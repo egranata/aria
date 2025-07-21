@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func returnisthree(x) {
+    return (x == 3);
+}
+
+func compare(x,y) {
+    # return was being treated as an identifier here, so this parsed as
+    # (return(x==3)) && (y == 0);
+    # as if func return(x) {...} was a callable
+    return (x == 3) && (y == 0);
+}
+
+func main() {
+    assert compare(3,0);
+    assert returnisthree(3);
+}

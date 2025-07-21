@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.iterator.mixin;
+
+func is_even(x) {
+    x % 2 == 0;
+}
+
+func add_one(x) {
+    x + 1;
+}
+
+func main() {
+    val l = [1,2,3,4,5,6,7,8,9,10];
+
+    val sum = 0;
+    for item in l.iterator().where(is_even).map(add_one) {
+        sum = sum + item;
+    }
+
+    assert sum == 35;
+}

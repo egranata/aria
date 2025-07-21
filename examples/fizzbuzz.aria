@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+extension Int {
+    func is_divisible_by(n: Int) {
+        return (this % n) == 0;
+    }
+
+    func to_fizzbuzz_string() {
+        val div_by_3 = this.is_divisible_by(3);
+        val div_by_5 = this.is_divisible_by(5);
+        if div_by_3 && div_by_5 {
+            return "FizzBuzz";
+        } elsif div_by_3 {
+            return "Fizz";
+        } elsif div_by_5 {
+            return "Buzz";
+        } else {
+            return this;
+        }
+    }
+}
+
+func main() {
+    for n in Range.from(1).through(20) {
+        println("{0} -> {1}".format(n, n.to_fizzbuzz_string()));
+    }
+}

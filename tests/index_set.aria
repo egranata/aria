@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+struct StorePairs {
+    type func new() {
+        alloc(This) {
+            .pairs = [],
+        };
+    }
+
+    instance func write_index(key, val) {
+        val i = 0;
+        val append = true;
+        while i < this.pairs.len() {
+            if this.pairs[i][0] == key {
+                this.pairs[i][1] = val;
+                append = false;
+                break;
+            }
+            i = i + 1;
+        }
+        if append {
+            this.pairs.append([key,val]);
+        }
+    }
+
+    instance func read_index(key) {
+        val i = 0;
+        while i < this.pairs.len() {
+            if this.pairs[i][0] == key {
+                return this.pairs[i][1];
+            }
+            i = i + 1;
+        }
+        return false;
+    }
+}
+
+func main() {
+    val p = StorePairs.new();
+    p[0] = 1;
+    assert p[0] == 1;
+    p[0] = 2;
+    assert p[0] == 2;
+    p[123] = "hi";
+    assert p[123] == "hi";
+    assert p[0] == 2;
+    assert p[true] == false;
+}

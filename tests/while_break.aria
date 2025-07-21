@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val i = 0;
+    while i != 10 {
+        i = i + 1;
+        if i == 4 {
+            break;
+        }
+    }
+
+    assert i == 4;
+}

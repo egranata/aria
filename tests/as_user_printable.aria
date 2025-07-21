@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func prettyprint() {
+        return "I'm a Foo";
+    }
+}
+
+func main() {
+    val l = [1,2, alloc(Foo), false, 3.14f];
+
+    assert prettyprint(l) == "[1, 2, I'm a Foo, false, 3.14]";
+}

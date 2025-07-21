@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+struct PrettyprintUnary {
+    func prettyprint() {
+        return "<PrettyprintUnary>";
+    }
+}
+
+struct PrettyprintBinary {
+    func prettyprint(x) {
+        if x == "abc" {
+            return "123";
+        } elsif x == "123" {
+            return "abc";
+        } elsif x == "" {
+            return "<PrettyprintBinary>";
+        } else {
+            assert(false);
+        }
+    }
+}
+
+func main() {
+    val s = "unary = {0}, unary with style = {0:unused}, binary = {1}, binary with style = {1:abc}, binary with other style = {1:123}";
+    val t = s.format(alloc(PrettyprintUnary), alloc(PrettyprintBinary));
+    assert t == "unary = <PrettyprintUnary>, unary with style = <PrettyprintUnary>, binary = <PrettyprintBinary>, binary with style = 123, binary with other style = abc";
+}

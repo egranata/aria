@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func do_fancy_math(x,y) {
+    return x + x * (x + x + y + 1);
+}
+
+func main() {
+    assert do_fancy_math(4,5) == 60;
+}

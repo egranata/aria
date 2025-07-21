@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin M {
+    func foo(x) {
+        return x + 1;
+    }
+}
+
+mixin MM {
+    func bar(x) {
+        return this.foo(x) + 1;
+    }
+
+    include M
+}
+
+struct IncludeM {
+    include M
+}
+
+struct IncludeMM {
+    include MM
+}
+
+func main() {
+    val m = alloc(IncludeM);
+    val mm = alloc(IncludeMM);
+
+    assert m isa M;
+    assert mm isa MM;
+    assert mm isa M;
+
+    assert !(m isa MM);
+
+    assert MM isa M;
+    assert !(M isa MM);
+
+    assert IncludeM isa M;
+    assert !(IncludeM isa MM);
+    assert IncludeMM isa MM;
+    assert IncludeMM isa M;
+}

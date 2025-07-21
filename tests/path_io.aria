@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val path = Path.new_with_environment_variable("ARIA_TEST_DIR").unwrap_Some();
+    path = path / "path_io.txt";
+
+    val msg1 = "First line of text.\nSecond line of text.\nThird line of text.";
+
+    path.write(msg1);
+
+    val msg2 = path.read();
+
+    assert msg1 == msg2;
+}

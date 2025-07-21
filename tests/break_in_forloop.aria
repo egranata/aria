@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val l = [1,2,3,4,5];
+    val sum = 0;
+    for item in l {
+        sum = sum + item;
+        if item == 3 {
+            break;
+        }
+    }
+
+    assert sum == 6;
+}

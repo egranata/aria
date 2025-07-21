@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func new() {
+        alloc(This);
+    }
+
+    instance func truth() {
+        true;
+    }
+}
+
+func main() {
+    val f: Foo = Foo.new();
+    assert(f.truth());
+}

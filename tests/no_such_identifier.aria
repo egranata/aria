@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val caught = false;
+
+    try {
+        val foo = value + 1;
+    } catch e {
+        match e {
+            isa RuntimeError and case NoSuchIdentifier(n) => {
+                caught = n == "value";
+            }
+        }
+    }
+
+    assert caught;
+}

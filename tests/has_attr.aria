@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func blah() {
+        return 0;
+    }
+
+    func answer() {
+        return 42;
+    }
+}
+
+extension Foo {
+    func question() {
+        return "?";
+    }
+}
+
+extension List {
+    instance func head() {
+        return this[0];
+    }
+}
+
+func main() {
+    assert hasattr(Foo, "blah");
+    assert !hasattr(Foo, "answer");
+    assert !hasattr(Foo, "question");
+
+    val foo = alloc(Foo);
+    assert hasattr(foo, "answer");
+    assert hasattr(foo, "question");
+
+    val s = "hello";
+    assert hasattr(s, "len");
+
+    val l = [1,2,3,4];
+    assert hasattr(l, "len");
+    assert hasattr(l, "head");
+    assert !hasattr(List, "len");
+    assert !hasattr(List, "head");
+}

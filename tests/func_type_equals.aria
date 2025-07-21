@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+func f1(x) {
+    return x + 1;
+}
+
+func f2(x,y) {
+    return x + y + 1;
+}
+
+func f3(x, ...) {
+    return x;
+}
+
+func f4(x) {
+    return x - 1;
+}
+
+func f5(y,x) {
+    return y - x;
+}
+
+func f6(...) {
+    return false;
+}
+
+func f7(x, ...) {
+    return 1;
+}
+
+func main() {
+    assert f1 isa typeof(f4);
+    assert !(f1 isa typeof(f2));
+
+    assert f4 isa typeof(f1);
+    assert !(f4 isa typeof(f6));
+
+    assert f2 isa typeof(f5);
+    assert f3 isa typeof(f7);
+    
+    assert !(f6 isa typeof(f3));
+    assert !(f7 isa typeof(f6));
+
+    assert f5 isa typeof(f2);
+    assert !(f6 isa typeof(f1));
+
+    assert !(f6 isa typeof(f7));
+}

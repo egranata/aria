@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+import JsonValue from aria.json.parser;
+
+func main() {
+    val json_object = JsonValue.parse('{"a":1,"b":2}');
+
+    assert json_object.is_Object();
+    val map = json_object.unwrap_Object();
+
+    assert map["a"].is_Number();
+    assert map["a"].unwrap_Number() == 1.0f;
+
+    assert map["b"].is_Number();
+    assert map["b"].unwrap_Number() == 2.0f;
+}

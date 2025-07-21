@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Foo {
+    func bar() {
+        return 1;
+    }
+}
+
+struct UsesFoo {
+    include Foo
+}
+
+extension Foo {
+    func baz() {
+        return 2;
+    }
+}
+
+func main() {
+    val f = alloc(UsesFoo);
+    assert f.bar() == 1;
+
+    assert f.baz() == 2;
+}

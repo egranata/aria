@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func new(x,y,z) {
+        val f = alloc(This);
+        f.set(x,y,z);
+    }
+
+    instance func set(x,y,z) {
+        this.x = x;
+        this.y = y;
+        this.z = (x+y==z);
+        return this;
+    }
+}
+
+func main() {
+    val f = Foo.new(1,2,4);
+    assert f.x == 1;
+    assert f.y == 2;
+    assert f.z == false;
+
+    f.set(2,3,5);
+    assert f.x == 2;
+    assert f.y == 3;
+    assert f.z == true;
+}

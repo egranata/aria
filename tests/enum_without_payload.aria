@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+enum E {
+    case NoPayload,
+}
+
+func main() {
+    val caught = false;
+    val e = E::NoPayload;
+
+    try {
+        match e {
+            case NoPayload(x) => { println(x); },
+        }
+    } catch e {
+        match e {
+            isa RuntimeError and case EnumWithoutPayload => {
+                caught = true;
+            }
+        }
+    }
+
+    assert caught;
+}

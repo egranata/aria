@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+import extensible.base;
+import Base from extensible.base;
+
+extension extensible.base.Base {
+    func move(x,y) {
+        this.x = this.x + x;
+        this.y = this.y + y;
+        return this;
+    }
+
+    func one_right() {
+        return this.move(0,1);
+    }
+
+    func one_up() {
+        return this.move(1,0);
+    }
+
+    func prettyprint() {
+        "({0},{1})".format(this.x, this.y);
+    }
+}

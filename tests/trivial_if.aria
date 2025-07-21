@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 0;
+    if true {
+        for a in [1,2,3,4] {
+            x = a;
+        }
+    }
+    if false {
+        x = 2;
+    }
+
+    assert x == 4;
+}

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+func obj() {
+    val check = false;
+    if Box(){.x = true}.x {
+        check = true;
+    }
+
+    return check;
+}
+
+func list() {
+    val check = false;
+    if []{[0] = true}[0] {
+        check = true;
+    }
+
+    return check;
+}
+
+func main() {
+    assert obj();
+    assert list();
+}

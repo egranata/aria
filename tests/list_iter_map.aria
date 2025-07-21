@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import Enumerate from aria.iterator.enumerate;
+import aria.iterator.mixin;
+
+func double(n) {
+    n + n;
+}
+
+func main() {
+    val sum = 0;
+    val list = [1,2,3,4,5,6];
+    for item in Enumerate.new(list.iterator().map(double)) {
+        val original_number = list[item.index];
+        val new_number = item.value;
+
+        assert new_number == double(original_number); 
+        sum += new_number;
+    }
+
+    assert sum == 42;
+}

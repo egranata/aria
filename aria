@@ -1,0 +1,5 @@
+#!/bin/sh
+cargo build --workspace --profile ${ARIA_BUILD_CONFIG:-"release"}
+
+SELF_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+ARIA_LIB_DIR=${ARIA_LIB_DIR:-"${SELF_DIR}/lib:${SELF_DIR}/lib-test"} cargo run --profile ${ARIA_BUILD_CONFIG:-"release"} --package aria-bin -- $@

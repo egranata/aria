@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Integer {
+    type func new(n) {
+        alloc(This){
+            .n = n,
+        };
+    }
+}
+
+extension Integer {
+    func op_add(rhs) {
+        if rhs isa Integer {
+            Integer.new(this.n + rhs.n);
+        } elsif rhs isa Int {
+            Integer.new(this.n + rhs);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_radd(lhs) {
+        # addition is commutative
+        this.op_add(lhs);
+    }
+
+    func op_equals(rhs) {
+        if rhs isa Integer {
+            rhs.n == this.n;
+        } elsif rhs isa Int {
+            this.n == rhs;
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func prettyprint() {
+        return "{0}".format(this.n);
+    }
+}
+
+func main() {
+    val x = Integer.new(4);
+    val y = 7;
+
+    assert x + y == 11;
+
+    assert y + x == 11;
+
+    x += 2;
+    assert x isa Integer;
+    assert x == 6;
+}

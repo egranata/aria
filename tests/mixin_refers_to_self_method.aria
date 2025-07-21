@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+
+mixin Double {
+    # requires
+    # this.value()
+    # this.add(y)
+    func double() {
+        this.add(this.value());
+    }
+}
+
+struct HasValue {
+    type func new(x) {
+        alloc(This) {
+            .x = x,
+        };
+    }
+
+    instance func value() {
+        return this.x;
+    }
+
+    instance func add(y) {
+        this.x += y;
+    }
+
+    include Double
+}
+
+func main() {
+    val hv = HasValue.new(4);
+
+    assert hv.value() == 4;
+    hv.add(1);
+    assert hv.value() == 5;
+    hv.double();
+    assert hv.value() == 10;
+    hv.double();
+    assert hv.value() == 20;
+    hv.add(3);
+    assert hv.value() == 23;
+}
+

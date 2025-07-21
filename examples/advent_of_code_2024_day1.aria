@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import Zip from aria.iterator.zip;
+
+val list1 = [3,4,2,1,3,3];
+val list2 = [4,3,5,3,9,3];
+
+func main() {
+    assert list1.len() == list2.len();
+
+    list1.quicksort();
+    list2.quicksort();
+
+    val z = Zip.new(list1, list2);
+    val sum = 0;
+    for pair in z {
+        val distance = (pair[0] - pair[1]).abs();
+        sum += distance;
+    }
+
+    println("The total distance is {0}".format(sum));
+}

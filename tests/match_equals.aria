@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+func is_even_digit(x) {
+    match x {
+        == 0 => { return true; },
+        == 2 => { return true; },
+        == 4 => { return true; },
+        == 6 => { return true; },
+        == 8 => { return true; },
+    } else {
+        return false;
+    }
+}
+
+func main() {
+    assert is_even_digit(4);
+    assert !is_even_digit(7);
+}

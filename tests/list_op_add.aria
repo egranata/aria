@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val l1 = [1,2,3,4];
+    val l2 = [3,2,1];
+
+    val l3 = l1 + l2;
+    assert l3.len() == l1.len() + l2.len();
+
+    assert l3[0] == 1;
+    assert l3[1] == 2;
+    assert l3[2] == 3;
+    assert l3[3] == 4;
+    assert l3[4] == 3;
+    assert l3[5] == 2;
+    assert l3[6] == 1;
+}

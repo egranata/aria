@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: Apache-2.0
+import Matrix from aria.numerics.matrix;
+
+func main() {
+    val m1 = Matrix.new(3,3);
+    m1.set(0, 0, 1.0f);
+    m1.set(1, 0, 0.25f);
+    m1.set(1, 1, 2.0f);
+    m1.set(2, 2, 3.0f);
+
+    val m2 = Matrix.new(3,3);
+    m2.set(0, 1, 4.0f);
+    m2.set(1, 0, 5);
+    m2.set(2, 2, 6);
+
+    val m3 = m1 + m2;
+
+    assert m3.get(0, 0) == 1.0f;
+    assert m3.get(1, 1) == 2.0f;
+    assert m3.get(2, 2) == 9.0f;
+    assert m3.get(0, 1) == 4.0f;
+    assert m3.get(1, 0) == 5.25f;
+    assert m3.get(0, 2) == 0.0f;
+    assert m3.get(2, 0) == 0.0f;
+
+    val m4 = m1 - m2;
+    assert m4.get(0, 0) == 1.0f;
+    assert m4.get(1, 1) == 2.0f;
+    assert m4.get(2, 2) == -3.0f;
+    assert m4.get(0, 1) == -4.0f;
+    assert m4.get(1, 0) == -4.75f;
+    assert m4.get(0, 2) == 0.0f;
+    assert m4.get(2, 0) == 0.0f;
+}

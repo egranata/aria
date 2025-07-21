@@ -1,0 +1,25 @@
+repos:
+-   repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+    -   id: fmt
+    -   id: cargo-check
+    -   id: clippy
+-   repo: http://github.com/Quard/license-header-checker
+    rev: v0.1
+    hooks:
+    -   id: license-header-checker
+        files: \.rs$
+        args:
+          - --comment-style
+          - "//"
+          - --license
+          - "SPDX-License-Identifier: Apache-2.0\n"
+-   repo: http://github.com/Quard/license-header-checker
+    rev: v0.1
+    hooks:
+    -   id: license-header-checker
+        files: \.aria$
+        args:
+          - --license
+          - "SPDX-License-Identifier: Apache-2.0\n"

@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val i = 3;
+    i.foo = "three";
+
+    val i_attributes = listattrs(i);
+    assert i_attributes.contains("foo");
+    assert i_attributes.contains("hash");
+    assert i_attributes.contains("parse"); # should type methods be included?
+    assert i_attributes.len() >= 3;
+
+    val f = 3.14f;
+    f.text = "pi";
+
+    val f_attributes = listattrs(f);
+    assert f_attributes.contains("text");
+    assert f_attributes.contains("hash");
+    assert f_attributes.len() >= 2;
+
+    val b = false;
+    b.truthy = false;
+
+    val b_attributes = listattrs(b);
+    assert b_attributes.contains("truthy");
+    assert b_attributes.contains("hash");
+    assert b_attributes.len() >= 2;
+
+    val s = "hello";
+    s.french = "bonjour";
+
+    val s_attributes = listattrs(s);
+    assert s_attributes.contains("french");
+    assert s_attributes.contains("hash");
+    assert s_attributes.len() >= 2;
+
+    val l = [1,2,3];
+    l.max = 3;
+    l.sum = 6;
+
+    val l_attributes = listattrs(l);
+    assert l_attributes.contains("max");
+    assert l_attributes.contains("sum");
+    assert l_attributes.contains("len");
+    assert l_attributes.len() >= 3;
+}

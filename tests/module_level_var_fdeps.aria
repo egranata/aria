@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(n) {
+    return 5+n;
+}
+
+val ten = foo(5);
+
+func main() {
+    assert ten == 10;
+}

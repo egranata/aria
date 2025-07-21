@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+func double(x) {
+    x + x;
+}
+
+func perform_op(f,n) {
+    f(n);
+}
+
+func main() {
+    assert perform_op(double,4) == 8;
+}

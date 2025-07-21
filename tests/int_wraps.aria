@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val a = 0x7FFFFFFFFFFFFFFF;
+    assert(a + 1 < 0);
+    assert(a * 2 == -2);
+    assert(a-a*2 == -9223372036854775807);
+    assert(a/2 == 4611686018427387903);
+    assert(a % 37 == 5);
+}

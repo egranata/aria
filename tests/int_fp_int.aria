@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val a = 3;
+    assert a.float() == 3.0f;
+    assert a.float() isa Float;
+    a = 3.0f;
+    assert a.int() == 3;
+    assert a.int() isa Int;
+}
+

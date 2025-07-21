@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: Apache-2.0
+import PriorityQueue from aria.structures.queue;
+
+func main() {
+    val pq = PriorityQueue.new();
+    
+    assert pq.len() == 0;
+
+    pq.push(5);
+    pq.push(3);
+
+    assert pq.len() == 2;
+    assert pq.pop() == 3;
+
+    pq.push(4);
+
+    assert pq.len() == 2;
+    assert pq.pop() == 4;
+    assert pq.pop() == 5;
+
+    assert pq.len() == 0;
+    assert pq.peek().is_None();
+
+    pq.push(7);
+    pq.push(2);
+    pq.push(6);
+
+    assert pq.len() == 3;
+    assert pq.peek().is_Some();
+    assert pq.peek().unwrap_Some() == 2;
+    assert pq.pop() == 2;
+    assert pq.len() == 2;
+    assert pq.peek().is_Some();
+    assert pq.peek().unwrap_Some() == 6;
+    assert pq.pop() == 6;
+    assert pq.len() == 1;
+    assert pq.peek().is_Some();
+    assert pq.peek().unwrap_Some() == 7;
+    assert pq.pop() == 7;
+    assert pq.len() == 0;
+    assert pq.peek().is_None();
+}

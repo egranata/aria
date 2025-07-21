@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val l = [1,2,3,5];
+    l.sum = 11;
+    l.max = 5;
+
+    assert l.sum == 11;
+    assert l.max == 5;
+
+    assert l.len() == 4;
+}

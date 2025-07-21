@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+func main() {
+    val range = Range.from(3).through(20);
+
+    val count = 0;
+    for item in range.iterator().where(|x| => x == 10) {
+        assert item == 10;
+        count = count + 1;
+    }
+
+    assert count == 1;
+}

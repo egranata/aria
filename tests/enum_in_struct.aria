@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Parent {
+    enum Child {
+        case A,
+        case B(Int)
+    }
+}
+
+extension Parent.Child {
+    func get_magic_value() {
+        return 123;
+    }
+}
+
+extension Parent {
+    type func get_child_A() {
+        Parent.Child::A;
+    }
+
+    type func get_child_B(x: Int) {
+        Parent.Child::B(x);
+    }
+}
+
+func main() {
+    # cannot test match yet
+    val a = Parent.get_child_A();
+    assert a.get_magic_value() == 123;
+    val b = Parent.get_child_B(456);
+    assert b.get_magic_value() == 123;
+}

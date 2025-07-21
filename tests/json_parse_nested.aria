@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+import JsonValue from aria.json.parser;
+
+func main() {
+    val json_object = JsonValue.parse('{"l": [1, 2, 3], "o": {"key1": 1, "key2": "value2", "key3": [4,5,6]}}');
+
+    assert json_object.is_Object();
+    val map = json_object.unwrap_Object();
+    assert map["l"].is_Array();
+    val array = map["l"].unwrap_Array();
+    assert array.len() == 3;
+    assert array[0].is_Number();
+    assert array[0].unwrap_Number() == 1.0f;
+    assert array[1].is_Number();
+    assert array[1].unwrap_Number() == 2.0f;
+    assert array[2].is_Number();
+    assert array[2].unwrap_Number() == 3.0f;
+    assert map["o"].is_Object();
+    val inner_map = map["o"].unwrap_Object();
+    assert inner_map["key1"].is_Number();
+    assert inner_map["key1"].unwrap_Number() == 1.0f;
+    assert inner_map["key2"].is_String();
+    assert inner_map["key2"].unwrap_String() == "value2";
+    assert inner_map["key3"].is_Array();
+    val inner_array = inner_map["key3"].unwrap_Array();
+    assert inner_array.len() == 3;
+    assert inner_array[0].is_Number();
+    assert inner_array[0].unwrap_Number() == 4.0f;
+    assert inner_array[1].is_Number();
+    assert inner_array[1].unwrap_Number() == 5.0f;
+    assert inner_array[2].is_Number();
+    assert inner_array[2].unwrap_Number() == 6.0f;
+}

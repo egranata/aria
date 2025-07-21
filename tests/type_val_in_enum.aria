@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Foo {}
+
+extension Foo {
+    type val ANSWER = 42;
+}
+
+func main() {
+    assert Foo.ANSWER == 42;
+}

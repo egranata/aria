@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Pair {
+    type func new(x,y) {
+        alloc(This) {
+            .x = x,
+            .y = y,
+        };
+    }
+
+    instance func prettyprint() {
+        "Pair({0},{1})".format(this.x, this.y);
+    }
+}
+
+func main() {
+    val p = Pair.new(3,4);
+    val s = "I am a pair and my values are {0}".format(p);
+    assert s == "I am a pair and my values are Pair(3,4)";
+}

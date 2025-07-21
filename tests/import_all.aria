@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+import * from all.source;
+
+func main() {
+    assert something(3,5) == 7;
+    assert something_else(1,2,3) == 5;
+
+    val st = SomeType.new();
+    st.do_something();
+    assert st.x == 3;
+}

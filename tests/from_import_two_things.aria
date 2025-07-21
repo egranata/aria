@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+import One from example.two.things;
+import Two from example.two.things;
+
+func main() {
+    val t1 = One.new(4);
+    assert t1.double() == 10;
+
+    val t2 = Two.new(7);
+    assert t2.half() == 3;
+}

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin SomeBehavior {
+    # requires
+    # func input()
+    func behavior() {
+        "input is {0}".format(this.input());
+    }
+}
+
+struct ProvidesInteger {
+    func input() {
+        return 42;
+    }
+}
+
+struct ProvidesString {
+    func input() {
+        return "hello";
+    }
+}
+
+extension ProvidesInteger {
+    include SomeBehavior
+}
+
+extension ProvidesString {
+    include SomeBehavior
+}
+
+func main() {
+    val pib = alloc(ProvidesInteger).behavior();
+    val psb = alloc(ProvidesString).behavior();
+
+    assert pib == "input is 42";
+    assert psb == "input is hello";
+}

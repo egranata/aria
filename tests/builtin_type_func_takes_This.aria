@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+extension Int {
+    type func from_string(x: String) {
+        This.parse(x).unwrap_Some();
+    }
+}
+
+func main() {
+    val n = Int.from_string("123");
+    assert n == 123;
+}

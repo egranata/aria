@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func compare(l,...) {
+    assert l == varargs;
+}
+
+func main() {
+    compare([3],3);
+    compare([3,4],3,4);
+    compare([3,4,5,6],3,4,5,6);
+    compare([]);
+}

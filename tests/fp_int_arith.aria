@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+func add() {
+    val x = 1;
+    val y = 1.25f;
+
+    assert x + y == 2.25f;
+    assert y + x == 2.25f;
+}
+
+func sub() {
+    val x = 1;
+    val y = 1.25f;
+
+    assert x - y == -0.25f;
+    assert y - x == 0.25f;
+}
+
+func mul() {
+    val x = 2;
+    val y = 3.25f;
+
+    assert x * y == 6.5f;
+    assert y * x == 6.5f;
+}
+
+func div() {
+    val x = 2;
+    val y = 4.0f;
+
+    assert x / y == 0.5f;
+    assert y / x == 2.0f;
+}
+
+func main() {
+    add();
+    sub();
+    mul();
+    div();
+}

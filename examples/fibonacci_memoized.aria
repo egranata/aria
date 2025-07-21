@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+
+struct Fibonacci {
+    type func new() {
+        alloc(This) {
+            .cache = Map.new(){[0] = 0, [1] = 1},
+        };
+    }
+
+    func eval(n) {
+        match this.cache.get(n) {
+            case Some(result) => { return result; }
+        } else {
+            val result = this.eval(n-1) + this.eval(n-2);
+            this.cache[n] = result;
+            return result;
+        }
+    }
+    
+    func fibonacci(n) {
+        this.eval(n);
+    }
+}
+
+func main() {
+    val f = Fibonacci.new();
+    println(f.fibonacci(28));
+}

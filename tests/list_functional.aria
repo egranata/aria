@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.iterator.mixin;
+
+func is_gt_10(x) {
+    x > 10;
+}
+
+func test_any() {
+    val l = [1,2,3,4,5,6];
+    assert l.iterator().any(|x| => x > 5) == true;
+    assert l.iterator().any(is_gt_10) == false;
+}
+
+func is_lt_10(x) {
+    x < 10;
+}
+
+func test_all() {
+    val l = [1,2,3,4,5,6];
+    assert l.iterator().all(is_lt_10) == true;
+    assert l.iterator().all(|x| => x > 5) == false;
+}
+
+func test_where() {
+    val l = [1,2,3,4,5,6];
+    assert l.where(is_gt_10).to_list() == [];
+    assert l.where(|x| => x > 5).to_list() == [6];
+}
+
+func do_the_thing(x) {
+    2 * x + 1;
+}
+
+func test_map() {
+    val l = [1,2,3,4,5,6];
+    assert l.map(do_the_thing).to_list() == [3,5,7,9,11,13];
+    assert l.map(|x| => x > 5).to_list() == [false,false,false,false,false,true];
+}
+
+func main() {
+    test_any();
+    test_all();
+    test_where();
+    test_map();
+}

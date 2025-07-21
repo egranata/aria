@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.iterator.mixin;
+import Instant from aria.date.instant;
+
+func is_this_test(path) {
+    return path.get_filename() == "dir_entries.aria";
+}
+
+func main() {
+    val path = getenv("ARIA_TEST_DIR").unwrap_Some();
+    val path = Path.new(path).new_canonical();
+
+    val entries = path.entries();
+    entries = entries.iterator().where(is_this_test).to_list();
+
+    assert entries.len() == 1;
+    assert entries[0] isa Path;
+    assert entries[0].is_file();
+    assert entries[0].exists();
+    assert entries[0].get_extension() == "aria";
+
+    val creation = Instant.from_unix_timestamp(entries[0].creation_ms_since_epoch());
+
+    assert creation.year >= 2025;
+    assert creation.month >= 7;
+    assert creation.day >= 4;
+}

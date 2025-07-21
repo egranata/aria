@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: Apache-2.0
+enum HasCases {
+    case A(Int),
+    case B,
+    case C(String),
+    case D,
+    case E(HasCases)
+}
+
+func main() {
+    val ev = HasCases::A(123);
+    
+    assert ev.is_A();
+    assert !ev.is_B();
+    assert !ev.is_C();
+    assert !ev.is_D();
+    assert !ev.is_E();
+    assert ev.unwrap_A() == 123;
+
+    ev = HasCases::B;
+    assert !ev.is_A();
+    assert ev.is_B();
+    assert !ev.is_C();
+    assert !ev.is_D();
+    assert !ev.is_E();
+
+    ev = HasCases::C("hello");
+    assert !ev.is_A();
+    assert !ev.is_B();
+    assert ev.is_C();
+    assert !ev.is_D();
+    assert !ev.is_E();
+    assert ev.unwrap_C() == "hello";
+
+    ev = HasCases::D;
+    assert !ev.is_A();
+    assert !ev.is_B();
+    assert !ev.is_C();
+    assert ev.is_D();
+    assert !ev.is_E();
+
+    ev = HasCases::E(HasCases::B);
+    assert !ev.is_A();
+    assert !ev.is_B();
+    assert !ev.is_C();
+    assert !ev.is_D();
+    assert ev.is_E();
+    assert ev.unwrap_E().is_B();
+}

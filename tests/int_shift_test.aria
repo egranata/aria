@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val n = 0b0011001100010;
+    val shl = n >> 3;
+    assert shl == 0b0011001100;
+    val shn = n << 4;
+    assert shn == 0b00110011000100000;
+}

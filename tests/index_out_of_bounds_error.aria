@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val l = [1,2,3,4];
+    val caught = false;
+
+    try {
+        assert l[0] + l[10] == 11;
+    } catch e {
+        match e {
+            isa RuntimeError and case IndexOutOfBounds(n) => {
+                caught = n == 10;
+            }
+        }
+    }
+
+    assert caught;
+}

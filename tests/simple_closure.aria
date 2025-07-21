@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+func make_adder(n) {
+    return |x| => x + n;
+}
+
+func main() {
+    val add1 = make_adder(1);
+    val add2 = make_adder(2);
+
+    assert add1(3) == 4;
+    assert add2(4) == 6;
+    assert add1(add1(3)) == add2(3);
+}

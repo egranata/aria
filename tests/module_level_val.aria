@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+val foo = 123;
+
+func bar() {
+    foo = 321;
+}
+
+func baq(foo) {
+    foo = 4;
+}
+
+func main() {
+    assert foo == 123;
+    bar();
+    assert foo == 321;
+    baq(5);
+    assert foo == 321;
+}

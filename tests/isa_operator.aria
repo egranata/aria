@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {}
+
+func main() {
+    assert 3 isa Int;
+    assert 3.14f isa Float;
+    assert false isa Bool;
+
+    assert !(false isa String);
+    assert !("hello" isa Foo);
+
+    assert alloc(Foo) isa (Int|Foo);
+    assert false isa (Bool|String);
+}

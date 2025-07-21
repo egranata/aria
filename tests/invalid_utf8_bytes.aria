@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    try {
+        val bytes = [240, 159, 150];
+        val str = String.new_with_bytes(bytes);
+        assert false;
+    } catch e {
+        assert e isa String.EncodingError;
+        assert e.msg == "invalid utf8";
+    }
+}

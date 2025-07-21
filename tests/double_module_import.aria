@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+import example.pair.Pair;
+import example.pair.Pair;
+import example.pair.Pair;
+import Pair from example.pair.Pair;
+
+func main() {
+    val p = Pair.new(1,2);
+    assert p.x == 1;
+    assert p.y == 2;
+}

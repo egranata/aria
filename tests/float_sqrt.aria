@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    assert (4.0f.sqrt() - 2.0f).abs() <= 0.0001f;
+    assert (9.0f.sqrt() - 3.0f).abs() <= 0.0001f;
+}

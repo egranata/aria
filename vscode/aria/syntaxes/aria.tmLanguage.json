@@ -1,0 +1,106 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Aria",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#booleans"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#identifiers"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "comment.line.double-slash.aria",
+					"match": "#.*$"
+				},
+				{
+					"name": "keyword.control.aria",
+					"match": "\\b(and|assert|break|case|catch|continue|enum|else|elsif|extension|for|from|guard|if|import|in|include|isa|func|match|mixin|return|struct|throw|try|val|while)\\b"
+				},
+				{
+					"name": "keyword.control.contextual.aria",
+					"match": "\\b(instance|type)\\b(?=\\s+func)"
+				},
+				{
+					"name": "keyword.control.type-val.aria",
+					"match": "\\btype\\s+val\\b"
+				}
+			]
+		},
+		"booleans": {
+			"patterns": [
+				{
+					"name": "constant.language.boolean.aria",
+					"match": "\\b(false|true)\\b"
+				}
+			]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.aria",
+					"begin": "\"",
+					"end": "\"",
+					"patterns": [
+						{
+							"name": "constant.character.escape.aria",
+							"match": "\\\\."
+						}
+					]
+				},
+				{
+					"name": "string.quoted.single.aria",
+					"begin": "'",
+					"end": "'",
+					"patterns": [
+						{
+							"name": "constant.character.escape.aria",
+							"match": "\\\\."
+						}
+					]
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [
+				{
+					"match": "\\b\\d+\\.\\d+f\\b",
+					"name": "constant.numeric.float.aria"
+				},
+				{
+					"name": "constant.numeric.decimal.aria",
+					"match": "\\b\\d[\\d_]*\\b"
+				},
+				{
+					"name": "constant.numeric.hexadecimal.aria",
+					"match": "\\b0x[0-9a-fA-F][0-9a-fA-F_]*\\b"
+				},
+				{
+					"name": "constant.numeric.binary.aria",
+					"match": "\\b0b[01][01_]*\\b"
+				}
+			]
+		},
+		"identifiers": {
+			"patterns": [
+				{
+					"name": "variable.other.aria",
+					"match": "\\b[_\\p{L}][_\\p{L}\\p{M}\\p{Nd}\\p{Pc}\\p{Nl}]*\\b"
+				}
+			]
+		}
+	},
+	"scopeName": "source.aria"
+}

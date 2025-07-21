@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+val q = 1;
+
+func foo(x,y,z) {
+    return |a| => a + y - z * q;
+}
+
+func main() {
+    val f = foo(3,4,5);
+    assert f(3) == 2;
+    assert f(4) == 3;
+    q = 2;
+    assert f(5) == -1;
+}

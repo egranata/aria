@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val path = getenv("ARIA_TEST_DIR").unwrap_Some();
+    path = path + "/file_lines_iter.txt";
+
+    val msg = "First line of text.\nSecond line of text.\n\nThird line of text.\nFourth line of text.";
+
+    guard file = File.open(path, File.OpenMode.new().write().truncate()) {
+        file.write(msg);
+    }
+
+    val i = 0;
+    val lines = [
+        "First line of text.",
+        "Second line of text.",
+        "",
+        "Third line of text.",
+        "Fourth line of text."
+    ];
+
+    guard file = File.open(path, File.OpenMode.new().read()) {
+        for line in file.lines() {
+            assert line == lines[i];
+            i += 1;
+        }
+        assert i == 5;
+    }
+}

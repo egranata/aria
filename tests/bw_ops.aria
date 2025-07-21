@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: Apache-2.0
+func min(x: Float, y: Float) {
+    if x < y {
+        return x;
+    } else {
+        return y;
+    }
+}
+
+func max(x: Float, y: Float) {
+    if x > y {
+        return x;
+    } else {
+        return y;
+    }
+}
+
+struct FuzzyNumber {
+    type func new(x: Float) {
+        alloc(This){
+            .x = x%1,
+        };
+    }
+
+    func op_bwand(other) {
+        if other isa FuzzyNumber {
+            return FuzzyNumber.new(min(this.x, other.x));
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_bwor(other) {
+        if other isa FuzzyNumber {
+            return FuzzyNumber.new(max(this.x, other.x));
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_neg() {
+        return FuzzyNumber.new(1 - this.x);
+    }
+
+    func op_xor(other) {
+        if other isa FuzzyNumber {
+            return (this | other) & -(this & other);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_equals(other) {
+        if other isa FuzzyNumber {
+            return this.x == other.x;
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+}
+
+func main() {
+    val a = FuzzyNumber.new(0.3f);
+    val b = FuzzyNumber.new(0.4f);
+
+    assert (a&b) == a;
+    assert (a|b) == b;
+
+    assert (a^b) == b;
+}

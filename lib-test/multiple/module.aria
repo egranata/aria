@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func one(x,y) {
+    x + y;
+}
+
+func two(x,y) {
+    x * y;
+}

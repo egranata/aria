@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: Apache-2.0
+enum CompareResult {
+    case lt,
+    case eq,
+    case gt,
+}
+
+mixin TotalOrdering {
+    # requires func comp(this,x) that returns a CompareResult
+
+    func op_equals(rhs) {
+        match this.comp(rhs) {
+            isa CompareResult and case eq => {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    func op_lt(rhs) {
+        match this.comp(rhs) {
+            isa CompareResult and case lt => {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    func op_gt(rhs) {
+        match this.comp(rhs) {
+            isa CompareResult and case gt => {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    func op_lteq(rhs) {
+        match this.comp(rhs) {
+            isa CompareResult and case lt => {
+                return true;
+            },
+            isa CompareResult and case eq => {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    func op_gteq(rhs) {
+        match this.comp(rhs) {
+            isa CompareResult and case gt => {
+                return true;
+            },
+            isa CompareResult and case eq => {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+}

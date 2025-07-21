@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+func top_level(arg0) {
+    return |arg1| => |arg2| => arg0 + arg1 + arg2;
+}
+
+func main() {
+    val add3 = top_level(3);
+
+    val add3_and_4 = add3(4);
+    val add3_and_2 = add3(2);
+
+    assert add3_and_4(7) == 14;
+    assert add3_and_2(7) == 12;
+
+    assert add3_and_4(3) == 10;
+    assert add3_and_2(1) == 6;
+}

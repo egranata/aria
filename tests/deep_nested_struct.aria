@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0
+struct A {
+    struct B {
+        struct C {
+            struct D {
+                func foo() {
+                    return 42;
+                }
+            }
+
+            type func subtract(x,y) {
+                x - y;
+            }
+        }
+        type func getD() {
+            return alloc(A.B.C.D);
+        }
+
+        instance func bar() {
+            return 123;
+        }
+    }
+
+    type func whoami() {
+        return "A";
+    }
+
+    instance func multiply(x,y) {
+        x * y;
+    }
+}
+
+func main() {
+    assert hasattr(A, "B");
+    assert hasattr(A.B, "C");
+    assert hasattr(A.B.C, "D");
+
+    assert hasattr(A, "whoami");
+    assert hasattr(A.B, "getD");
+
+    assert A.whoami() == "A";
+    assert alloc(A).multiply(3,4) == 12;
+
+    assert A.B.getD().foo() == 42;
+    assert alloc(A.B).bar() == 123;
+
+    assert A.B.C.subtract(7,4) == 3;
+
+    assert alloc(A.B.C.D).foo() == 42;
+}

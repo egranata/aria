@@ -1,0 +1,186 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+# this is conceptually the same as what's in aria.string.classes
+# but we don't want to import from the core builtin library, so
+# the duplication of this rather trivial code is acceptable
+func is_digit(s: String) {
+    match s {
+        == "0" => { return true; },
+        == "1" => { return true; },
+        == "2" => { return true; },
+        == "3" => { return true; },
+        == "4" => { return true; },
+        == "5" => { return true; },
+        == "6" => { return true; },
+        == "7" => { return true; },
+        == "8" => { return true; },
+        == "9" => { return true; },
+    } else {
+        return false;
+    }
+}
+
+# these functions are never called, their sole purpose is to provide
+# type information for prettyprint with one or two arguments
+func _aria__prettyprint_unary(x) {assert(false);}
+func _aria__prettyprint_binary(x,y) {assert(false);}
+
+extension String {
+    struct EncodingError {
+        type func new(msg: String) {
+            alloc(This) {
+                .msg = msg
+            };
+        }
+
+        instance func prettyprint() {
+            return "encoding error: {0}".format(this.msg);
+        }
+    }
+
+    func repeat(n: Int) {
+        if n == 0 { return ""; }
+        if n == 1 { return this; }
+        val ret = this;
+        while n > 1 {
+            ret = ret + this;
+            n -= 1;
+        }
+        return ret;
+    }
+
+    func op_mul(rhs: Int) {
+        if rhs isa Int {
+            this.repeat(rhs);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_rmul(lhs: Int) {
+        this.op_mul(lhs);
+    }
+
+    func trim() {
+        return this.trim_head().trim_tail();
+    }
+
+    func prettyprint() {
+        return this;
+    }
+
+    func format(...) {
+        val ret = "";
+        val chars = this.chars();
+        val idx = 0;
+
+        while idx < chars.len() {
+            val c = chars[idx];
+
+            if c == "{" && idx + 1 < chars.len() && chars[idx + 1] == "{" {
+                ret += "{";
+                idx += 2;
+                continue;
+            }
+
+            if c == "}" && idx + 1 < chars.len() && chars[idx + 1] == "}" {
+                ret += "}";
+                idx += 2;
+                continue;
+            }
+
+            if c == "{" {
+                idx += 1;
+                val num_str = "";
+                val style_str = "";
+                val has_style = false;
+
+                while idx < chars.len() {
+                    val c = chars[idx];
+
+                    if c == "}" {
+                        idx += 1;
+                        break;
+                    } elsif c == ":" && !has_style {
+                        has_style = true;
+                        idx += 1;
+                    } elsif !has_style {
+                        if is_digit(c) {
+                            num_str += c;
+                            idx += 1;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        style_str += c;
+                        idx += 1;
+                    }
+                }
+
+                match Int.parse(num_str) {
+                    case Some(i) => {
+                        if i >= varargs.len() {
+                            if has_style {
+                                ret += "{" + num_str + ":" + style_str + "}";
+                            } else {
+                                ret += "{" + num_str + "}";
+                            }
+                        } else {
+                            val arg = varargs[i];
+                            val need_default = true;
+                            if hasattr(arg, "prettyprint") {
+                                if arg.prettyprint isa typeof(_aria__prettyprint_binary) {
+                                    ret += arg.prettyprint(style_str);
+                                    need_default = false;
+                                } elsif arg.prettyprint isa typeof(_aria__prettyprint_unary) {
+                                    ret += arg.prettyprint();
+                                    need_default = false;
+                                }
+                            }
+
+                            if need_default {
+                                ret += prettyprint(arg);
+                            }
+                        }
+                    }
+                } else {
+                    if has_style {
+                        ret += "{" + num_str + ":" + style_str + "}";
+                    } else {
+                        ret += "{" + num_str + "}";
+                    }
+                }
+
+                continue;
+            }
+
+            ret += c;
+            idx += 1;
+        }
+
+        return ret;
+    }
+
+    func substring(from: Int, to: Int) {
+        val ret = "";
+        while from < this.len() {
+            if from > to {
+                break;
+            }
+            ret = ret + this[from];
+            from += 1;
+        }
+
+        return ret;
+    }
+
+    func hash() {
+        val ret = 0;
+        for b in this.bytes() {
+            ret += 31 * b;
+        }
+
+        return ret;
+    }
+}

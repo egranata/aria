@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val double = |x| => x * 2;
+
+    assert double(3) == 6;
+    assert double("a") == "aa";
+}

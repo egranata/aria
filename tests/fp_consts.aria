@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    assert hasattr(Float, "inf");
+    assert hasattr(Float, "nan");
+    assert hasattr(Float, "epsilon");
+
+    assert Float.inf > 1.0f;
+    assert 1.0f > -Float.inf;
+
+    assert Float.inf > -Float.inf;
+    assert -Float.inf < Float.inf;
+    
+    assert Float.nan != Float.nan;
+}

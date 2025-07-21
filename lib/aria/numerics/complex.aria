@@ -1,0 +1,117 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Complex {
+    type func new(r,i) {
+        alloc(This) {
+            .real = r + 0.0f, # ensure floating point
+            .imag = i + 0.0f, # ensure floating point
+        };
+    }
+
+    type func zero() {
+        return This.new(0,0);
+    }
+
+    func conj() {
+        return Complex.new(this.real, -this.imag);
+    }
+
+    func reciprocal() {
+        val den = (this.real * this.real + this.imag * this.imag) + 0.0f;
+        return Complex.new(this.real/den, -this.imag/den);
+    }
+
+    func prettyprint() {
+        if this.imag == 0 {
+            return "{0}".format(this.real);
+        } elsif this.real == 0 {
+            return "{0}i".format(this.imag);
+        } elsif this.imag >= 0 {
+            return "{0}+{1}i".format(this.real, this.imag);
+        } else {
+            return "{0}{1}i".format(this.real, this.imag);
+        }
+    }
+
+    func op_radd(lhs) {
+        this.op_add(lhs);
+    }
+
+    func op_add(rhs) {
+        if (rhs isa Int) || (rhs isa Float) {
+            Complex.new(this.real + rhs, this.imag);
+        } elsif rhs isa Complex {
+            Complex.new(this.real + rhs.real, this.imag + rhs.imag);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_rmul(lhs) {
+        this.op_mul(lhs);
+    }
+
+    func op_mul(rhs) {
+        if (rhs isa Int) || (rhs isa Float) {
+            Complex.new(this.real * rhs, this.imag * rhs);
+        } elsif rhs isa Complex {
+            val real_part = this.real * rhs.real - this.imag * rhs.imag;
+            val imag_part = this.real * rhs.imag + this.imag * rhs.real;
+            return Complex.new(real_part, imag_part);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_rdiv(lhs) {
+        if (lhs isa Int) || (lhs isa Float) {
+            lhs = Complex.new(lhs,0);
+        }
+
+        if lhs isa Complex {
+            return lhs / this;
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_div(rhs) {
+        if (rhs isa Int) || (rhs isa Float) {
+            Complex.new(this.real / rhs, this.imag / rhs);
+        } elsif rhs isa Complex {
+            return this * rhs.reciprocal();
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_rsub(lhs) {
+        if (lhs isa Int) || (lhs isa Float) {
+            Complex.new(lhs - this.real, this.imag);
+        } elsif rhs isa Complex {
+            Complex.new(lhs.real - this.real, lhs.imag - this.imag);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_sub(rhs) {
+        if (rhs isa Int) || (rhs isa Float) {
+            Complex.new(this.real - rhs, this.imag);
+        } elsif rhs isa Complex {
+            Complex.new(this.real - rhs.real, this.imag - rhs.imag);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+
+    func op_equals(rhs) {
+        if rhs isa Complex {
+            return this.real == rhs.real && this.imag == rhs.imag;
+        } elsif (rhs isa Int) || (rhs isa Float) {
+            return this.real == rhs && this.imag == 0;
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+}

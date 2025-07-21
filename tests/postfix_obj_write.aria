@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func with_one_number(x) {
+        Foo.with_two_numbers(x,x);
+    }
+
+    type func with_two_numbers(x,y) {
+        return alloc(This) {
+            .x = x,
+            .y = y,
+        };
+    }
+}
+
+func main() {
+    val pair = Foo.with_two_numbers(4,5);
+    assert pair.x == 4;
+    assert pair.y == 5;
+
+    val pair = Foo.with_one_number(6);
+    assert pair.x == 6;
+    assert pair.y == 6;
+}

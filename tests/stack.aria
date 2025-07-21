@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0
+import Stack from aria.structures.stack;
+
+func main() {
+    val s = Stack.new();
+
+    assert s.len() == 0;
+    assert s.is_empty();
+
+    s.push(123);
+    s.push(false);
+    s.push("hello");
+
+    assert s.len() == 3;
+    assert !s.is_empty();
+
+    assert s.peek().unwrap_Some() == "hello";
+    assert s.len() == 3;
+    assert !s.is_empty();
+
+    assert s.peek_at(1).unwrap_Some() == false;
+    assert s.peek_at(2).unwrap_Some() == 123;
+    assert s.peek_at(3).is_None();
+
+    assert s.try_pop().unwrap_Some() == "hello";
+    assert s.len() == 2;
+    assert !s.is_empty();
+
+    assert s.peek().unwrap_Some() == false;
+    assert s.peek_at(1).unwrap_Some() == 123;
+    assert s.peek_at(2).is_None();
+
+    assert s.pop() == false;
+    assert s.len() == 1;
+    assert !s.is_empty();
+
+    s.push(4*5);
+    assert s.len() == 2;
+    assert !s.is_empty();
+
+    assert s.peek_at(1).unwrap_Some() == 123;
+    assert s.pop() == 20;
+    assert s.pop() == 123;
+    assert s.len() == 0;
+    assert s.is_empty();
+
+    s.push(45);
+    assert s.len() == 1;
+    assert !s.is_empty();
+}

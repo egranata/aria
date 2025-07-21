@@ -1,0 +1,25 @@
+{
+  "name": "aria",
+  "displayName": "Aria",
+  "description": "Aria Language Support",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "aria",
+      "aliases": ["Aria", "aria"],
+      "extensions": [".aria"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "aria",
+      "scopeName": "source.aria",
+      "path": "./syntaxes/aria.tmLanguage.json"
+    }]
+  }
+}

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+extension List {
+    func head() {
+        return this[0];
+    }
+}
+
+func main() {
+    val list = [1,2,3,4,5,6];
+    assert list.head() == 1;
+}

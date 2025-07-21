@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+func find_all_mul_matches(str) {
+    val r = Regex.new("mul\\(\\d{1,3},\\d{1,3}\\)");
+    val ret = [];
+    for m in r.matches(str) {
+        ret.append(m.value);
+    }
+    return ret;
+}
+
+func main() {
+    val input = "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
+    val multiplications = find_all_mul_matches(input);
+    val total = 0;
+    for multiplication in multiplications {
+        val operands = multiplication.replace("mul(", "").replace(")","").split(",");
+        assert operands.len() == 2;
+        val op1 = Int.parse(operands[0]).unwrap_Some();
+        val op2 = Int.parse(operands[1]).unwrap_Some();
+        total += op1 * op2;
+    }
+    println("The total value is {0}".format(total));
+}

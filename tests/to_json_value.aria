@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import aria.json.writer;
+import JsonValue from aria.json.value;
+import Map from aria.structures.map;
+
+func main() {
+    val map = Map.new();
+    map["hello"] = [1,2,3];
+    map["hi"] = false;
+    map["foo"] = 3.14f;
+
+    val json_map = JsonValue.new_from_value(map);
+
+    assert json_map isa JsonValue;
+
+    val unwrap_map = json_map.unwrap_Object();
+    assert unwrap_map isa Map;
+
+    assert unwrap_map["hello"].is_Array();
+    val array = unwrap_map["hello"].flatten();
+    assert array.len() == 3;
+    assert array[0] == 1;
+    assert array[1] == 2;
+    assert array[2] == 3;
+
+    assert unwrap_map["hi"].is_Boolean();
+    assert unwrap_map["hi"].flatten() == false;
+
+    assert unwrap_map["foo"].is_Number();
+    assert unwrap_map["foo"].flatten() == 3.14f;
+}

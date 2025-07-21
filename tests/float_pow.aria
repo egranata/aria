@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+func rough_approx_eq(x: Float, y: Float) {
+    (x-y).abs() <= 0.00001f;
+}
+
+func main() {
+    assert((-2.0f).pow(2) == 4.0f);
+    assert(3.0f.pow(2.0f) == 9.0f);
+
+    assert(rough_approx_eq(3.7f.pow(2.12f), 16.01724f));
+    assert(rough_approx_eq(1245.0f.pow(0.73f), 181.74967f));
+
+    val caught_err = false;
+    try {
+        (-1.1f).pow(3.5f);
+    } catch e {
+        caught_err =  e isa Float.DomainError;
+    }
+
+    assert caught_err;
+}

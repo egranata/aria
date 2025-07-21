@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Foo {
+    case A,
+    case B,
+}
+
+extension Foo {
+    instance func number() {
+        return 42;
+    }
+}
+
+func main() {
+    val a = Foo::A;
+    assert a.number() == 42;
+    assert Foo::B.number() == 42;
+}

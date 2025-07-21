@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(x,y) {
+    return x + y + foo.n;
+}
+
+foo.n = 123;
+
+func main() {
+    val l = |x,y| => x + y;
+    l.n = 456;
+
+    val foo_attrs = listattrs(foo);
+    assert foo_attrs.contains("n");
+    assert foo_attrs.len() >= 1;
+
+    val l_attrs = listattrs(l);
+    assert l_attrs.contains("n");
+    assert l_attrs.len() >= 1;
+}

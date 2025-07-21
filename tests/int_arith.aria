@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+func addition() {
+    assert 3 + 4 == 7;
+    assert 2 + 2 == 4;
+}
+
+func subtraction() {
+    assert 2 - 2 == 0;
+    assert 12 - 3 == 9;
+    assert 9 - 10 == -1;
+}
+
+func multiplication() {
+    assert 3 * 2 == 6;
+    assert 2 * 1 == 2;
+    assert 6 * 7 == 42;
+}
+
+func division() {
+    assert 8 / 4 == 2;
+    assert 7 / 2 == 3;
+    assert 5 / 1 == 5;
+}
+
+func remainder() {
+    assert 8 % 2 == 0;
+    assert 7 % 2 == 1;
+    assert 21 % 9 == 3;
+}
+
+func main() {
+    addition();
+    subtraction();
+    multiplication();
+    division();
+    remainder();
+}

@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val rgx = Regex.new("\d\d");
+    val matches = rgx.matches("1234567");
+    assert matches.len() == 3;
+    assert matches[0].value == "12";
+    assert matches[1].value == "34";
+    assert matches[2].value == "56";
+
+    val replaced = rgx.replace("abc12def5gh78ijk", "?");
+    assert replaced == "abc?def5gh?ijk";
+}

@@ -1,0 +1,186 @@
+# SPDX-License-Identifier: Apache-2.0
+import CompareResult, TotalOrdering from aria.ordering.compare;
+import Map from aria.structures.map;
+import Range from aria.range.range;
+
+struct MatrixIndex {
+    type func new(row: Int, col: Int) {
+        return alloc(This) {
+            .row = row,
+            .col = col,
+        };
+    }
+
+    func hash() {
+        return this.row * 31 + this.col;
+    }
+
+    func op_equals(other) {
+        return this.row == other.row && this.col == other.col;
+    }
+}
+
+struct Matrix {
+    struct DimensionMismatch {
+        type func new(msg: String) {
+            return alloc(This) {
+                .msg = msg,
+            };
+        }
+
+        func prettyprint() {
+            return "DimensionMismatch: " + this.msg;
+        }
+    }
+
+    type func new(rows: Int, cols: Int) {
+        return alloc(This) {
+            .rows = rows,
+            .cols = cols,
+            .data = Map.new(),
+        };
+    }
+
+    func get(row: Int, col: Int) {
+        if row >= this.rows || col >= this.cols {
+            throw Matrix.DimensionMismatch.new("Index out of bounds: ({0},{1})".format(row, col));
+        }
+
+        match this.data.get(MatrixIndex.new(row, col)) {
+            case Some(value) => {
+                return value;
+            }
+        } else {
+            # ideally, we would find the type of (0,0) and default to it
+            # and only return float if 0,0 is missing (or a float)
+            return 0.0f;
+        }
+    }
+
+    func set(row: Int, col: Int, value) {
+        if row >= this.rows || col >= this.cols {
+            throw Matrix.DimensionMismatch.new("Index out of bounds: ({0},{1})".format(row, col));
+        }
+
+        this.data.set(MatrixIndex.new(row, col), value);
+    }
+
+    func op_add(other: Matrix) {
+        if (this.rows != other.rows || this.cols != other.cols) {
+            throw Matrix.DimensionMismatch.new("Matrix dimensions do not match for addition");
+        }
+
+        val result = Matrix.new(this.rows, this.cols);
+        for row in Range.from(0).to(this.rows) {
+            for col in Range.from(0).to(this.cols) {
+                result.set(row, col, this.get(row, col) + other.get(row, col));
+            }
+        }
+
+        return result;
+    }
+
+    func op_equals(other: Matrix) {
+        if (this.rows != other.rows || this.cols != other.cols) {
+            return false;
+        }
+
+        for row in Range.from(0).to(this.rows) {
+            for col in Range.from(0).to(this.cols) {
+                if this.get(row, col) != other.get(row, col) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    func op_sub(other: Matrix) {
+        if (this.rows != other.rows || this.cols != other.cols) {
+            throw Matrix.DimensionMismatch.new("Matrix dimensions do not match for subtraction");
+        }
+
+        val result = Matrix.new(this.rows, this.cols);
+        for row in Range.from(0).to(this.rows) {
+            for col in Range.from(0).to(this.cols) {
+                result.set(row, col, this.get(row, col) - other.get(row, col));
+            }
+        }
+
+        return result;
+    }
+
+    func transpose() {
+        val result = Matrix.new(this.cols, this.rows);
+        for row in Range.from(0).to(this.rows) {
+            for col in Range.from(0).to(this.cols) {
+                result.set(col, row, this.get(row, col));
+            }
+        }
+        return result;
+    }
+
+    func prettyprint() {
+        val ret = [];
+        for row in Range.from(0).to(this.rows) {
+            val row_str = [];
+            for col in Range.from(0).to(this.cols) {
+                row_str.append(this.get(row, col));
+            }
+            ret.append("[" + row_str.join() + "]");
+        }
+        return "Matrix(" + ret.join() + ")";
+    }
+
+    func op_mul(other: Matrix) {
+        if (this.cols != other.rows) {
+            throw Matrix.DimensionMismatch.new("Matrix dimensions do not match for multiplication");
+        }
+
+        val result = Matrix.new(this.rows, other.cols);
+        for row in Range.from(0).to(this.rows) {
+            for col in Range.from(0).to(other.cols) {
+                val sum = alloc(typeof(this.get(0,0)));
+                for k in Range.from(0).to(this.cols) {
+                    sum += this.get(row, k) * other.get(k, col);
+                }
+                result.set(row, col, sum);
+            }
+        }
+
+        return result;
+    }
+
+    func determinant() {
+        if (this.rows != this.cols) {
+            throw Matrix.DimensionMismatch.new("Determinant can only be calculated for square matrices");
+        }
+
+        if this.rows == 1 {
+            return this.get(0, 0);
+        } elsif this.rows == 2 {
+            return this.get(0, 0) * this.get(1, 1) - this.get(0, 1) * this.get(1, 0);
+        }
+
+        val det = alloc(typeof(this.get(0,0)));
+        for col in Range.from(0).to(this.cols) {
+            val submatrix = Matrix.new(this.rows - 1, this.cols - 1);
+            for sub_row in Range.from(1).to(this.rows) {
+                for sub_col in Range.from(0).to(this.cols) {
+                    if sub_col < col {
+                        submatrix.set(sub_row - 1, sub_col, this.get(sub_row, sub_col));
+                    } elsif sub_col > col {
+                        submatrix.set(sub_row - 1, sub_col - 1, this.get(sub_row, sub_col));
+                    }
+                }
+            }
+            if col % 2 == 0 {
+                det += this.get(0, col) * submatrix.determinant();
+            } else {
+                det -= this.get(0, col) * submatrix.determinant();
+            }
+        }
+        return det;
+    }
+}

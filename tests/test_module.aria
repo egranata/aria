@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+import TestSuite,TestCase from aria.test.test;
+
+struct SamplePassingTest {
+    func test() {
+        this.assert_equal(5, 5);
+    }
+
+    func prettyprint() {
+        return "SamplePassingTest";
+    }
+
+    include TestCase
+}
+
+struct SampleFailingTest {
+    func test() {
+        this.assert_equal("hi", "hello");
+    }
+
+    func prettyprint() {
+        return "SampleFailingTest";
+    }
+
+    include TestCase
+}
+
+
+func main() {
+    val suite = TestSuite.new("Sample Test Suite");
+    assert suite.add_test(SamplePassingTest.new()).add_test(SampleFailingTest.new()).run() == 1;
+}

@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
+struct IteratorValue {
+    type func end() {
+        Box(){
+            .done = true,
+        };
+    }
+
+    type func more(v) {
+        Box() {
+            .done = false,
+            .value = v,
+        };
+    }
+}
+
+struct GenValues {
+    type func new(f,t) {
+        alloc(This){
+            .from = f,
+            .to = t,
+        };
+    }
+
+    struct GenValuesIterator {
+        type func new(gv) {
+            alloc(This) {
+                .from = gv.from,
+                .to = gv.to,
+                .current = gv.from,
+            };
+        }
+
+        func next() {
+            if this.current == this.to {
+                return IteratorValue.end();
+            } else {
+                val ret = IteratorValue.more(this.current);
+                this.current = this.current + 1;
+                return ret;
+            }
+        }
+    }
+
+    func iterator() {
+        GenValues.GenValuesIterator.new(this);
+    }
+}
+
+func main() {
+    val gv = GenValues.new(3,10);
+    val sum = 0;
+    for n in gv {
+        sum = sum + n;
+    }
+    assert sum == 42;
+}

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+import attributes.things;
+
+func main() {
+    val m_attribs = listattrs(attributes.things);
+    assert m_attribs.contains("foo");
+    assert m_attribs.contains("Bar");
+    assert m_attribs.contains("A");
+    assert m_attribs.contains("Something");
+    assert m_attribs.len() >= 4;
+}

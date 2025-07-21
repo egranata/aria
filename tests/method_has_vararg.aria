@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: Apache-2.0
+struct TakesVarArgs {
+    type func new(){
+        alloc(This){
+            .value = 0,
+        };
+    }
+
+    func add_at_least_one(n, ...) {
+        this.value += n;
+        for arg in varargs {
+            this.value += arg;
+        }
+    }
+
+    func add_any_count(...) {
+        for arg in varargs {
+            this.value += arg;
+        }
+    }
+
+    func add_at_least_two(x,y, ...) {
+        this.value += x+y;
+        for arg in varargs {
+            this.value += arg;
+        }
+    }
+}
+
+func main() {
+    val va = TakesVarArgs.new();
+
+    va.add_at_least_one(3);
+    assert va.value == 3;
+    va.add_at_least_one(3,4,5);
+    assert va.value == 15;
+    va.add_at_least_one(5,2);
+    assert va.value == 22;
+
+    va.add_any_count();
+    assert va.value == 22;
+    va.add_any_count(1);
+    assert va.value == 23;
+    va.add_any_count(3,1,1,2);
+    assert va.value == 30;
+
+    va.add_at_least_two(3,4);
+    assert va.value == 37;
+    va.add_at_least_two(3,5,4);
+    assert va.value == 49;
+    va.add_at_least_two(1,5,4,1,9,1);
+    assert va.value == 70;
+}

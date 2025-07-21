@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func answer() {
+        return 42;
+    }
+}

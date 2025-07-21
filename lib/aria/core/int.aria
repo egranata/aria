@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+func char_to_int(c: String) {
+    match c {
+        == "0" => { return 0; },
+        == "1" => { return 1; },
+        == "2" => { return 2; },
+        == "3" => { return 3; },
+        == "4" => { return 4; },
+        == "5" => { return 5; },
+        == "6" => { return 6; },
+        == "7" => { return 7; },
+        == "8" => { return 8; },
+        == "9" => { return 9; },
+    } else {
+        return Maybe::None;
+    }
+}
+
+extension Int {
+    func hash() {
+        return this;
+    }
+
+    func abs() {
+        if this < 0 {
+            -this;
+        } else {
+            this;
+        }
+    }
+
+    func float() {
+        this + 0.0f;
+    }
+
+    type func parse(s: String) {
+        if s.len() == 0 {
+            return Maybe::None;
+        }
+
+        if s == "-" {
+            return Maybe::None;
+        }
+
+        val s: List = s.chars();
+
+        val ret = 0;
+        val i = 0;
+        val sign = 1;
+
+        if s[0] == "-" {
+            i = 1;
+            sign = -1;
+        }
+
+        while i < s.len() {
+            val chr = s[i];
+            val digit = char_to_int(chr);
+            if digit == Maybe::None {
+                return Maybe::None;
+            } else {
+                ret = ret * 10 + digit;
+            }
+            i += 1;
+        }
+
+        return Maybe::Some(sign*ret);
+    }
+}

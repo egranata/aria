@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+val foo = 123;
+
+func change_foo(x) {
+    foo = x;
+}
+
+func fetch_foo() {
+    return foo;
+}

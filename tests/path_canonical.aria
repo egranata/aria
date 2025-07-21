@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val p = Path.new("/usr/bin/../bin/../lib/../../usr/bin/ls");
+    val q = p.new_canonical();
+
+    assert q.prettyprint() == "/usr/bin/ls";
+}

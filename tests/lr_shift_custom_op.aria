@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Shifter {
+    type func new() {
+        alloc(This){
+            .offset = 0,
+        };
+    }
+
+    # left shift is < 0, right shift is > 0
+    func op_lshift(n) {
+        this.offset -= n;
+        return this;
+    }
+
+    func op_rshift(n) {
+        this.offset += n;
+        return this;
+    }
+}
+
+func main() {
+    val s = Shifter.new();
+
+    s << 1;
+    assert s.offset == -1;
+
+    s >> 6;
+    assert s.offset == 5;
+
+    s << 3;
+    assert s.offset == 2;
+
+    (s << 3) >> 4;
+    assert s.offset == 3;
+
+    s << 10;
+    assert s.offset == -7;
+}

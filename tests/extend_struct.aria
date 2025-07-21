@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func increment(x) {
+        return x + 1;
+    }
+}
+
+extension Foo {
+    func double(x) {
+        return x + x;
+    }
+}
+
+extension Foo {
+    func zero() {
+        return 0;
+    }
+
+    func one() {
+        return 1;
+    }
+
+    func two() {
+        return 2;
+    }
+}
+
+func main() {
+    val foo = alloc(Foo);
+    assert foo.increment(5) == 6;
+    assert foo.double(12) == 24;
+    assert foo.zero() == 0;
+    assert foo.one() == 1;
+    assert foo.two() == 2;
+}

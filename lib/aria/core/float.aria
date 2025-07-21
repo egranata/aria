@@ -1,0 +1,204 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+func char_to_int(c: String) {
+    match c {
+        == "0" => { return 0; },
+        == "1" => { return 1; },
+        == "2" => { return 2; },
+        == "3" => { return 3; },
+        == "4" => { return 4; },
+        == "5" => { return 5; },
+        == "6" => { return 6; },
+        == "7" => { return 7; },
+        == "8" => { return 8; },
+        == "9" => { return 9; },
+    } else {
+        return Maybe::None;
+    }
+}
+
+extension Float {
+    type val pi = 3.14159265358979323846f;
+    type val e =  2.71828182845904523536f;
+    type val π = Float.pi;
+
+    func abs() {
+        if this < 0 {
+            -this;
+        } else {
+            this;
+        }
+    }
+
+    func sqrt() {
+        val ε = 0.000000000001f;
+        if this == 0 {
+            return 0;
+        }
+
+        val guess = this / 2;
+
+        val i = 0;
+        val n = 1000;
+        while i < n {
+            i = i + 1;
+            val next_guess = (guess + this / guess) / 2;
+            if (next_guess - guess).abs() < ε {
+                return next_guess;
+            } else {
+                guess = next_guess;
+            }
+        }
+
+        return guess;
+    }
+
+    struct DomainError {
+        type func new(msg: String) {
+            alloc(This) {
+                .msg = msg
+            };
+        }
+
+        instance func prettyprint() {
+            return "floating-point domain error: {0}".format(this.msg);
+        }
+    }
+
+    func ln() {
+        if this <= 0 {
+            throw Float.DomainError.new("logarithm undefined for non-positive values");
+        }
+
+        val ε = 0.000000000001f;
+
+        val guess = this / 2.0f;
+        val current_guess = guess;
+
+        val max_iterations = 1000;
+        val iterations = 0;
+
+        while iterations < max_iterations {
+            iterations = iterations + 1;
+
+            val f = current_guess.exp() - this;
+            val f_prime = current_guess.exp();
+
+            val next_guess = current_guess - f / f_prime;
+
+            if (next_guess - current_guess).abs() < ε {
+                return next_guess;
+            }
+
+            current_guess = next_guess;
+        }
+        
+        return next_guess;
+    }
+
+    func exp() {
+        val ε = 0.000000000001f;
+
+        val result = 1.0f;
+        val term = 1.0f;
+
+        val max_iterations = 1000;
+        val iterations = 0;
+
+        while iterations < max_iterations {
+            iterations = iterations + 1;
+
+            term = term * this / iterations;
+            if term.abs() < ε {
+                break;
+            }
+
+            result = result + term;
+        }
+
+        return result;
+    }
+
+    func pow(exponent: Int|Float) {
+        if exponent == 0 {
+            return 1.0f;
+        } elsif exponent == 1 {
+            return this;
+        } elsif exponent isa Int {
+            exponent = exponent + 0.0f;
+        }
+
+        if this < 0 && exponent % 1 != 0 {
+            throw Float.DomainError.new("cannot calculate fractional power of negative integer");
+        }
+
+        val is_exponent_negative = exponent < 0;
+        val abs_exponent = exponent.abs();
+
+        val integer_part = abs_exponent.floor();
+        val fractional_part = abs_exponent - integer_part;
+
+        val result = 1.0f;
+        val temp = this;
+
+        val i = 0;
+        while i < integer_part {
+            result = result * temp;
+            i = i + 1;
+        }
+
+        if fractional_part > 0 {
+            result = result * this.sqrt().pow(fractional_part * 2);
+        }
+
+        if is_exponent_negative {
+            result = 1.0f / result;
+        }
+
+        return result;
+    }
+
+    type func parse(s: String) {
+        if s.len() == 0 || s == "-" || s == "." {
+            return Maybe::None;
+        }
+        
+        val ret = 0.0f;
+        val i = 0;
+        val sign = 1;
+        val decimal_found = false;
+        val decimal_factor = 0.1f;
+
+        val s: List = s.chars();
+
+        if s[0] == "-" {
+            i = 1;
+            sign = -1;
+        }
+
+        while i < s.len() {
+            val chr = s[i];
+            if chr == "." {
+                if decimal_found {
+                    return Maybe::None;
+                }
+                decimal_found = true;
+            } else {
+                val digit = char_to_int(chr);
+                if digit == Maybe::None {
+                    return Maybe::None;
+                }
+                if decimal_found {
+                    ret = ret + digit * decimal_factor;
+                    decimal_factor = decimal_factor / 10;
+                } else {
+                    ret = ret * 10 + digit;
+                }
+            }
+            i += 1;
+        }
+        
+        return Maybe::Some(sign * ret);
+    }
+}

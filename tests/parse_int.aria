@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    assert(12345 == Int.parse("12345").unwrap_Some());
+    assert(67890 == Int.parse("67890").unwrap_Some());
+    assert(-12 == Int.parse("-12").unwrap_Some());
+    assert Int.parse("").is_None();
+    assert Int.parse("-abcdef").is_None();
+    assert Int.parse("15a46").is_None();
+}

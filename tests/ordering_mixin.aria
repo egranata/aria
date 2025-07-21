@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: Apache-2.0
+import CompareResult, TotalOrdering from aria.ordering.compare;
+
+struct Ordered {
+    type func new(x: Int) {
+        alloc(This){
+            .x = x,
+        };
+    }
+
+    type func int_int_compare(lhs: Int, rhs: Int) {
+        if lhs == rhs {
+            return CompareResult::eq;
+        } elsif lhs > rhs {
+            return CompareResult::gt;
+        } else {
+            return CompareResult::lt;
+        }
+    }
+
+    func comp(rhs) {
+        if rhs isa Ordered {
+            return Ordered.int_int_compare(this.x, rhs.x);
+        } elsif rhs isa Int {
+            return Ordered.int_int_compare(this.x, rhs);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    include TotalOrdering
+}
+
+func main() {
+    val o3 = Ordered.new(3);
+    val o4 = Ordered.new(4);
+
+    assert (o3 == o3);
+    assert (o3 != o4);
+    assert (o4 == 4);
+    assert (o4 != 5);
+
+    assert (o3 < o4);
+    assert (o4 > o3);
+    assert (o3 < 5);
+    assert (o4 > 2);
+
+    assert (o3 <= 5);
+    assert (o4 <= 4);
+    assert (o3 <= o4);
+    assert (o4 <= o4);
+
+    assert (o3 >= 1);
+    assert (o4 >= o3);
+}

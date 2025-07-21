@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.iterator.mixin;
+
+func iter_or_self(i) {
+    if hasattr(i, "iterator") {
+        return i.iterator();
+    } else {
+        return i;
+    }
+}
+
+func get_next(i) {
+    return i.next();
+}
+
+struct Zip {
+    type func new(...) {
+        val iterators = varargs.iterator().map(iter_or_self).to_list();
+        alloc(This){
+            .iterators = iterators,
+        };
+    }
+
+    func iterator() {
+        return this;
+    }
+
+    func next() {
+        val next_values = [];
+        for iter in this.iterators {
+            val next_entry = iter.next();
+            if next_entry.done {
+                return Box(){
+                    .done = true
+                };
+            }
+            next_values.append(next_entry.value);
+        }
+        return Box(){
+            .done = next_values.len() == 0,
+            .value = next_values,
+        };
+    }
+}

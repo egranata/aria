@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Something {
+    func answer() {
+        return 42 + this.value;
+    }
+}

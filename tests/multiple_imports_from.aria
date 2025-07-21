@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+import one, two from multiple.module;
+
+func main() {
+    assert one(3,4) == 7;
+    assert two(3,4) == 12;
+}

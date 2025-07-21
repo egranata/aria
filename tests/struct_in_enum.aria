@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Void {}
+
+extension Void {
+    struct Pair {
+        type func new(x,y) {
+            alloc(This) {
+                .x=x,
+                .y=y,
+            };
+        }
+    }
+}
+
+extension Void.Pair {
+    instance func swap() {
+        Void.Pair.new(this.y,this.x);
+    }
+}
+
+val Pair = Void.Pair;
+
+func main() {
+    val p = Pair.new(3,4);
+    val q = p.swap();
+    
+    assert q.x == 4;
+    assert q.y == 3;
+}

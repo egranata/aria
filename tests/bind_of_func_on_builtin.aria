@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: Apache-2.0
+func x_and_then_some(this,x) {
+    this + x;
+}
+
+func for_int() {
+    Int.bar = x_and_then_some;
+    val n = 3;
+    n.foo = x_and_then_some;
+
+    assert n.foo(n,4) == 7;
+    assert n.bar(4) == 7;
+}
+
+func for_float() {
+    Float.bar = x_and_then_some;
+    val n = 3.0f;
+    n.foo = x_and_then_some;
+
+    assert n.foo(n,4) == 7.0f;
+    assert n.bar(4) == 7.0f;
+}
+
+func for_string() {
+    String.bar = x_and_then_some;
+    val n = "hello ";
+    n.foo = x_and_then_some;
+
+    assert n.foo(n,"world") == "hello world";
+    assert n.bar("world") == "hello world";
+}
+
+func negate_and(this,x) {
+    !this && x;
+}
+
+func for_bool() {
+    Bool.bar = negate_and;
+    val n = false;
+    n.foo = negate_and;
+
+    assert n.foo(n, true) == true;
+    assert n.bar(true) == true;
+}
+
+func main() {
+    for_int();
+    for_float();
+    for_string();
+    for_bool();
+}
+

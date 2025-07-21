@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func add_one(x) {
+        return x + 1;
+    }
+    func add_two(x) {
+        return this.add_one(this.add_one(x));
+    }
+}
+
+extension Foo {
+    func add_three(x) {
+        return this.add_two(this.add_one(x));
+    }
+}
+
+func main() {
+    val foo = alloc(Foo);
+    assert foo.add_one(3) == 4;
+    assert foo.add_two(4) == 6;
+    assert foo.add_three(6) == 9;
+}

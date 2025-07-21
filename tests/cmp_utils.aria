@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+import min,max,min_max from aria.ordering.utils;
+import min_with_comparator,max_with_comparator,min_max_with_comparator from aria.ordering.utils;
+import CompareResult from aria.ordering.compare;
+
+func main() {
+    val list = [1,2,3,4,5,6,7,8,9,10];
+
+    assert min(list) == 1;
+    assert max(list) == 10;
+    val mM = min_max(list);
+    assert mM.min == 1;
+    assert mM.max == 10;
+
+    list = ["a", "abc", "hello world", "this is a very long string"];
+    val cmp = |x,y| => {
+        if x.len() == y.len() {
+            return CompareResult::eq;
+        } elsif x.len() < y.len() {
+            return CompareResult::lt;
+        } else {
+            return CompareResult::gt;
+        }
+    };
+
+    assert min_with_comparator(list, cmp) == "a";
+    assert max_with_comparator(list, cmp) == "this is a very long string";
+    mM = min_max_with_comparator(list, cmp);
+    assert mM.min == "a";
+    assert mM.max == "this is a very long string";
+}

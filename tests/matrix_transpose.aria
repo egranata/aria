@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+import Matrix from aria.numerics.matrix;
+
+func main() {
+    val m = Matrix.new(3,3);
+
+    m.set(0, 0, 1.0f);
+    m.set(1, 0, 2.0f);
+    m.set(1, 1, 3.0f);
+    m.set(1, 2, 6.0f);
+    m.set(2, 2, 4.0f);
+    m.set(0, 1, 5.0f);
+    m.set(2, 0, 7.0f);
+    m.set(0, 2, 8.0f);
+    m.set(2, 1, 9.0f);
+
+    val mt = m.transpose();
+    assert mt.get(0, 0) == m.get(0, 0);
+    assert mt.get(0, 1) == m.get(1, 0);
+    assert mt.get(0, 2) == m.get(2, 0);
+    assert mt.get(1, 0) == m.get(0, 1);
+    assert mt.get(1, 1) == m.get(1, 1);
+    assert mt.get(1, 2) == m.get(2, 1);
+    assert mt.get(2, 0) == m.get(0, 2);
+    assert mt.get(2, 1) == m.get(1, 2);
+    assert mt.get(2, 2) == m.get(2, 2);
+}

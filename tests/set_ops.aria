@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+import Set from aria.structures.set;
+
+func main() {
+    val s1 = Set.new_from_items(1,2,3,4,5);
+    val s2 = Set.new_from_items(2,4,6,8,10);
+
+    val s3 = s1.union(s2);
+    assert s3.len() == 8;
+    assert s3.contains(1);
+    assert s3.contains(2);
+    assert s3.contains(3);
+    assert s3.contains(4);
+    assert s3.contains(5);
+    assert s3.contains(6);
+    assert s3.contains(8);
+    assert s3.contains(10);
+
+    val s4 = s1.intersection(s2);
+    assert s4.len() == 2;
+    assert s4.contains(2);
+    assert s4.contains(4);
+
+    val s5 = s1.difference(s2);
+    assert s5.len() == 3;
+    assert s5.contains(1);
+    assert s5.contains(3);
+    assert s5.contains(5);
+}

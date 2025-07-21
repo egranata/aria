@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Options {
+    struct LotsOfThem {
+        type func new(opt1, opt2, opt3) {
+            return alloc(This) {
+                .opt1 = opt1,
+                .opt2 = opt2,
+                .opt3 = opt3,
+            };
+        }
+    }
+
+    struct FewerOfThem {
+        type func new(opt1) {
+            return alloc(This) {
+                .opt1 = opt1,
+            };
+        }
+    }
+
+    case Lots(Options.LotsOfThem)
+    case Fewer(Options.FewerOfThem)
+
+    func option1() {
+        match this {
+            case Lots(x) => { return x.opt1; },
+            case Fewer(x) => { return x.opt1; },
+        }
+    }
+
+    func option2() {
+        match this {
+            case Lots(x) => { return x.opt2; },
+            case Fewer => { return 42; },
+        }
+    }
+
+    func option3() {
+        match this {
+            case Lots(x) => { return x.opt3; },
+            case Fewer => { return 24; },
+        }
+    }
+}
+
+func main() {
+    val ol = Options::Lots(Options.LotsOfThem.new(1,2,3));
+    val of = Options::Fewer(Options.FewerOfThem.new(4));
+
+    assert ol.option1() == 1;
+    assert ol.option2() == 2;
+    assert ol.option3() == 3;
+
+    assert of.option1() == 4;
+    assert of.option2() == 42;
+    assert of.option3() == 24;
+}

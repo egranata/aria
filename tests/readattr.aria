@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func new(x,y) {
+        return alloc(This) {
+            .x = x,
+            .y = y,
+            .z = x + y,
+        };
+    }
+}
+
+func main() {
+    val f = Foo.new(3,4);
+
+    assert readattr(f, "x") == 3;
+    assert readattr(f, "y") == 4;
+    assert readattr(f, "z") == 7;
+}

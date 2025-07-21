@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+import XorshiftRng from aria.rng.xorshift;
+import MiddleSquareRng from aria.rng.msws;
+import Range from aria.range.range;
+
+func test_rng(rng) {
+    val items = ["pick", "one", "word"];
+
+    val have_pick = false;
+    val have_one = false;
+    val have_word = false;
+
+    for _ in Range.from(0).to(100) {
+        val item = rng.one_of(items);
+        assert items.contains(item);
+        if item == "pick" {
+            have_pick = true;
+        } elsif item == "one" {
+            have_one = true;
+        } else {
+            have_word = true;
+        }
+    }
+
+    # This could theoretically fail, but hopefully with 100 values being
+    # generated this possibility remains very very theoretical...
+    assert have_pick && have_one && have_word;
+}
+
+func main() {
+    test_rng(MiddleSquareRng.new());
+    test_rng(XorshiftRng.new());
+}

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import JsonValue from aria.json.value;
+import aria.json.parser;
+
+func main() {
+    val json_string = '{ "key1": [1,2,3], "key2": {"a":1, "b":false, "c": "hello world"} }';
+
+    val json_object = JsonValue.parse(json_string);
+    val json_flat = json_object.flatten();
+
+    assert json_flat["key1"][0] == 1;
+    assert json_flat["key1"][1] == 2;
+    assert json_flat["key1"][2] == 3;
+    assert json_flat["key1"].len() == 3;
+
+    assert json_flat["key2"]["a"] == 1;
+    assert json_flat["key2"]["b"] == false;
+    assert json_flat["key2"]["c"] == "hello world";
+    assert json_flat["key2"].len() == 3;
+
+    assert json_flat.len() == 2;
+}

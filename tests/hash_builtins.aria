@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+func string() {
+    val s1 = "hello";
+    assert s1.hash() != 0;
+    val s2 = "world";
+    assert s2.hash() != s1.hash();
+}
+
+func int() {
+    assert 123.hash() == 123;
+    assert 5555.hash() == 5555;
+}
+
+func bool() {
+    assert true.hash() != false.hash();
+}
+
+func float() {
+    val f1 = 3.14f;
+    val f2 = 1.112f;
+
+    assert f1.hash() != 0;
+    assert f2.hash() != f1.hash();
+    assert f2.hash() != 0;
+}
+
+func main() {
+    string();
+    int();
+    float();
+    bool();
+}
+

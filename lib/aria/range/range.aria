@@ -1,0 +1,152 @@
+# SPDX-License-Identifier: Apache-2.0
+import Iterator,Iterable from aria.iterator.mixin;
+
+struct InvalidRangeError {
+    type func new(msg: String){
+        return alloc(This) {
+            .msg = msg,
+        };
+    }
+
+    func prettyprint() {
+        return "range error: {0}".format(this.msg);
+    }
+}
+
+struct RangeIterator {
+    type func new(from, to, step) {
+        if step == 0 {
+            throw InvalidRangeError.new("iteration step cannot be zero");
+        }
+
+        val cur = from;
+        val lim = to;
+
+        if step < 0 {
+            cur = to - 1;
+            lim = from - 1;
+        }
+
+        return alloc(This) {
+            .current = cur,
+            .limit = lim,
+            .step = step,
+        };
+    }
+
+    func next() {
+        if this.step > 0 {
+            if this.current >= this.limit {
+                return Box() { .done = true };
+            }
+        } else {
+            if this.current <= this.limit {
+                return Box() { .done = true };
+            }
+        }
+
+        val result = this.current;
+        this.current += this.step;
+        return Box() {
+            .done = false,
+            .value = result,
+        };
+    }
+
+    include Iterator
+}
+
+struct RangeImpl {
+    type func new(from, to) {
+        return alloc(This) {
+            .from = from,
+            .to = to,
+        };
+    }
+
+    func step(n) {
+        return RangeIterator.new(this.from, this.to, n);
+    }
+
+    func iterator() {
+        return this.step(1);
+    }
+
+    func descending() {
+        return this.step(-1);
+    }
+
+    func contains(x) {
+        return x >= this.from && x < this.to;
+    }
+
+    func length() {
+        return this.to - this.from;
+    }
+
+    func union(other) {
+        val lo = this.from;
+        if other.from < lo {
+            lo = other.from;
+        }
+
+        val hi = this.to;
+        if other.to > hi {
+            hi = other.to;
+        }
+
+        return RangeImpl.new(lo, hi);
+    }
+
+    func intersection(other) {
+        val lo = this.from;
+        if other.from > lo {
+            lo = other.from;
+        }
+
+        val hi = this.to;
+        if other.to < hi {
+            hi = other.to;
+        }
+
+        if lo >= hi {
+            return RangeImpl.new(0, 0);  # empty range
+        }
+
+        return RangeImpl.new(lo, hi);
+    }
+
+    include Iterable
+
+    func prettyprint() {
+        return "Range from={0} to={1}".format(this.from, this.to);
+    }
+}
+
+struct RangeFrom {
+    type func new(n) {
+        return alloc(This) {
+            .from = n,
+        };
+    }
+
+    func to(n) {
+        if this.from > n {
+            throw InvalidRangeError.new("lower bound {0} is greater than upper bound {1}".format(this.from, n));
+        }
+        return RangeImpl.new(this.from, n);
+    }
+
+    func through(n) {
+        if this.from > n {
+            throw InvalidRangeError.new("lower bound {0} is greater than upper bound {1}".format(this.from, n));
+        }
+        return RangeImpl.new(this.from, n+1); # inclusive range - end at n + 1
+    }
+}
+
+struct Range {
+    type func from(n) {
+        return RangeFrom.new(n);
+    }
+}

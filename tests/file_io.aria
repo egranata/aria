@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val path = getenv("ARIA_TEST_DIR").unwrap_Some();
+    path = path + "/file_io.txt";
+
+    val msg = "First line of text.\nSecond line of text.\nThird line of text.";
+
+    guard file = File.open(path, File.OpenMode.new().write().truncate()) {
+        file.write(msg);
+    }
+
+    guard file = File.open(path, File.OpenMode.new().read()) {
+        assert file.get_position() == 0;
+        val l1 = file.readln();
+        assert file.get_position() == 20;
+        assert l1 == "First line of text.";
+        val s = file.read_all();
+        assert s == "Second line of text.\nThird line of text.";
+
+        file.set_position(1);
+        s = file.read(2);
+        assert file.get_position() == 3;
+        assert s == "ir";
+        s = file.readln();
+        assert file.get_position() == 20;
+        s == "st line of text.";
+
+        file.seek(File.SeekMode::Start(1));
+        s = file.read(2);
+        assert file.get_position() == 3;
+        assert s == "ir";
+
+        file.seek(File.SeekMode::Current(2));
+        s = file.read(2);
+        assert file.get_position() == 7;
+        assert s == " l";
+
+        file.seek(File.SeekMode::Current(-3));
+        s = file.read(3);
+        assert file.get_position() == 7;
+        assert s == "t l";
+
+        file.seek(File.SeekMode::End(-4));
+        s = file.read(4);
+        assert s == "ext.";
+    }
+}

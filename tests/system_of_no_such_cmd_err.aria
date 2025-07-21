@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val caught = false;
+
+    try {
+        val ok = system("this_command_does_not_exist.no-such-file");
+        caught = ok != 0;
+    } catch e {
+        match e {
+            isa RuntimeError and case OperationFailed => {
+                caught = true;
+            }
+        }
+    }
+
+    assert caught;
+}

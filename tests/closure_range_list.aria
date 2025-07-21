@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.iterator.mixin;
+import Range from aria.range.range;
+
+func main() {
+    val closures = [];
+    val how_many = Range.from(0).through(100);
+    
+    for i in how_many {
+        closures.append(|x| => x + i);
+    }
+
+    val x = 0;
+    for closure in closures {
+        assert closure(3) == 3 + x;
+        x += 1;
+    }
+}

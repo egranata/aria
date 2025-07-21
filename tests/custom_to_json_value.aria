@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import aria.json.writer;
+import JsonValue from aria.json.value;
+import Map from aria.structures.map;
+
+struct CustomJson {
+    type func new(x,y) {
+        return alloc(This) {
+            .x = x,
+            .y = y,
+        };
+    }
+
+    func to_json_value() {
+        return JsonValue::Object(Map.new() {
+            ["x"] = JsonValue.new_from_value(this.x),
+            ["y"] = JsonValue.new_from_value(this.y),
+        });
+    }
+}
+
+func main() {
+    val map = Map.new();
+    map["hello"] = CustomJson.new(3,4);
+    map["hi"] = false;
+
+    val json_map = JsonValue.new_from_value(map);
+
+    assert json_map isa JsonValue;
+
+    val unwrap_map = json_map.unwrap_Object();
+    assert unwrap_map isa Map;
+
+    assert unwrap_map["hello"].is_Object();
+    val custom_object = unwrap_map["hello"].flatten();
+    assert custom_object isa Map;
+    assert custom_object["x"] == 3.0f;
+    assert custom_object["y"] == 4.0f;
+
+    assert unwrap_map["hi"].is_Boolean();
+    assert unwrap_map["hi"].flatten() == false;
+}

@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+extension Path {
+    type func new_with_current_directory() {
+        return This._cwd();
+    }
+
+    type func new_with_environment_variable(var) {
+        return getenv(var).apply(|p| => {
+            return This.new(p);
+        });
+    }
+
+    type func new(s: String) {
+        return This._new(s);
+    }
+
+    func append(rhs: String|Path) {
+        if rhs isa String {
+            this._append(rhs);
+        } elsif rhs isa Path {
+            this._append(rhs.prettyprint());
+        }
+
+        return this;
+    }
+
+    func op_div(rhs: String|Path) {
+        return Path.new(this.prettyprint()).append(rhs);
+    }
+
+    func parent() {
+        return Path.new(this.prettyprint()).pop();
+    }
+
+    func read() {
+        guard file = File.open(this.prettyprint(), File.OpenMode.new().read()) {
+            return file.read_all();
+        }
+    }
+
+    func write(text) {
+        guard file = File.open(this.prettyprint(), File.OpenMode.new().write().truncate()) {
+            file.write(text);
+        }
+    }
+
+    func creation_ms_since_epoch() {
+        return this._when_created();
+    }
+
+    func modification_ms_since_epoch() {
+        return this._when_accessed();
+    }
+
+    # we could use the builtin _copy, except for type validation
+    func copy_to(other: Path) {
+        this._copy(other);
+    }
+}

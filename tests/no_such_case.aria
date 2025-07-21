@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+enum E {
+    case A, case B,
+}
+
+func main() {
+    val caught = false;
+
+    try {
+        val foo = E::X;
+    } catch e {
+        match e {
+            isa RuntimeError and case NoSuchCase(n) => {
+                caught = n == "X";
+            }
+        }
+    }
+
+    assert caught;
+}

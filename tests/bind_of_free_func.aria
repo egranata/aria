@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+func x_and_then_some(this,x) {
+    this.x + x;
+}
+
+struct Foo {
+    type func new(x) {
+        alloc(This){
+            .x = x,
+        };
+    }
+}
+
+func main() {
+    val f = Foo.new(3);
+
+    # on the instance, do not bind to this
+    f.add = x_and_then_some;
+    assert f.add(f, 4) == 7;
+
+    # on the type, bind to this
+    Foo.and_add = x_and_then_some;
+    assert f.and_add(4) == 7;
+}
+

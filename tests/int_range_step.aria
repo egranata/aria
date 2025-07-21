@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+func main() {
+    val range = Range.from(3).through(20);
+
+    val sum = 0;
+    for item in range.step(5) {
+        sum = sum + item;
+    }
+    assert sum == 42;
+}

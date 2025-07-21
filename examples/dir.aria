@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: Apache-2.0
+import Instant from aria.date.instant;
+
+func pad(n) {
+    if n < 10 {
+        return "0{0}".format(n);
+    } else {
+        return "{0}".format(n);
+    }
+}
+
+func run_over_dir(path: Path) {
+    val files_count = 0;
+    val dirs_count = 0;
+    val total_size = 0;
+
+    for entry in path.entries() {
+        val mod_time = entry.creation_ms_since_epoch();
+        match mod_time {
+            isa Maybe and case None => {
+                mod_time = 0;
+            }
+        }
+        val mod_time = Instant.from_unix_timestamp(mod_time);
+
+        val month = pad(mod_time.month);
+        val month = pad(mod_time.month);
+        val day = pad(mod_time.day);
+        val year = mod_time.year;
+        
+        val hour = mod_time.hour;
+        val minute = pad(mod_time.minute);
+        val am_pm = "AM";
+        if hour >= 12 {
+            am_pm = "PM";
+            if hour > 12 {
+                hour = hour - 12;
+            }
+        }
+        if hour == 0 {
+            hour = 12;
+        }
+
+        val date_str = "{0}/{1}/{2}".format(month, day, year);
+        val time_str = "{0}:{1} {2}".format(pad(hour), minute, am_pm);
+
+        if entry.is_directory() {
+            dirs_count += 1;
+
+            println("{0}  {1}       <DIR>          {2}".format(
+                    date_str,
+                    time_str,
+                    entry.get_filename()
+            ));
+        } else {
+            val size = entry.size();
+            match size {
+                isa Maybe and case None => {
+                    size = 0;
+                }
+            }
+            total_size += size;
+            files_count += 1;
+
+            val size_str = "{0}".format(size);
+            val padding = " " * (14 - size_str.len());
+
+            println("{0}  {1} {2}{3} {4}".format(
+                date_str,
+                time_str,
+                padding,
+                size_str,
+                entry.get_filename()
+            ));
+        }
+    }
+
+   println("");
+   println("              {0} File(s)    {1} bytes".format(files_count, total_size));
+   println("              {0} Dir(s)".format(dirs_count));
+}
+
+func main() {
+    val args = cmdline_arguments();
+    for arg in args {
+        val arg_path = Path.new(arg);
+        if !arg_path.exists() || !arg_path.is_directory() {
+            println("{0} is not a valid directory; ignoring".format(arg));
+            continue;
+        }
+
+        run_over_dir(arg_path);
+    }
+}

@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+# this is not *exactly* right - ideally it would be
+# x: Int|String, y: typeof(x) - but we can't express that
+func foo(x: Int|String, y:Int|String) {
+    assert typeof(x) == typeof(y); # this is the next best thing
+    return x + y;
+}
+
+func main() {
+    assert foo(4,5) == 9;
+    assert foo("hello", "world") == "helloworld";
+}

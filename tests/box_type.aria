@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val b = Box();
+    b.x = 1;
+    b.y = 2;
+    assert b.y == 2;
+    assert b.x == 1;
+}

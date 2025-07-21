@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+func add(x: Int, y: Int) {
+    x + y;
+}
+
+func len_plus_one(x: List) {
+    add(x.len(), 1);
+}
+
+func main() {
+    assert len_plus_one([]) == 1;
+}

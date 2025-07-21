@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+import same_root.part1.file2;
+
+struct MeFirst {
+    include same_root.part1.file2.Something
+
+    type func new() {
+        alloc(This) {
+            .value = 321,
+        };
+    }
+}

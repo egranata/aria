@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+import Base from extensible.ext;
+import Base from extensible.base;
+
+func main() {
+    val b = Base.new(2,3);
+    b.one_right();
+    assert b.x == 2;
+    assert b.y == 4;
+}

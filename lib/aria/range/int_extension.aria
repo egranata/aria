@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+extension Int {
+    func to(n: Int) {
+        return Range.from(this).to(n);
+    }
+    
+    func through(n: Int) {
+        return Range.from(this).through(n);
+    }
+}

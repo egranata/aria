@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+
+struct Set {
+    type func new() {
+        return alloc(This) {
+            .impl = Map.new(),
+        };
+    }
+
+    type func new_from_items(...) {
+        val ret = Set.new();
+        for item in varargs {
+            ret.set(item);
+        }
+        return ret;
+    }
+
+    func set(x) {
+        this.impl.set(x, true);
+    }
+
+    func contains(x) {
+        this.impl.contains(x);
+    }
+
+    func remove(x) {
+        this.impl.remove(x);
+    }
+
+    func len() {
+        this.impl.len();
+    }
+
+    func union(other) {
+        val ret = Set.new();
+        for x in this {
+            ret.set(x);
+        }
+        for x in other {
+            ret.set(x);
+        }
+        return ret;
+    }
+
+    func intersection(other) {
+        val ret = Set.new();
+        for x in this {
+            if other.contains(x) {
+                ret.set(x);
+            }
+        }
+        return ret;
+    }
+
+    func difference(other) {
+        val ret = Set.new();
+        for x in this {
+            if !other.contains(x) {
+                ret.set(x);
+            }
+        }
+        return ret;
+    }
+
+    struct SetIterator {
+        type func new(set) {
+            alloc(This) {
+                .impl = set.impl.iterator(),
+            };
+        }
+
+        func next() {
+            val nv = this.impl.next();
+            if nv.done {
+                return nv;
+            } else {
+                return Box(){
+                    .done = false,
+                    .value = nv.value.key,
+                };
+            }
+        }
+    }
+
+    func iterator() {
+        return Set.SetIterator.new(this);
+    }
+}

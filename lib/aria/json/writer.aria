@@ -1,0 +1,131 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import Map from aria.structures.map;
+import JsonValue from aria.json.value;
+import JsonNull from aria.json.value;
+
+# this is a type-check only prototype
+func _to_json_thing(this) {}
+
+struct JsonConvertError {
+    type func new(why: String) {
+        alloc(This) {
+            .message = why,
+        };
+    }
+
+    func prettyprint() {
+        return "JsonConvertError: " + this.message;
+    }
+}
+
+extension JsonValue {
+    type func new_from_value(x) {
+        match x {
+            isa String => {
+                return JsonValue::String(x);
+            },
+            isa Int => {
+                return JsonValue::Number(x + 0.0f);
+            },
+            isa Float => {
+                return JsonValue::Number(x);
+            },
+            isa Bool => {
+                return JsonValue::Boolean(x);
+            },
+            isa List => {
+                val ret = [];
+                for item in x {
+                    ret.append(JsonValue.new_from_value(item));
+                }
+                return JsonValue::Array(ret);
+            }
+            isa Map => {
+                val ret = Map.new();
+                for item in x {
+                    val key = item.key;
+                    if !(key isa String) {
+                        key = format("{0}", key);
+                    }
+                    val value = JsonValue.new_from_value(item.value);
+                    ret.set(key, value);
+                }
+                return JsonValue::Object(ret);
+            }
+            isa JsonNull => {
+                return JsonValue::Null(alloc(JsonNull));
+            }
+        } else {
+            if hasattr(x, "to_json_value") && x.to_json_value isa typeof(_to_json_thing) {
+                return x.to_json_value();
+            } else {
+                throw JsonConvertError.new("type of value {0} cannot be converted as JSON".format(x));
+            }
+        }
+    }
+}
+
+func escape_json_string(s: String) {
+    val result = "";
+    for c in s.chars() {
+        if c == '"' {
+            result += '\\"';
+        } elsif c == '\\' {
+            result += "\\\\";
+        } elsif c == '\n' {
+            result += "\\n";
+        } elsif c == '\r' {
+            result += "\\r";
+        } elsif c == '\t' {
+            result += "\\t";
+        } elsif c == '\b' {
+            result += "\\b";
+        } elsif c == '\f' {
+            result += "\\f";
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}
+
+extension JsonValue {
+    func to_json_string() {
+        match this {
+            case Object(map) => {
+                val parts = [];
+                for entry in map {
+                    val key = escape_json_string(entry.key);
+                    val value_str = entry.value.to_json_string();
+                    parts.append('"' + key + '":' + value_str);
+                }
+                return "{" + parts.join() + "}";
+            },
+
+            case Array(items) => {
+                val parts = [];
+                for item in items {
+                    parts.append(item.to_json_string());
+                }
+                return "[" + parts.join() + "]";
+            },
+
+            case String(s) => {
+                return '"' + escape_json_string(s) + '"';
+            },
+
+            case Number(n) => {
+                return "{0}".format(n);
+            },
+
+            case Boolean(b) => {
+                if b { return "true"; } else { return "false"; }
+            },
+
+            case Null(x) => {
+                return "null";
+            },
+        }
+    }
+}

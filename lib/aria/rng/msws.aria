@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.rng.mixin;
+
+struct MiddleSquareRng {
+    type func new() {
+        MiddleSquareRng.new_with_params(now(),0x5ad4eceda1ce2a9);
+    }
+
+    type func new_with_params(x,s) {
+        alloc(This){
+            .x = x,
+            .w = 0,
+            .s = s,
+        };
+    }
+
+    func next() {
+        this.x = this.x * this.x;
+        this.w += this.s;
+        this.x += this.w;
+        this.x = (this.x >> 32) | (this.x << 32);
+        return this.x;
+    }
+
+    include aria.rng.mixin.RngRange
+}

@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(f,n) {
+    return f(n) + f(n-1);
+}
+
+func main() {
+    assert foo(|x| => x%5, 6) == 1;
+    assert foo(|x| => x+2, 6) == 15;
+}

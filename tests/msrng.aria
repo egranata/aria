@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+import MiddleSquareRng from aria.rng.msws;
+import aria.iterator.mixin;
+
+func is_within_range(n) {
+    (n >= 1) && (n <= 6);
+}
+
+func main() {
+    val rng = MiddleSquareRng.new();
+
+    # TODO: replace this with a proper verification, this is not exactly
+    # guaranteed - just very very likely
+    assert rng.next() != rng.next();
+    assert rng.next() != rng.next();
+    assert rng.next() != rng.next();
+
+    val n = 0;
+    val l = [];
+    while n < 100 {
+        n = n + 1;
+        l.append(rng.in_range(1,6));
+    }
+
+    assert l.iterator().all(is_within_range);
+}

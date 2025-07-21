@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Double {
+    func op_call(n) {
+        return n + n;
+    }
+}
+
+func main() {
+    val d = alloc(Double);
+
+    assert d(4) == 8;
+    assert d("hi") == "hihi";
+}

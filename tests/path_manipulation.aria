@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val msg = "this is a test file";
+
+    val path = Path.new_with_environment_variable("ARIA_TEST_DIR").unwrap_Some();
+
+    val src_file = path / "path_manipulation.txt";
+    src_file.write(msg);
+
+    val dst_file = path / "path_manipulation";
+    dst_file.mkdir();
+    dst_file /= "path_manipulation.txt";
+    src_file.copy_to(dst_file);
+
+    assert dst_file.exists();
+    assert dst_file.is_file();
+    assert dst_file.read() == msg;
+
+    dst_file.erase();
+    assert !dst_file.exists();
+
+    dst_file = dst_file.parent();
+    assert dst_file.exists();
+    assert dst_file.is_directory();
+
+    dst_file.rmdir();
+    assert !dst_file.exists();
+}

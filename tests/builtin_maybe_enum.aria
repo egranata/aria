@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+func double(x) {
+    x + x;
+}
+
+func main() {
+    val s = Maybe::Some(123);
+    val n = Maybe::None;
+
+    assert(s.is_Some());
+    assert(n.is_None());
+    assert(s.unwrap_Some() == 123);
+
+    val double_s = s.apply(double).apply(double);
+    val double_n = n.apply(double).apply(double);
+
+    assert(double_s.is_Some());
+    assert(double_n.is_None());
+
+    assert(double_s.unwrap_Some() == 492);
+}

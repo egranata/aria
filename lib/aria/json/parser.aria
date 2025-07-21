@@ -1,0 +1,234 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import Map from aria.structures.map;
+import aria.string.classes;
+import JsonValue from aria.json.value;
+import JsonNull from aria.json.value;
+
+struct JsonStream {
+    type func new(s) {
+        alloc(This) { .input = s.chars(), .pos = 0 };
+    }
+
+    func peek() {
+        if this.pos < this.input.len() {
+            return this.input[this.pos];
+        } else {
+            return Maybe::None;
+        }
+    }
+
+    func next() {
+        val c = this.peek();
+        this.pos += 1;
+        return c;
+    }
+
+    func eat(expected) {
+        if this.peek() == expected {
+            this.next();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    func skip_whitespace() {
+        while true {
+            val c = this.peek();
+            if c == ' ' || c == '\t' || c == '\n' || c == '\r' {
+                this.next();
+            } else {
+                break;
+            }
+        }
+    }
+}
+
+extension JsonValue {
+    type func parse(s) {
+        val stream = JsonStream.new(s);
+        stream.skip_whitespace();
+        val result = parse_value(stream);
+        stream.skip_whitespace();
+        return result;
+    }
+}
+
+struct JsonParseError {
+    type func new(why: String) {
+        alloc(This) {
+            .message = why,
+        };
+    }
+
+    func prettyprint() {
+        return "JsonParseError: " + this.message;
+    }
+}
+
+func parse_value(stream) {
+    stream.skip_whitespace();
+    val c = stream.peek();
+
+    if c == '"' {
+        return JsonValue::String(parse_string(stream));
+    } elsif c == '{' {
+        return JsonValue::Object(parse_object(stream));
+    } elsif c == '[' {
+        return JsonValue::Array(parse_array(stream));
+    } elsif c == 't' {
+        parse_true(stream);
+        return JsonValue::Boolean(true);
+    } elsif c == 'f' {
+        parse_false(stream);
+        return JsonValue::Boolean(false);
+    } elsif c == 'n' {
+        parse_null(stream);
+        return JsonValue::Null(alloc(JsonNull));
+    } elsif c.is_digit() || c == '-' {
+        return JsonValue::Number(parse_number(stream));
+    } else {
+        throw JsonParseError.new("Not a valid JSON value: " + c);
+    }
+}
+
+func parse_string(stream) {
+    if !stream.eat('"') {
+        throw alloc(JsonParseError);
+    }
+
+    val result = "";
+    while true {
+        val c = stream.next();
+        if c == '"' {
+            break;
+        } elsif c == '\\' {
+            val esc = stream.next();
+            if esc == 'n' {
+                result += '\n';
+            } elsif esc == 't' {
+                result += '\t';
+            } elsif esc == '"' {
+                result += '"';
+            } elsif esc == '\\' {
+                result += '\\';
+            } else {
+                throw JsonParseError.new("Not a valid JSON string escape sequence");
+            }
+        } else {
+            result += c;
+        }
+    }
+
+    return result;
+}
+
+func parse_number(stream) {
+    val text = "";
+    if stream.peek() == '-' {
+        text += stream.next();
+    }
+
+    while true {
+        val c = stream.peek();
+        if c.is_digit() {
+            text += stream.next();
+        } else {
+            break;
+        }
+    }
+
+    if stream.peek() == '.' {
+        text += stream.next();
+        while true {
+            val c = stream.peek();
+            if c.is_digit() {
+                text += stream.next();
+            } else {
+                break;
+            }
+        }
+    }
+
+    return Float.parse(text).unwrap_Some();
+}
+
+func parse_true(stream) {
+    if stream.next() != 't' || stream.next() != 'r' || stream.next() != 'u' || stream.next() != 'e' {
+        throw JsonParseError.new("Trying to parse true and failed");
+    }
+}
+
+func parse_false(stream) {
+    if stream.next() != 'f' || stream.next() != 'a' || stream.next() != 'l' || stream.next() != 's' || stream.next() != 'e' {
+        throw JsonParseError.new("Trying to parse false and failed");
+    }
+}
+
+func parse_null(stream) {
+    if stream.next() != 'n' || stream.next() != 'u' || stream.next() != 'l' || stream.next() != 'l' {
+        throw JsonParseError.new("Trying to parse null and failed");
+    }
+}
+
+func parse_object(stream) {
+    val map = Map.new();
+    stream.eat('{');
+    stream.skip_whitespace();
+
+    if stream.peek() == '}' {
+        stream.next();
+        return map;
+    }
+
+    while true {
+        stream.skip_whitespace();
+        val key = parse_string(stream);
+        stream.skip_whitespace();
+        if !stream.eat(':') {
+            throw JsonParseError.new("Invalid JSON object key-value pair");
+        }
+
+        val value = parse_value(stream);
+        map.set(key, value);
+        stream.skip_whitespace();
+
+        if stream.eat('}') {
+            break;
+        } elsif stream.eat(',') {
+            continue;
+        } else {
+            throw JsonParseError.new("Unexpected character in JSON object");
+        }
+    }
+
+    return map;
+}
+
+func parse_array(stream) {
+    val list = [];
+    stream.eat('[');
+    stream.skip_whitespace();
+
+    if stream.peek() == ']' {
+        stream.next();
+        return list;
+    }
+
+    while true {
+        val value = parse_value(stream);
+        list.append(value);
+        stream.skip_whitespace();
+
+        if stream.eat(']') {
+            break;
+        } elsif stream.eat(',') {
+            continue;
+        } else {
+            throw JsonParseError.new("Unexpected character in JSON array");
+        }
+    }
+
+    return list;
+}

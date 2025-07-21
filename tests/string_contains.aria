@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val s = "hello world";
+    assert s.contains("world");
+    assert s.contains("llo");
+    
+    assert !s.contains("test");
+    assert !s.contains("world!");
+}

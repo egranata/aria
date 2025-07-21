@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Something {
+    case WithPayload(Any),
+    case WithoutPayload
+}
+
+extension Something {
+    # only doing this for test purposes, it's actually a terrible
+    # definition of an equality comparison
+    func op_equals(rhs) {
+        match rhs {
+            isa Something => { return true; }
+        } else {
+            return false;
+        }
+    }
+}
+
+func main() {
+    assert Something::WithPayload(3) == Something::WithoutPayload;
+
+    assert 3 != Something::WithoutPayload;
+    assert 3 != Something::WithPayload(3);
+}

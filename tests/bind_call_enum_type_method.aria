@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Foo {}
+
+extension Foo {
+    type func answer() {
+        return 42;
+    }
+}
+
+func main() {
+    assert Foo.answer() == 42;
+}

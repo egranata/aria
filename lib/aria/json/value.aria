@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import aria.structures.map;
+
+struct JsonNull {}
+
+enum JsonValue {
+    case Object(aria.structures.map.Map),
+    case Array(List),
+    case String(String),
+    case Number(Float),
+    case Boolean(Bool),
+    case Null(JsonNull),
+}
+
+extension JsonValue {
+    func flatten() {
+        match this {
+            case Boolean(x) => {
+                return x;
+            },
+            case Number(x) => {
+                return x;
+            },
+            case String(x) => {
+                return x;
+            },
+            case Array(x) => {
+                val ret = [];
+                for v in x {
+                    ret.append(v.flatten());
+                }
+                return ret;
+            },
+            case Object(x) => {
+                val ret = aria.structures.map.Map.new();
+                for v in x {
+                    ret.set(v.key, v.value.flatten());
+                }
+                return ret;
+            },
+            case Null(x) => {
+                return x;
+            },
+        }
+    }
+}

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val ARIA_LIB_DIR = getenv("ARIA_LIB_DIR");
+    assert ARIA_LIB_DIR.is_Some();
+
+    assert ARIA_LIB_DIR.unwrap_Some().len() > 0;
+    assert ARIA_LIB_DIR.unwrap_Some()[0] == "/";
+
+    val NO_SUCH_ENV_VAR = getenv("THERESHOULDBENOSUCHVARIABLEANYWHERE");
+    assert NO_SUCH_ENV_VAR.is_None();
+}

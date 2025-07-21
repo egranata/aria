@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+import * from exported_var.source;
+
+func main() {
+    assert foo == 123;
+    assert fetch_foo() == 123;
+    assert exported_var.source.foo == 123;
+    assert exported_var.source.fetch_foo() == 123;
+
+    # TODO: foo should be assignable?
+    #foo = 456;
+    #assert foo == 456;
+    #assert fetch_foo() == 456;
+    #assert exported_var.source.foo == 456;
+    #assert exported_var.source.fetch_foo() == 456;
+
+    change_foo(111);
+    assert foo == 123; # TODO: should it be 111?
+    assert fetch_foo() == 111;
+    assert exported_var.source.foo == 111;
+    assert exported_var.source.fetch_foo() == 111;
+
+    exported_var.source.change_foo(222);
+    assert foo == 123; # TODO: should it be 222?
+    assert fetch_foo() == 222;
+    assert exported_var.source.foo == 222;
+    assert exported_var.source.fetch_foo() == 222;
+}

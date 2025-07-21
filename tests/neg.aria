@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = -3;
+    val y = 3;
+    assert x < 0;
+    assert y > 0;
+    assert y > x;
+    assert x < y;
+    assert (x+y == 0);
+    assert x != 0;
+    assert y != 0;
+    assert y-x == 6;
+}

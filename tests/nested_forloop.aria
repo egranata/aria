@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val l = [1,2,3,4,5];
+    val total_loops = 0;
+    
+    val a_sum = 0;
+    for a in l {
+        total_loops = total_loops + 1;
+        val b_sum = 0;
+        for b in l {
+            total_loops = total_loops + 1;
+            b_sum = b_sum + b;
+        }
+        assert b_sum == 15;
+        a_sum = a_sum + a;
+    }
+    assert a_sum == 15;
+    assert total_loops == 30; # 5x outer loop + 5 times 5x inner loop
+}

@@ -1,0 +1,17 @@
+# Rust & Cargo
+/target
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Aria-specific
+history.aria
+/vscode/aria/*.vsix
+.vscodeignore
+
+# OS-specific
+.DS_Store
+Thumbs.db

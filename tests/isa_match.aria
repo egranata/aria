@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 123;
+    val hit = false;
+    match x {
+        isa Bool => { assert(false); },
+        isa List => { assert(false); },
+        isa Int => { hit = true; },
+    } else {
+        assert(false);
+    }
+
+    assert hit;
+}

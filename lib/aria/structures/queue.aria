@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: Apache-2.0
+struct PriorityQueue {
+    type func new() {
+        alloc(This) {
+            .data = [],
+            .cmp = |x,y| => x < y,
+        };
+    }
+
+    type func new_with_comparator(cmp) {
+        alloc(This) {
+            .data = [],
+            .cmp = cmp,
+        };
+    }
+
+    func push(item) {
+        this.data.append(item);
+        this._sift_up(this.data.len() - 1);
+    }
+
+    func pop() {
+        val top = this.data[0];
+        val last = this.data.drop();
+        if this.data.len() > 0 {
+            this.data[0] = last;
+            this._sift_down(0);
+        }
+        return top;
+    }
+
+    func peek() {
+        if this.data.len() == 0 {
+            return Maybe::None;
+        }
+        return Maybe::Some(this.data[0]);
+    }
+
+    func len() {
+        return this.data.len();
+    }
+
+    func _sift_up(index) {
+        val i = index;
+        while i > 0 {
+            val parent = (i - 1) / 2;
+            if this.cmp(this.data[i], this.data[parent]) {
+                val tmp = this.data[i];
+                this.data[i] = this.data[parent];
+                this.data[parent] = tmp;
+                i = parent;
+            } else {
+                break;
+            }
+        }
+    }
+
+    func _sift_down(index) {
+        val i = index;
+        val n = this.data.len();
+        while true {
+            val left = 2 * i + 1;
+            val right = 2 * i + 2;
+            val smallest = i;
+
+            if left < n && this.cmp(this.data[left], this.data[smallest]) {
+                smallest = left;
+            }
+
+            if right < n && this.cmp(this.data[right], this.data[smallest]) {
+                smallest = right;
+            }
+
+            if smallest == i {
+                break;
+            }
+
+            val tmp = this.data[i];
+            this.data[i] = this.data[smallest];
+            this.data[smallest] = tmp;
+
+            i = smallest;
+        }
+    }
+}

@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val a = 1234;
+    val b = -35;
+
+    assert "{0}".format(a) == "1234";
+    assert "{0:6}".format(a) == "001234";
+    assert "{0:2}".format(a) == "1234";
+
+    assert "0x{0:x}".format(a) == "0x4d2";
+    assert "0x{0:5x}".format(a) == "0x004d2";
+
+    assert "{0}".format(b) == "-35";
+    assert "{0:6}".format(b) == "-00035";
+}

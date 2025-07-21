@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type val COUNTER = 1;
+
+    type func new(x) {
+        val f = alloc(This){
+            .counter = Foo.COUNTER,
+            .x = x,
+        };
+        Foo.COUNTER = Foo.COUNTER + 1;
+        f;
+    }
+
+    func prettyprint() {
+        "Foo({0},{1})".format(this.counter,this.x);
+    }
+}
+
+func main() {
+    val l = [Foo.new("a"),Foo.new("b"),Foo.new("c")];
+    val ls = "list of Foo = {0}".format(l);
+    assert ls == "list of Foo = [Foo(1,a), Foo(2,b), Foo(3,c)]";
+}

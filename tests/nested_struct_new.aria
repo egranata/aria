@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Top {
+    struct Child {
+        enum E {
+            case A,
+            case B,
+        }
+
+        type func foo() {
+            return 42;
+        }
+    }
+}
+
+func main() {
+    assert Top.Child.foo() == 42;
+
+    assert Top.Child.E::A.is_A();
+}

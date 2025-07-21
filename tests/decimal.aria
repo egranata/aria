@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+import Decimal from aria.numerics.decimal;
+
+func main() {
+    assert Decimal.new("3.14") + Decimal.new("3.14") == Decimal.new(6.28f);
+    assert 3 + Decimal.new("5") == Decimal.new(8);
+    assert 3.1f + Decimal.new("2.5") == Decimal.new(5.6f);
+    assert Decimal.new(5) - Decimal.new("3.1") == Decimal.new("1.9");
+    assert 4 - Decimal.new("3.5") == Decimal.new(0.5f);
+
+    assert Decimal.new("3.14") * 2 == Decimal.new(6.28f);
+    assert 2 * Decimal.new("3.14") == Decimal.new(6.28f);
+    assert 3.14f * Decimal.new(2) == Decimal.new(6.28f);
+    assert Decimal.new("12") / Decimal.new("3") == Decimal.new(4);
+    assert 12 / Decimal.new(3) == Decimal.new(4);
+
+    assert Decimal.new("3.14") > Decimal.new("2.0");
+    assert Decimal.new("5.123") < Decimal.new(6.28f);
+
+    assert Decimal.new(5) != Decimal.new("6");
+
+    assert Decimal.new(5) >= Decimal.new(4);
+    assert Decimal.new(5) >= Decimal.new("5.00000");
+
+    assert Decimal.new("5.0") <= Decimal.new(5);
+    assert Decimal.new("5.0") <= Decimal.new(5.001f);
+}

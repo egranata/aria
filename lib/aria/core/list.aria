@@ -1,0 +1,182 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+import Box from aria.core.box;
+
+extension List {
+    func repeat(n: Int) {
+        if n == 0 { return []; }
+        if n == 1 { return this; }
+        val ret = this;
+        while n > 1 {
+            ret = ret + this;
+            n -= 1;
+        }
+        return ret;
+    }
+
+    func op_mul(rhs: Int) {
+        if rhs isa Int {
+            this.repeat(rhs);
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_rmul(lhs: Int) {
+        this.op_mul(lhs);
+    }
+
+    func prettyprint() {
+        return "[" + this.join() + "]";
+    }
+
+    func join() {
+        val s = "";
+        val first = true;
+        for item in this {
+            val item = prettyprint(item);
+            if first {
+                s = item;
+                first = false;
+            } else {
+                s = s + ", " + item;
+            }
+        }
+
+        return s;
+    }
+
+
+    func contains(x) {
+        for item in this {
+            if item == x {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    type func from_function(f, n: Int) {
+        val ret = [];
+        if n <= 0 {
+            return ret;
+        }
+        val i = 0;
+        while i < n {
+            ret.append(f(i));
+            i = i + 1;
+        }
+        ret;
+    }
+
+    func op_equals(rhs: List) {
+        if rhs.len() != this.len() {
+            return false;
+        }
+
+        val idx = 0;
+        while idx < this.len() {
+            val this_idx = this[idx];
+            val rhs_idx = rhs[idx];
+
+            if this_idx != rhs_idx {
+                return false;
+            }
+
+            idx += 1;
+        }
+
+        return true;
+    }
+
+    func op_add(rhs: List) {
+        val ret = [];
+        for item in this {
+            ret.append(item);
+        }
+        for item in rhs {
+            ret.append(item);
+        }
+        return ret;
+    }
+
+    struct ListIterator {
+        type func new(l: List) {
+        alloc(This){
+                .list = l,
+                .len = l.len(),
+                .index = 0,
+            };
+        }
+
+        func next() {
+            if this.index == this.len {
+                return Box(){.done = true};
+            } else {
+                val v = this.list[this.index];
+                this.index = this.index + 1;
+                return Box(){.done = false, .value=v};
+            }
+        }
+    }
+
+    func iterator() {
+        return List.ListIterator.new(this);
+    }
+
+    func quicksort_with_comparator(f) {
+        this.qks_helper(0, this.len() - 1, f);
+    }
+
+    func quicksort() {
+        this.quicksort_with_comparator(|x,y| => x < y);
+    }
+
+    func qks_helper(left, right, f) {
+        if left >= right {
+            return 0;
+        }
+        val pivotIndex = this.partition(left, right, f);
+        this.qks_helper(left, pivotIndex - 1, f);
+        this.qks_helper(pivotIndex + 1, right, f);
+    }
+
+    func partition(left, right, f) {
+        val pivot = this[right];
+        val i = left;
+        val j = left;
+        while j < right {
+            if f(this[j], pivot) {
+                val temp = this[i];
+                this[i] = this[j];
+                this[j] = temp;
+                i += 1;
+            }
+            j += 1;
+        }
+        val temp = this[i];
+        this[i] = this[right];
+        this[right] = temp;
+        return i;
+    }
+
+    func binary_search(target) {
+        return this.bs_helper(target, 0, this.len() - 1);
+    }
+
+    func bs_helper(target, left, right) {
+        if left > right {
+            return Maybe::None;
+        }
+        val mid = (left + right) / 2;
+        if this[mid] == target {
+            return Maybe::Some(mid);
+        } elsif this[mid] < target {
+            return this.bs_helper(target, mid + 1, right);
+        } else {
+            return this.bs_helper(target, left, mid - 1);
+        }
+    }
+}

@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val s = "one two three four five words";
+    val l = s.split(" ");
+    assert l.len() == 6;
+    assert l[0] == "one";
+    assert l[1] == "two";
+    assert l[2] == "three";
+    assert l[3] == "four";
+    assert l[4] == "five";
+    assert l[5] == "words";
+}

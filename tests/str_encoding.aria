@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val S = "ABC 123";
+    assert S[0].encoding() == 65;
+    assert S[1].encoding() == 66;
+    assert S[2].encoding() == 67;
+    assert S[3].encoding() == 32;
+    assert S[4].encoding() == 49;
+    assert S[5].encoding() == 50;
+    assert S[6].encoding() == 51;
+}

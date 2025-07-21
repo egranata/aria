@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+func five() {
+    return 5;
+}
+
+func main() {
+    val x = 5;
+    x += 1;
+    assert x == 6;
+    x -= 3;
+    assert x == 3;
+    x += 0;
+    assert x == 3;
+    x += five();
+    assert x == 8;
+    x -= 2 * 2 + 1;
+    assert x == 3;
+}

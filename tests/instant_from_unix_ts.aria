@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+import Instant from aria.date.instant;
+
+func main() {
+    val moment = Instant.from_unix_timestamp(1623602460000);
+    assert moment.year == 2021;
+    assert moment.month == 6;
+    assert moment.day == 13;
+    assert moment.hour == 16;
+    assert moment.minute == 41;
+    assert moment.second == 0;
+    assert moment.millisecond == 0;
+    assert "{0}".format(moment) == "Jun 13 2021 16:41:00.000";
+
+    moment = Instant.from_unix_timestamp(1736142835000);
+    assert moment.year == 2025;
+    assert moment.month == 1;
+    assert moment.day == 6;
+    assert moment.hour == 5;
+    assert moment.minute == 53;
+    assert moment.second == 55;
+    assert moment.millisecond == 0;
+
+    moment = Instant.from_unix_timestamp(-85399999000);
+    assert moment.year == 1967;
+    assert moment.month == 4;
+    assert moment.day == 18;
+    assert moment.hour == 13;
+    assert moment.minute == 46;
+    assert moment.second == 41;
+    assert moment.millisecond == 0;
+
+    moment = Instant.from_unix_timestamp(-783264174000);
+    assert moment.year == 1945;
+    assert moment.month == 3;
+    assert moment.day == 7;
+    assert moment.hour == 10;
+    assert moment.minute == 37;
+    assert moment.second == 6;
+    assert moment.millisecond == 0;
+}

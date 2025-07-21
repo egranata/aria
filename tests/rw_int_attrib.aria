@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+extension Int {
+    func foo(x) {
+        this + x;
+    }
+
+    func bar(y) {
+        this - y;
+    }
+}
+
+func main() {
+    val x = 3;
+    val y = 4;
+    assert x.foo(y) == 7;
+    assert x.bar(1) == 2;
+
+    x.foo = 5;
+    assert x.foo == 5;
+    assert x.bar(2) == 1;
+
+    y.bar = 1;
+    assert y.bar == 1;
+    y.bar = x;
+    assert y.bar == 3;
+}

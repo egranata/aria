@@ -1,0 +1,222 @@
+# SPDX-License-Identifier: Apache-2.0
+import CompareResult, TotalOrdering from aria.ordering.compare;
+
+func pow(x: Int, y: Int) {
+    if y == 0 { return 1; }
+    if y == 1 { return x; }
+    val ret = x;
+    while y > 1 {
+        ret *= x;
+        y -= 1;
+    }
+    return ret;
+}
+
+func max(x,y) {
+    if x > y {
+        return x;
+    } else {
+        return y;
+    }
+}
+
+struct Decimal {
+    type func new(v) {
+        if v isa Int {
+            return This.new_with_parts(v, 0);
+        }
+
+        if v isa Float {
+            val s = prettyprint(v);
+            val parts = s.split(".");
+            match parts.len() {
+                == 1 => {
+                    return This.new_with_parts(v.int(), 0);
+                },
+                == 2 => {
+                    val decimal_part = parts[1];
+                    val scale = decimal_part.len();
+                    val value = (v * pow(10, scale)).int();
+                    return This.new_with_parts(value, scale);
+                }
+            }
+        }
+
+        if v isa String {
+            val parts = v.split(".");
+            match parts.len() {
+                == 1 => {
+                    val v = Int.parse(parts[0]).unwrap_Some();
+                    return This.new_with_parts(v, 0);
+                },
+                == 2 => {
+                    val integer_part = Int.parse(parts[0]).unwrap_Some();
+                    val decimal_part = parts[1];
+                    val scale = decimal_part.len();
+                    val combined_str = parts[0] + decimal_part;
+                    val value = Int.parse(combined_str).unwrap_Some();
+                    return This.new_with_parts(value, scale);
+                }
+            }
+        }
+
+        return Maybe::None;
+    }
+
+    type func new_with_parts(v: Int, s: Int) {
+        while s > 0 && v % 10 == 0 {
+            v /= 10;
+            s -= 1;
+        }
+
+        return alloc(This){
+            .value = v,
+            .scale = s,
+        };
+    }
+
+    func op_radd(lhs) {
+        return this.op_add(lhs);
+    }
+
+    func op_rsub(lhs) {
+        return (this*-1).op_add(lhs);
+    }
+
+    func op_rmul(lhs) {
+        return this.op_mul(lhs);
+    }
+
+    func op_rdiv(lhs) {
+        if lhs isa Int {
+            lhs = Decimal.new(lhs);
+        } elsif lhs isa Float {
+            lhs = Decimal.new(lhs);
+        } elsif !(lhs isa Decimal) {
+            throw alloc(Unimplemented);
+        }
+
+        return lhs / this;
+    }
+
+    func op_add(other) {
+        if other isa Int {
+            other = Decimal.new(other);
+        } elsif other isa Float {
+            other = Decimal.new(other);
+        } elsif !(other isa Decimal) {
+            throw alloc(Unimplemented);
+        }
+
+        if this.scale == other.scale {
+            return Decimal.new_with_parts(this.value + other.value, this.scale);
+        } else {
+            val max_scale = max(this.scale, other.scale);
+            val this_value = this.value * pow(10, (max_scale - this.scale));
+            val other_value = other.value * pow(10, (max_scale - other.scale));
+            return Decimal.new_with_parts(this_value + other_value, max_scale);
+        }
+    }
+
+    func op_sub(other) {
+        if other isa Int {
+            other = Decimal.new(other);
+        } elsif other isa Float {
+            other = Decimal.new(other);
+        } elsif !(other isa Decimal) {
+            throw alloc(Unimplemented);
+        }
+
+        if this.scale == other.scale {
+            return Decimal.new_with_parts(this.value - other.value, this.scale);
+        } else {
+            val max_scale = max(this.scale, other.scale);
+            val this_value = this.value * pow(10, (max_scale - this.scale));
+            val other_value = other.value * pow(10, (max_scale - other.scale));
+            return Decimal.new_with_parts(this_value - other_value, max_scale);
+        }
+    }
+
+    func op_mul(other) {
+        if other isa Int {
+            other = Decimal.new(other);
+        } elsif other isa Float {
+            other = Decimal.new(other);
+        } elsif !(other isa Decimal) {
+            throw alloc(Unimplemented);
+        }
+
+        return Decimal.new_with_parts(this.value * other.value, this.scale + other.scale);
+    }
+
+    func op_div(other) {
+        if other isa Int {
+            other = Decimal.new(other);
+        } elsif other isa Float {
+            other = Decimal.new(other);
+        } elsif !(other isa Decimal) {
+            throw alloc(Unimplemented);
+        }
+
+        return Decimal.new_with_parts(this.value * pow(10, other.scale) / other.value, this.scale);
+    }
+
+    func align(other) {
+        if this.scale == other.scale {
+            return [this, other];
+        }
+
+        val max_scale = max(this.scale, other.scale);
+        val this_value = this.value * pow(10, max_scale - this.scale);
+        val other_value = other.value * pow(10, max_scale - other.scale);
+
+        val a0 = alloc(Decimal){ .value=this_value,  .scale=max_scale };
+        val a1 = alloc(Decimal){ .value=other_value, .scale=max_scale };
+
+        return [a0,a1];
+    }
+
+    func comp(other) {
+        if other isa Int {
+            other = Decimal.new(other);
+        } elsif other isa Float {
+            other = Decimal.new(other);
+        } elsif !(other isa Decimal) {
+            throw alloc(Unimplemented);
+        }
+
+        val a = this.align(other);
+
+        if a[0].value == a[1].value {
+            return CompareResult::eq;
+        } elsif a[0].value > a[1].value {
+            return CompareResult::gt;
+        } else {
+            return CompareResult::lt;
+        }
+    }
+
+    func prettyprint() {
+        val abs_value_str = prettyprint(this.value.abs());
+        val sign = "";
+        if this.value < 0 { sign = "-"; }
+
+        if this.scale == 0 {
+            return sign + abs_value_str;
+        }
+
+        val value_str = abs_value_str;
+        val len = value_str.len();
+
+        if len <= this.scale {
+            return sign + "0." + "0" * (this.scale - len) + value_str;
+        }
+
+        val integer_part = value_str.substring(0, len - this.scale - 1);
+        val fractional_part = value_str.substring(len - this.scale, len - 1);
+        
+        return sign + integer_part + "." + fractional_part;
+    }
+
+    include TotalOrdering
+}

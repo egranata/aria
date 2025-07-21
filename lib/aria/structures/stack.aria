@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: Apache-2.0
+
+struct Stack {
+    type func new() {
+        alloc(This) {
+            .store = [],
+            .count = 0,
+        };
+    }
+
+    func len() {
+        this.count;
+    }
+
+    func is_empty() {
+        this.count == 0;
+    }
+
+    func push(x) {
+        if this.count == this.store.len() {
+            this.store.append(x);
+        } else {
+            this.store[this.count] = x;
+        }
+        this.count += 1;
+    }
+
+    func peek_at(offset) {
+        if offset >= this.count {
+            Maybe::None;
+        } else {
+            Maybe::Some(this.store[this.count - 1 - offset]);
+        }
+    }
+
+    func peek() {
+        this.peek_at(0);
+    }
+
+    func try_pop() {
+        val p = this.peek();
+        match p {
+            case Some => {
+                assert this.count > 0;
+                this.count -= 1;
+            }
+        }
+        return p;
+    }
+
+    func pop() {
+        this.try_pop().unwrap_Some();
+    }
+}

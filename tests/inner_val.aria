@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: Apache-2.0
+val counter = 0;
+
+func next() {
+    counter = counter + 1;
+    return counter;
+}
+
+func new_val_decl() {
+    val buffer = [];
+    val n = next();
+    while true {
+        buffer.append(n);
+        val n = next();
+        if n == 5 {
+            break;
+        }
+    }
+    return buffer;
+}
+
+func reuse_val_decl() {
+    val buffer = [];
+    val n = next();
+    while true {
+        buffer.append(n);
+        n = next();
+        if n == 5 {
+            break;
+        }
+    }
+    return buffer;
+}
+
+
+func main() {
+    val data = new_val_decl();
+    assert data == [1, 1, 1, 1];
+    counter = 0;
+    data = reuse_val_decl();
+    assert data == [1, 2, 3, 4];
+}

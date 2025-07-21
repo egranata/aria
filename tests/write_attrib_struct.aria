@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {}
+
+func main() {
+    Foo{.x = 1};
+    assert Foo.x == 1;
+}

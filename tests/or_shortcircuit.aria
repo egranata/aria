@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = [1,0];
+    assert true || (x[0] / x[1] == 4);
+}

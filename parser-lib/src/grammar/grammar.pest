@@ -1,0 +1,184 @@
+WHITESPACE = _{ " " | "\n" | "\t" }
+COMMENT    = _{ "#" ~ (!"\n" ~ ANY)* }
+
+// this should only matter for keywords that take an expression
+keywords = _{ "assert" | "else" | "elsif" | "extension" | "if" | "include" | "match" | "return" | "throw" | "while" }
+
+identifier_start = @{ (XID_START | EMOJI_PRESENTATION | "_" | "$") }
+identifier_next  = @{ (XID_CONTINUE | EMOJI_PRESENTATION | "_" | "$") }
+identifier       = @{ !(keywords ~ !identifier_next) ~ !("__" ~ identifier_next*) ~ identifier_start ~ identifier_next* }
+
+ident_list = { identifier ~ ("," ~ identifier)* ~ ","? }
+
+hex_int_literal = @{ "0x" ~ ASCII_HEX_DIGIT+ ~ ("_" ~ ASCII_HEX_DIGIT+)* }
+oct_int_literal = @{ "0o" ~ ASCII_OCT_DIGIT+ ~ ("_" ~ ASCII_OCT_DIGIT+)* }
+bin_int_literal = @{ "0b" ~ ASCII_BIN_DIGIT+ ~ ("_" ~ ASCII_BIN_DIGIT+)* }
+dec_int_literal = @{ "-"? ~ ASCII_DIGIT+ ~ ("_" ~ ASCII_DIGIT+)* }
+int_literal     = @{ hex_int_literal | oct_int_literal | bin_int_literal | dec_int_literal }
+
+fp_literal = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ ~ exp_part? ~ "f" }
+exp_part   =  { ("e" | "E") ~ ("+" | "-")? ~ ASCII_DIGIT+ }
+
+str_literal_dbl_qt = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+str_literal_sgl_qt = @{ "'" ~ (!"'" ~ ANY)* ~ "'" }
+str_literal        = @{ str_literal_dbl_qt | str_literal_sgl_qt }
+
+list_literal = { "[" ~ expr_list? ~ "]" }
+
+expr_list = { expression ~ ("," ~ expression)* ~ ","? }
+
+paren_expr = { "(" ~ expression ~ ")" }
+primary    = { identifier | fp_literal | str_literal | int_literal | list_literal | paren_expr }
+
+postfix_field_set      = { "." ~ identifier ~ "=" ~ expression }
+postfix_field_set_list = { postfix_field_set ~ ("," ~ postfix_field_set)* ~ ","? }
+
+postfix_index_set      = { "[" ~ expression ~ "]" ~ "=" ~ expression }
+postfix_index_set_list = { postfix_index_set ~ ("," ~ postfix_index_set)* ~ ","? }
+
+postfix_term_attrib    = { "." ~ identifier }
+postfix_term_index     = { "[" ~ expression ~ "]" }
+postfix_term_call      = { "(" ~ expr_list? ~ ")" }
+postfix_term_dot_write = { "{" ~ postfix_field_set_list ~ "}" }
+postfix_term_idx_write = { "{" ~ postfix_index_set_list ~ "}" }
+postfix_term_enum_case = { "::" ~ identifier ~ ("(" ~ expression ~ ")")? }
+postfix_term           = {
+    postfix_term_dot_write
+  | postfix_term_idx_write
+  | postfix_term_enum_case
+  | postfix_term_attrib
+  | postfix_term_index
+  | postfix_term_call
+}
+
+postfix_lv = { primary ~ postfix_term* }
+postfix_rv = { postfix_lv }
+
+unary_op = @{ "!" | "-" }
+unary    =  { unary_op? ~ postfix_rv }
+
+mul_op = @{ "*" | "/" | "%" }
+mul    =  { unary ~ (mul_op ~ unary)* }
+
+add_op = @{ "+" | "-" }
+add    =  { mul ~ (add_op ~ mul)* }
+
+shift_op = @{ "<<" | ">>" }
+shift    =  { add ~ (shift_op ~ add)? }
+
+rel_op = @{ "<=" | "<" | ">=" | ">" }
+rel    =  { shift ~ (rel_op ~ shift)? }
+
+comp_op = @{ "==" | "!=" | "isa" }
+comp    =  { rel ~ (comp_op ~ rel)? }
+
+log_op = @{ "&&" | "||" | "^" | "&" | "|" }
+log    =  { comp ~ (log_op ~ comp)* }
+
+lambda_f_body = { expression | code_block }
+lambda_f      = { "|" ~ arg_list ~ "|" ~ "=>" ~ lambda_f_body }
+
+expression = { lambda_f | log }
+
+decl_id = { identifier ~ (":" ~ expression)? }
+
+val_decl_stmt  = { "val" ~ decl_id ~ "=" ~ expression ~ ";" }
+val_write_stmt = { postfix_lv ~ "=" ~ expression ~ ";" }
+
+add_op_eq        = @{ "+=" | "-=" | "*=" | "/=" | "%=" }
+val_add_eq_write =  { postfix_lv ~ add_op_eq ~ expression ~ ";" }
+
+if_cond_piece = { expression ~ code_block }
+if_piece      = { "if" ~ if_cond_piece }
+elsif_piece   = { "elsif" ~ if_cond_piece }
+else_piece    = { "else" ~ code_block }
+if_stmt       = { if_piece ~ elsif_piece* ~ else_piece? }
+
+match_pattern_rel       = { comp_op ~ expression }
+match_pattern_enum_case = { "case" ~ identifier ~ ("(" ~ decl_id ~ ")")? }
+match_pattern           = { match_pattern_enum_case | match_pattern_rel }
+match_rule              = { match_pattern ~ ("and" ~ match_pattern)* ~ "=>" ~ code_block }
+match_stmt              = { "match" ~ expression ~ "{" ~ match_rule ~ (","? ~ match_rule)* ~ ","? ~ "}" ~ else_piece? }
+
+while_stmt = { "while" ~ expression ~ code_block }
+for_stmt   = { "for" ~ identifier ~ "in" ~ expression ~ code_block }
+
+return_stmt = { "return" ~ expression ~ ";" }
+assert_stmt = { "assert" ~ expression ~ ";" }
+
+break_stmt    = { "break" ~ ";" }
+continue_stmt = { "continue" ~ ";" }
+expr_stmt     = { expression ~ ";" }
+
+throw_stmt = { "throw" ~ expression ~ ";" }
+
+statement = {
+    assert_stmt
+  | break_stmt
+  | continue_stmt
+  | expr_stmt
+  | val_decl_stmt
+  | val_add_eq_write
+  | val_write_stmt
+  | if_stmt
+  | match_stmt
+  | while_stmt
+  | for_stmt
+  | throw_stmt
+  | return_stmt
+  | code_block
+  | guard_block
+  | try_block
+  | struct_decl
+  | enum_decl
+}
+
+code_block  = { "{" ~ (statement)* ~ "}" }
+guard_block = { "guard" ~ identifier ~ "=" ~ expression ~ code_block }
+try_block   = { "try" ~ code_block ~ "catch" ~ identifier ~ code_block }
+
+arg_list      = { decl_id ~ ("," ~ decl_id)* ~ ","? }
+vararg_marker = { "..." ~ ","? }
+function_decl = { "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+
+method_access = @{ "instance" | "type" }
+method_decl   =  { method_access? ~ "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+
+mixin_entry = { method_decl | mixin_include_decl }
+mixin_decl  = { "mixin" ~ identifier ~ "{" ~ mixin_entry* ~ "}" }
+
+mixin_include_decl = { "include" ~ expression }
+
+struct_entry = { method_decl | "type" ~ val_decl_stmt | mixin_include_decl | struct_decl | enum_decl }
+
+struct_decl    = { "struct" ~ identifier ~ "{" ~ struct_entry* ~ "}" }
+extension_decl = { "extension" ~ expression ~ "{" ~ struct_entry* ~ "}" }
+
+enum_case_decl  = { "case" ~ identifier ~ ("(" ~ expression ~ ")")? }
+enum_decl_entry = { (enum_case_decl | struct_entry) ~ ","? }
+
+enum_decl = { "enum" ~ identifier ~ "{" ~ enum_decl_entry* ~ "}" }
+
+import_all     = { "*" }
+import_target  = { ident_list | import_all }
+import_path    = { identifier ~ ("." ~ identifier)* }
+import_stmt    = { "import" ~ import_path ~ ";" }
+import_id_stmt = { "import" ~ import_target ~ "from" ~ import_path ~ ";" }
+
+top_level_entry = {
+    import_id_stmt
+  | import_stmt
+  | val_decl_stmt
+  | val_write_stmt
+  | struct_decl
+  | mixin_decl
+  | enum_decl
+  | extension_decl
+  | function_decl
+  | assert_stmt
+}
+
+module_flag  = { "flag:" ~ identifier ~ ("(" ~ str_literal ~ ")")? ~ ";" }
+module_flags = { module_flag* }
+
+module = { SOI ~ module_flags? ~ top_level_entry* ~ EOI }

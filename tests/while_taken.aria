@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func add_them_up(n) {
+    val counter = 0;
+    val i = 0;
+    while i != n {
+        counter = counter + i;
+        i = i + 1;
+    }
+    return counter + n;
+}
+
+func main() {
+    val total = add_them_up(6);
+    assert total == 21;
+}

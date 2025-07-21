@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    # assumes a standard Linux host
+    val binls = Path.new("/bin/ls");
+    assert binls.is_file();
+    assert binls.is_absolute();
+    assert binls.exists();
+    assert binls.size() > 0;
+    
+    val usrbin = Path.new("/usr/bin");
+    assert usrbin.is_directory();
+    assert usrbin.is_absolute();
+    assert usrbin.exists();
+
+    val nodir = Path.new("thisfiledoesnotexist");
+    assert nodir.exists() == false;
+    assert nodir.is_absolute() == false;
+}

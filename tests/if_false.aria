@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val n = 0;
+    if false {
+        n = 1;
+    } else {
+        n = 2;
+    }
+    assert n == 2;
+}

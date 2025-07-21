@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import XorshiftRng from aria.rng.xorshift;
+import Range from aria.range.range;
+
+func main() {
+    val rng = XorshiftRng.new();
+
+    # TODO: replace this with a proper verification, this is not exactly
+    # guaranteed - just very very likely
+    assert rng.next() != rng.next();
+    assert rng.next() != rng.next();
+    assert rng.next() != rng.next();
+
+    val die = Range.from(1).through(6).iterator().to_list();
+
+    for _ in Range.from(0).to(100) {
+        val random = rng.one_of(die);
+        assert random >= 1;
+        assert random <= 6;
+    }
+}

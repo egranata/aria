@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+func main() {
+    val r1 = Range.from(3).through(5);
+    val r2 = Range.from(6).through(10);
+    val r3 = Range.from(1).through(7);
+
+    val r2_u_r3 = r2.union(r3);
+    assert r2_u_r3.iterator().to_list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    val r1_i_r2 = r1.intersection(r2);
+    assert r1_i_r2.length() == 0;
+
+    val r1_i_r3 = r1.intersection(r3);
+    assert r1_i_r3.iterator().to_list() == [3, 4, 5];
+
+    val r1_u_3 = r1.union(r3);
+    assert r1_u_3.iterator().to_list() == [1, 2, 3, 4, 5, 6, 7];
+}

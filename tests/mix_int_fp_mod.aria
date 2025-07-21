@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    assert 2.5f % 1 == 0.5f;
+    assert 2 % 1.0f == 0.0f;
+}

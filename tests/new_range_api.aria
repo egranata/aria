@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+func increasing_exclusive_range() {
+    val r = Range.from(1).to(10);
+    val items = r.iterator().to_list();
+    assert items == [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    assert r.contains(1) == true;
+    assert r.contains(10) == false;
+    assert r.length() == 9;
+}
+
+func increasing_inclusive_range() {
+    val r = Range.from(1).through(10);
+    val items = r.iterator().to_list();
+    assert items == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    assert r.contains(1) == true;
+    assert r.contains(10) == true;
+    assert r.contains(11) == false;
+    assert r.length() == 10;
+}
+
+func decreasing_exclusive_range() {
+    val r = Range.from(1).to(10);
+    val items = r.descending().to_list();
+    assert items == [9, 8, 7, 6, 5, 4, 3, 2, 1];
+}
+
+func decreasing_inclusive_range() {
+    val r = Range.from(1).through(10);
+    val items = r.descending().to_list();
+    assert items == [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+}
+
+func increasing_exclusive_range_with_step() {
+    val r = Range.from(1).to(11).step(2);
+    val items = r.iterator().to_list();
+    assert items == [1, 3, 5, 7, 9];
+
+    val r = Range.from(1).to(10).step(2);
+    val items = r.iterator().to_list();
+    assert items == [1, 3, 5, 7, 9];
+}
+
+func increasing_inclusive_range_with_step() {
+    val r = Range.from(1).through(11).step(2);
+    val items = r.iterator().to_list();
+    assert items == [1, 3, 5, 7, 9, 11];
+
+    val r = Range.from(1).through(10).step(2);
+    val items = r.iterator().to_list();
+    assert items == [1, 3, 5, 7, 9];
+}
+
+func decreasing_exclusive_range_with_step() {
+    val r = Range.from(0).to(10);
+    val items = r.step(-2).to_list();
+    assert items == [9, 7, 5, 3, 1];
+
+    val r = Range.from(1).to(10);
+    val items = r.step(-2).to_list();
+    assert items == [9, 7, 5, 3, 1];
+}
+
+func decreasing_inclusive_range_with_step() {
+    val r = Range.from(0).through(10);
+    val items = r.step(-2).to_list();
+    assert items == [10, 8, 6, 4, 2, 0];
+
+    val r = Range.from(1).through(10);
+    val items = r.step(-2).to_list();
+    assert items == [10, 8, 6, 4, 2];
+}
+
+func union() {
+    val r1 = Range.from(1).to(5);
+    val r2 = Range.from(3).to(7);
+    val r3 = r1.union(r2);
+    assert r3.from == 1;
+    assert r3.to == 7;
+
+    val items = r3.iterator().to_list();
+    assert items == [1, 2, 3, 4, 5, 6];
+}
+
+func intersection() {
+    val r1 = Range.from(1).to(5);
+    val r2 = Range.from(3).to(7);
+    val r3 = r1.intersection(r2);
+    assert r3.from == 3;
+    assert r3.to == 5;
+
+    val items = r3.iterator().to_list();
+    assert items == [3, 4];
+}
+
+func main() {
+    increasing_exclusive_range();
+    increasing_inclusive_range();
+    decreasing_exclusive_range();
+    decreasing_inclusive_range();
+    increasing_exclusive_range_with_step();
+    increasing_inclusive_range_with_step();
+    decreasing_exclusive_range_with_step();
+    decreasing_inclusive_range_with_step();
+
+    union();
+    intersection();
+}

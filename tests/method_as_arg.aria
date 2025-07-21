@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+struct AddNumber {
+    type func new(n) {
+        alloc(This) {
+            .n = n,
+        };
+    }
+
+    func add(x) {
+        this.n + x;
+    }
+}
+
+func perform_op(f,n) {
+    f(n);
+}
+
+func main() {
+    val add5 = AddNumber.new(5);
+    assert perform_op(add5.add,4) == 9;
+}

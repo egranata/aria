@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: Apache-2.0
+import Set from aria.structures.set;
+import Range from aria.range.range;
+
+enum Direction {
+    case Increasing,
+    case Equal,
+    case Decreasing,
+}
+
+extension Direction {
+    func hash() {
+        match this {
+            case Increasing => { return 6037; },
+            case Equal => { return 4154; },
+            case Decreasing => { return 7889; }
+        }
+    }
+}
+
+func get_direction(a, b) {
+    if a > b {
+        return Direction::Increasing;
+    } elsif a == b {
+        return Direction::Equal;
+    } else {
+        return Direction::Decreasing;
+    }
+}
+
+func get_directions(nums) {
+    val directions = Set.new();
+    val idx = 0;
+    val bound = nums.len() - 2;
+    for idx in Range.from(0).through(bound) {
+        val a = nums[idx];
+        val b = nums[idx+1];
+        directions.set(get_direction(a,b));
+    }
+    return directions;
+}
+
+func get_max_delta(nums) {
+    val max_delta = -1;
+    val idx = 0;
+    val bound = nums.len() - 2;
+    for idx in Range.from(0).through(bound) {
+        val a = nums[idx];
+        val b = nums[idx+1];
+        val delta = (a-b).abs();
+        if delta > max_delta {
+            max_delta = delta;
+        }
+    }
+    return max_delta;
+}
+
+func main() {
+    val inputs = [
+        [7,6,4,2,1],
+        [1,2,7,8,9],
+        [9,7,6,2,1],
+        [8,6,4,4,1],
+        [1,3,6,7,9],
+    ];
+
+    for input in inputs {
+        val directions = get_directions(input);
+        if directions.len() != 1 || directions.contains(Direction::Equal) {
+            println("Input {0} is unsafe (not always increasing/decreasing)".format(input.join()));
+            continue;
+        }
+
+        val max_delta = get_max_delta(input);
+        if max_delta > 3 {
+            println("Input {0} is unsafe (levels change by more than 3)".format(input.join()));
+            continue;
+        }
+
+        println("Input {0} is safe".format(input.join()));
+    }
+}

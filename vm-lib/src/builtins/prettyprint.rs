@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: Apache-2.0
+use crate::{
+    builtins::VmBuiltins,
+    frame::Frame,
+    runtime_value::{function::BuiltinFunctionImpl, RuntimeValue},
+    vm::RunloopExit,
+};
+
+#[derive(Default)]
+struct Prettyprint {}
+impl BuiltinFunctionImpl for Prettyprint {
+    fn eval(
+        &self,
+        cur_frame: &mut Frame,
+        vm: &mut crate::vm::VirtualMachine,
+    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        let the_value = cur_frame.stack.pop();
+        let pp = the_value.prettyprint(cur_frame, vm);
+        cur_frame.stack.push(RuntimeValue::String(pp.into()));
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn arity(&self) -> u8 {
+        1_u8
+    }
+
+    fn name(&self) -> &str {
+        "prettyprint"
+    }
+}
+
+pub(super) fn insert_builtins(builtins: &mut VmBuiltins) {
+    builtins.insert_builtin::<Prettyprint>();
+}

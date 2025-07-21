@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin FunStuff {
+    func have_fun() {
+        return 123;
+    }
+}
+
+struct WantsFun {
+    include FunStuff
+}
+
+extension FunStuff {
+    func have_more_fun() {
+        return 456;
+    }
+}
+
+func main() {
+    val wf = alloc(WantsFun);
+    assert wf.have_fun() == 123;
+    assert wf.have_more_fun() == 456;
+}

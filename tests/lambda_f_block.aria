@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val f = |x,y| => {
+        if x > y {
+            return x;
+        } else {
+            return y;
+        }
+    };
+
+    assert f(3,4) == 4;
+    assert f(2,0) == 2;
+}

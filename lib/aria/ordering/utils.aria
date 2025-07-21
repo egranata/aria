@@ -1,0 +1,88 @@
+# SPDX-License-Identifier: Apache-2.0
+import CompareResult from aria.ordering.compare;
+
+func min(l: List) {
+    val min = l[0];
+
+    for i in l {
+        if i < min {
+            min = i;
+        }
+    }
+
+    return min;
+}
+
+func min_with_comparator(l: List, cmp) {
+    val min = l[0];
+
+    for i in l {
+        if cmp(i, min).is_lt() {
+            min = i;
+        }
+    }
+
+    return min;
+}
+
+func max(l: List) {
+    val max = l[0];
+
+    for i in l {
+        if i > max {
+            max = i;
+        }
+    }
+
+    return max;
+}
+
+func max_with_comparator(l: List, cmp) {
+    val max = l[0];
+
+    for i in l {
+        if cmp(i, max).is_gt() {
+            max = i;
+        }
+    }
+
+    return max;
+}
+
+func min_max(l: List) {
+    val min = l[0];
+    val max = l[0];
+
+    for i in l {
+        if i < min {
+            min = i;
+        }
+        if i > max {
+            max = i;
+        }
+    }
+
+    return Box(){
+        .min = min,
+        .max = max
+    };
+}
+
+func min_max_with_comparator(l: List, cmp) {
+    val min = l[0];
+    val max = l[0];
+
+    for i in l {
+        if cmp(i, min).is_lt() {
+            min = i;
+        }
+        if cmp(i, max).is_gt() {
+            max = i;
+        }
+    }
+
+    return Box(){
+        .min = min,
+        .max = max
+    };
+}

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+struct TakesVarArgs {
+    func compare(l,...) {
+        assert this isa TakesVarArgs;
+
+        assert l == varargs;
+    }
+}
+
+func main() {
+    val va = alloc(TakesVarArgs);
+
+    va.compare([3],3);
+    va.compare([3,4],3,4);
+    va.compare([3,4,5,6],3,4,5,6);
+    va.compare([]);
+}

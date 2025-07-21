@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+val n = 3;
+
+val foo = |x| => x + n;
+
+func main() {
+    assert foo(4) == 7;
+    n = 2;
+    assert foo(4) == 6;
+    assert foo(6) == 8;
+}

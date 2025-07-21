@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+struct InvalidArgument {}
+
+struct Divider {
+    func op_div(rhs) {
+        if rhs == 0 {
+            throw alloc(InvalidArgument);
+        } else {
+            return 1;
+        }
+    }
+}
+
+func main() {
+    val caught = false;
+
+    try {
+        alloc(Divider) / 0;
+    } catch e {
+        caught = e isa InvalidArgument;
+    }
+
+    assert caught;
+}

@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+func calc_pi() {
+    val lasts = 0;
+    val t = 3.0f;
+    val s = 3;
+    val n = 1;
+    val na = 0;
+    val d = 0;
+    val da = 24;
+    while s != lasts {
+        lasts = s;
+        n = n + na;
+        na = na + 8;
+        d = d + da;
+        da = da + 32;
+        t = (t * n) / d;
+        s = s + t;
+    }
+    return s;
+}
+
+func main() {
+    println("pi = {0}".format(calc_pi()));
+}

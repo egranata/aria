@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func lesser_or_equal(x,y) {
+    x <= y;
+}
+
+func main() {
+    assert lesser_or_equal(1.0f, 1.0f);
+    assert !lesser_or_equal(1.0f, 0);
+    assert !lesser_or_equal(1, 0.1f);
+
+    assert lesser_or_equal(1.1f, 3.14f);
+    assert lesser_or_equal(2, 3.14f);
+    assert lesser_or_equal(3.14f, 5);
+}

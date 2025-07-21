@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.string.classes;
+
+func main() {
+    assert "A".is_uppercase_letter();
+    assert "A".is_letter();
+    assert "A".is_alphanumeric();
+
+    assert "Z".is_uppercase_letter();
+    assert "Z".is_letter();
+    assert "Z".is_alphanumeric();
+
+    assert "a".is_lowercase_letter();
+    assert "a".is_letter();
+    assert "a".is_alphanumeric();
+
+    assert "z".is_lowercase_letter();
+    assert "z".is_letter();
+    assert "z".is_alphanumeric();
+
+    assert "0".is_digit();
+    assert "0".is_alphanumeric();
+
+    assert "9".is_digit();
+    assert "9".is_alphanumeric();
+
+    assert !"9".is_uppercase_letter();
+    assert !"9".is_lowercase_letter();
+
+    assert !",".is_alphanumeric();
+    assert !"*".is_alphanumeric();
+    assert !" ".is_alphanumeric();
+
+    assert " ".is_whitespace();
+    assert "\r".is_whitespace();
+    assert "\n".is_whitespace();
+    assert "\t".is_whitespace();
+}

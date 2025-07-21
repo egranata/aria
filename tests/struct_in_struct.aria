@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Outer {
+    struct Inner {
+        type func new(x,y) {
+            alloc(This) {
+                .x = x,
+                .y = y,
+            };
+        }
+
+        func i_add() {
+            this.x + this.y;
+        }
+
+        func i_sub() {
+            this.x - this.y;
+        }
+
+        func i_swap() {
+            val x = this.x;
+            val y = this.y;
+            this.x = y;
+            this.y = x;
+        }
+    }
+
+    type func new(x,y) {
+        alloc(This) {
+            .impl = Outer.Inner.new(x,y),
+        };
+    }
+
+    func add() {
+        this.impl.i_add();
+    }
+
+    func swap() {
+        this.impl.i_swap();
+    }
+
+    func sub() {
+        this.impl.i_sub();
+    }
+}
+
+func main() {
+    val o = Outer.new(8,2);
+    assert o.add() == 10;
+    o.swap();
+    assert o.sub() == -6;
+
+    # check that names are unique between Outer and Inner
+    assert !hasattr(o, "i_swap");
+    assert !hasattr(o.impl, "swap");
+
+    assert hasattr(Outer, "Inner");
+}

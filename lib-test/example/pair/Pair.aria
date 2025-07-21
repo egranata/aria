@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Pair {
+    type func new(x,y) {
+        alloc(This){
+            .x = x,
+            .y = y,
+        };
+    }
+
+    func swap() {
+        Pair.new(this.y, this.x);
+    }
+}
+
+extension Pair {
+    func max() {
+        if this.x > this.y {
+            return this.x;
+        } else {
+            return this.y;
+        }
+    }
+}

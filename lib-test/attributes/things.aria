@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(x,y) {
+    return x + y;
+}
+
+struct Bar {
+    type func new() {
+        return alloc(This);
+    }
+}
+
+enum A {
+    case X
+}
+
+mixin Something {
+    func answer() {
+        return 42;
+    }
+}

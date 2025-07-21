@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+
+func rough_approx_eq(x: Float, y: Float) {
+    (x-y).abs() <= 0.00001f;
+}
+
+func roundtrip_le(x: Float) {
+    x.ln().exp();
+}
+
+func roundtrip_el(x: Float) {
+    x.exp().ln();
+}
+
+func main() {
+    assert(rough_approx_eq(roundtrip_le(2.0f), 2.0f));
+    assert(rough_approx_eq(roundtrip_el(2.0f), 2.0f));
+
+    assert(rough_approx_eq(roundtrip_le(3.4635f), 3.4635f));
+    assert(rough_approx_eq(roundtrip_el(3.4635f), 3.4635f));
+
+    val had_error = false;
+
+    try {
+        (-1.1f).ln();
+    } catch e {
+        had_error = e isa Float.DomainError;
+    }
+
+    assert had_error;
+}

@@ -1,0 +1,8 @@
+[package]
+name = "opcodes-lib"
+version = "0.9.0"
+edition = "2021"
+
+[lib]
+name = "haxby_opcodes"
+path = "src/lib.rs"

@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Enumerate {
+    type func new(iter) {
+        if hasattr(iter, "iterator") {
+            iter = iter.iterator();
+        }
+        alloc(This) {
+            .iter = iter,
+            .index = 0,
+        };
+    }
+
+    func iterator() {
+        return this;
+    }
+
+    func next() {
+        val iter_next = this.iter.next();
+        if iter_next.done {
+            return iter_next;
+        } else {
+            val next = Box(){
+                .done = false,
+                .value = Box(){
+                    .index = this.index,
+                    .value = iter_next.value,
+                }
+            };
+            this.index += 1;
+            return next;
+        }
+    }
+}

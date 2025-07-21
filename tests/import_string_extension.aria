@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+import ext.string;
+
+func main() {
+    val s = "hello";
+    assert s.test_method() == 6;
+}

@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Double {
+    func double(n) {
+        return n + n;
+    }
+}
+
+mixin Triple {
+    func triple(n) {
+        return this.double(n) + n;
+    }
+
+    include Double
+}
+
+struct Test {
+    include Triple
+}
+
+func main() {
+    val t = alloc(Test);
+
+    assert t.double(2) == 4;
+    assert t.triple(4) == 12;
+}

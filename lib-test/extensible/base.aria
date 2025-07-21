@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Base {
+    type func new(x,y) {
+        alloc(This){
+            .x = x,
+            .y = y,
+        };
+    }
+
+    func swap() {
+        Base.new(this.y, this.x);
+    }
+}

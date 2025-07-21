@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+import JsonValue from aria.json.parser;
+
+func main() {
+    val json_object = JsonValue.parse('[true, false, null]');
+
+    assert json_object.is_Array();
+    val array = json_object.unwrap_Array();
+    assert array.len() == 3;
+    assert array[0].is_Boolean();
+    assert array[0].unwrap_Boolean() == true;
+    assert array[1].is_Boolean();
+    assert array[1].unwrap_Boolean() == false;
+    assert array[2].is_Null();    
+}

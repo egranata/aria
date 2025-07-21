@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func hash() {
+        return 42;
+    }
+}
+
+func main() {
+    val a = Maybe::None;
+    assert a.hash() == 0;
+
+    a = Maybe::Some(alloc(Foo));
+    assert a.hash() == 42;
+}

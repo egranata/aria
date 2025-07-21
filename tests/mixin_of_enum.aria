@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Direction {
+    case North,
+    case South,
+    case East,
+    case West,
+}
+
+extension Direction {
+    func prettyprint() {
+        match this {
+            case North => { return "North"; },
+            case South => { return "South"; },
+            case East => { return "East"; },
+            case West => { return "West"; },
+        }
+    }
+}
+
+mixin Navigation {
+    func navigate() {
+        return "Head {0}".format(this);
+    }
+}
+
+extension Direction {
+    include Navigation
+}
+
+func main() {
+    val d = Direction::East;
+
+    assert d.navigate() == "Head East";
+}

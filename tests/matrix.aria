@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0
+import Matrix from aria.numerics.matrix;
+
+func main() {
+    val m = Matrix.new(3, 3);
+    m.set(0, 0, 1.0f);
+    m.set(1, 1, 2.0f);
+    m.set(2, 2, 3.0f);
+    m.set(0, 1, 4.0f);
+    m.set(1, 0, 5.0f); 
+
+    assert m.get(0, 0) == 1.0f;
+    assert m.get(1, 1) == 2.0f;
+    assert m.get(2, 2) == 3.0f;
+    assert m.get(0, 1) == 4.0f;
+    assert m.get(1, 0) == 5.0f;
+    assert m.get(0, 2) == 0.0f;
+
+    val caught = false;
+    try {
+        m.set(3, 3, 10.0f);
+    } catch e {
+        assert e isa Matrix.DimensionMismatch;
+        caught = true;
+    }
+    assert caught;
+
+    val caught = false;
+    try {
+        m.get(4, 6);
+    } catch e {
+        assert e isa Matrix.DimensionMismatch;
+        caught = true;
+    }
+    assert caught;
+}

@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+struct EqualsFive {
+    func op_equals(rhs) {
+        return rhs == 5;
+    }
+}
+
+func main() {
+    val f = alloc(EqualsFive);
+    val yes = false;
+
+    match f {
+        == 3 => { assert false; },
+        isa Int => { assert false; },
+        == 5 => { yes = true; },
+        case Foo => { assert false; },
+    } else {
+        assert false;
+    }
+
+    assert yes;
+}

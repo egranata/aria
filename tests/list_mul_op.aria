@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val l = [1,2,3];
+    assert l * 0 == [];
+    assert l * 1 == [1,2,3];
+    assert l * 2 == [1,2,3,1,2,3];
+    assert l * 3 == [1,2,3,1,2,3,1,2,3];
+    assert l * 4 == [1,2,3,1,2,3,1,2,3,1,2,3];
+
+    assert 0 * l == [];
+    assert 1 * l == [1,2,3];
+    assert 2 * l == [1,2,3,1,2,3];
+    assert 3 * l == [1,2,3,1,2,3,1,2,3];
+    assert 4 * l == [1,2,3,1,2,3,1,2,3,1,2,3];
+}

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Blah {}
+
+enum Foo {
+    case A,
+    case B(Int),
+    case C,
+    case D(Blah)
+}
+
+func main() {
+    val f1 = Foo::A;
+    val f2 = Foo::B(3);
+    val f3 = Foo::C;
+    val f4 = Foo::D(alloc(Blah));
+}
+

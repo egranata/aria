@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Pair{
+    type func new_with_duplicate(x) {
+        assert hasattr(This, "new_with_items");
+        This.new_with_items(x,x);
+    }
+    type func new_with_items(x,y) {
+        alloc(This){
+            .x = x,
+            .y = y,
+        };
+    }
+}
+
+func main() {
+    val p = Pair.new_with_duplicate(5);
+    assert p.x == 5;
+    assert p.y == 5;
+}

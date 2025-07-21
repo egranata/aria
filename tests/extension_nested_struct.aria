@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: Apache-2.0
+struct A {
+    struct B {
+        struct C {
+            struct D {
+            }
+        }
+    }
+}
+
+extension A.B.C.D {
+    type func new() {
+        return alloc(This);
+    }
+
+    instance func answer() {
+        return 42;
+    }
+}
+
+extension A.B.C {
+    instance func answer() {
+        return 42;
+    }
+}
+
+extension A.B {
+    type func whoami() {
+        return "A.B";
+    }
+}
+
+extension A {
+    instance func getD() {
+        A.B.C.D.new();
+    }
+}
+
+val nested_struct = A.B.C;
+
+extension nested_struct {
+    type func question() {
+        return 24;
+    }
+}
+
+extension A {
+    struct OneMore {
+        type func new(x) {
+            alloc(This){
+                .x = x
+            };
+        }
+
+        instance func increment() {
+            this.x = this.x + 1;
+            this;
+        }
+    }
+}
+
+extension A.OneMore {
+    instance func get() {
+        return this.x;
+    }
+}
+
+func main() {
+    assert hasattr(A.B.C.D, "new");
+    assert hasattr(A.B, "whoami");
+    assert hasattr(A.B.C, "question");
+    assert hasattr(A, "OneMore");
+
+    assert alloc(A).getD().answer() == 42;
+    assert A.B.C.D.new().answer() == 42;
+
+    assert alloc(A.B.C).answer() == 42;
+    assert A.B.C.question() == 24;
+
+    assert A.B.whoami() == "A.B";
+
+    val aom = A.OneMore.new(12);
+    assert aom.get() == 12;
+    aom.increment().increment().increment();
+    assert aom.get() == 15;
+}

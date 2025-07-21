@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = Maybe::Some(123);
+    val a = false;
+    val b = false;
+
+    match x {
+        case Some(x: Int) => { a = true; },
+        case Some(x) => {assert(false);},
+    } else {
+        assert(false);
+    }
+
+    match x {
+        case Some(x) => {b = true;},
+        case Some(x: Int) => {assert(false);},
+    } else {
+        assert(false);
+    }
+
+    assert a;
+    assert b;
+}

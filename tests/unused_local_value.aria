@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(x) {
+    val y = x + 1;
+    return x;
+}
+
+func main() {
+    assert foo(4) == 4;
+}

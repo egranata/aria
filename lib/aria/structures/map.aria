@@ -1,0 +1,190 @@
+# SPDX-License-Identifier: Apache-2.0
+import Iterator,Iterable from aria.iterator.mixin;
+
+func empty_list(n) {
+    return [];
+}
+
+struct Map {
+    struct Entry {
+        type func new(k,v) {
+            alloc(This) {
+                .key = k,
+                .value = v,
+            };
+        }
+    }
+
+    func calc_hash(k) {
+        return k.hash() % this.capacity;
+    }
+
+    type func new() {
+        return Map.new_with_capacity(128);
+    }
+
+    type func new_with_capacity(n: Int) {
+        return alloc(This){
+            .buckets = List.from_function(empty_list, n),
+            .count = 0,
+            .capacity = n,
+            .key_list = [],
+        };
+    }
+
+    func keys() {
+        val remaining = this.len();
+        val ret = [];
+        val buckets_len = this.buckets.len();
+        for bucket in this.buckets {
+            for entry in bucket {
+                if entry isa Map.Entry {
+                    ret.append(entry.key);
+                    remaining -= 1;
+                    if remaining == 0 {
+                        return ret;
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    func prettyprint() {
+        val first = true;
+        val ret = "";
+        val count = this.len();
+        for bucket in this.buckets {
+            for entry in bucket {
+                if entry isa Map.Entry {
+                    if first {
+                        ret = "[{0}]->{1}".format(entry.key, entry.value);
+                        first = false;
+                    } else {
+                        ret = ret + ", [{0}]->{1}".format(entry.key, entry.value);
+                    }
+                    count -= 1;
+                    if count == 0 {
+                        return "Map(" + ret + ")";
+                    }
+                }
+            }
+        }
+
+        return "Map(" + ret + ")";
+    }
+
+    func set(k,v) {
+        val h = this.calc_hash(k);
+        val bucket = this.buckets[h];
+        val bucket_len = bucket.len();
+        val idx = 0;
+        val need_append = true;
+        val len_increase = true;
+        while idx < bucket_len {
+            match bucket[idx] {
+                isa Map.Entry => {
+                    if bucket[idx].key == k {
+                        len_increase = false; # key overwrite does not increase len
+                        bucket[idx].value = v;
+                        need_append = false;
+                        break;
+                    }
+                },
+                isa Maybe => {
+                    bucket[idx] = Map.Entry.new(k,v);
+                    need_append = false;
+                    break;
+                }
+            }
+            idx = idx + 1;
+        }
+        if need_append {
+            bucket.append(Map.Entry.new(k,v));
+        }
+        if len_increase {
+            this.count += 1;
+        }
+    }
+
+    func remove(k) {
+        val h = this.calc_hash(k);
+        val bucket = this.buckets[h];
+        val bucket_len = bucket.len();
+        val idx = 0;
+        while idx < bucket_len {
+            match bucket[idx] {
+                isa Map.Entry => {
+                    if bucket[idx].key == k {
+                        assert this.count > 0;
+                        this.count -= 1;
+                        bucket[idx] = Maybe::None;
+                    }
+                }
+            }
+            idx = idx + 1;
+        }
+    }
+
+    func get(k) {
+        val h = this.calc_hash(k);
+        val bucket = this.buckets[h];
+        val bucket_len = bucket.len();
+        for entry in bucket {
+            if (entry isa Map.Entry) && entry.key == k {
+                return Maybe::Some(entry.value);
+            }
+        }
+        return Maybe::None;
+    }
+
+    func contains(k) {
+        this.get(k).is_Some();
+    }
+
+    func len() {
+        return this.count;
+    }
+
+    func read_index(k) {
+        this.get(k).unwrap_Some();
+    }
+
+    func write_index(k,v) {
+        this.set(k,v);
+    }
+
+    struct MapIterator {
+        type func new(m) {
+            alloc(This){
+                .map = m,
+                .keys = m.keys().iterator(),
+            };
+        }
+
+        func next() {
+            val next_key = this.keys.next();
+            if next_key.done {
+                return next_key;
+            } else {
+                val value = this.map[next_key.value];
+                return Box(){
+                    .done = false,
+                    .value = Box(){
+                        .key = next_key.value,
+                        .value = value,
+                    }
+                };
+            }
+        }
+
+        include Iterator
+    }
+
+    func iterator() {
+        return Map.MapIterator.new(this);
+    }
+
+    include Iterable
+}

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val 🇮🇹 = 1_861;
+    assert(🇮🇹 == 1861);
+    val 😎 = 1;
+    assert(😎 == 1);
+    val 📦 = 3;
+    assert(📦 == 3);
+    val 💯 = 100;
+    assert(💯 == 100);
+    val αΞж = 123;
+    assert(αΞж == 123);
+    val $_a = 321;
+    assert($_a == 321);
+    val _a$ = 213;
+    assert(_a$ == 213);
+}

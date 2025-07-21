@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+func boolean() {
+    assert (true && true) == true;
+    assert (true && false) == false;
+    assert (false && true) == false;
+    assert (false && false) == false;
+}
+
+func integer() {
+    val a =           0b00101110101011110001;
+    val b =           0b00010100001100011010;
+    assert (a & b) == 0b00000100001000010000;
+}
+
+func main() {
+    integer();
+    boolean();
+}

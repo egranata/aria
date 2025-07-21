@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+struct GuardOne {
+    type val COUNTER = 1;
+
+    func guard_exit() {
+        GuardOne.COUNTER = GuardOne.COUNTER + GuardTwo.COUNTER;
+    }
+}
+
+struct GuardTwo {
+    type val COUNTER = 2;
+
+    func guard_exit() {
+        GuardTwo.COUNTER = GuardTwo.COUNTER + GuardOne.COUNTER;
+    }
+}
+
+func add(x,y) {
+    guard a = alloc(GuardOne) {
+        guard b = alloc(GuardTwo) {
+            return x + y;
+        }
+    }
+}
+
+func add_again(x,y) {
+    guard b = alloc(GuardTwo) {
+        guard a = alloc(GuardOne) {
+            return x + y;
+        }
+    }
+}
+
+func main() {
+    val n = add(3,4);
+    assert n == 7;
+    assert GuardTwo.COUNTER == 3;
+    assert GuardOne.COUNTER == 4;
+
+    GuardOne.COUNTER = 1;
+    GuardTwo.COUNTER = 2;
+
+    n = add_again(3,4);
+    assert n == 7;
+    assert GuardOne.COUNTER == 3;
+    assert GuardTwo.COUNTER == 5;
+}

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+
+func main() {
+    val m = Map.new() {
+        [1] = 2,
+        [2] = 3,
+        [3] = 4,
+        [4] = 5,
+        [5] = 6,
+        [6] = 7,
+    };
+
+    val key_total = 0;
+    for kvp in m {
+        assert kvp.value - kvp.key == 1;
+        key_total = key_total + kvp.key;
+    }
+
+    assert key_total == 21;
+}

@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func add_numbers(n, ...) {
+    val ret = n;
+    for n in varargs {
+        ret += n;
+    }
+    return ret;
+}
+
+func main() {
+    assert add_numbers(1,2,3,4) == 10;
+    assert add_numbers(5) == 5;
+    assert add_numbers(5,6) == 11;
+}
+

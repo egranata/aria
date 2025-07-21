@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+enum X {
+    case A,
+    case B(String),
+    case C(Int)
+}
+
+
+func main() {
+    val b = X::B("hello world");
+    val str = "goodbye";
+    match b {
+        isa Int => { assert(false); },
+        isa X and case A => { assert(false); },
+        isa X and case B(s) => { str = s; },
+    } else {
+        assert(false);
+    }
+
+    assert str == "hello world";
+}

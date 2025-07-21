@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: Apache-2.0
+func parity(x) {
+    enum Parity {
+        case Even,
+        case Odd,
+    }
+
+    if (x % 2 == 0) {
+        return Parity::Even;
+    } else {
+        return Parity::Odd;
+    }
+}
+
+func main() {
+    val p3 = parity(3);
+    val p6 = parity(6);
+
+    assert p3.is_Odd();
+    assert !p3.is_Even();
+
+    assert p6.is_Even();
+    assert !p6.is_Odd();
+
+    val hit = false;
+    match p6 {
+        case Even => {
+            hit = true;
+        }
+    }
+    assert hit;
+
+    val hit = false;
+    match p3 {
+        case Odd => {
+            hit = true;
+        }
+    }
+    assert hit;
+}

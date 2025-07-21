@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin RngRange {
+    # assume the Rng has instance func next()
+
+    func in_range(low, high) {
+        val range = high - low + 1;
+        val n = this.next();
+        return low + ((n % range + range) % range);
+    }
+
+    func one_of(x: List) {
+        val low = 0;
+        val high = x.len() - 1;
+        val index = this.in_range(low, high);
+        return x[index];
+    }
+}

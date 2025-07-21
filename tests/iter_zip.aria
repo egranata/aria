@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import Zip from aria.iterator.zip;
+import aria.iterator.mixin;
+
+func add(x,y) { x + y; }
+
+func main() {
+    val l1 = [1,2,3,4,5];
+    val l2 = [4,3,2,0];
+    val l3 = [3,3,3,4];
+    val count = 0;
+
+    val z = Zip.new(l1,l2,l3);
+    for item in z {
+        val sum = item.reduce(add,0);
+        assert sum == 8;
+        count = count + 1;
+    }
+
+    assert count == 4;
+}

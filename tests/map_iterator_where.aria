@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+
+func main() {
+    val m = Map.new(){
+        ["hello"] = 123,
+        ["A key"] = true,
+        ["Another key"] = true,
+        ["one more key"] = 321,
+    };
+
+    val count = 0;
+    for item in m.iterator().where(|kvp| => kvp.key[0] == "A") {
+        assert item.value == true;
+        count = count + 1;
+    }
+
+    assert count == 2;
+}

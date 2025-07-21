@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import aria.json.writer;
+import aria.json.parser;
+import JsonValue, JsonNull from aria.json.value;
+import Map from aria.structures.map;
+
+func main() {
+    val json_value = JsonValue::Object(Map.new() {
+        ["pi"] = JsonValue::Number(3.14f),
+        ["zero"] = JsonValue::Number(0.0f),
+        ["false"] = JsonValue::Boolean(false),
+        ["list"] = JsonValue::Array([
+            JsonValue::String("hello world"),
+            JsonValue::Number(1.0f),
+            JsonValue::Null(alloc(JsonNull))
+        ]),
+    });
+
+    val json_as_string = json_value.to_json_string();
+    
+    assert json_as_string.contains('"zero":0');
+    assert json_as_string.contains('"list":[');
+    assert json_as_string.contains('"false":false');
+
+    val json_remade = JsonValue.parse(json_as_string).flatten();
+
+    assert json_remade["pi"] == 3.14f;
+    assert json_remade["zero"] == 0.0f;
+    assert json_remade["false"] == false;
+    assert json_remade["list"].len() == 3;
+    assert json_remade["list"][0] == "hello world";
+    assert json_remade["list"][1] == 1.0f;
+    assert json_remade["list"][2] isa JsonNull;
+}

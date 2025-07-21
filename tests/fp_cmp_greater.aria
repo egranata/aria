@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func is_greater(x,y) {
+    x > y;
+}
+
+func main() {
+    assert is_greater(3.14f, 0);
+    assert is_greater(4, 1.1f);
+    assert is_greater(1.1f, 0.1f);
+
+    assert !is_greater(3.14f, 5.0f);
+    assert !is_greater(1, 1.1f);
+    assert !is_greater(2.0f, 4);
+}

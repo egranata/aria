@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func take_myself(x: Foo) {
+        return 42;
+    }
+}
+
+func main() {
+    val f = alloc(Foo);
+    assert f.take_myself(f) == 42;
+}

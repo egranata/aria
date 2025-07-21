@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+extension List {
+    type func empty() {
+        return [];
+    }
+}
+
+func main() {
+    assert hasattr(List, "empty");
+
+    val l = List.empty();
+    assert l.len() == 0;
+}

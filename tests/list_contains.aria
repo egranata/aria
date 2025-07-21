@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {}
+
+func main() {
+    val l = ["hello", false, 123, alloc(Foo), 5];
+
+    assert l.contains(false);
+    assert l.contains("hello");
+    assert !l.contains(true);
+    assert !l.contains(456);
+    assert l.contains(5);
+}

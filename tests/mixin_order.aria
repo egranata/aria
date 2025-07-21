@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin A {
+    func answer() {
+        return "Mixin A";
+    }
+}
+
+mixin B {
+    func answer() {
+        return "Mixin B";
+    }
+}
+
+struct A_Then_B {
+    include A
+    include B
+}
+
+struct B_Then_A {
+    include B
+    include A
+}
+
+func main() {
+    val a_then_b = alloc(A_Then_B);
+    val b_then_a = alloc(B_Then_A);
+
+    assert a_then_b.answer() == "Mixin B";
+    assert b_then_a.answer() == "Mixin A"; 
+}

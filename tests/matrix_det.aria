@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+import Matrix from aria.numerics.matrix;
+
+func main() {
+    val m = Matrix.new(3,3);
+
+    m.set(0, 0, 3);
+    m.set(0, 1, 3);
+    m.set(0, 2, 3);
+    m.set(1, 0, 4);
+    m.set(1, 1, 2);
+    m.set(1, 2, 5);
+    m.set(2, 0, 1);
+    m.set(2, 1, 6);
+    m.set(2, 2, 2);
+
+    assert m.determinant() == -21;
+}

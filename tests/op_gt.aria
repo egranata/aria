@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+struct StoreFive {
+    func op_lt(x) {
+        if x isa Int {
+            return 5 < x;
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+
+    func op_gt(x) {
+        if x isa Int {
+            return 5 > x;
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+}
+
+func main() {
+    assert alloc(StoreFive) > 3;
+    assert !(alloc(StoreFive) > 7);
+
+    assert 8 > alloc(StoreFive);
+    assert !(4 > alloc(StoreFive));
+}

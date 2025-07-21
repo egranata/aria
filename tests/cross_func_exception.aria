@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+func throws(x: Int) {
+    throw x + 1;
+}
+
+func call_throw() {
+    println(throws(5));
+}
+
+func handle_it() {
+    val handled = false;
+    try {
+        call_throw();
+    } catch e {
+        handled = true;
+        assert e == 6;
+    }
+    
+    return handled;
+}
+
+func main() {
+    assert handle_it() == true;
+}

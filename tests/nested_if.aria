@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+func do_compare(x,a,y,b) {
+    if x == a {
+        if y == b {
+            return 123;
+        } elsif y == a {
+            return 124;
+        } else {
+            return 125;
+        }
+    } elsif x == b {
+        if y == a {
+            return 321;
+        } elsif y == b {
+            return 324;
+        } else {
+            return 325;
+        }
+    }
+}
+
+func main() {
+    assert do_compare(3,3,4,3) == 125;
+
+    assert do_compare(3,3,4,4) == 123;
+
+    assert do_compare(5,0,0,5) == 321;
+
+    assert do_compare(2,1,2,2) == 324;
+}

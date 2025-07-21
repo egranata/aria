@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+import Pair from example.pair.Pair;
+
+func main() {
+    val p = Pair.new(4,6);
+    assert p.max() == 6;
+
+    val q = example.pair.Pair.Pair.new(5,7);
+    assert q.max() == 7;
+}

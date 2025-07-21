@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val list = [3,7,11,16,19,33,46,55,91,328,410,510,613];
+
+    assert list.binary_search(21).is_None();
+    assert list.binary_search(33).is_Some();
+    assert list.binary_search(33).unwrap_Some() == 5;
+    assert list[5] == 33;
+}

@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val caught = false;
+
+    try {
+        assert 1 + "hello" == false;
+    } catch e {
+        match e {
+            isa RuntimeError and case UnexpectedType => {
+                caught = true;
+            }
+        }
+    }
+
+    assert caught;
+}

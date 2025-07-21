@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+struct One {
+    type func new(x) {
+        alloc(This) {
+            .x = x + 1,
+        };
+    }
+
+    func double() {
+        this.x + this.x;
+    }
+}
+
+struct Two {
+    type func new(x) {
+        alloc(This) {
+            .x = x - 1,
+        };
+    }
+
+    func half() {
+        this.x / 2;
+    }
+}

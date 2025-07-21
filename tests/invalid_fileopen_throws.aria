@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val thrown = false;
+
+    try {
+        # this path should be invalid on pretty much any system that exists and matters
+        val file = File.open("@:?/\.nonexistent_file.txt", File.OpenMode.new().read());
+    } catch e {
+        thrown = true;
+    }
+
+    assert(thrown);
+}

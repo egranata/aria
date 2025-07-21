@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val a = 5;
+    val b = 8;
+
+    assert a <= a;
+    assert b >= b;
+    assert a >= a;
+    assert b <= b;
+
+    assert a <= b;
+    assert b >= a;
+}

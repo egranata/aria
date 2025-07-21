@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+func make_pair(x,y) {
+    val pair = Box();
+    pair.x = x;
+    pair.y = y;
+    return pair;
+}
+
+func symmetrical(p) {
+    make_pair(p.y, p.x);
+}
+
+func main() {
+    val p = make_pair(4,5);
+    assert p.x == 4;
+    assert p.y == 5;
+    
+    val q = symmetrical(p);
+    assert q.x == 5;
+    assert q.y == 4;
+}

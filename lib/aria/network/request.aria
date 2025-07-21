@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: uses_dylib("aria_http");
+
+import Map from aria.structures.map;
+import JsonValue, JsonNull from aria.json.value;
+import aria.json.writer;
+
+struct Request {
+    struct Response {
+        func prettyprint() {
+            println("aria.network.Request.Response");
+        }
+    }
+
+    struct Error {
+        type func new(msg) {
+            return alloc(This) {
+                .msg = msg,
+            };
+        }
+
+        func prettyprint() {
+            return "network error: {0}".format(self.msg);
+        }
+    }
+
+    type func new(url: String) {
+        return alloc(This) {
+            .url = url,
+            .headers = Map.new(),
+            .timeout = 30.0f,
+        };
+    }
+
+    func get() {
+        # the native impl takes and returns headers as a key/value pair list
+        # but we use Map in Aria - this code handles that conversion logic
+
+        val headers = [];
+        for h in this.headers {
+            headers.append([h.key, h.value]);
+        }
+
+        val response = this._get(headers);
+
+        val headers = Map.new();
+        for header in response.headers {
+            headers.set(header[0], header[1]);
+        }
+        response.headers = headers;
+
+        return response;
+    }
+
+    func post(data: String) {
+        # the native impl takes and returns headers as a key/value pair list
+        # but we use Map in Aria - this code handles that conversion logic
+
+        val headers = [];
+        for h in this.headers {
+            headers.append([h.key, h.value]);
+        }
+
+        val response = this._post(headers, data);
+
+        val headers = Map.new();
+        for header in response.headers {
+            headers.set(header[0], header[1]);
+        }
+        response.headers = headers;
+
+        return response;
+    }
+
+    func post_as_json(data) {
+        val the_val = JsonValue.new_from_value(data).to_json_string();
+        this.headers["Content-Type"] = "application/json";
+        return this.post(the_val);
+    }
+}

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+enum Maybe {
+    case Some(Any),
+    case None,
+}
+
+extension Maybe {
+    func apply(f) {
+        match this {
+            case Some(x) => { return Maybe::Some(f(x)); },
+            case None => { return Maybe::None; }
+        }
+    }
+
+    func hash() {
+        match this {
+            case Some(x) => { return x.hash(); },
+        } else {
+            return 0;
+        }
+    }
+
+    func unwrap_or(x) {
+        match this {
+            case Some(y) => { return y; },
+            case None => { return x; }
+        }
+    }
+}
+

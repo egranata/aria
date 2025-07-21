@@ -1,0 +1,328 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+import aria.string.classes;
+
+enum Token {
+    case Number(Int),
+    case Identifier(String),
+    case Plus,
+    case Minus,
+    case Star,
+    case Slash,
+    case LeftParen,
+    case RightParen,
+    case EOF,
+}
+
+extension Token {
+    func prettyprint() {
+        match this {
+            case Number(n) => { return prettyprint(n); },
+            case Identifier(s) => { return s; },
+            case Plus => { return "+"; },
+            case Minus => { return "-"; },
+            case Star => { return "*"; },
+            case Slash => { return "/"; },
+            case LeftParen => { return "("; },
+            case RightParen => { return ")"; },
+            case EOF => { return "<eof>"; },
+        }
+    }
+}
+
+struct Lexer {
+    struct InvalidCharacter {
+        type func new(c) {
+            return alloc(This) {
+                .c = c,
+            };
+        }
+
+        func prettyprint() {
+            return "Invalid character: '{0}'".format(this.c);
+        }
+    }
+
+    type func new(text) {
+        return alloc(This) {
+            .text = text,
+            .pos = 0,
+        };
+    }
+
+    func current() {
+        return this.text[this.pos];
+    }
+
+    func eof() {
+        return this.pos >= this.text.len();
+    }
+
+    func advance() {
+        this.pos += 1;
+    }
+
+    func whitespace() {
+        while !this.eof() {
+            val c = this.current();
+            if c.is_whitespace() {
+                this.advance();
+            } else {
+                break;
+            }
+        }
+    }
+
+    func identifier() {
+        val id_str = "";
+        while !this.eof() {
+            val c = this.current();
+            if !c.is_alphanumeric() {
+                break;
+            } else {
+                id_str += c;
+                this.advance();
+            }
+        }
+
+        return Token::Identifier(id_str);
+    }
+
+    func number() {
+        val num_str = "";
+        while !this.eof() {
+            val c = this.current();
+            if !c.is_digit() {
+                break;
+            } else {
+                num_str += c;
+                this.advance();
+            }
+        }
+
+        return Token::Number(Int.parse(num_str).unwrap_Some());
+    }
+
+    func next() {
+        while !this.eof() {
+            if this.current().is_whitespace() {
+                this.whitespace();
+            }
+ 
+            if this.current().is_digit() {
+                return this.number();
+            }
+
+            if this.current().is_letter() {
+                return this.identifier();
+            }
+            
+            if this.current() == "+" {
+                this.advance();
+                return Token::Plus;
+            }
+
+            if this.current() == "-" {
+                this.advance();
+                return Token::Minus;
+            }
+
+            if this.current() == "*" {
+                this.advance();
+                return Token::Star;
+            }
+
+            if this.current() == "/" {
+                this.advance();
+                return Token::Slash;
+            }
+
+            if this.current() == "(" {
+                this.advance();
+                return Token::LeftParen;
+            }
+
+            if this.current() == ")" {
+                this.advance();
+                return Token::RightParen;
+            }
+
+            throw Lexer.InvalidCharacter.new(this.current());
+        }
+
+        return Token::EOF;
+    }
+}
+
+struct Ast {
+    struct Identifier {
+        type func new(name: String) {
+            return alloc(This) {
+                .name = name,
+            };
+        }
+
+        func prettyprint() {
+            return "Identifier({0})".format(this.name);
+        }
+
+        func eval(identifiers) {
+            return identifiers[this.name];
+        }
+    }
+
+    struct Number {
+        type func new(v: Int) {
+            return alloc(This) {
+                .value = v,
+            };
+        }
+
+        func prettyprint() {
+            return "Number({0})".format(this.value);
+        }
+
+        func eval(_) {
+            return this.value;
+        }
+    }
+
+    struct BinaryOperation {
+        enum Operator {
+            case Add,
+            case Sub,
+            case Mul,
+            case Div,
+        }
+    }
+}
+
+extension Ast.BinaryOperation {
+    type func new(left, right, op: Ast.BinaryOperation.Operator) {
+        return alloc(This) {
+            .left = left,
+            .op = op,
+            .right = right,
+        };
+    }
+
+    func prettyprint() {
+        return "BinOp(({0}) {1} ({2}))".format(this.left, this.op, this.right);
+    }
+
+    func eval(identifiers) {
+        val left = this.left.eval(identifiers);
+        val right = this.right.eval(identifiers);
+
+        match this.op {
+            case Add => { return left + right; },
+            case Sub => { return left - right; },
+            case Mul => { return left * right; },
+            case Div => { return left / right; },
+        } else {
+            assert(false);
+        }
+    }
+}
+
+extension Ast.BinaryOperation.Operator {
+    type func from(src: Token) {
+        match src {
+            case Plus => { return This::Add; },
+            case Minus => { return This::Sub; },
+            case Star => { return This::Mul; },
+            case Slash => { return This::Div; },
+        } else {
+            assert(false);
+        }
+    }
+
+    func prettyprint() {
+        match this {
+            case Add => { return "+"; },
+            case Sub => { return "-"; },
+            case Mul => { return "*"; },
+            case Div => { return "/"; },
+        }
+    }
+}
+
+struct Parser {
+    struct UnexpectedToken {
+        func prettyprint() {
+            return "Unexpected token encountered";
+        }
+    }
+    type func new(lexer: Lexer) {
+        alloc(This) {
+            .lexer = lexer,
+            .current_token = lexer.next(),
+        };
+    }
+
+    func eat(f) {
+        if f(this.current_token) {
+            this.current_token = this.lexer.next();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    func factor() {
+        val token = this.current_token;
+        if this.eat(|t| => t.is_Number()) {
+            return Ast.Number.new(token.unwrap_Number());
+        } elsif this.eat(|t| => t.is_LeftParen()) {
+            val node = this.expr();
+            assert (this.eat(|t| => t.is_RightParen()));
+            return node;
+        } elsif this.eat(|t| => t.is_Identifier()) {
+            return Ast.Identifier.new(token.unwrap_Identifier());
+        } else {
+            throw alloc(Parser.UnexpectedToken);
+        }
+    }
+
+    func term() {
+        val node = this.factor();
+        while true {
+            val op = this.current_token;
+            if this.eat(|t| => t.is_Star() || t.is_Slash()) {
+                op = Ast.BinaryOperation.Operator.from(op);
+                node = Ast.BinaryOperation.new(node, this.factor(), op);
+            } else {
+                return node;
+            }
+        }
+    }
+
+    func expr() {
+        val node = this.term();
+        while true {
+            val op = this.current_token;
+            if this.eat(|t| => t.is_Plus() || t.is_Minus()) {
+                op = Ast.BinaryOperation.Operator.from(op);
+                node = Ast.BinaryOperation.new(node, this.term(), op);
+            } else {
+                return node;
+            }
+        }
+    }
+
+    func parse() {
+        this.expr();
+    }
+}
+
+func main() {
+    val identifiers = Map.new() {
+        ["answer"] = 42,
+    };
+
+    val input = "answer + 4 * (5 - 7 / 2)";
+    val lxr = Lexer.new(input);
+    val parser = Parser.new(Lexer.new(input));
+    val ast = parser.parse();
+    println("{0} -> {1}".format(ast, ast.eval(identifiers)));
+}

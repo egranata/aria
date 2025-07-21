@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+import aria.iterator.mixin;
+
+func main() {
+    val range = Range.from(3).through(5);
+    assert range.contains(3);
+    assert range.contains(4);
+    assert range.contains(5);
+
+    assert !range.contains(2);
+    assert !range.contains(6);
+
+    val sum = 0;
+    for item in range {
+        sum = sum + item;
+    }
+
+    assert sum == 12;
+
+    val list = range.iterator().to_list();
+    assert list == [3,4,5];
+}
+

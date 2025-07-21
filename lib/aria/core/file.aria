@@ -1,0 +1,191 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+extension File {
+    struct IOError {
+        type func new(message: String) {
+            alloc(This) {
+                .message = message
+            };
+        }
+
+        instance func prettyprint() {
+            return "IO error: {0}".format(this.message);
+        }
+    }
+
+    func guard_exit() {
+        this.close();
+    }
+
+    func close() {
+        this._close();
+    }
+
+    # the values here must be kept in sync with file_io.rs
+    struct OpenMode {
+        type func new() {
+            alloc(This) {
+                .mode = 0,
+            };
+        }
+
+        func read() {
+            this.mode = this.mode | 1;
+            return this;
+        }
+
+        func write() {
+            this.mode = this.mode | 2;
+            return this;
+        }
+
+        func append() {
+            this.mode = this.mode | 4;
+            return this;
+        }
+
+        func truncate() {
+            this.mode = this.mode | 8;
+            return this;
+        }
+
+        func create() {
+            this.mode = this.mode | 16;
+            return this;
+        }
+    }
+
+    type func open(path, mode: File.OpenMode) {
+        if path isa Path {
+            path = path.prettyprint();
+        }
+
+        File._new(path, mode.mode);
+    }
+
+    func read_all() {
+        this._read_all();
+    }
+
+    func read(n: Int) {
+        val buffer = this._read_count(n);
+        return String.new_with_bytes(buffer);
+    }
+
+    func write(s) {
+        this._write_str(s);
+    }
+
+    func try_readln() {
+        val buffer = [];
+        val c = 0;
+        try {
+            c = this._read_count(1);
+        } catch e {
+            return Maybe::None;
+        }
+        if c[0] == 10 {
+            return Maybe::Some("");
+        }
+        while true {
+            buffer.append(c[0]);
+            try {
+                c = this._read_count(1);
+            } catch e {
+                break;
+            }
+            if c[0] == 10 {
+                break;
+            }
+        }
+        return Maybe::Some(String.new_with_bytes(buffer));
+    }
+
+    # this is slow!
+    func readln() {
+        val maybe_line = this.try_readln();
+        return maybe_line.unwrap_or("");
+    }
+
+    func writeln(s) {
+        this.write(s); this.write("\n");
+    }
+
+    func get_position() {
+        this._getpos();
+    }
+
+    func set_position(offset: Int) {
+        this._setpos(offset);
+    }
+
+    func len() {
+        this._getsize();
+    }
+
+    enum SeekMode {
+        case Start(Int),
+        case Current(Int),
+        case End(Int),
+    }
+
+    func seek(mode: File.SeekMode) {
+        match mode {
+            case Start(offset) => {
+                return this.set_position(offset);
+            },
+            case Current(offset) => {
+                return this.set_position(this.get_position() + offset);
+            },
+            case End(offset) => {
+                return this.set_position(this.len() + offset);
+            },
+        }
+    }
+
+    func flush() {
+        this._flush();
+    }
+
+    func lines() {
+        return FileLineIterator.new(this);
+    }
+}
+
+struct FileLineIterator {
+    type func new(file) {
+        alloc(This) {
+            .file = file,
+        };
+    }
+
+    func iterator() {
+        return this;
+    }
+
+    # Box is not available because of no_std flag
+    struct IteratorResult {
+        type func new_with_done() {
+            return alloc(This) {
+                .done = true,
+            };
+        }
+
+        type func new_with_value(v) {
+            return alloc(This) {
+                .done = false,
+                .value = v,
+            };
+        }
+    }
+
+    func next() {
+        val maybe_line = this.file.try_readln();
+        if maybe_line.is_None() {
+            return FileLineIterator.IteratorResult.new_with_done();
+        } else {
+            return FileLineIterator.IteratorResult.new_with_value(maybe_line.unwrap_Some());
+        }
+    }
+}

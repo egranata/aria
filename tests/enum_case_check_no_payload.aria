@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Foo {
+    case A,
+    case B,
+    case C,
+    case D,
+    case E,
+}
+
+struct WhichCase {
+    type func new() {
+        alloc(This){
+            .is_a = false,
+            .is_b = false,
+            .is_c = false,
+            .is_d = false,
+        };
+    }
+}
+
+func check_cases(x: Foo) {
+    val wc: WhichCase = WhichCase.new();
+
+    match x {
+        case A => { wc.is_a = true; },
+        case B => { wc.is_b = true; },
+        case C => { wc.is_c = true; },
+        case D => { wc.is_d = true; },
+    }
+
+    return wc;
+}
+
+func main() {
+    val a = Foo::A;
+    val b = Foo::B;
+    val c = Foo::C;
+    val d = Foo::D;
+    val e = Foo::E;
+
+    val check: WhichCase = check_cases(a);
+    assert check.is_a;
+    assert !check.is_b;
+    assert !check.is_c;
+    assert !check.is_d;
+
+    val check: WhichCase = check_cases(b);
+    assert !check.is_a;
+    assert check.is_b;
+    assert !check.is_c;
+    assert !check.is_d;
+
+    val check: WhichCase = check_cases(c);
+    assert !check.is_a;
+    assert !check.is_b;
+    assert check.is_c;
+    assert !check.is_d;
+
+    val check: WhichCase = check_cases(d);
+    assert !check.is_a;
+    assert !check.is_b;
+    assert !check.is_c;
+    assert check.is_d;
+
+    val check: WhichCase = check_cases(e);
+    assert !check.is_a;
+    assert !check.is_b;
+    assert !check.is_c;
+    assert !check.is_d;
+}

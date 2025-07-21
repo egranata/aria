@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type val MAX_VALUE = 3;
+
+    type func new(n) {
+        if n > Foo.MAX_VALUE {
+            n = Foo.MAX_VALUE;
+        }
+        alloc(This) {
+            .n = n,
+        };
+    }
+}
+
+func main() {
+    val foo_2 = Foo.new(2);
+    val foo_4 = Foo.new(4);
+
+    Foo.MAX_VALUE = 5;
+    val foo_5 = Foo.new(5);
+
+    assert foo_2.n == 2;
+    assert foo_4.n == 3;
+    assert foo_5.n == 5;
+
+    # should this actually work?
+    assert foo_2.MAX_VALUE == 5;
+}

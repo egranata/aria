@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func subtract(x,y) {
+    x-y;
+}
+
+func main() {
+    val n = subtract(5,2);
+    assert n == 3;
+}

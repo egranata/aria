@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Guard {
+    type func new(x: Int) {
+        alloc(This) {
+            .counter = x,
+        };
+    }
+
+    func guard_exit() {
+        this.counter = this.counter + 1;
+    }
+}
+
+func main() {
+    val g1 = Guard.new(1);
+    val g2 = Guard.new(2);
+
+    try {
+        guard _ = g1 {
+            guard _ = g2 {
+                throw 4;
+            }
+        }
+    } catch e {
+        assert e == 4;
+        assert g1.counter == 2;
+        assert g2.counter == 3;
+    }
+
+    assert g1.counter == 2;
+    assert g2.counter == 3;
+}

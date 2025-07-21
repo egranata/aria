@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Answer {
+    func answer() {
+        return 42;
+    }
+}
+
+struct SomeType {
+    type func new(x) {
+        alloc(This){
+            .x = x,
+        };
+    }
+
+    include Answer
+}
+
+func main() {
+    val st = SomeType.new(1);
+    assert st.x == 1;
+    assert st.answer() == 42;
+}
+

@@ -1,0 +1,133 @@
+# SPDX-License-Identifier: Apache-2.0
+enum TestResult {
+    case Pass,
+    case Fail(String)
+}
+
+extension TestResult {
+    func prettyprint() {
+        match this {
+            case Pass => { return "passed"; },
+            case Fail(e) => { return prettyprint(e); },
+        }
+    }
+}
+
+struct ComparisonMismatch {
+    type func new(expected, actual, description) {
+        return alloc(This) {
+            .expected = expected,
+            .actual = actual,
+            .description = description
+        };
+    }
+
+    instance func prettyprint() {
+        return "expected: {0} {1} {2}, but it was not".format(this.actual, this.description, this.expected);
+    }
+}
+
+struct OperationFailure {
+    type func new(operation, message) {
+        return alloc(This) {
+            .operation = operation,
+            .message = message
+        };
+    }
+
+    instance func prettyprint() {
+        return "operation {0} expected to {1}".format(this.operation, this.message);
+    }
+}
+
+mixin TestCase {
+    # this.test() is required, and expected to not throw any errors
+    # if test.setup() and test.teardown() are defined they will be called
+
+    # encourage tests to use setup/teardown for any non trivial construction
+    type func new() {
+        return alloc(This);
+    }
+
+    func run() {
+        if hasattr(this, "setup") {
+            try {
+                this.setup(); # setup cannot return error, but can throw
+            } catch e {
+                return TestResult::Fail("setup error: {0}".format(e));
+            }
+        }
+
+        val ret = TestResult::Pass;
+
+        try {
+            this.test(); # test cannot return error, but can throw
+        } catch e {
+            ret = TestResult::Fail("test failure: {0}".format(e));
+        }
+
+        if hasattr(this, "teardown") {
+            try {
+                this.teardown();
+            } catch e {
+                # ignore teardown errors for now
+                # should a teardown error cause a test to fail? probably not
+            }
+        }
+
+        return ret;
+    }
+
+    func assert_equal(expected, actual) {
+        if expected != actual {
+            throw ComparisonMismatch.new(expected, actual, "equal to");
+        }
+    }
+
+    func assert_not_equal(expected, actual) {
+        if expected == actual {
+            throw ComparisonMismatch.new(expected, actual, "different from");
+        }
+    }
+
+    func assert_throws(f) {
+        try {
+            f();
+            throw OperationFailure.new(prettyprint(f), "throw but didn't");
+        } catch e {
+            # this is expected
+        }
+    }
+}
+
+struct TestSuite {
+    type func new(name) {
+        return alloc(This) {
+            .name = name,
+            .tests = []
+        };
+    }
+
+    instance func add_test(test) {
+        this.tests.append(test);
+        return this;
+    }
+
+    instance func run() {
+        val num_fail = 0;
+        val num_pass = 0;
+        for test in this.tests {
+            val result = test.run();
+            println("{0}: {1}".format(prettyprint(test), result.prettyprint()));
+            if result.is_Fail() {
+                num_fail += 1;
+            } else {
+                num_pass += 1;
+            }
+        }
+
+        println("{0} tests, {1} passed, {2} failed".format(this.tests.len(), num_pass, num_fail));
+
+        return num_fail;
+    }
+}

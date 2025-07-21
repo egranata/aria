@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+import Set from aria.structures.set;
+
+func main() {
+    val s = Set.new();
+    
+    assert s.len() == 0;
+    s.set(123);
+    
+    assert s.len() == 1;
+    assert s.contains(123);
+    assert !s.contains("123");
+
+    s.set("hello");
+    assert s.len() == 2;
+    assert s.contains("hello");
+    assert s.contains(123);
+
+    s.remove(321);
+    assert s.len() == 2;
+    assert s.contains("hello");
+    assert s.contains(123);
+
+    s.remove(123);
+    assert s.len() == 1;
+    assert s.contains("hello");
+    assert !s.contains(123);
+}

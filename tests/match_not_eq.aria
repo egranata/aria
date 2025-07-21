@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val check = false;
+
+    match 5 {
+        != 5 => { assert(false); },
+        == 4 => { assert false; },
+        != 4 => { check = true; },
+    } else {
+        assert false;
+    }
+
+    assert check;
+}

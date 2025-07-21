@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+extension Bool {
+    func hash() {
+        if this {
+            return 4093;
+        } else {
+            return 7877;
+        }
+    }
+}

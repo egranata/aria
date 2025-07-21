@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func f1(x) {
+        return x + 1;
+    }
+    func f2(x) {
+        return x * 2;
+    }
+    func f3(x) {
+        return x + 3;
+    }
+}
+
+extension Foo {
+    func f4(x) {
+        return x + 4;
+    }
+    func f5(x) {
+        return x + 5;
+    }
+    func f6(x) {
+        return x + 6;
+    }
+}
+
+struct Bar {
+    func f1(x) {
+        return x + 1;
+    }
+    func f2(x) {
+        return x * 2;
+    }
+    func f3(x) {
+        return x + 3;
+    }
+}
+
+mixin PlusSeven {
+    func f7(x) {
+        return x + 7;
+    }
+}
+
+extension Bar {
+    include PlusSeven
+}
+
+func main() {
+    val f = alloc(Foo);
+    val b = alloc(Bar);
+
+    val attribs_f = listattrs(f);
+    val attribs_b = listattrs(b);
+
+    assert attribs_f.contains("f1");
+    assert attribs_f.contains("f2");
+    assert attribs_f.contains("f3");
+    assert attribs_f.contains("f4");
+    assert attribs_f.contains("f5");
+    assert attribs_f.contains("f6");
+    assert attribs_f.len() == 6;
+
+    assert attribs_b.contains("f1");
+    assert attribs_b.contains("f2");
+    assert attribs_b.contains("f3");
+    assert attribs_b.contains("f7");
+    assert attribs_b.len() == 4;
+
+    val attribs_m = listattrs(PlusSeven);
+    assert attribs_m.contains("f7");
+    assert attribs_m.len() == 1;
+}

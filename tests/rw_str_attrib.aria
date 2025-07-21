@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+extension String {
+    func size() {
+        this.len();
+    }
+
+    func double() {
+        this * 2;
+    }
+}
+
+func b_double() {
+    return "test";
+}
+
+func main() {
+    val a = "hello";
+    val b = "world";
+
+    assert a.size() == 5;
+    assert b.size() == 5;
+
+    a.size = a.size() + 1;
+    assert a.size == 6;
+    assert b.size() == 5;
+
+    assert a.double() == "hellohello";
+    b.double = b_double();
+    assert b.double == "test";
+    assert a.double() == "hellohello";
+    assert b.size() == b.len();
+}

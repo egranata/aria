@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 1;
+    try {
+        x = 2;
+        throw 3;
+    } catch e {
+        assert e == 3;
+        x = x + 1;
+    }
+    assert x == 3;
+}

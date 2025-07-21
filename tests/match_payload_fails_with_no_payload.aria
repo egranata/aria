@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Something {
+    case HasPayload(Any),
+    case HasNoPayload
+}
+
+func do_the_thing(x: Something) {
+    match x {
+        case HasPayload(x) => { return x; }
+    } else {
+        return 123456;
+    }
+}
+
+func main() {
+    val thing = do_the_thing(Something::HasNoPayload);
+    assert thing == 123456;
+
+    thing = do_the_thing(Something::HasPayload("hello"));
+    assert thing == "hello";
+}

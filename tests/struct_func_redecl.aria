@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Test {
+    func answer() {
+        return "A";
+    }
+
+    func answer() {
+        return "B";
+    }
+}
+
+func main() {
+    val test = alloc(Test);
+
+    assert test.answer() == "B";
+}

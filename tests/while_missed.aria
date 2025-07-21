@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func loop_forever_or_never(b) {
+    val counter = 721;
+    while b {
+        counter = counter + 1;
+        println(b);        
+    }
+    return counter;
+}
+
+func main() {
+    val c = loop_forever_or_never(false);
+    assert c == 721;
+}

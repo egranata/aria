@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+import Complex from aria.numerics.complex;
+
+func complex(i,j) {
+    Complex.new(i,j);
+}
+
+func main() {
+    val one = complex(1,0);
+    val some_num = complex(3,2);
+
+    assert one == 1;
+    assert one == 1.0f;
+
+    assert some_num != 3;
+    assert some_num != 2;
+    assert some_num != 3.0f;
+    assert some_num != 2.0f;
+
+    assert (some_num + one) == complex(4,2);
+
+    assert one + complex(0,1) == complex(1,1);
+    assert 1 + complex(2,2) == some_num;
+
+    assert (some_num - one) == complex(2,2);
+    assert (some_num - complex(0,2)) == 3;
+
+    assert 1 - complex(1,2) - complex(0,1) == complex(0,1);
+
+    assert complex(3,2) * complex(4,-1) == complex(14,5);
+    assert 2 * complex(0,1) == complex(0,2);
+    assert 2 * complex(1,0) == 2;
+
+    assert some_num.conj() == complex(3,-2);
+    assert one.conj() == one;
+
+    assert complex(3,4).reciprocal() == complex(0.12f, -0.16f);
+
+    val quot = complex(2,3) / complex(1,-2);
+
+    assert (quot.real + 0.8f).abs() <= 0.0001f;
+    assert (quot.imag - 1.4f).abs() <= 0.0001f;
+}

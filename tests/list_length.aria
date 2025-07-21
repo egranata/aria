@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val lst_empty = [];
+    val lst_one = [1];
+    val lst_three = [1,2,3];
+    val lst_nested = [lst_empty, lst_one, lst_three, false];
+
+    assert lst_empty.len() == 0;
+    assert lst_one.len() == 1;
+    assert lst_three.len() == 3;
+
+    assert lst_nested.len() == 4;
+    assert lst_nested[0].len() == 0;
+    assert lst_nested[1].len() == 1;
+    assert lst_nested[2].len() == 3;
+}

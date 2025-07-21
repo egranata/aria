@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+# this should be a real enum
+enum Optional {
+    case Some(Any),
+    case None,
+}
+
+extension Optional {
+    instance func get_Some() {
+        match this {
+            case Some(x) => { return x; },
+        } else {
+            assert(false);
+        }
+    }
+}
+
+func main() {
+    val s = Optional::Some(123);
+
+    val n = s.get_Some();
+    assert n == 123;
+}

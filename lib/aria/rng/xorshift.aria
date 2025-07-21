@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.rng.mixin;
+
+struct XorshiftRng {
+    type func new() {
+        XorshiftRng.new_with_seed(now());
+    }
+
+    type func new_with_seed(seed) {
+        alloc(This) {
+            .x = seed | 1
+        };
+    }
+
+    func next() {
+        this.x = this.x ^ (this.x << 7);
+        this.x = this.x ^ (this.x >> 9);
+        return this.x;
+    }
+
+    include aria.rng.mixin.RngRange
+}

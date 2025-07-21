@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Integer {
+    type func new(n: Int) {
+        alloc(This){
+            .n = n,
+        };
+    }
+
+    func op_equals(rhs) {
+        if rhs isa Integer {
+            return rhs.n == this.n;
+        } elsif rhs isa Int {
+            return rhs == this.n;
+        } else {
+            throw alloc(Unimplemented);
+        }
+    }
+}
+
+func main() {
+    val l1 = [1,2,3,4,5];
+    val l2 = [Integer.new(1), 2, 3, Integer.new(4), 5];
+    val l3 = [Integer.new(1), 2, 3, 5, Integer.new(5)];
+
+    assert l1 == l2;
+    assert l2 == l1;
+
+    assert l1 != l3;
+    assert l3 != l1;
+
+    assert l2 != l3;
+    assert l3 != l2;
+}

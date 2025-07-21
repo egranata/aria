@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin HasTypeFunc {
+    # requires
+    # type func new_with_pair(x,y)
+    type func new_with_duplicate(x) {
+        This.new_with_pair(x,x);
+    }
+}
+
+struct TestStruct {
+    type func new_with_pair(x,y) {
+        alloc(This){
+            .x = x,
+            .y = y,
+        };
+    }
+
+    include HasTypeFunc
+}
+
+func main() {
+    val t = TestStruct.new_with_duplicate(5);
+    assert t.x == 5;
+    assert t.y == 5;
+}
+

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    func write(x) {
+        this.x = x;
+    }
+
+    func read() {
+        return this.x;
+    }
+}
+
+func main() {
+    val f = alloc(Foo);
+    f.write(123);
+    assert f.read() == 123;
+    f.write(456);
+    assert f.read() == 456;
+}

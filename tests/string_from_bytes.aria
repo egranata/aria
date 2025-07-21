@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val bytes = [65, 66, 67, 68, 69];
+    val s = String.new_with_bytes(bytes);
+    assert s == "ABCDE";
+}

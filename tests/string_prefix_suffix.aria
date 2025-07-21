@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    assert("hello".has_prefix("he"));
+    assert("hello".has_suffix("lo"));
+
+    assert !"hello".has_prefix("123");
+    assert !"hello".has_suffix("123");
+}

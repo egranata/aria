@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val s1 = "hello";
+    val s2 = ", ";
+    val s3 = "world";
+    assert (s1+s2+s3) == "hello, world";
+}

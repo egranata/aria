@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(x,y) {
+    return x + y + foo.n;
+}
+
+func main() {
+    writeattr(foo, "n", 5);
+    assert foo(3,4) == 12;
+    assert readattr(foo, "n") == 5;
+    assert foo.n == 5;
+
+    writeattr(foo, "n", 10);
+    assert foo(3,4) == 17;
+    assert readattr(foo, "n") == 10;
+    assert foo.n == 10;
+}

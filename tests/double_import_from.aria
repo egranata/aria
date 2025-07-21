@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+import Pair from example.pair.Pair;
+import Pair from example.pair.Pair;
+import Pair from example.pair.Pair;
+
+extension Pair {
+    func min() {
+        if this.x > this.y {
+            return this.y;
+        } else {
+            return this.x;
+        }
+    }
+}
+
+func main() {
+    val p = Pair.new(1,2);
+    val q = Pair.new(3,4);
+
+    assert p.max() == 2;
+    assert q.max() == 4;
+
+    assert p.min() == 1;
+    assert q.min() == 3;
+}

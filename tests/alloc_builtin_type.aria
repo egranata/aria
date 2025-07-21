@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    assert alloc(Int) == 0;
+    assert alloc(Float) == 0.0f;
+    assert alloc(Bool) == false;
+    assert alloc(String) == "";
+    assert alloc(List) == [];
+}

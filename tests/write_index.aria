@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val arr = []{
+        [0] = 1,
+        [1] = 2,
+        [2] = 3,
+        [3] = 4,
+    };
+
+    assert arr.len() == 4;
+    assert arr[0] == 1;
+    assert arr[1] == 2;
+    assert arr[2] == 3;
+    assert arr[3] == 4;
+}

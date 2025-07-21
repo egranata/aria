@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val str = "Hello, World!";
+
+    val u = str.uppercase();
+    val l = str.lowercase();
+
+    assert u == "HELLO, WORLD!";
+    assert l == "hello, world!";
+}

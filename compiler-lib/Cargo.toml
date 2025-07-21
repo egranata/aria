@@ -1,0 +1,16 @@
+[package]
+name = "compiler-lib"
+version = "0.9.0"
+edition = "2021"
+
+[lib]
+name = "aria_compiler"
+path = "src/lib.rs"
+
+[dependencies]
+pest = "2.7.14"
+pest_derive = "2.7.14"
+opcodes-lib = { path = "../opcodes-lib" }
+parser-lib = { path = "../parser-lib" }
+enum-as-inner = "0.6.1"
+thiserror = "1.0.65"

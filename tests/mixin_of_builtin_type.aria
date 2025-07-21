@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Double {
+    func double() {
+        this + this;
+    }
+}
+
+extension Int {
+    include Double
+}
+
+extension String {
+    include Double
+}
+
+extension Float {
+    include Double
+}
+
+extension Double {
+    func triple() {
+        return this + this + this;
+    }
+}
+
+func main() {
+    assert 3.double() == 6;
+    assert "abc".double() == "abcabc";
+    assert 3.14f.double() == 6.28f;
+
+    assert 3.triple() == 9;
+    assert "abc".triple() == "abcabcabc";
+    assert 3.14f.triple() == 9.42f;
+}

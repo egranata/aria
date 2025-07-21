@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Enum {
+    case A,
+    case B,
+}
+
+mixin LogicalOps {
+    func some_op() {
+        return 123;
+    }
+}
+
+extension Enum {
+    include LogicalOps
+}
+
+extension LogicalOps {
+    func some_other_op() {
+        return 321;
+    }
+}
+
+func main() {
+    val e = Enum::A;
+    assert e.some_op() == 123;
+    assert e.some_other_op() == 321;
+}

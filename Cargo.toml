@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "opcodes-lib",
+    "parser-lib",
+    "compiler-lib",
+    "vm-lib",
+    "aria-bin",
+    "test-bin",
+    "network-lib",
+]
+resolver = "2"

@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: Apache-2.0
+struct FilteringIterator {
+    type func new(i, f) {
+        alloc(This){
+            .it = i,
+            .clause = f,
+        };
+    }
+
+    func next() {
+        while true {
+            val nv = this.it.next();
+            if nv.done {
+                return nv;
+            }
+            if this.clause(nv.value) {
+                return nv;
+            }
+        }
+    }
+}
+
+struct MappingIterator {
+    type func new(i, f) {
+        alloc(This){
+            .it = i,
+            .clause = f,
+        };
+    }
+
+    func next() {
+        while true {
+            val nv = this.it.next();
+            if nv.done {
+                return nv;
+            }
+            return Box() {
+                .done = false,
+                .value = this.clause(nv.value)
+            };
+        }
+    }
+}
+
+func append_to_list(x,y) {
+    x.append(y);
+    return x;
+}
+
+mixin Iterator {
+    # allow running a for loop directly on an iterator
+    func iterator() {
+        return this;
+    }
+
+    func where(f) {
+        FilteringIterator.new(this,f);
+    }
+
+    func map(f) {
+        MappingIterator.new(this,f);
+    }
+
+    func to_list() {
+        this.reduce(append_to_list, []);
+    }
+
+    func all(f) {
+        for v in this {
+            if !f(v) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    func any(f) {
+        for v in this {
+            if f(v) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    func reduce(f, v0) {
+        val acc = v0;
+        for v in this {
+            acc = f(acc, v);
+        }
+        return acc;
+    }
+}
+
+extension FilteringIterator {
+    include Iterator
+}
+
+extension MappingIterator {
+    include Iterator
+}
+
+extension List.ListIterator {
+    include Iterator
+}
+
+mixin Iterable {
+    func where(f) {
+        return this.iterator().where(f);
+    }
+
+    func map(f) {
+        return this.iterator().map(f);
+    }
+
+    func reduce(f,v0) {
+        return this.iterator().reduce(f,v0);
+    }
+}
+
+extension List {
+    include Iterable
+}

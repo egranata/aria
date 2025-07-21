@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+struct A {
+    enum B {
+        case X
+        func foo() {
+            return 42;
+        }
+    }
+
+    func b() {
+        return A.B::X.foo();
+    }
+
+    type func c() {
+        return alloc(This).b();
+    }
+}
+
+func main() {
+    assert A.c() == 42;
+    assert alloc(A).b() == 42;
+    assert A.B::X.foo() == 42;
+}

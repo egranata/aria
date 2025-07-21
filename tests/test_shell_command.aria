@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    # only run a very minimal test; this is likely to only work on Linux but it should do something
+
+    val whoami = system("whoami");
+    assert whoami == 0;
+    assert whoami.stdout != "";
+    assert whoami.stderr == "";
+}

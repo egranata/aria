@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+
+func main() {
+    assert(3.14f == Float.parse("3.14").unwrap_Some());
+    assert(5.0f == Float.parse("5").unwrap_Some());
+    assert(-6.28f == Float.parse("-6.28").unwrap_Some());
+
+    assert Float.parse("").is_None();
+    assert Float.parse("127.0.0.1").is_None();
+    assert Float.parse("-abc.def").is_None();
+    assert Float.parse("15a46").is_None();
+}

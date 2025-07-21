@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import aria.numerics.trig;
+
+val π = Float.pi;
+
+func rough_approx_eq(x: Float, y: Float) {
+    (x-y).abs() <= 0.00001f;
+}
+
+func main() {
+    assert(rough_approx_eq((π/6.0f).sin(), 0.5f));
+    assert(rough_approx_eq((π/6.0f).cos(), 0.8660254f));
+
+    assert(rough_approx_eq((0.0f).sin(), 0.0f));
+    assert(rough_approx_eq((0.0f).cos(), 1.0f));
+
+    assert(rough_approx_eq((π/2.0f).sin(), 1.0f));
+    assert(rough_approx_eq((π/2.0f).cos(), 0.0f));
+
+    assert(rough_approx_eq(π.sin(), 0.0f));
+    assert(rough_approx_eq(π.cos(), -1.0f));
+
+    assert(rough_approx_eq(0.0f.arcsin(), 0.0f));
+    assert(rough_approx_eq(0.5f.arcsin(), π/6.0f));
+    assert(rough_approx_eq((-0.5f).arcsin(), -π/6.0f));
+
+    assert(rough_approx_eq(0.0f.arccos(), π/2.0f));
+    assert(rough_approx_eq(0.5f.arccos(), π/3));
+    assert(rough_approx_eq((-0.5f).arccos(), 2*π/3));
+
+    assert(rough_approx_eq(0.0f.arctan(), 0.0f));
+    assert(rough_approx_eq(1.0f.arctan(), π/4));
+    assert(rough_approx_eq(10.0f.arctan(), 1.4711289944f));
+}

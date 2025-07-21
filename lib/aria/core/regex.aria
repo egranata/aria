@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+extension Regex {
+    struct Error {
+        type func new(msg: String) {
+            return alloc(This) {.msg = msg};
+        }
+
+        func prettyprint() {
+            return "regex error: {0}".format(this.msg);
+        }
+    }
+}
+
+extension Regex.Match {
+    func prettyprint() {
+        return 'match(start={0} len={1} val="{2}")'.format(this.start, this.len, this.value);
+    }
+}
+
+extension Regex {
+    func prettyprint() {
+        return 'Regex("{0}")'.format(this.pattern);
+    }
+}

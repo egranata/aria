@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 3;
+    val y = -3;
+    assert y.abs() == x;
+    assert x.abs() == x;
+}

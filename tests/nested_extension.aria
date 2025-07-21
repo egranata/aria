@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+import base_module.nested_module.content;
+
+extension base_module.nested_module.content.Foo {
+    type func new(x) {
+        return alloc(This) {
+            .x = x,
+        };
+    }
+
+    func increment() {
+        this.x += 1;
+    }
+
+    func answer_x() {
+        return this.answer() + this.x;
+    }
+}
+
+func main() {
+    val f = base_module.nested_module.content.Foo.new(1);
+    f.increment();
+
+    assert f.answer() == 42;
+    assert f.answer_x() == 44;
+}

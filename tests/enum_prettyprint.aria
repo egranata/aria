@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Parity {
+    case Even(Int),
+    case Odd(Int),
+}
+
+extension Parity {
+    type func new(n: Int) {
+        if n % 2 == 0 {
+            return Parity::Even(n);
+        } else {
+            return Parity::Odd(n);
+        }
+    }
+
+    instance func prettyprint() {
+        match this {
+            case Even(x) => {
+                return "{0} is an even number".format(x);
+            },
+            case Odd(x) => {
+                return "{0} is an odd number".format(x);
+            }
+        }
+    }
+}
+
+func main() {
+    val six = Parity.new(6);
+    val eleven = Parity.new(11);
+
+    val six_fmt = "{0}".format(six);
+    val eleven_fmt = "{0}".format(eleven);
+
+    assert six_fmt == "6 is an even number";
+    assert eleven_fmt == "11 is an odd number";
+}

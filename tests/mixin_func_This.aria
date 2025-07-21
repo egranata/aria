@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+struct S1 {
+    type func new(x) {
+        alloc(This) {
+            .x = x + 1,
+        };
+    }
+}
+
+struct S2 {
+    type func new(x) {
+        alloc(This) {
+            .x = x + 2,
+        };
+    }
+}
+
+mixin DoubleMe {
+    func double() {
+        val This = typeof(this);
+        return This.new(this.x * 2);
+    }
+}
+
+extension S1 {
+    include DoubleMe
+}
+
+extension S2 {
+    include DoubleMe
+}
+
+func main() {
+    val s1 = S1.new(5);
+    val s2 = S2.new(6);
+
+    assert s1.x == 6;
+    assert s2.x == 8;
+
+    val ds1 = s1.double();
+    assert ds1.x == 13;
+    assert ds1 isa S1;
+
+    val ds2 = s2.double();
+    assert ds2.x == 18;
+    assert ds2 isa S2;
+}

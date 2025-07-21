@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+import MeFirst from same_root.part1.file3;
+import Foo from same_root.part1.file1;
+
+func main() {
+    val f = Foo.new();
+    val m = MeFirst.new();
+    
+    assert f.answer() == 165;
+    assert m.answer() == 363;
+}

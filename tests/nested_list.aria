@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val list = [[1,2,3],[4,5,6]];
+
+    val one = list[0][0];
+    val three = list[0][2];
+    val five = list[1][1];
+    
+    val total = one + three + five;
+    assert total == 9;
+}

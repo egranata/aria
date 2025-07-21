@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Foo {
+    case A
+    case B
+    case C
+    case D
+    case E
+}
+
+extension Foo {
+    func to_int() {
+        match this {
+            case A => {
+                return 1;
+            }
+            case B => {
+                return 2;
+            }
+            case C => {
+                return 3;
+            }
+            case D => {
+                return 4;
+            }
+            case E => {
+                return 5;
+            }
+        }
+    }
+}
+
+func main() {
+    val a = Foo::A;
+    val b = Foo::B;
+    val c = Foo::C;
+    val d = Foo::D;
+    val e = Foo::E;
+
+    assert a.to_int() == 1;
+    assert b.to_int() == 2;
+    assert c.to_int() == 3;
+    assert d.to_int() == 4;
+    assert e.to_int() == 5;
+}

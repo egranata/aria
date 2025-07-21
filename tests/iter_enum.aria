@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+import Enumerate from aria.iterator.enumerate;
+
+func main() {
+    val l = [1,2,3,4,5,6,7,8,9];
+    for item in Enumerate.new(l) {
+        assert item.index + 1 == item.value;
+    }
+}

@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+
+func main() {
+    val m = Map.new_with_capacity(5){
+        [123] = "test",
+        [456] = "string",
+        [false] = true,
+        ["hello"] = "world",
+    };
+
+    assert m[123] == "test";
+    assert m[456] == "string";
+    assert m[false] == true;
+    assert m["hello"] == "world";
+}

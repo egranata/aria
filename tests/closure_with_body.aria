@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+func greater_than_N(N) {
+    return |x| => {
+        if x > N {
+            return true;
+        } else {
+            return false;
+        }
+    };
+}
+
+func main() {
+    assert greater_than_N(5)(3) == false;
+    assert greater_than_N(6)(8) == true;
+    assert greater_than_N(5)(6) == true;
+    assert greater_than_N(3)(1) == false; 
+}

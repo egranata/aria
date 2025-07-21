@@ -1,0 +1,194 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+func is_leap_year(year: Int) {
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+func leap_years_since_1970(year: Int) {
+    return ((year - 1969) / 4) - ((year - 1901) / 100) + ((year - 1601) / 400);
+}
+
+func leap_years_through_end_of(year: Int) {
+    return (year / 4) - (year / 100) + (year / 400);
+}
+
+val SECONDS_PER_MINUTE = 60;
+val SECONDS_PER_HOUR = 3600;
+val SECONDS_PER_DAY = 86400;
+val DAYS_PER_YEAR = 365;
+val EPOCH_YEAR = 1970;
+
+val CUMULATIVE_DAYS =      [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
+val LEAP_CUMULATIVE_DAYS = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366];
+
+val MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+func offset_ms_to_string(offset_ms) {
+    if offset_ms == 0 {
+        return "";
+    } else {
+        val abs = offset_ms.abs();
+        val hours = abs / (1000 * SECONDS_PER_HOUR);
+        val minutes = (abs % (1000 * SECONDS_PER_HOUR)) / (1000 * SECONDS_PER_MINUTE);
+        val sign = "+";
+        if offset_ms < 0 { sign = "-"; }
+        return "{0}{1:2}:{2:2}".format(sign, hours, minutes);
+    }
+}
+
+struct Instant {
+    type func before_epoch(timestamp_ms) {
+        val millisecond = timestamp_ms.abs() % 1000;
+
+        val timestamp_s = timestamp_ms / 1000;
+
+        val days = timestamp_s / SECONDS_PER_DAY;
+        val rem = timestamp_s % SECONDS_PER_DAY;
+
+        while rem < 0 {
+            rem += SECONDS_PER_DAY;
+            days -= 1;
+        }
+
+        while rem >= SECONDS_PER_DAY {
+            rem -= SECONDS_PER_DAY;
+            days += 1;
+        }
+
+        val hour = rem / SECONDS_PER_HOUR;
+        rem %= SECONDS_PER_HOUR;
+        val minute = rem / 60;
+        val second = rem % 60;
+
+        val year = 1970;
+        while true {
+            if days >= 0 {
+                if is_leap_year(year) {
+                    if days < 366 {
+                        break;
+                    }
+                } else {
+                    if days < 365 {
+                        break;
+                    }
+                }
+            }
+
+            val yg = year + days / 365;
+            if days % 365 < 0 {
+                yg -= 1;
+            }
+            days -= ((yg - year) * 365 + leap_years_through_end_of(yg - 1) - leap_years_through_end_of(year - 1));
+            year = yg;
+        }
+
+        val months = CUMULATIVE_DAYS;
+        if is_leap_year(year) {
+            months = LEAP_CUMULATIVE_DAYS;
+        }
+
+        val month = 1;
+        for i in Range.from(0).through(11) {
+            if days < months[i] {
+                month = i;
+                days -= months[i - 1];
+                break;
+            }
+        }
+
+        return alloc(This) {
+            .year = year,
+            .month = month,
+            .day = days + 1,
+            .hour = hour,
+            .minute = minute,
+            .second = second,
+            .millisecond = timestamp_ms.abs() % 1000,
+        };
+    }
+
+    type func after_epoch(timestamp_ms) {
+        val total_seconds = timestamp_ms / 1000;
+        
+        val year = EPOCH_YEAR + (total_seconds / (DAYS_PER_YEAR * SECONDS_PER_DAY));
+
+        while true {
+            val days_since_epoch = (year - EPOCH_YEAR) * 365 + leap_years_since_1970(year);
+            val seconds_since_epoch = days_since_epoch * SECONDS_PER_DAY;
+            
+            if total_seconds >= seconds_since_epoch {
+                break;
+            }
+            year -= 1;
+        }
+
+        val day_of_year = (total_seconds / SECONDS_PER_DAY) - ((year - EPOCH_YEAR) * 365 + leap_years_since_1970(year));
+        
+        val months = CUMULATIVE_DAYS;
+        if is_leap_year(year) {
+            months = LEAP_CUMULATIVE_DAYS;
+        }
+
+        val month = 1;
+        for i in Range.from(0).through(11) {
+            if day_of_year < months[i] {
+                month = i;
+                break;
+            }
+        }
+
+        val day = (day_of_year - months[month - 1]) + 1;
+
+        val remaining_seconds = total_seconds % SECONDS_PER_DAY;
+        val hour = remaining_seconds / SECONDS_PER_HOUR;
+        remaining_seconds %= SECONDS_PER_HOUR;
+
+        val minute = remaining_seconds / SECONDS_PER_MINUTE;
+        val second = remaining_seconds % SECONDS_PER_MINUTE;
+
+        return alloc(This) {
+            .year = year,
+            .month = month,
+            .day = day,
+            .hour = hour,
+            .minute = minute,
+            .second = second,
+            .millisecond = timestamp_ms % 1000,
+        };
+    }
+
+    type func from_unix_timestamp(timestamp_ms) {
+        if timestamp_ms >= 0 {
+            val i = Instant.after_epoch(timestamp_ms);
+            i.unix_ts = timestamp_ms;
+            i.offset_ms = 0;
+            return i;
+        } else {
+            val i = Instant.before_epoch(timestamp_ms);
+            i.unix_ts = timestamp_ms;
+            i.offset_ms = 0;
+            return i;
+        }
+    }
+
+    type func from_localtime_unix_timestamp(timestamp_ms, offset_minutes) {
+        val offset_ms = offset_minutes * SECONDS_PER_MINUTE * 1000;
+        val i = Instant.from_unix_timestamp(timestamp_ms + offset_ms);
+        i.offset_ms = offset_ms;
+        return i;
+    }
+
+    instance func prettyprint() {
+        return "{0} {1} {2} {3:2}:{4:2}:{5:2}.{6:3}{7}".format(
+            MONTH_NAMES[this.month - 1],
+            this.day,
+            this.year,
+            this.hour,
+            this.minute,
+            this.second,
+            this.millisecond,
+            offset_ms_to_string(this.offset_ms)
+        );
+    }
+}

@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 1;
+
+    val x_🇮🇹 = "uno";
+    val x_🇸🇴 = "mid";
+
+    val flag_it = "🇮🇹";
+    val flag_so = "🇸🇴";
+
+    val fmt_str = "The number {0} is written {1} in {2} and {3} in {4}";
+    val out = fmt_str.format(x,x_🇮🇹,flag_it,x_🇸🇴,flag_so);
+
+    assert out == "The number 1 is written uno in 🇮🇹 and mid in 🇸🇴";
+}

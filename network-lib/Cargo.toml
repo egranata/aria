@@ -1,0 +1,14 @@
+[package]
+name = "network-lib"
+version = "0.9.0"
+edition = "2021"
+
+[lib]
+name = "aria_http"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+vm-lib = { path = "../vm-lib" }
+opcodes-lib = { path = "../opcodes-lib" }
+reqwest = { version = "0.12.22", features = ["blocking"] }

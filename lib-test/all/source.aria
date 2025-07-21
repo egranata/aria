@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+func something(x,y) {
+    x + y - 1;
+}
+
+func something_else(x,y,z) {
+    something(x,y) + z;
+}
+
+struct SomeType {
+    type func new() {
+        alloc(This) {
+            .x = 1,
+        };
+    }
+
+    instance func do_something() {
+        this.x = something(this.x, 3);
+        return this;
+    }
+}

@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+extension Float {
+    func double() {
+        return this * 2;
+    }
+}
+
+func main() {
+    val f = 1.234f;
+    f.zero = 0.0f;
+
+    assert f.zero == 0.0f;
+    assert f.double() == 2.468f;
+}

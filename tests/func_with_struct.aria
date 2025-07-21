@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(x,y) {
+    struct Pair {
+        type func new(x,y) {
+            return alloc(This) {
+                .x = x,
+                .y = y,
+            };
+        }
+
+        func add() {
+            return this.x + this.y;
+        }
+
+        func max() {
+            if (this.x > this.y) {
+                return this.x;
+            } else {
+                return this.y;
+            }
+        }
+    }
+
+    return Pair.new(x,y);
+}
+
+func main() {
+    val p = foo(3,4);
+    assert(p.add() == 7);
+    assert(p.max() == 4);
+}

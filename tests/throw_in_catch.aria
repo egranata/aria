@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val inner = false;
+    val outer = false;
+    try {
+        try {
+            throw 1;
+        } catch e {
+            inner = e;
+            throw 2;
+        }
+    } catch e {
+        outer = e;
+    }
+
+    assert inner == 1;
+    assert outer == 2;
+}
