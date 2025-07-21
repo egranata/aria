@@ -13,7 +13,7 @@ impl Derive for ExpressionStatement {
         assert!(p.as_rule() == Rule::expr_stmt);
         let loc = From::from(&p.as_span());
         let mut inner = p.into_inner();
-        let val = Expression::from_parse_tree(inner.next().expect("need expression"), source);
+        let val = inner.next().map(|p| Expression::from_parse_tree(p, source));
         Self {
             loc: source.pointer(loc),
             val,
@@ -23,6 +23,10 @@ impl Derive for ExpressionStatement {
 
 impl PrettyPrintable for ExpressionStatement {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        buffer << &self.val << ";"
+        if let Some(val) = &self.val {
+            buffer << val << ";"
+        } else {
+            buffer << ";"
+        }
     }
 }

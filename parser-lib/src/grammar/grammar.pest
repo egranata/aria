@@ -108,7 +108,7 @@ assert_stmt = { "assert" ~ expression ~ ";" }
 
 break_stmt    = { "break" ~ ";" }
 continue_stmt = { "continue" ~ ";" }
-expr_stmt     = { expression ~ ";" }
+expr_stmt     = { expression? ~ ";" }
 
 throw_stmt = { "throw" ~ expression ~ ";" }
 

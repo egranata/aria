@@ -651,7 +651,7 @@ impl From<&Identifier> for DeclarationId {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExpressionStatement {
     pub loc: SourcePointer,
-    pub val: Expression,
+    pub val: Option<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
