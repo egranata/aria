@@ -1,0 +1,14 @@
+[package]
+name = "regex-lib"
+version = "0.9.0"
+edition = "2021"
+
+[lib]
+name = "aria_regex"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+vm-lib = { path = "../../vm-lib" }
+opcodes-lib = { path = "../../opcodes-lib" }
+regex = "1.11.1"

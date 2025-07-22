@@ -1341,6 +1341,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex-lib"
+version = "0.9.0"
+dependencies = [
+ "opcodes-lib",
+ "regex",
+ "vm-lib",
+]
+
+[[package]]
 name = "regex-syntax"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
