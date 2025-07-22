@@ -159,17 +159,10 @@ struct Instant {
     }
 
     type func from_unix_timestamp(timestamp_ms) {
-        if timestamp_ms >= 0 {
-            val i = Instant.after_epoch(timestamp_ms);
-            i.unix_ts = timestamp_ms;
-            i.offset_ms = 0;
-            return i;
-        } else {
-            val i = Instant.before_epoch(timestamp_ms);
-            i.unix_ts = timestamp_ms;
-            i.offset_ms = 0;
-            return i;
-        }
+        val i = timestamp_ms >= 0 ? Instant.after_epoch(timestamp_ms) : Instant.before_epoch(timestamp_ms);
+        i.unix_ts = timestamp_ms;
+        i.offset_ms = 0;
+        return i;
     }
 
     type func from_localtime_unix_timestamp(timestamp_ms, offset_minutes) {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    ast::TernaryExpression,
     ast::{
         derive::Derive,
         prettyprint::{printout_accumulator::PrintoutAccumulator, PrettyPrintable},
@@ -17,6 +18,9 @@ impl Derive for Expression {
             Rule::lambda_f => {
                 Self::LambdaFunction(LambdaFunction::from_parse_tree(content, source))
             }
+            Rule::ternary_expr => {
+                Self::TernaryExpression(TernaryExpression::from_parse_tree(content, source))
+            }
             _ => panic!("atom does not contain"),
         }
     }
@@ -27,6 +31,7 @@ impl PrettyPrintable for Expression {
         match self {
             Expression::LogOperation(c) => c.prettyprint(buffer),
             Expression::LambdaFunction(f) => f.prettyprint(buffer),
+            Expression::TernaryExpression(t) => t.prettyprint(buffer),
         }
     }
 }

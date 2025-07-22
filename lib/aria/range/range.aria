@@ -85,35 +85,15 @@ struct RangeImpl {
     }
 
     func union(other) {
-        val lo = this.from;
-        if other.from < lo {
-            lo = other.from;
-        }
-
-        val hi = this.to;
-        if other.to > hi {
-            hi = other.to;
-        }
-
+        val lo = other.from < this.from ? other.from : this.from;
+        val hi = other.to > this.to ? other.to : this.to;
         return RangeImpl.new(lo, hi);
     }
 
     func intersection(other) {
-        val lo = this.from;
-        if other.from > lo {
-            lo = other.from;
-        }
-
-        val hi = this.to;
-        if other.to < hi {
-            hi = other.to;
-        }
-
-        if lo >= hi {
-            return RangeImpl.new(0, 0);  # empty range
-        }
-
-        return RangeImpl.new(lo, hi);
+        val lo = other.from > this.from ? other.from : this.from;
+        val hi = other.to < this.to ? other.to : this.to;
+        return lo >= hi ? RangeImpl.new(0, 0) : RangeImpl.new(lo, hi);
     }
 
     include Iterable

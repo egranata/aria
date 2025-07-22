@@ -75,10 +75,12 @@ comp    =  { rel ~ (comp_op ~ rel)? }
 log_op = @{ "&&" | "||" | "^" | "&" | "|" }
 log    =  { comp ~ (log_op ~ comp)* }
 
+ternary_expr = { log ~ "?" ~ expression ~ ":" ~ expression }
+
 lambda_f_body = { expression | code_block }
 lambda_f      = { "|" ~ arg_list ~ "|" ~ "=>" ~ lambda_f_body }
 
-expression = { lambda_f | log }
+expression = { ternary_expr | lambda_f | log }
 
 decl_id = { identifier ~ (":" ~ expression)? }
 

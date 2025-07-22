@@ -187,6 +187,14 @@ for x in l {
 
 Loops can be exited with `break`, or jump to the next iteration with `continue`, much like in other languages in the C family.
 
+A ternary operator is provided with very similar behavior to its C counterpart:
+
+```
+val num = 3;
+val str = num == 1 ? "one" : num == 2 ? "two" : "three";
+println(str); # prints three
+```
+
 ## 🧑‍💻 Functions
 
 Functions are defined with the `func` keyword, and can take zero or more arguments. They are invoked in the usual manner, with their name followed by parentheses.

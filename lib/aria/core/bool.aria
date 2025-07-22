@@ -3,10 +3,6 @@ flag: no_std;
 
 extension Bool {
     func hash() {
-        if this {
-            return 4093;
-        } else {
-            return 7877;
-        }
+        return this ? 4093 : 7877;
     }
 }

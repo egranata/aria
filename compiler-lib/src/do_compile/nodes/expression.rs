@@ -6,6 +6,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::Expression {
         match self {
             Self::LogOperation(lo) => lo.do_compile(params),
             Self::LambdaFunction(lf) => lf.do_compile(params),
+            Self::TernaryExpression(te) => te.do_compile(params),
         }
     }
 }

@@ -41,6 +41,7 @@ mod shift_operation;
 mod statement;
 mod string_literal;
 mod struct_decl;
+mod ternary_expression;
 mod throw_statement;
 mod try_block;
 mod unary_operation;

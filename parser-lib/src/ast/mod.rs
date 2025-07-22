@@ -593,10 +593,19 @@ pub struct LambdaFunction {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TernaryExpression {
+    pub loc: SourcePointer,
+    pub condition: Box<LogOperation>,
+    pub true_expression: Box<Expression>,
+    pub false_expression: Box<Expression>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::large_enum_variant)]
 pub enum Expression {
     LambdaFunction(LambdaFunction),
     LogOperation(LogOperation),
+    TernaryExpression(TernaryExpression),
 }
 
 impl From<&LogOperation> for Expression {
@@ -627,6 +636,7 @@ impl Expression {
         match self {
             Expression::LogOperation(c) => &c.loc,
             Expression::LambdaFunction(f) => &f.loc,
+            Expression::TernaryExpression(t) => &t.loc,
         }
     }
 }

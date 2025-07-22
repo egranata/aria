@@ -81,11 +81,7 @@ extension Float {
         
         if x.abs() > 1.0f {
             val ret = (Float.π / 2 - (1.0f / x).arctan());
-            if x <= 0 {
-                return -ret;
-            } else {
-                return ret;
-            }
+            return x <= 0 ? -ret : ret;
         }
 
         if x.abs() > 0.5f {

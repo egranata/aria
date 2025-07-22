@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+
+func main() {
+    val x = true ? (false ? 1 : 2) : 3;
+    assert x == 2;
+
+    val y = false ? 1 : (true ? 2 : 3);
+    assert y == 2;
+
+    val z = true ? (true ? (false ? 1 : 2) : 3) : 4;
+    assert z == 2;
+
+    val n = x == 1 ? "one" : x == 2 ? "two" : "three";
+    assert n == "two";
+}

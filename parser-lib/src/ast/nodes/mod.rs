@@ -78,6 +78,7 @@ mod statement;
 mod string_literal;
 mod struct_decl;
 mod struct_entry;
+mod ternary_expression;
 mod throw_statement;
 mod top_level_entry;
 mod try_block;

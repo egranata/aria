@@ -120,7 +120,7 @@ extension JsonValue {
             },
 
             case Boolean(b) => {
-                if b { return "true"; } else { return "false"; }
+                return b ? "true" : "false";
             },
 
             case Null(x) => {

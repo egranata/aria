@@ -2,11 +2,7 @@
 import aria.iterator.mixin;
 
 func iter_or_self(i) {
-    if hasattr(i, "iterator") {
-        return i.iterator();
-    } else {
-        return i;
-    }
+    return hasattr(i, "iterator") ? i.iterator() : i;
 }
 
 func get_next(i) {

@@ -13,11 +13,7 @@ func pow(x: Int, y: Int) {
 }
 
 func max(x,y) {
-    if x > y {
-        return x;
-    } else {
-        return y;
-    }
+    return x > y ? x : y;
 }
 
 struct Decimal {

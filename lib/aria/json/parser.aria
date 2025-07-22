@@ -11,11 +11,7 @@ struct JsonStream {
     }
 
     func peek() {
-        if this.pos < this.input.len() {
-            return this.input[this.pos];
-        } else {
-            return Maybe::None;
-        }
+        return this.pos < this.input.len() ? this.input[this.pos] : Maybe::None;
     }
 
     func next() {
