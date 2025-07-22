@@ -1,11 +1,11 @@
 [workspace]
 members = [
+    "aria-bin",
+    "compiler-lib",
+    "native-libs/*",
     "opcodes-lib",
     "parser-lib",
-    "compiler-lib",
-    "vm-lib",
-    "aria-bin",
     "test-bin",
-    "network-lib",
+    "vm-lib",
 ]
 resolver = "2"
