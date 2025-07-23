@@ -145,7 +145,7 @@ impl VirtualMachine {
 }
 
 macro_rules! build_vm_error {
-    ($reason: expr_2021, $next: expr_2021, $frame: expr_2021, $idx: expr_2021) => {{
+    ($reason: expr, $next: expr, $frame: expr, $idx: expr) => {{
         let lt = if let Some(lt) = $frame.get_line_table() {
             lt.get($idx as u16)
         } else {
@@ -160,7 +160,7 @@ macro_rules! build_vm_error {
 }
 
 macro_rules! pop_or_err {
-    ($next: expr_2021, $frame: expr_2021, $idx: expr_2021) => {
+    ($next: expr, $frame: expr, $idx: expr) => {
         if let Some(val) = $frame.stack.try_pop() {
             val
         } else {
@@ -205,7 +205,7 @@ enum OpcodeRunExit {
 }
 
 macro_rules! binop_eval {
-    ( ($op_expr: expr_2021), $next: expr_2021, $frame: expr_2021, $op_idx: expr_2021) => {
+    ( ($op_expr: expr), $next: expr, $frame: expr, $op_idx: expr) => {
         match $op_expr {
             crate::runtime_value::OperatorEvalOutcome::Ok(val) => $frame.stack.push(val),
             crate::runtime_value::OperatorEvalOutcome::Exception(e) => {
@@ -223,7 +223,7 @@ macro_rules! binop_eval {
 }
 
 macro_rules! unaryop_eval {
-    ( ($op_expr: expr_2021), $next: expr_2021, $frame: expr_2021, $op_idx: expr_2021) => {
+    ( ($op_expr: expr), $next: expr, $frame: expr, $op_idx: expr) => {
         match $op_expr {
             crate::runtime_value::OperatorEvalOutcome::Ok(val) => $frame.stack.push(val),
             crate::runtime_value::OperatorEvalOutcome::Exception(e) => {

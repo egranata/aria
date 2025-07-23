@@ -71,7 +71,7 @@ impl VmException {
 
 #[macro_export]
 macro_rules! some_or_err {
-    ($opt:expr_2021, $err:expr_2021) => {
+    ($opt:expr, $err:expr) => {
         match $opt {
             Some(val) => val,
             None => return Err($err),
@@ -81,7 +81,7 @@ macro_rules! some_or_err {
 
 #[macro_export]
 macro_rules! ok_or_err {
-    ($opt:expr_2021, $err:expr_2021) => {
+    ($opt:expr, $err:expr) => {
         match $opt {
             Ok(val) => val,
             Err(_) => return Err($err),

@@ -9,7 +9,7 @@ use crate::{
 };
 
 macro_rules! collate_error_if_any {
-    {$expression: expr_2021, $errors: expr_2021} => {
+    {$expression: expr, $errors: expr} => {
         if let Err(e) = $expression {
             $errors.push(e);
         }

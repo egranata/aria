@@ -466,7 +466,7 @@ pub enum AttributeError {
 }
 
 macro_rules! val_or_bound_func {
-    ($val: expr_2021, $self: expr_2021) => {
+    ($val: expr, $self: expr) => {
         if let Some(rf) = $val.as_function() {
             if rf.attribute().is_type_method() {
                 Err(AttributeError::InvalidFunctionBinding)
