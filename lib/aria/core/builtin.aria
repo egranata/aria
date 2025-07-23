@@ -15,8 +15,6 @@ import aria.core.list;
 
 import aria.core.path;
 
-import aria.core.regex;
-
 import aria.core.string;
 
 import Void from aria.core.void;

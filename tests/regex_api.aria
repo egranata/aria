@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+import Regex from aria.string.regex;
+
 func main() {
     val rgx = Regex.new("\d\d");
     val matches = rgx.matches("1234567");

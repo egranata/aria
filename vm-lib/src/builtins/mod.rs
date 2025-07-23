@@ -31,7 +31,6 @@ mod print;
 mod println;
 mod readattr;
 mod readln;
-mod regular_expression;
 mod string;
 mod system;
 mod typeof_builtin;
@@ -94,7 +93,6 @@ impl Default for VmBuiltins {
         readln::insert_builtins(&mut this);
         string::insert_string_builtins(&mut this);
         readattr::insert_builtins(&mut this);
-        regular_expression::insert_rgx_builtins(&mut this);
         system::insert_builtins(&mut this);
         typeof_builtin::insert_builtins(&mut this);
         writeattr::insert_builtins(&mut this);

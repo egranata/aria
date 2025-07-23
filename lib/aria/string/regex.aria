@@ -1,7 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-flag: no_std;
+flag: uses_dylib("aria_regex");
 
-extension Regex {
+struct Regex {
+    struct Match {
+        func prettyprint() {
+            return 'match(start={0} len={1} val="{2}")'.format(this.start, this.len, this.value);
+        }
+    }
+
     struct Error {
         type func new(msg: String) {
             return alloc(This) {.msg = msg};
@@ -11,15 +17,7 @@ extension Regex {
             return "regex error: {0}".format(this.msg);
         }
     }
-}
 
-extension Regex.Match {
-    func prettyprint() {
-        return 'match(start={0} len={1} val="{2}")'.format(this.start, this.len, this.value);
-    }
-}
-
-extension Regex {
     func prettyprint() {
         return 'Regex("{0}")'.format(this.pattern);
     }
