@@ -1165,34 +1165,19 @@ impl VirtualMachine {
                 let mixin = pop_or_err!(next, frame, op_idx);
                 let struk = pop_or_err!(next, frame, op_idx);
 
-                match (mixin.as_mixin(), struk.as_struct()) {
-                    (Some(mixin), Some(strukt)) => {
-                        strukt.include_mixin(mixin);
-                    }
-                    _ => match (mixin.as_mixin(), struk.as_enum()) {
-                        (Some(mixin), Some(enumm)) => {
-                            enumm.include_mixin(mixin);
-                        }
-                        _ => match (mixin.as_mixin(), struk.as_builtin_type()) {
-                            (Some(mixin), Some(btt)) => {
-                                btt.include_mixin(mixin);
-                            }
-                            _ => {
-                                if let (Some(src_mixin), Some(dst_mixin)) =
-                                    (mixin.as_mixin(), struk.as_mixin())
-                                {
-                                    dst_mixin.include_mixin(src_mixin);
-                                } else {
-                                    return build_vm_error!(
-                                        VmErrorReason::UnexpectedType,
-                                        next,
-                                        frame,
-                                        op_idx
-                                    );
-                                }
-                            }
-                        },
-                    },
+                if let (Some(mixin), Some(strukt)) = (mixin.as_mixin(), struk.as_struct()) {
+                    strukt.include_mixin(mixin);
+                } else if let (Some(mixin), Some(enumm)) = (mixin.as_mixin(), struk.as_enum()) {
+                    enumm.include_mixin(mixin);
+                } else if let (Some(mixin), Some(btt)) = (mixin.as_mixin(), struk.as_builtin_type())
+                {
+                    btt.include_mixin(mixin);
+                } else if let (Some(src_mixin), Some(dst_mixin)) =
+                    (mixin.as_mixin(), struk.as_mixin())
+                {
+                    dst_mixin.include_mixin(src_mixin);
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
             Opcode::BindMethod(a, n) => {
@@ -1207,39 +1192,23 @@ impl VirtualMachine {
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 };
-                match (method.as_code_object(), struk.as_struct()) {
-                    (Some(x), Some(y)) => {
-                        let new_f = Function::from_code_object(x, a, this_module);
-                        y.store_named_value(&new_name, RuntimeValue::Function(new_f));
-                    }
-                    _ => match (method.as_code_object(), struk.as_enum()) {
-                        (Some(x), Some(y)) => {
-                            let new_f = Function::from_code_object(x, a, this_module);
-                            y.store_named_value(&new_name, RuntimeValue::Function(new_f));
-                        }
-                        _ => {
-                            if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_mixin())
-                            {
-                                let new_f = Function::from_code_object(x, a, this_module);
-                                y.store_named_value(&new_name, RuntimeValue::Function(new_f));
-                            } else {
-                                match (method.as_code_object(), struk.as_builtin_type()) {
-                                    (Some(x), Some(y)) => {
-                                        let new_f = Function::from_code_object(x, a, this_module);
-                                        y.write(&new_name, RuntimeValue::Function(new_f));
-                                    }
-                                    _ => {
-                                        return build_vm_error!(
-                                            VmErrorReason::UnexpectedType,
-                                            next,
-                                            frame,
-                                            op_idx
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                    },
+
+                if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_struct()) {
+                    let new_f = Function::from_code_object(x, a, this_module);
+                    y.store_named_value(&new_name, RuntimeValue::Function(new_f));
+                } else if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_enum()) {
+                    let new_f = Function::from_code_object(x, a, this_module);
+                    y.store_named_value(&new_name, RuntimeValue::Function(new_f));
+                } else if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_mixin()) {
+                    let new_f = Function::from_code_object(x, a, this_module);
+                    y.store_named_value(&new_name, RuntimeValue::Function(new_f));
+                } else if let (Some(x), Some(y)) =
+                    (method.as_code_object(), struk.as_builtin_type())
+                {
+                    let new_f = Function::from_code_object(x, a, this_module);
+                    y.write(&new_name, RuntimeValue::Function(new_f));
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
             Opcode::BindCase(a, n) => {

@@ -44,17 +44,6 @@ impl ariadne::Cache<&String> for StringCache {
     }
 }
 
-// impl ariadne::Cache<&String> for StringCache {
-//     type Storage = String;
-
-//     fn fetch(&mut self, path: &&String) -> Result<&Source, Box<dyn std::fmt::Debug + '_>> {
-//         Ok(&self.buffers[*path])
-//     }
-//     fn display<'a>(&self, path: &&'a String) -> Option<Box<dyn std::fmt::Display + 'a>> {
-//         Some(Box::new(*path))
-//     }
-// }
-
 fn report_from_msg_and_location(msg: &str, locations: &[&SourcePointer]) {
     let magenta = Color::Magenta;
     let primary_span = &locations[0];
