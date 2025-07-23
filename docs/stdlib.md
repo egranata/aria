@@ -199,33 +199,6 @@ This module provides a `Path` struct for interacting with the file system.
 
 ---
 
-### `aria.core.regex`
-
-This module provides regular expression functionality.
-
-#### **Structs**
-
-*   **`Regex`**
-    Represents a compiled regular expression.
-
-    **Fields:**
-    *   `pattern` (String): The regular expression pattern string.
-
-    **Methods:**
-    *   `type func new(pattern: String)`: Compiles a new `Regex` from the given `pattern` string. Throws `Regex.Error` if the pattern is invalid.
-    *   `is_match(text: String)`: Returns `true` if the regex matches any part of the `text`, `false` otherwise.
-    *   `find(text: String)`: Searches for the first match of the regex in `text`. Returns a `Regex.Match` object wrapped in `Maybe::Some` if a match is found, `Maybe::None` otherwise.
-
-*   **`Regex.Match`**
-    Represents a single match found by a regular expression.
-
-    **Fields:**
-    *   `start` (Int): The starting byte index of the match in the input string.
-    *   `len` (Int): The length of the match in bytes.
-    *   `value` (String): The matched string itself.
-
----
-
 ### `aria.core.string`
 
 This module provides extensions to the built-in `String` type.
@@ -802,6 +775,34 @@ This module provides methods to check if a single-character string belongs to a 
     *   `is_letter()`: Returns `true` if the character is an uppercase or lowercase ASCII letter, `false` otherwise.
     *   `is_alphanumeric()`: Returns `true` if the character is an ASCII letter or a numeric digit, `false` otherwise.
     *   `is_whitespace()`: Returns `true` if the character is a space, newline, carriage return, or tab, `false` otherwise.
+
+---
+
+### `aria.string.regex`
+
+This module provides regular expression functionality.
+
+#### **Structs**
+
+*   **`Regex`**
+    Represents a compiled regular expression.
+
+    **Fields:**
+    *   `pattern` (String): The regular expression pattern string.
+
+    **Methods:**
+    *   `type func new(pattern: String)`: Compiles a new `Regex` from the given `pattern` string. Throws `Regex.Error` if the pattern is invalid.
+    *   `any_match(text: String)`: Returns `true` if the regex matches any part of the `text`, `false` otherwise.
+    *   `matches(text: String)`: Searches for every match of the regex in `text`. Returns a `List` of `Regex.Match` objects, potentially empty if no matches are found.
+    *   `replace(text: String, with: String)`: Searches for every match of the regex in `text` and replaces each occurrence with `with`. Returns a `String` with all the substitutions performed.
+
+*   **`Regex.Match`**
+    Represents a single match found by a regular expression.
+
+    **Fields:**
+    *   `start` (Int): The starting byte index of the match in the input string.
+    *   `len` (Int): The length of the match in bytes.
+    *   `value` (String): The matched string itself.
 
 ---
 # `aria.structures` Module Reference
