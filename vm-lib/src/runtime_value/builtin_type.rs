@@ -4,10 +4,10 @@ use std::{cell::RefCell, collections::HashSet, rc::Rc};
 use enum_as_inner::EnumAsInner;
 
 use super::{
+    RuntimeValue,
     function::{BuiltinFunctionImpl, Function},
     mixin::Mixin,
     object::ObjectBox,
-    RuntimeValue,
 };
 
 #[derive(EnumAsInner, Clone, PartialEq, Eq)]
@@ -31,10 +31,9 @@ impl BuiltinTypeImpl {
     }
 
     fn read(&self, name: &str) -> Option<RuntimeValue> {
-        if let Some(nv) = self.boxx.read(name) {
-            Some(nv)
-        } else {
-            self.mixins.borrow().load_named_value(name)
+        match self.boxx.read(name) {
+            Some(nv) => Some(nv),
+            _ => self.mixins.borrow().load_named_value(name),
         }
     }
 

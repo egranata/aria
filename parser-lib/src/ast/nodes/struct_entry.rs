@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        derive::Derive,
-        prettyprint::{printout_accumulator::PrintoutAccumulator, PrettyPrintable},
         EnumDecl, MethodDecl, MixinIncludeDecl, SourceBuffer, StructDecl, StructEntry,
         ValDeclStatement,
+        derive::Derive,
+        prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
     grammar::Rule,
 };

@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
-// SPDX-License-Identifier: Apache-2.0
-use crate::runtime_value::{mixin::Mixin, RuntimeValue};
+use crate::runtime_value::{RuntimeValue, mixin::Mixin};
 
 #[derive(Default)]
 pub struct MixinIncluder {

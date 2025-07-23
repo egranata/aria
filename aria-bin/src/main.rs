@@ -2,10 +2,11 @@
 
 use std::collections::HashMap;
 
-use aria_compiler::{compile_from_ast, do_compile::CompilationError, CompilationOptions};
+use aria_compiler::{CompilationOptions, compile_from_ast, do_compile::CompilationError};
 use aria_parser::ast::{
-    prettyprint::{printout_accumulator::PrintoutAccumulator, PrettyPrintable},
-    source_to_ast, ParserError, SourceBuffer, SourcePointer,
+    ParserError, SourceBuffer, SourcePointer,
+    prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
+    source_to_ast,
 };
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use clap::Parser;
@@ -27,13 +28,32 @@ pub struct StringCache {
 impl ariadne::Cache<&String> for StringCache {
     type Storage = String;
 
-    fn fetch(&mut self, path: &&String) -> Result<&Source, Box<dyn std::fmt::Debug + '_>> {
-        Ok(&self.buffers[*path])
+    fn fetch(
+        &mut self,
+        path: &&String,
+    ) -> Result<
+        &Source<<Self as ariadne::Cache<&std::string::String>>::Storage>,
+        impl std::fmt::Debug,
+    > {
+        Ok::<&Source, Source>(&self.buffers[*path])
     }
-    fn display<'a>(&self, path: &&'a String) -> Option<Box<dyn std::fmt::Display + 'a>> {
-        Some(Box::new(*path))
+
+    #[allow(refining_impl_trait)]
+    fn display<'a>(&self, path: &&'a String) -> Option<impl std::fmt::Display + 'a> {
+        Some(Box::new((**path).clone()))
     }
 }
+
+// impl ariadne::Cache<&String> for StringCache {
+//     type Storage = String;
+
+//     fn fetch(&mut self, path: &&String) -> Result<&Source, Box<dyn std::fmt::Debug + '_>> {
+//         Ok(&self.buffers[*path])
+//     }
+//     fn display<'a>(&self, path: &&'a String) -> Option<Box<dyn std::fmt::Display + 'a>> {
+//         Some(Box::new(*path))
+//     }
+// }
 
 fn report_from_msg_and_location(msg: &str, locations: &[&SourcePointer]) {
     let magenta = Color::Magenta;

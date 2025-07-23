@@ -3,7 +3,7 @@ use haxby_opcodes::function_attribs::FUNC_IS_METHOD;
 use haxby_vm::{
     error::{dylib_load::LoadResult, exception::VmException},
     runtime_module::RuntimeModule,
-    runtime_value::{list::List, object::Object, RuntimeValue},
+    runtime_value::{RuntimeValue, list::List, object::Object},
     vm::ExecutionResult,
 };
 
@@ -60,17 +60,20 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
                     header_list.append(RuntimeValue::List(header_kvp));
                 }
                 response_obj.write("headers", RuntimeValue::List(header_list));
-                if let Ok(content) = r.text() {
-                    response_obj.write("content", RuntimeValue::String(content.into()));
-                } else {
-                    let error_obj = Object::new(&this_error);
-                    error_obj.write(
-                        "msg",
-                        RuntimeValue::String("content is not a valid String".into()),
-                    );
-                    return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                        VmException::from_value(RuntimeValue::Object(error_obj)),
-                    ));
+                match r.text() {
+                    Ok(content) => {
+                        response_obj.write("content", RuntimeValue::String(content.into()));
+                    }
+                    _ => {
+                        let error_obj = Object::new(&this_error);
+                        error_obj.write(
+                            "msg",
+                            RuntimeValue::String("content is not a valid String".into()),
+                        );
+                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
+                            VmException::from_value(RuntimeValue::Object(error_obj)),
+                        ));
+                    }
                 }
 
                 frame
@@ -158,17 +161,20 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
                     header_list.append(RuntimeValue::List(header_kvp));
                 }
                 response_obj.write("headers", RuntimeValue::List(header_list));
-                if let Ok(content) = r.text() {
-                    response_obj.write("content", RuntimeValue::String(content.into()));
-                } else {
-                    let error_obj = Object::new(&this_error);
-                    error_obj.write(
-                        "msg",
-                        RuntimeValue::String("content is not a valid String".into()),
-                    );
-                    return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                        VmException::from_value(RuntimeValue::Object(error_obj)),
-                    ));
+                match r.text() {
+                    Ok(content) => {
+                        response_obj.write("content", RuntimeValue::String(content.into()));
+                    }
+                    _ => {
+                        let error_obj = Object::new(&this_error);
+                        error_obj.write(
+                            "msg",
+                            RuntimeValue::String("content is not a valid String".into()),
+                        );
+                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
+                            VmException::from_value(RuntimeValue::Object(error_obj)),
+                        ));
+                    }
                 }
 
                 frame
@@ -199,7 +205,7 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult {
     match unsafe { module.as_ref() } {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use aria_parser::ast::prettyprint::printout_accumulator::PrintoutAccumulator;
-use haxby_opcodes::{builtin_type_ids::*, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE, Opcode};
+use haxby_opcodes::{Opcode, builtin_type_ids::*, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE};
 
 use crate::module::CompiledModule;
 

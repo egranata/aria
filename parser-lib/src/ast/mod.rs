@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::{fmt::Display, path::Path, rc::Rc};
 
-use pest::{error::InputLocation, Parser};
+use pest::{Parser, error::InputLocation};
 
 use crate::grammar::{HaxbyParser, Rule};
 

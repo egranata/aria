@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::{
-    list::List, object::ObjectBox, runtime_code_object::CodeObject, CallResult, RuntimeValue,
+    CallResult, RuntimeValue, list::List, object::ObjectBox, runtime_code_object::CodeObject,
 };
 
 pub trait BuiltinFunctionImpl {
@@ -328,16 +328,15 @@ impl Function {
         }
 
         match self.eval_in_frame(&mut new_frame, vm)? {
-            RunloopExit::Ok(_) => {
-                if let Some(ret) = new_frame.stack.try_pop() {
+            RunloopExit::Ok(_) => match new_frame.stack.try_pop() {
+                Some(ret) => {
                     if !discard_result {
                         cur_frame.stack.push(ret.clone());
                     }
                     Ok(CallResult::Ok(ret))
-                } else {
-                    Ok(CallResult::OkNoValue)
                 }
-            }
+                _ => Ok(CallResult::OkNoValue),
+            },
             RunloopExit::Exception(e) => Ok(CallResult::Exception(e)),
         }
     }

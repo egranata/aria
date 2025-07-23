@@ -3,10 +3,10 @@ use aria_compiler::compile_from_source;
 use aria_parser::ast::SourceBuffer;
 
 use crate::{
+    HaxbyEvalResult,
     error::vm_error::VmErrorReason,
     haxby_eval,
     vm::{ExecutionResult, VmOptions},
-    HaxbyEvalResult,
 };
 
 fn exec_code(src: &'static str) -> ExecutionResult<HaxbyEvalResult> {
@@ -43,8 +43,10 @@ func main() {
 }
 "##;
 
-    assert!(exec_code(input)
-        .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x==2".to_owned())));
+    assert!(
+        exec_code(input)
+            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x==2".to_owned()))
+    );
 }
 
 #[test]
@@ -135,8 +137,11 @@ func main() {
 }
 "##;
 
-    assert!(exec_code(input)
-        .is_err_and(|err| err.reason == VmErrorReason::CircularImport("circular.zero".to_owned())));
+    assert!(
+        exec_code(input).is_err_and(
+            |err| err.reason == VmErrorReason::CircularImport("circular.zero".to_owned())
+        )
+    );
 }
 
 #[test]
@@ -167,8 +172,10 @@ func main() {
 }
 "##;
 
-    assert!(exec_code(input)
-        .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("false".to_owned())));
+    assert!(
+        exec_code(input)
+            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("false".to_owned()))
+    );
 }
 
 #[test]
@@ -185,8 +192,10 @@ func main() {
 }
 "##;
 
-    assert!(exec_code(input)
-        .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("false".to_owned())));
+    assert!(
+        exec_code(input)
+            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("false".to_owned()))
+    );
 }
 
 #[test]
@@ -224,13 +233,15 @@ func main() {
 }
 "##;
 
-    assert!(exec_code_with_vm_options(
-        input,
-        VmOptions {
-            tracing: false,
-            dump_stack: false,
-            vm_args: vec!["foo".to_owned(), "bar".to_owned()],
-        }
-    )
-    .is_ok());
+    assert!(
+        exec_code_with_vm_options(
+            input,
+            VmOptions {
+                tracing: false,
+                dump_stack: false,
+                vm_args: vec!["foo".to_owned(), "bar".to_owned()],
+            }
+        )
+        .is_ok()
+    );
 }

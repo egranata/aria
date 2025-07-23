@@ -9,8 +9,8 @@ use crate::{
     frame::Frame,
     ok_or_err,
     runtime_value::{
-        function::BuiltinFunctionImpl, kind::RuntimeValueType, list::List, object::Object,
-        opaque::OpaqueValue, structure::Struct, RuntimeValue,
+        RuntimeValue, function::BuiltinFunctionImpl, kind::RuntimeValueType, list::List,
+        object::Object, opaque::OpaqueValue, structure::Struct,
     },
     some_or_err,
     vm::RunloopExit,

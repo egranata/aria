@@ -2,7 +2,7 @@
 use aria_parser::ast::StructEntry;
 
 use crate::{
-    do_compile::{emit_type_members_compile, CompilationResult, CompileNode, CompileParams},
+    do_compile::{CompilationResult, CompileNode, CompileParams, emit_type_members_compile},
     func_builder::BasicBlockOpcode,
 };
 

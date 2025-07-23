@@ -1,11 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use haxby_opcodes::function_attribs::FUNC_IS_METHOD;
 
-// SPDX-License-Identifier: Apache-2.0
 use crate::{
     frame::Frame,
     runtime_value::{
-        builtin_type::BuiltinType, function::BuiltinFunctionImpl, kind::RuntimeValueType,
-        RuntimeValue,
+        RuntimeValue, builtin_type::BuiltinType, function::BuiltinFunctionImpl,
+        kind::RuntimeValueType,
     },
     vm::RunloopExit,
 };

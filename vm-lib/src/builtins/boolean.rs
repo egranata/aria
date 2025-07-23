@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use crate::runtime_value::{builtin_type::BuiltinType, kind::RuntimeValueType, RuntimeValue};
+use crate::runtime_value::{RuntimeValue, builtin_type::BuiltinType, kind::RuntimeValueType};
 
 use super::VmBuiltins;
 

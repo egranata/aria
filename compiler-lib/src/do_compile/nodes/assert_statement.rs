@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use aria_parser::ast::prettyprint::{printout_accumulator::PrintoutAccumulator, PrettyPrintable};
+use aria_parser::ast::prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator};
 
 use crate::{
     constant_value::ConstantValue,

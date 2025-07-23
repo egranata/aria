@@ -7,7 +7,7 @@ use enum_as_inner::EnumAsInner;
 use crate::builtins::VmBuiltins;
 
 use super::{
-    builtin_type::BuiltinType, enumeration::Enum, structure::Struct, AttributeError, RuntimeValue,
+    AttributeError, RuntimeValue, builtin_type::BuiltinType, enumeration::Enum, structure::Struct,
 };
 
 #[derive(Clone, PartialEq, Eq)]

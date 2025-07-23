@@ -6,7 +6,7 @@ use crate::{
     vm::{ExecutionResult, RunloopExit, VirtualMachine},
 };
 
-use super::{function::Function, list::List, CallResult, RuntimeValue};
+use super::{CallResult, RuntimeValue, function::Function, list::List};
 
 struct BoundFunctionImpl {
     this: RuntimeValue,
@@ -83,16 +83,15 @@ impl BoundFunction {
         new_frame.stack.push(self.this().clone());
 
         match self.imp.func.eval_in_frame(&mut new_frame, vm)? {
-            RunloopExit::Ok(()) => {
-                if let Some(ret) = new_frame.stack.try_pop() {
+            RunloopExit::Ok(()) => match new_frame.stack.try_pop() {
+                Some(ret) => {
                     if !discard_result {
                         cur_frame.stack.push(ret.clone());
                     }
                     Ok(CallResult::Ok(ret))
-                } else {
-                    Ok(CallResult::OkNoValue)
                 }
-            }
+                _ => Ok(CallResult::OkNoValue),
+            },
             RunloopExit::Exception(e) => Ok(CallResult::Exception(e)),
         }
     }

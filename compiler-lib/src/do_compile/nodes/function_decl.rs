@@ -4,8 +4,8 @@ use haxby_opcodes::function_attribs::FUNC_ACCEPTS_VARARG;
 use crate::{
     constant_value::{CompiledCodeObject, ConstantValue},
     do_compile::{
-        emit_args_at_target, ensure_unique_arg_names, CompilationError, CompilationErrorReason,
-        CompilationResult, CompileNode, CompileParams, ControlFlowTargets,
+        CompilationError, CompilationErrorReason, CompilationResult, CompileNode, CompileParams,
+        ControlFlowTargets, emit_args_at_target, ensure_unique_arg_names,
     },
     func_builder::{BasicBlockOpcode, FunctionBuilder},
 };
@@ -53,7 +53,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
                 return Err(CompilationError {
                     loc: self.loc.clone(),
                     reason: er,
-                })
+                });
             }
         };
         let frame_size = params.scope.as_function_root().unwrap().num_locals();

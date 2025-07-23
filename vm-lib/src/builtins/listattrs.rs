@@ -2,7 +2,7 @@
 use crate::{
     builtins::VmBuiltins,
     frame::Frame,
-    runtime_value::{function::BuiltinFunctionImpl, list::List, RuntimeValue},
+    runtime_value::{RuntimeValue, function::BuiltinFunctionImpl, list::List},
     vm::RunloopExit,
 };
 

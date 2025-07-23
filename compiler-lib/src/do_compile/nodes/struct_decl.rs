@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use crate::do_compile::{do_struct_compile, CompilationResult, CompileNode, CompileParams};
+use crate::do_compile::{CompilationResult, CompileNode, CompileParams, do_struct_compile};
 
 impl<'a> CompileNode<'a> for aria_parser::ast::StructDecl {
     fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {

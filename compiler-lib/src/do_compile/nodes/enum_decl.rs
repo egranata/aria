@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
-    do_compile::{do_enum_compile, CompilationResult, CompileNode, CompileParams},
+    do_compile::{CompilationResult, CompileNode, CompileParams, do_enum_compile},
     func_builder::BasicBlockOpcode,
 };
 

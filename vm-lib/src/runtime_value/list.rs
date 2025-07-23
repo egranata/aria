@@ -119,10 +119,9 @@ impl List {
         _: &mut VirtualMachine,
     ) -> Result<RuntimeValue, VmError> {
         if let Some(i) = idx.as_integer() {
-            if let Some(val) = self.get_at(i.raw_value() as usize) {
-                Ok(val)
-            } else {
-                Err(VmErrorReason::IndexOutOfBounds(i.raw_value() as usize).into())
+            match self.get_at(i.raw_value() as usize) {
+                Some(val) => Ok(val),
+                _ => Err(VmErrorReason::IndexOutOfBounds(i.raw_value() as usize).into()),
             }
         } else {
             Err(VmErrorReason::UnexpectedType.into())

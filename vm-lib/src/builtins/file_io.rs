@@ -12,8 +12,8 @@ use crate::{
     error::vm_error::VmErrorReason,
     frame::Frame,
     runtime_value::{
-        function::BuiltinFunctionImpl, kind::RuntimeValueType, list::List, object::Object,
-        opaque::OpaqueValue, structure::Struct, RuntimeValue,
+        RuntimeValue, function::BuiltinFunctionImpl, kind::RuntimeValueType, list::List,
+        object::Object, opaque::OpaqueValue, structure::Struct,
     },
     vm::RunloopExit,
 };

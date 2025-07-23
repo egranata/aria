@@ -7,9 +7,9 @@ use crate::{
     error::vm_error::VmErrorReason,
     frame::Frame,
     runtime_value::{
+        RuntimeValue,
         function::{BuiltinFunctionImpl, Function},
         kind::RuntimeValueType,
-        RuntimeValue,
     },
 };
 

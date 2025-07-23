@@ -8,9 +8,9 @@ use std::{
 use crate::error::vm_error::VmErrorReason;
 
 use super::{
+    RuntimeValue,
     function::{BuiltinFunctionImpl, Function},
     mixin::Mixin,
-    RuntimeValue,
 };
 
 struct StructImpl {

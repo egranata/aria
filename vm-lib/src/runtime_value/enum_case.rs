@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use crate::{frame::Frame, vm::VirtualMachine};
 
-use super::{enumeration::Enum, RuntimeValue};
+use super::{RuntimeValue, enumeration::Enum};
 
 pub(super) struct EnumValueImpl {
     pub(super) enumm: Enum,

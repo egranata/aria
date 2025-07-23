@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::{collections::HashSet, rc::Rc};
 
-use super::{object::ObjectBox, RuntimeValue};
+use super::{RuntimeValue, object::ObjectBox};
 
 pub(crate) struct BuiltinValueImpl<T>
 where

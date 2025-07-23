@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::ffi::{c_char, CString};
+use std::ffi::{CString, c_char};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

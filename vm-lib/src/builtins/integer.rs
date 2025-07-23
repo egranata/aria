@@ -5,8 +5,8 @@ use haxby_opcodes::function_attribs::FUNC_IS_METHOD;
 use crate::{
     frame::Frame,
     runtime_value::{
-        builtin_type::BuiltinType, function::BuiltinFunctionImpl, kind::RuntimeValueType,
-        RuntimeValue,
+        RuntimeValue, builtin_type::BuiltinType, function::BuiltinFunctionImpl,
+        kind::RuntimeValueType,
     },
     vm::RunloopExit,
 };

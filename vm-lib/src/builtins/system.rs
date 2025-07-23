@@ -3,7 +3,7 @@ use super::VmBuiltins;
 use crate::{
     error::vm_error::VmErrorReason,
     frame::Frame,
-    runtime_value::{function::BuiltinFunctionImpl, integer::IntegerValue, RuntimeValue},
+    runtime_value::{RuntimeValue, function::BuiltinFunctionImpl, integer::IntegerValue},
     vm::RunloopExit,
 };
 use std::process::Command;

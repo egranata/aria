@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::{error::vm_error::VmErrorReason, frame::Frame, vm::VirtualMachine};
 
-use super::{builtin_value::BuiltinValue, RuntimeValue};
+use super::{RuntimeValue, builtin_value::BuiltinValue};
 
-// SPDX-License-Identifier: Apache-2.0
 pub type StringValue = BuiltinValue<String>;
 
 impl From<&str> for StringValue {
@@ -68,10 +69,9 @@ impl StringValue {
         _: &mut VirtualMachine,
     ) -> Result<RuntimeValue, VmErrorReason> {
         if let Some(i) = idx.as_integer() {
-            if let Some(val) = self.get_at(i.raw_value() as usize) {
-                Ok(val)
-            } else {
-                Err(VmErrorReason::IndexOutOfBounds(i.raw_value() as usize))
+            match self.get_at(i.raw_value() as usize) {
+                Some(val) => Ok(val),
+                _ => Err(VmErrorReason::IndexOutOfBounds(i.raw_value() as usize)),
             }
         } else {
             Err(VmErrorReason::UnexpectedType)

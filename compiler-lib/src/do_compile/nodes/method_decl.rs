@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     do_compile::{
-        emit_args_at_target, ensure_unique_arg_names, CompilationResult, CompileNode, CompileParams,
+        CompilationResult, CompileNode, CompileParams, emit_args_at_target, ensure_unique_arg_names,
     },
     func_builder::BasicBlockOpcode,
 };

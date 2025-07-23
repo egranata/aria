@@ -7,10 +7,10 @@ use std::{
 };
 
 use super::{
+    RuntimeValue,
     enum_case::{EnumValue, EnumValueImpl},
     kind::RuntimeValueType,
     mixin::Mixin,
-    RuntimeValue,
 };
 
 #[derive(Clone)]
@@ -130,20 +130,21 @@ impl Enum {
     }
 
     pub fn make_value(&self, cidx: usize, payload: Option<RuntimeValue>) -> Option<EnumValue> {
-        if let Some(case) = self.get_case_by_idx(cidx) {
-            if case.payload_type.is_some() == payload.is_some() {
-                Some(EnumValue {
-                    imp: Rc::new(EnumValueImpl {
-                        enumm: self.clone(),
-                        case: cidx,
-                        payload,
-                    }),
-                })
-            } else {
-                None
+        match self.get_case_by_idx(cidx) {
+            Some(case) => {
+                if case.payload_type.is_some() == payload.is_some() {
+                    Some(EnumValue {
+                        imp: Rc::new(EnumValueImpl {
+                            enumm: self.clone(),
+                            case: cidx,
+                            payload,
+                        }),
+                    })
+                } else {
+                    None
+                }
             }
-        } else {
-            None
+            _ => None,
         }
     }
 

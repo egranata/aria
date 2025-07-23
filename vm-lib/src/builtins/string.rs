@@ -5,8 +5,8 @@ use crate::{
     error::vm_error::VmErrorReason,
     frame::Frame,
     runtime_value::{
-        builtin_type::BuiltinType, function::BuiltinFunctionImpl, kind::RuntimeValueType,
-        list::List, RuntimeValue,
+        RuntimeValue, builtin_type::BuiltinType, function::BuiltinFunctionImpl,
+        kind::RuntimeValueType, list::List,
     },
     vm::RunloopExit,
 };

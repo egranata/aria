@@ -5,8 +5,8 @@ use aria_parser::ast::SourcePointer;
 use haxby_opcodes::Opcode;
 
 use crate::{
-    bc_writer::BytecodeWriter, constant_value::ConstantValues, line_table::LineTable,
-    CompilationOptions,
+    CompilationOptions, bc_writer::BytecodeWriter, constant_value::ConstantValues,
+    line_table::LineTable,
 };
 
 pub enum BasicBlockOpcode {

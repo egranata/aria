@@ -7,7 +7,7 @@ use std::{
 
 use crate::error::vm_error::VmErrorReason;
 
-use super::{structure::Struct, RuntimeValue};
+use super::{RuntimeValue, structure::Struct};
 
 #[derive(Default)]
 pub struct ObjectBox {

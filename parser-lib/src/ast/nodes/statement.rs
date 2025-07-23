@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        derive::Derive,
-        prettyprint::{printout_accumulator::PrintoutAccumulator, PrettyPrintable},
         AssertStatement, AssignStatement, BreakStatement, CodeBlock, ContinueStatement, EnumDecl,
         ExpressionStatement, ForStatement, GuardBlock, IfStatement, MatchStatement,
         ReturnStatement, Statement, StructDecl, ThrowStatement, TryBlock, ValDeclStatement,
         WhileStatement, WriteOpEqStatement,
+        derive::Derive,
+        prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
     gen_from_options,
 };

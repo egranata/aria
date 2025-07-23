@@ -9,7 +9,7 @@ use aria_compiler::{constant_value::ConstantValue, module::CompiledModule};
 
 use crate::{
     builtins::VmBuiltins,
-    runtime_value::{kind::RuntimeValueType, RuntimeValue},
+    runtime_value::{RuntimeValue, kind::RuntimeValueType},
 };
 
 #[derive(Clone)]

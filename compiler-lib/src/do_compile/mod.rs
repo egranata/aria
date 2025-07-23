@@ -2,21 +2,21 @@
 use std::{collections::HashSet, rc::Rc};
 
 use aria_parser::ast::{
-    source_to_ast, ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece,
-    EnumCaseDecl, EnumDecl, EnumDeclEntry, Expression, Identifier, MatchPattern,
-    MatchPatternEnumCase, MatchRule, MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl,
-    ParsedModule, ReturnStatement, SourceBuffer, SourcePointer, Statement, StringLiteral,
-    StructDecl, StructEntry, ValDeclStatement,
+    ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl, EnumDecl,
+    EnumDeclEntry, Expression, Identifier, MatchPattern, MatchPatternEnumCase, MatchRule,
+    MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl, ParsedModule, ReturnStatement,
+    SourceBuffer, SourcePointer, Statement, StringLiteral, StructDecl, StructEntry,
+    ValDeclStatement, source_to_ast,
 };
 use haxby_opcodes::{builtin_type_ids::BUILTIN_TYPE_ANY, function_attribs::*};
 use thiserror::Error;
 
 use crate::{
+    CompilationOptions,
     constant_value::{CompiledCodeObject, ConstantValue, ConstantValuesError},
     func_builder::{BasicBlock, BasicBlockOpcode, FunctionBuilder},
     module::CompiledModule,
     scope::{CompilationScope, ScopeError, ScopeErrorReason},
-    CompilationOptions,
 };
 
 #[derive(Debug, Error)]
@@ -206,7 +206,7 @@ fn compile_method_decl(pf: &MethodDecl, params: &mut CompileParams) -> Compilati
             return Err(CompilationError {
                 loc: pf.loc.clone(),
                 reason: er,
-            })
+            });
         }
     };
     let frame_size = scope.as_function_root().unwrap().num_locals();

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use aria_parser::ast::{prettyprint::printout_accumulator::PrintoutAccumulator, SourcePointer};
+use aria_parser::ast::{SourcePointer, prettyprint::printout_accumulator::PrintoutAccumulator};
 use haxby_opcodes::Opcode;
 use thiserror::Error;
 

@@ -6,7 +6,7 @@ use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_RUNTIME_ERROR;
 use crate::{
     builtins::VmBuiltins,
     error::vm_error::{VmError, VmErrorReason},
-    runtime_value::{object::Object, RuntimeValue},
+    runtime_value::{RuntimeValue, object::Object},
     vm::VirtualMachine,
 };
 
@@ -71,7 +71,7 @@ impl VmException {
 
 #[macro_export]
 macro_rules! some_or_err {
-    ($opt:expr, $err:expr) => {
+    ($opt:expr_2021, $err:expr_2021) => {
         match $opt {
             Some(val) => val,
             None => return Err($err),
@@ -81,7 +81,7 @@ macro_rules! some_or_err {
 
 #[macro_export]
 macro_rules! ok_or_err {
-    ($opt:expr, $err:expr) => {
+    ($opt:expr_2021, $err:expr_2021) => {
         match $opt {
             Ok(val) => val,
             Err(_) => return Err($err),

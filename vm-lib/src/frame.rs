@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use aria_compiler::line_table::LineTable;
 use aria_parser::ast::SourcePointer;
 
-// SPDX-License-Identifier: Apache-2.0
 use crate::{
-    runtime_value::{function::Function, kind::RuntimeValueType, RuntimeValue},
+    runtime_value::{RuntimeValue, function::Function, kind::RuntimeValueType},
     stack::Stack,
     vm::VirtualMachine,
 };

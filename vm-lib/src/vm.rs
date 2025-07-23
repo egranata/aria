@@ -5,9 +5,9 @@ use std::{
 };
 
 use aria_compiler::{bc_reader::BytecodeReader, compile_from_source, module::CompiledModule};
-use aria_parser::ast::{prettyprint::printout_accumulator::PrintoutAccumulator, SourceBuffer};
+use aria_parser::ast::{SourceBuffer, prettyprint::printout_accumulator::PrintoutAccumulator};
 use haxby_opcodes::{
-    enum_case_attribs::CASE_HAS_PAYLOAD, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE, Opcode,
+    Opcode, enum_case_attribs::CASE_HAS_PAYLOAD, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE,
 };
 
 use crate::{
@@ -21,6 +21,7 @@ use crate::{
     opcodes::prettyprint::opcode_prettyprint,
     runtime_module::RuntimeModule,
     runtime_value::{
+        RuntimeValue,
         enumeration::{Enum, EnumCase},
         function::Function,
         kind::RuntimeValueType,
@@ -29,7 +30,6 @@ use crate::{
         object::Object,
         runtime_code_object::CodeObject,
         structure::Struct,
-        RuntimeValue,
     },
     stack::Stack,
 };
@@ -145,7 +145,7 @@ impl VirtualMachine {
 }
 
 macro_rules! build_vm_error {
-    ($reason: expr, $next: expr, $frame: expr, $idx: expr) => {{
+    ($reason: expr_2021, $next: expr_2021, $frame: expr_2021, $idx: expr_2021) => {{
         let lt = if let Some(lt) = $frame.get_line_table() {
             lt.get($idx as u16)
         } else {
@@ -160,7 +160,7 @@ macro_rules! build_vm_error {
 }
 
 macro_rules! pop_or_err {
-    ($next: expr, $frame: expr, $idx: expr) => {
+    ($next: expr_2021, $frame: expr_2021, $idx: expr_2021) => {
         if let Some(val) = $frame.stack.try_pop() {
             val
         } else {
@@ -205,7 +205,7 @@ enum OpcodeRunExit {
 }
 
 macro_rules! binop_eval {
-    ( ($op_expr: expr), $next: expr, $frame: expr, $op_idx: expr) => {
+    ( ($op_expr: expr_2021), $next: expr_2021, $frame: expr_2021, $op_idx: expr_2021) => {
         match $op_expr {
             crate::runtime_value::OperatorEvalOutcome::Ok(val) => $frame.stack.push(val),
             crate::runtime_value::OperatorEvalOutcome::Exception(e) => {
@@ -223,7 +223,7 @@ macro_rules! binop_eval {
 }
 
 macro_rules! unaryop_eval {
-    ( ($op_expr: expr), $next: expr, $frame: expr, $op_idx: expr) => {
+    ( ($op_expr: expr_2021), $next: expr_2021, $frame: expr_2021, $op_idx: expr_2021) => {
         match $op_expr {
             crate::runtime_value::OperatorEvalOutcome::Ok(val) => $frame.stack.push(val),
             crate::runtime_value::OperatorEvalOutcome::Exception(e) => {
@@ -298,17 +298,19 @@ impl VirtualMachine {
 
         let cmp0 = components[0];
         let root = {
-            if let Some(cmp0_obj) = module.load_named_value(cmp0) {
-                if let Some(s) = cmp0_obj.as_enum() {
-                    s
-                } else {
-                    return Err(VmErrorReason::UnexpectedType);
+            match module.load_named_value(cmp0) {
+                Some(cmp0_obj) => match cmp0_obj.as_enum() {
+                    Some(s) => s,
+                    _ => {
+                        return Err(VmErrorReason::UnexpectedType);
+                    }
+                },
+                _ => {
+                    let cmp0_struct = Enum::new(cmp0);
+                    let cmp0_val = RuntimeValue::Type(RuntimeValueType::Enum(cmp0_struct.clone()));
+                    module.store_named_value(cmp0, cmp0_val);
+                    cmp0_struct
                 }
-            } else {
-                let cmp0_struct = Enum::new(cmp0);
-                let cmp0_val = RuntimeValue::Type(RuntimeValueType::Enum(cmp0_struct.clone()));
-                module.store_named_value(cmp0, cmp0_val);
-                cmp0_struct
             }
         };
 
@@ -319,13 +321,10 @@ impl VirtualMachine {
             name: &str,
         ) -> Result<Enum, VmErrorReason> {
             match current_struct.load_named_value(name) {
-                Some(existing_val) => {
-                    if let Some(s) = existing_val.as_enum() {
-                        Ok(s)
-                    } else {
-                        Err(VmErrorReason::UnexpectedType)
-                    }
-                }
+                Some(existing_val) => match existing_val.as_enum() {
+                    Some(s) => Ok(s),
+                    _ => Err(VmErrorReason::UnexpectedType),
+                },
                 None => {
                     let new_struct = Enum::new(name);
                     let new_val = RuntimeValue::Type(RuntimeValueType::Enum(new_struct.clone()));
@@ -406,12 +405,12 @@ impl VirtualMachine {
         module: &RuntimeModule,
         name: &str,
     ) -> Result<RuntimeValue, VmErrorReason> {
-        if let Some(nv) = module.load_named_value(name) {
-            Ok(nv)
-        } else if let Some(nv) = self.builtins.load_named_value(name) {
-            Ok(nv)
-        } else {
-            Err(VmErrorReason::NoSuchIdentifier(name.to_owned()))
+        match module.load_named_value(name) {
+            Some(nv) => Ok(nv),
+            _ => match self.builtins.load_named_value(name) {
+                Some(nv) => Ok(nv),
+                _ => Err(VmErrorReason::NoSuchIdentifier(name.to_owned())),
+            },
         }
     }
 
@@ -445,13 +444,14 @@ impl VirtualMachine {
             Opcode::Push1 => frame.stack.push(RuntimeValue::Integer(1.into())),
             Opcode::PushTrue => frame.stack.push(RuntimeValue::Boolean(true.into())),
             Opcode::PushFalse => frame.stack.push(RuntimeValue::Boolean(false.into())),
-            Opcode::PushBuiltinTy(n) => {
-                if let Some(bty) = self.builtins.get_builtin_type_by_id(n) {
+            Opcode::PushBuiltinTy(n) => match self.builtins.get_builtin_type_by_id(n) {
+                Some(bty) => {
                     frame.stack.push(RuntimeValue::Type(bty));
-                } else {
+                }
+                _ => {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
-            }
+            },
             Opcode::PushRuntimeValue(n) => match n {
                 RUNTIME_VALUE_THIS_MODULE => {
                     frame.stack.push(RuntimeValue::Module(this_module.clone()));
@@ -752,15 +752,18 @@ impl VirtualMachine {
             Opcode::ReadUplevel(n) => {
                 if let Some(f) = &frame.func {
                     if let Some(bcf) = f.imp.as_bytecode_function() {
-                        if let Some(ulv) = bcf.read_uplevel(n) {
-                            frame.stack.push(ulv);
-                        } else {
-                            return build_vm_error!(
-                                VmErrorReason::UplevelOutOfBounds(n as usize),
-                                next,
-                                frame,
-                                op_idx
-                            );
+                        match bcf.read_uplevel(n) {
+                            Some(ulv) => {
+                                frame.stack.push(ulv);
+                            }
+                            _ => {
+                                return build_vm_error!(
+                                    VmErrorReason::UplevelOutOfBounds(n as usize),
+                                    next,
+                                    frame,
+                                    op_idx
+                                );
+                            }
                         }
                     } else {
                         return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
@@ -1056,47 +1059,45 @@ impl VirtualMachine {
                     .ctrl_blocks
                     .push(crate::frame::ControlBlock::Guard(x_exit));
             }
-            Opcode::GuardExit => {
-                if let Some(block) = frame.ctrl_blocks.try_pop() {
-                    match block {
-                        crate::frame::ControlBlock::Guard(guard) => {
-                            let _ = guard.eval(0, frame, self, true);
-                        }
-                        _ => {
-                            return build_vm_error!(
-                                VmErrorReason::InvalidControlInstruction,
-                                next,
-                                frame,
-                                op_idx
-                            );
-                        }
+            Opcode::GuardExit => match frame.ctrl_blocks.try_pop() {
+                Some(block) => match block {
+                    crate::frame::ControlBlock::Guard(guard) => {
+                        let _ = guard.eval(0, frame, self, true);
                     }
-                } else {
+                    _ => {
+                        return build_vm_error!(
+                            VmErrorReason::InvalidControlInstruction,
+                            next,
+                            frame,
+                            op_idx
+                        );
+                    }
+                },
+                _ => {
                     return build_vm_error!(VmErrorReason::EmptyStack, next, frame, op_idx);
                 }
-            }
+            },
             Opcode::TryEnter(offset) => {
                 frame
                     .ctrl_blocks
                     .push(crate::frame::ControlBlock::Try(offset));
             }
-            Opcode::TryExit => {
-                if let Some(block) = frame.ctrl_blocks.try_pop() {
-                    match block {
-                        crate::frame::ControlBlock::Try(_) => {}
-                        _ => {
-                            return build_vm_error!(
-                                VmErrorReason::InvalidControlInstruction,
-                                next,
-                                frame,
-                                op_idx
-                            );
-                        }
+            Opcode::TryExit => match frame.ctrl_blocks.try_pop() {
+                Some(block) => match block {
+                    crate::frame::ControlBlock::Try(_) => {}
+                    _ => {
+                        return build_vm_error!(
+                            VmErrorReason::InvalidControlInstruction,
+                            next,
+                            frame,
+                            op_idx
+                        );
                     }
-                } else {
+                },
+                _ => {
                     return build_vm_error!(VmErrorReason::EmptyStack, next, frame, op_idx);
                 }
-            }
+            },
             Opcode::Throw => {
                 let ev = pop_or_err!(next, frame, op_idx);
                 match frame.drop_to_first_try(self) {
@@ -1164,19 +1165,34 @@ impl VirtualMachine {
                 let mixin = pop_or_err!(next, frame, op_idx);
                 let struk = pop_or_err!(next, frame, op_idx);
 
-                if let (Some(mixin), Some(strukt)) = (mixin.as_mixin(), struk.as_struct()) {
-                    strukt.include_mixin(mixin);
-                } else if let (Some(mixin), Some(enumm)) = (mixin.as_mixin(), struk.as_enum()) {
-                    enumm.include_mixin(mixin);
-                } else if let (Some(mixin), Some(btt)) = (mixin.as_mixin(), struk.as_builtin_type())
-                {
-                    btt.include_mixin(mixin);
-                } else if let (Some(src_mixin), Some(dst_mixin)) =
-                    (mixin.as_mixin(), struk.as_mixin())
-                {
-                    dst_mixin.include_mixin(src_mixin);
-                } else {
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                match (mixin.as_mixin(), struk.as_struct()) {
+                    (Some(mixin), Some(strukt)) => {
+                        strukt.include_mixin(mixin);
+                    }
+                    _ => match (mixin.as_mixin(), struk.as_enum()) {
+                        (Some(mixin), Some(enumm)) => {
+                            enumm.include_mixin(mixin);
+                        }
+                        _ => match (mixin.as_mixin(), struk.as_builtin_type()) {
+                            (Some(mixin), Some(btt)) => {
+                                btt.include_mixin(mixin);
+                            }
+                            _ => {
+                                if let (Some(src_mixin), Some(dst_mixin)) =
+                                    (mixin.as_mixin(), struk.as_mixin())
+                                {
+                                    dst_mixin.include_mixin(src_mixin);
+                                } else {
+                                    return build_vm_error!(
+                                        VmErrorReason::UnexpectedType,
+                                        next,
+                                        frame,
+                                        op_idx
+                                    );
+                                }
+                            }
+                        },
+                    },
                 }
             }
             Opcode::BindMethod(a, n) => {
@@ -1191,22 +1207,39 @@ impl VirtualMachine {
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 };
-                if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_struct()) {
-                    let new_f = Function::from_code_object(x, a, this_module);
-                    y.store_named_value(&new_name, RuntimeValue::Function(new_f));
-                } else if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_enum()) {
-                    let new_f = Function::from_code_object(x, a, this_module);
-                    y.store_named_value(&new_name, RuntimeValue::Function(new_f));
-                } else if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_mixin()) {
-                    let new_f = Function::from_code_object(x, a, this_module);
-                    y.store_named_value(&new_name, RuntimeValue::Function(new_f));
-                } else if let (Some(x), Some(y)) =
-                    (method.as_code_object(), struk.as_builtin_type())
-                {
-                    let new_f = Function::from_code_object(x, a, this_module);
-                    y.write(&new_name, RuntimeValue::Function(new_f));
-                } else {
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                match (method.as_code_object(), struk.as_struct()) {
+                    (Some(x), Some(y)) => {
+                        let new_f = Function::from_code_object(x, a, this_module);
+                        y.store_named_value(&new_name, RuntimeValue::Function(new_f));
+                    }
+                    _ => match (method.as_code_object(), struk.as_enum()) {
+                        (Some(x), Some(y)) => {
+                            let new_f = Function::from_code_object(x, a, this_module);
+                            y.store_named_value(&new_name, RuntimeValue::Function(new_f));
+                        }
+                        _ => {
+                            if let (Some(x), Some(y)) = (method.as_code_object(), struk.as_mixin())
+                            {
+                                let new_f = Function::from_code_object(x, a, this_module);
+                                y.store_named_value(&new_name, RuntimeValue::Function(new_f));
+                            } else {
+                                match (method.as_code_object(), struk.as_builtin_type()) {
+                                    (Some(x), Some(y)) => {
+                                        let new_f = Function::from_code_object(x, a, this_module);
+                                        y.write(&new_name, RuntimeValue::Function(new_f));
+                                    }
+                                    _ => {
+                                        return build_vm_error!(
+                                            VmErrorReason::UnexpectedType,
+                                            next,
+                                            frame,
+                                            op_idx
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    },
                 }
             }
             Opcode::BindCase(a, n) => {
@@ -1233,13 +1266,16 @@ impl VirtualMachine {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 };
 
-                if let Some(enumm) = enumm.as_enum() {
-                    enumm.add_case(EnumCase {
-                        name: new_name,
-                        payload_type,
-                    });
-                } else {
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                match enumm.as_enum() {
+                    Some(enumm) => {
+                        enumm.add_case(EnumCase {
+                            name: new_name,
+                            payload_type,
+                        });
+                    }
+                    _ => {
+                        return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    }
                 }
             }
             Opcode::NewEnumVal(n) => {
@@ -1254,38 +1290,41 @@ impl VirtualMachine {
                 };
 
                 let enumm = pop_or_err!(next, frame, op_idx);
-                if let Some(enumm) = enumm.as_enum() {
-                    let case = enumm.get_idx_of_case(&case_name);
-                    let (cidx, case) = if let Some(case) = case {
-                        (case, enumm.get_case_by_idx(case).unwrap())
-                    } else {
-                        return build_vm_error!(
-                            VmErrorReason::NoSuchCase(case_name),
-                            next,
-                            frame,
-                            op_idx
-                        );
-                    };
-                    let payload = match &case.payload_type {
-                        Some(pt) => {
-                            let pv = pop_or_err!(next, frame, op_idx);
-                            if !pv.isa(pt, &self.builtins) {
-                                return build_vm_error!(
-                                    VmErrorReason::UnexpectedType,
-                                    next,
-                                    frame,
-                                    op_idx
-                                );
-                            } else {
-                                Some(pv)
+                match enumm.as_enum() {
+                    Some(enumm) => {
+                        let case = enumm.get_idx_of_case(&case_name);
+                        let (cidx, case) = if let Some(case) = case {
+                            (case, enumm.get_case_by_idx(case).unwrap())
+                        } else {
+                            return build_vm_error!(
+                                VmErrorReason::NoSuchCase(case_name),
+                                next,
+                                frame,
+                                op_idx
+                            );
+                        };
+                        let payload = match &case.payload_type {
+                            Some(pt) => {
+                                let pv = pop_or_err!(next, frame, op_idx);
+                                if !pv.isa(pt, &self.builtins) {
+                                    return build_vm_error!(
+                                        VmErrorReason::UnexpectedType,
+                                        next,
+                                        frame,
+                                        op_idx
+                                    );
+                                } else {
+                                    Some(pv)
+                                }
                             }
-                        }
-                        None => None,
-                    };
-                    let ev = enumm.make_value(cidx, payload).unwrap();
-                    frame.stack.push(RuntimeValue::EnumValue(ev));
-                } else {
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                            None => None,
+                        };
+                        let ev = enumm.make_value(cidx, payload).unwrap();
+                        frame.stack.push(RuntimeValue::EnumValue(ev));
+                    }
+                    _ => {
+                        return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    }
                 }
             }
             Opcode::EnumCheckIsCase(n) => {

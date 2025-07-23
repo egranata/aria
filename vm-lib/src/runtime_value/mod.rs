@@ -466,7 +466,7 @@ pub enum AttributeError {
 }
 
 macro_rules! val_or_bound_func {
-    ($val: expr, $self: expr) => {
+    ($val: expr_2021, $self: expr_2021) => {
         if let Some(rf) = $val.as_function() {
             if rf.attribute().is_type_method() {
                 Err(AttributeError::InvalidFunctionBinding)
@@ -508,12 +508,14 @@ impl RuntimeValue {
             env.get_container_enum().isa_mixin(mixin)
         } else if let Some(m) = self.as_mixin() {
             m.isa_mixin(mixin)
-        } else if let Some(st) = self.as_struct() {
-            st.isa_mixin(mixin)
-        } else if let Some(en) = self.as_enum() {
-            en.isa_mixin(mixin)
         } else {
-            false
+            match self.as_struct() {
+                Some(st) => st.isa_mixin(mixin),
+                _ => match self.as_enum() {
+                    Some(en) => en.isa_mixin(mixin),
+                    _ => false,
+                },
+            }
         }
     }
 
@@ -556,10 +558,11 @@ impl RuntimeValue {
             f.eval(argc, cur_frame, vm, discard_result)
         } else if let Some(bf) = self.as_bound_function() {
             bf.eval(argc, cur_frame, vm, discard_result)
-        } else if let Ok(op_call) = self.read_attribute("op_call", &vm.builtins) {
-            op_call.eval(argc, cur_frame, vm, discard_result)
         } else {
-            Err(crate::error::vm_error::VmErrorReason::UnexpectedType.into())
+            match self.read_attribute("op_call", &vm.builtins) {
+                Ok(op_call) => op_call.eval(argc, cur_frame, vm, discard_result),
+                _ => Err(crate::error::vm_error::VmErrorReason::UnexpectedType.into()),
+            }
         }
     }
 
@@ -670,86 +673,97 @@ impl RuntimeValue {
         builtins: &VmBuiltins,
     ) -> Result<RuntimeValue, AttributeError> {
         if let Some(obj) = self.as_object() {
-            if let Some(val) = obj.read(attrib_name) {
-                Ok(val)
-            } else if let Some(val) = obj.get_struct().load_named_value(attrib_name) {
-                val_or_bound_func!(val, self)
-            } else {
-                Err(AttributeError::NoSuchAttribute)
+            match obj.read(attrib_name) {
+                Some(val) => Ok(val),
+                _ => match obj.get_struct().load_named_value(attrib_name) {
+                    Some(val) => {
+                        val_or_bound_func!(val, self)
+                    }
+                    _ => Err(AttributeError::NoSuchAttribute),
+                },
             }
         } else if let Some(mixin) = self.as_mixin() {
-            if let Some(val) = mixin.load_named_value(attrib_name) {
-                Ok(val)
-            } else {
-                Err(AttributeError::NoSuchAttribute)
+            match mixin.load_named_value(attrib_name) {
+                Some(val) => Ok(val),
+                _ => Err(AttributeError::NoSuchAttribute),
             }
         } else if let Some(enumm) = self.as_enum_value() {
-            if let Some(val) = enumm.read(attrib_name) {
-                val_or_bound_func!(val, self)
-            } else {
-                Err(AttributeError::NoSuchAttribute)
+            match enumm.read(attrib_name) {
+                Some(val) => {
+                    val_or_bound_func!(val, self)
+                }
+                _ => Err(AttributeError::NoSuchAttribute),
             }
         } else if let Some(i) = self.as_integer() {
-            if let Some(val) = i.read(attrib_name) {
-                Ok(val)
-            } else {
-                let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_INT).unwrap();
-                if let Ok(val) = bt.read_attribute(attrib_name) {
-                    val_or_bound_func!(val, self)
-                } else {
-                    Err(AttributeError::NoSuchAttribute)
+            match i.read(attrib_name) {
+                Some(val) => Ok(val),
+                _ => {
+                    let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_INT).unwrap();
+                    match bt.read_attribute(attrib_name) {
+                        Ok(val) => {
+                            val_or_bound_func!(val, self)
+                        }
+                        _ => Err(AttributeError::NoSuchAttribute),
+                    }
                 }
             }
         } else if let Some(i) = self.as_float() {
-            if let Some(val) = i.read(attrib_name) {
-                Ok(val)
-            } else {
-                let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_FLOAT).unwrap();
-                if let Ok(val) = bt.read_attribute(attrib_name) {
-                    val_or_bound_func!(val, self)
-                } else {
-                    Err(AttributeError::NoSuchAttribute)
+            match i.read(attrib_name) {
+                Some(val) => Ok(val),
+                _ => {
+                    let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_FLOAT).unwrap();
+                    match bt.read_attribute(attrib_name) {
+                        Ok(val) => {
+                            val_or_bound_func!(val, self)
+                        }
+                        _ => Err(AttributeError::NoSuchAttribute),
+                    }
                 }
             }
         } else if let Some(f) = self.as_function() {
-            if let Some(val) = f.read(attrib_name) {
-                Ok(val)
-            } else {
-                Err(AttributeError::NoSuchAttribute)
+            match f.read(attrib_name) {
+                Some(val) => Ok(val),
+                _ => Err(AttributeError::NoSuchAttribute),
             }
         } else if let Some(l) = self.as_list() {
-            if let Some(val) = l.read(attrib_name) {
-                Ok(val)
-            } else {
-                let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_LIST).unwrap();
-                if let Ok(val) = bt.read_attribute(attrib_name) {
-                    val_or_bound_func!(val, self)
-                } else {
-                    Err(AttributeError::NoSuchAttribute)
+            match l.read(attrib_name) {
+                Some(val) => Ok(val),
+                _ => {
+                    let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_LIST).unwrap();
+                    match bt.read_attribute(attrib_name) {
+                        Ok(val) => {
+                            val_or_bound_func!(val, self)
+                        }
+                        _ => Err(AttributeError::NoSuchAttribute),
+                    }
                 }
             }
         } else if let Some(i) = self.as_string() {
-            if let Some(val) = i.read(attrib_name) {
-                Ok(val)
-            } else {
-                let bt = builtins
-                    .get_builtin_type_by_id(BUILTIN_TYPE_STRING)
-                    .unwrap();
-                if let Ok(val) = bt.read_attribute(attrib_name) {
-                    val_or_bound_func!(val, self)
-                } else {
-                    Err(AttributeError::NoSuchAttribute)
+            match i.read(attrib_name) {
+                Some(val) => Ok(val),
+                _ => {
+                    let bt = builtins
+                        .get_builtin_type_by_id(BUILTIN_TYPE_STRING)
+                        .unwrap();
+                    match bt.read_attribute(attrib_name) {
+                        Ok(val) => {
+                            val_or_bound_func!(val, self)
+                        }
+                        _ => Err(AttributeError::NoSuchAttribute),
+                    }
                 }
             }
         } else if let Some(i) = self.as_boolean() {
-            if let Some(val) = i.read(attrib_name) {
-                Ok(val)
-            } else {
-                let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_BOOL).unwrap();
-                if let Ok(val) = bt.read_attribute(attrib_name) {
-                    val_or_bound_func!(val, self)
-                } else {
-                    Err(AttributeError::NoSuchAttribute)
+            match i.read(attrib_name) {
+                Some(val) => Ok(val),
+                _ => {
+                    let bt = builtins.get_builtin_type_by_id(BUILTIN_TYPE_BOOL).unwrap();
+                    match bt.read_attribute(attrib_name) {
+                        Ok(val) => {
+                            val_or_bound_func!(val, self)
+                        }
+                        _ => Err(AttributeError::NoSuchAttribute),
+                    }
                 }
             }
         } else if let Some(t) = self.as_type() {
@@ -780,12 +794,13 @@ impl RuntimeValue {
         vm: &mut VirtualMachine,
     ) -> ExecutionResult {
         if self.is_object() {
-            if let Ok(read_index) = self.read_attribute("read_index", &vm.builtins) {
-                cur_frame.stack.push(idx.clone());
-                read_index.eval(1_u8, cur_frame, vm, false)?;
-                Ok(())
-            } else {
-                Err(VmErrorReason::UnexpectedType.into())
+            match self.read_attribute("read_index", &vm.builtins) {
+                Ok(read_index) => {
+                    cur_frame.stack.push(idx.clone());
+                    read_index.eval(1_u8, cur_frame, vm, false)?;
+                    Ok(())
+                }
+                _ => Err(VmErrorReason::UnexpectedType.into()),
             }
         } else if let Some(lst) = self.as_list() {
             let val = lst.read_index(idx, cur_frame, vm)?;
@@ -808,13 +823,14 @@ impl RuntimeValue {
         vm: &mut VirtualMachine,
     ) -> ExecutionResult {
         if self.is_object() {
-            if let Ok(write_index) = self.read_attribute("write_index", &vm.builtins) {
-                cur_frame.stack.push(val.clone());
-                cur_frame.stack.push(idx.clone());
-                write_index.eval(2_u8, cur_frame, vm, true)?;
-                Ok(())
-            } else {
-                Err(VmErrorReason::UnexpectedType.into())
+            match self.read_attribute("write_index", &vm.builtins) {
+                Ok(write_index) => {
+                    cur_frame.stack.push(val.clone());
+                    cur_frame.stack.push(idx.clone());
+                    write_index.eval(2_u8, cur_frame, vm, true)?;
+                    Ok(())
+                }
+                _ => Err(VmErrorReason::UnexpectedType.into()),
             }
         } else if let Some(lst) = self.as_list() {
             lst.write_index(idx, val, cur_frame, vm)

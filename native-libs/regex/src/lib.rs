@@ -7,8 +7,8 @@ use haxby_vm::{
     frame::Frame,
     runtime_module::RuntimeModule,
     runtime_value::{
-        function::BuiltinFunctionImpl, list::List, object::Object, opaque::OpaqueValue,
-        structure::Struct, RuntimeValue,
+        RuntimeValue, function::BuiltinFunctionImpl, list::List, object::Object,
+        opaque::OpaqueValue, structure::Struct,
     },
     some_or_err,
     vm::{ExecutionResult, RunloopExit, VirtualMachine},
@@ -205,7 +205,7 @@ impl BuiltinFunctionImpl for Replace {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult {
     match unsafe { module.as_ref() } {

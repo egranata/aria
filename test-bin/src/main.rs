@@ -8,7 +8,7 @@ use std::{
 
 use aria_compiler::compile_from_source;
 use aria_parser::ast::SourceBuffer;
-use clap::{command, Parser};
+use clap::{Parser, command};
 use glob::Paths;
 use haxby_vm::{frame::Frame, vm::VirtualMachine};
 use rayon::prelude::*;

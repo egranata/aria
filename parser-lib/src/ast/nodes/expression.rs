@@ -2,9 +2,9 @@
 use crate::{
     ast::TernaryExpression,
     ast::{
-        derive::Derive,
-        prettyprint::{printout_accumulator::PrintoutAccumulator, PrettyPrintable},
         Expression, LambdaFunction, LogOperation, SourceBuffer,
+        derive::Derive,
+        prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
     grammar::Rule,
 };
