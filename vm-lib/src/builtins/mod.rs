@@ -136,6 +136,7 @@ impl VmBuiltins {
             BUILTIN_TYPE_MAYBE => Some(self.get_builtin_type_by_name("Maybe")),
             BUILTIN_TYPE_UNIMPLEMENTED => Some(self.get_builtin_type_by_name("Unimplemented")),
             BUILTIN_TYPE_RUNTIME_ERROR => Some(self.get_builtin_type_by_name("RuntimeError")),
+            BUILTIN_TYPE_UNIT => Some(self.get_builtin_type_by_name("Unit")),
             _ => None,
         }
     }
@@ -179,6 +180,30 @@ impl VmBuiltins {
 
         let rv = crate::some_or_err!(
             rt_maybe_enum.make_value(none_idx, None),
+            VmErrorReason::UnexpectedVmState
+        );
+
+        Ok(RuntimeValue::EnumValue(rv))
+    }
+
+    #[allow(unused)]
+    pub(in crate::builtins) fn create_unit_object(
+        &self,
+        x: RuntimeValue,
+    ) -> Result<RuntimeValue, VmErrorReason> {
+        let rt_unit = crate::some_or_err!(
+            self.get_builtin_type_by_id(BUILTIN_TYPE_UNIT),
+            VmErrorReason::UnexpectedVmState
+        );
+        let rt_unit_enum = crate::some_or_err!(rt_unit.as_enum(), VmErrorReason::UnexpectedType);
+
+        let unit_idx = crate::some_or_err!(
+            rt_unit_enum.get_idx_of_case("unit"),
+            VmErrorReason::NoSuchCase("unit".to_owned())
+        );
+
+        let rv = crate::some_or_err!(
+            rt_unit_enum.make_value(unit_idx, Some(x)),
             VmErrorReason::UnexpectedVmState
         );
 

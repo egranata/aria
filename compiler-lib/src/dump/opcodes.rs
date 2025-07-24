@@ -15,6 +15,7 @@ fn builtin_type_id_to_str(id: u8) -> &'static str {
         BUILTIN_TYPE_FLOAT => "Float",
         BUILTIN_TYPE_UNIMPLEMENTED => "Unimplemented",
         BUILTIN_TYPE_RUNTIME_ERROR => "RuntimeError",
+        BUILTIN_TYPE_UNIT => "Unit",
         _ => "Unknown",
     }
 }

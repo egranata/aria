@@ -105,6 +105,7 @@ pub mod builtin_type_ids {
     pub const BUILTIN_TYPE_FLOAT:          u8 = 7;
     pub const BUILTIN_TYPE_UNIMPLEMENTED:  u8 = 8;
     pub const BUILTIN_TYPE_RUNTIME_ERROR:  u8 = 9;
+    pub const BUILTIN_TYPE_UNIT:           u8 = 10;
 }
 
 #[allow(unused_imports)]
