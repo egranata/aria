@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
 func main() {
-    val v = Void;
+    val v = Nothing;
 }

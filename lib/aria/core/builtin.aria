@@ -17,4 +17,4 @@ import aria.core.path;
 
 import aria.core.string;
 
-import Void from aria.core.void;
+import Nothing from aria.core.nothing;

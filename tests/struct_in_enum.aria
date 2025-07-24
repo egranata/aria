@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
-enum Void {}
+enum X {}
 
-extension Void {
+extension X {
     struct Pair {
         type func new(x,y) {
             alloc(This) {
@@ -12,13 +12,13 @@ extension Void {
     }
 }
 
-extension Void.Pair {
+extension X.Pair {
     instance func swap() {
-        Void.Pair.new(this.y,this.x);
+        X.Pair.new(this.y,this.x);
     }
 }
 
-val Pair = Void.Pair;
+val Pair = X.Pair;
 
 func main() {
     val p = Pair.new(3,4);

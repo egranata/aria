@@ -162,6 +162,19 @@ This module provides extensions to the built-in `List` type.
 
 ---
 
+### `aria.core.nothing`
+
+This module provides the `Nothing` enum, representing the absence of a value.
+
+#### **Enums**
+
+*   **`Nothing`**
+    An empty enumeration, used to represent the absence of a value or a type that can never be instantiated.
+
+    **Cases:** (None)
+
+---
+
 ### `aria.core.path`
 
 This module provides a `Path` struct for interacting with the file system.
@@ -228,19 +241,6 @@ This module provides extensions to the built-in `String` type.
     *   `uppercase()`: Returns a new string with all characters converted to uppercase.
     *   `lowercase()`: Returns a new string with all characters converted to lowercase.
     *   `contains(substring: String)`: Returns `true` if the string contains the `substring`, `false` otherwise.
-
----
-
-### `aria.core.void`
-
-This module provides the `Void` enum, representing the absence of a value.
-
-#### **Enums**
-
-*   **`Void`**
-    An empty enumeration, used to represent the absence of a value or a type that can never be instantiated. Similar to `void` in C-like languages or `Unit` in Rust.
-
-    **Cases:** (None)
 
 ---
 
