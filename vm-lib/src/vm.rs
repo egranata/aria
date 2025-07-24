@@ -90,6 +90,19 @@ impl VirtualMachine {
         self
     }
 
+    fn load_unit_into_builtins(mut self) -> Self {
+        let unit_rmod = self
+            .load_core_file_into_builtins("builtins/unit.aria", include_str!("builtins/unit.aria"));
+
+        let unit_enum = match unit_rmod.load_named_value("Unit") {
+            Some(e) => e,
+            None => panic!("Unit type not defined in unit module"),
+        };
+
+        self.builtins.insert("Unit", unit_enum);
+        self
+    }
+
     fn load_runtime_error_into_builtins(mut self) -> Self {
         let maybe_rmod = self.load_core_file_into_builtins(
             "builtins/runtime_error.aria",
@@ -141,6 +154,7 @@ impl VirtualMachine {
         .load_unimplemented_into_builtins()
         .load_maybe_into_builtins()
         .load_runtime_error_into_builtins()
+        .load_unit_into_builtins()
     }
 }
 

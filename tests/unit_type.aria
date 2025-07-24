@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val nu = Unit.new();
+    val uu = Unit::unit;
+
+    assert nu == uu;
+    assert nu.prettyprint() == "unit";
+}
