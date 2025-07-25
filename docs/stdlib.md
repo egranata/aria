@@ -265,6 +265,20 @@ This module provides extensions to the built-in `String` type.
     *   `apply(f)`: If `Maybe` is `Some(value)`, applies the function `f` to `value` and returns the result. If `Maybe` is `None`, returns `None`.
 
 ---
+
+### `Unit` (Built-in Enum)
+
+`Unit` is a built-in enumeration that represents the absence of any meaningful value. It is similar to `void` in C-like languages or `()` in Rust.
+
+#### **Enums**
+
+*   **`Unit`**
+    An enumeration with a single case, used to indicate that a function returns no meaningful value, or as a placeholder where a type is required but no data is conveyed.
+
+    **Cases:** `unit`: Represents the unit value
+
+---
+
 # `aria.date` Module Reference
 
 This document provides a reference for the `aria.date` module, which contains utilities for handling dates and times.
