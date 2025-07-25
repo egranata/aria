@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 extension String {
     func size() {
-        this.len();
+        return this.len();
     }
 
     func double() {
-        this * 2;
+        return this * 2;
     }
 }
 

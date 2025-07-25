@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 func is_greater(x,y) {
-    x > y;
+    return x > y;
 }
 
 func main() {

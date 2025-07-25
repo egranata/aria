@@ -7,7 +7,7 @@ mixin Answer {
 
 struct SomeType {
     type func new(x) {
-        alloc(This){
+        return alloc(This){
             .x = x,
         };
     }

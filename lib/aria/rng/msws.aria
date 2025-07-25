@@ -3,11 +3,11 @@ import aria.rng.mixin;
 
 struct MiddleSquareRng {
     type func new() {
-        MiddleSquareRng.new_with_params(now(),0x5ad4eceda1ce2a9);
+        return MiddleSquareRng.new_with_params(now(),0x5ad4eceda1ce2a9);
     }
 
     type func new_with_params(x,s) {
-        alloc(This){
+        return alloc(This){
             .x = x,
             .w = 0,
             .s = s,

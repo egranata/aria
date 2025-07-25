@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Integer {
     type func new(n: Int) {
-        alloc(This){
+        return alloc(This){
             .n = n,
         };
     }

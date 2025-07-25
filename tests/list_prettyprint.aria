@@ -8,11 +8,11 @@ struct Foo {
             .x = x,
         };
         Foo.COUNTER = Foo.COUNTER + 1;
-        f;
+        return f;
     }
 
     func prettyprint() {
-        "Foo({0},{1})".format(this.counter,this.x);
+        return "Foo({0},{1})".format(this.counter,this.x);
     }
 }
 

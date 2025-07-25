@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Pair {
     type func new(x,y) {
-        alloc(This){
+        return alloc(This){
             .x = x,
             .y = y,
         };
     }
 
     func swap() {
-        Pair.new(this.y, this.x);
+        return Pair.new(this.y, this.x);
     }
 }
 

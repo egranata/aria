@@ -6,7 +6,7 @@ struct Foo {
         if n > Foo.MAX_VALUE {
             n = Foo.MAX_VALUE;
         }
-        alloc(This) {
+        return alloc(This) {
             .n = n,
         };
     }

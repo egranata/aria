@@ -4,7 +4,7 @@ flag: no_std;
 extension File {
     struct IOError {
         type func new(message: String) {
-            alloc(This) {
+            return alloc(This) {
                 .message = message
             };
         }
@@ -25,7 +25,7 @@ extension File {
     # the values here must be kept in sync with file_io.rs
     struct OpenMode {
         type func new() {
-            alloc(This) {
+            return alloc(This) {
                 .mode = 0,
             };
         }
@@ -61,11 +61,11 @@ extension File {
             path = path.prettyprint();
         }
 
-        File._new(path, mode.mode);
+        return File._new(path, mode.mode);
     }
 
     func read_all() {
-        this._read_all();
+        return this._read_all();
     }
 
     func read(n: Int) {
@@ -109,11 +109,11 @@ extension File {
     }
 
     func writeln(s) {
-        this.write(s); this.write("\n");
+        return this.write(s); this.write("\n");
     }
 
     func get_position() {
-        this._getpos();
+        return this._getpos();
     }
 
     func set_position(offset: Int) {
@@ -121,7 +121,7 @@ extension File {
     }
 
     func len() {
-        this._getsize();
+        return this._getsize();
     }
 
     enum SeekMode {
@@ -155,7 +155,7 @@ extension File {
 
 struct FileLineIterator {
     type func new(file) {
-        alloc(This) {
+        return alloc(This) {
             .file = file,
         };
     }

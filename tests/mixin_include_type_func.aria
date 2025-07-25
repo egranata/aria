@@ -3,13 +3,13 @@ mixin HasTypeFunc {
     # requires
     # type func new_with_pair(x,y)
     type func new_with_duplicate(x) {
-        This.new_with_pair(x,x);
+        return This.new_with_pair(x,x);
     }
 }
 
 struct TestStruct {
     type func new_with_pair(x,y) {
-        alloc(This){
+        return alloc(This){
             .x = x,
             .y = y,
         };

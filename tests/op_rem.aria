@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Integer {
     type func new(n) {
-        alloc(This){
+        return alloc(This){
             .n = n,
         };
     }
@@ -10,9 +10,9 @@ struct Integer {
 extension Integer {
     func op_rem(rhs) {
         if rhs isa Integer {
-            Integer.new(this.n % rhs.n);
+            return Integer.new(this.n % rhs.n);
         } elsif rhs isa Int {
-            Integer.new(this.n % rhs);
+            return Integer.new(this.n % rhs);
         } else {
             throw alloc(Unimplemented);
         }
@@ -20,9 +20,9 @@ extension Integer {
 
     func op_rrem(lhs) {
         if lhs isa Integer {
-            Integer.new(lhs.n % this.n);
+            return Integer.new(lhs.n % this.n);
         } elsif lhs isa Int {
-            Integer.new(lhs % this.n);
+            return Integer.new(lhs % this.n);
         } else {
             throw alloc(Unimplemented);
         }
@@ -30,9 +30,9 @@ extension Integer {
 
     func op_equals(rhs) {
         if rhs isa Integer {
-            rhs.n == this.n;
+            return rhs.n == this.n;
         } elsif rhs isa Int {
-            this.n == rhs;
+            return this.n == rhs;
         } else {
             throw alloc(Unimplemented);
         }

@@ -17,14 +17,14 @@ extension List {
 
     func op_mul(rhs: Int) {
         if rhs isa Int {
-            this.repeat(rhs);
+            return this.repeat(rhs);
         } else {
             throw alloc(Unimplemented);
         }
     }
 
     func op_rmul(lhs: Int) {
-        this.op_mul(lhs);
+        return this.op_mul(lhs);
     }
 
     func prettyprint() {
@@ -68,7 +68,8 @@ extension List {
             ret.append(f(i));
             i = i + 1;
         }
-        ret;
+
+        return ret;
     }
 
     func op_equals(rhs: List) {
@@ -104,7 +105,7 @@ extension List {
 
     struct ListIterator {
         type func new(l: List) {
-        alloc(This){
+            return alloc(This){
                 .list = l,
                 .len = l.len(),
                 .index = 0,

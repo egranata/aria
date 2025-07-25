@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 extension Int {
     func foo(x) {
-        this + x;
+        return this + x;
     }
 
     func bar(y) {
-        this - y;
+        return this - y;
     }
 }
 

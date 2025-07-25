@@ -29,7 +29,7 @@ func _aria__prettyprint_binary(x,y) {assert(false);}
 extension String {
     struct EncodingError {
         type func new(msg: String) {
-            alloc(This) {
+            return alloc(This) {
                 .msg = msg
             };
         }
@@ -52,14 +52,14 @@ extension String {
 
     func op_mul(rhs: Int) {
         if rhs isa Int {
-            this.repeat(rhs);
+            return this.repeat(rhs);
         } else {
             throw alloc(Unimplemented);
         }
     }
 
     func op_rmul(lhs: Int) {
-        this.op_mul(lhs);
+        return this.op_mul(lhs);
     }
 
     func trim() {

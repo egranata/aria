@@ -9,7 +9,7 @@ enum Foo {
 
 struct WhichCase {
     type func new() {
-        alloc(This){
+        return alloc(This){
             .is_a = false,
             .is_b = false,
             .is_c = false,

@@ -5,13 +5,13 @@ mixin Double {
     # this.value()
     # this.add(y)
     func double() {
-        this.add(this.value());
+        return this.add(this.value());
     }
 }
 
 struct HasValue {
     type func new(x) {
-        alloc(This) {
+        return alloc(This) {
             .x = x,
         };
     }

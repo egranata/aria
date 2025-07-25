@@ -17,7 +17,7 @@ func max(x: Float, y: Float) {
 
 struct FuzzyNumber {
     type func new(x: Float) {
-        alloc(This){
+        return alloc(This){
             .x = x%1,
         };
     }

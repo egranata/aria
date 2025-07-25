@@ -5,7 +5,7 @@ struct MeFirst {
     include same_root.part1.file2.Something
 
     type func new() {
-        alloc(This) {
+        return alloc(This) {
             .value = 321,
         };
     }

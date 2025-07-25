@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Integer {
     type func new(n) {
-        alloc(This){
+        return alloc(This){
             .n = n,
         };
     }
@@ -10,9 +10,9 @@ struct Integer {
 extension Integer {
     func op_add(rhs) {
         if rhs isa Integer {
-            Integer.new(this.n + rhs.n);
+            return Integer.new(this.n + rhs.n);
         } elsif rhs isa Int {
-            Integer.new(this.n + rhs);
+            return Integer.new(this.n + rhs);
         } else {
             throw alloc(Unimplemented);
         }
@@ -20,14 +20,14 @@ extension Integer {
 
     func op_radd(lhs) {
         # addition is commutative
-        this.op_add(lhs);
+        return this.op_add(lhs);
     }
 
     func op_equals(rhs) {
         if rhs isa Integer {
-            rhs.n == this.n;
+            return rhs.n == this.n;
         } elsif rhs isa Int {
-            this.n == rhs;
+            return this.n == rhs;
         } else {
             throw alloc(Unimplemented);
         }

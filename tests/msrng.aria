@@ -3,7 +3,7 @@ import MiddleSquareRng from aria.rng.msws;
 import aria.iterator.mixin;
 
 func is_within_range(n) {
-    (n >= 1) && (n <= 6);
+    return (n >= 1) && (n <= 6);
 }
 
 func main() {

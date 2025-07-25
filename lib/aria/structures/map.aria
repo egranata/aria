@@ -8,7 +8,7 @@ func empty_list(n) {
 struct Map {
     struct Entry {
         type func new(k,v) {
-            alloc(This) {
+            return alloc(This) {
                 .key = k,
                 .value = v,
             };
@@ -140,7 +140,7 @@ struct Map {
     }
 
     func contains(k) {
-        this.get(k).is_Some();
+        return this.get(k).is_Some();
     }
 
     func len() {
@@ -148,16 +148,16 @@ struct Map {
     }
 
     func read_index(k) {
-        this.get(k).unwrap_Some();
+        return this.get(k).unwrap_Some();
     }
 
     func write_index(k,v) {
-        this.set(k,v);
+        return this.set(k,v);
     }
 
     struct MapIterator {
         type func new(m) {
-            alloc(This){
+            return alloc(This){
                 .map = m,
                 .keys = m.keys().iterator(),
             };

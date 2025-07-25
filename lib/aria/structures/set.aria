@@ -21,7 +21,7 @@ struct Set {
     }
 
     func contains(x) {
-        this.impl.contains(x);
+        return this.impl.contains(x);
     }
 
     func remove(x) {
@@ -29,7 +29,7 @@ struct Set {
     }
 
     func len() {
-        this.impl.len();
+        return this.impl.len();
     }
 
     func union(other) {
@@ -65,7 +65,7 @@ struct Set {
 
     struct SetIterator {
         type func new(set) {
-            alloc(This) {
+            return alloc(This) {
                 .impl = set.impl.iterator(),
             };
         }

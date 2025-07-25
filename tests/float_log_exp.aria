@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 func rough_approx_eq(x: Float, y: Float) {
-    (x-y).abs() <= 0.00001f;
+    return (x-y).abs() <= 0.00001f;
 }
 
 func roundtrip_le(x: Float) {
-    x.ln().exp();
+    return x.ln().exp();
 }
 
 func roundtrip_el(x: Float) {
-    x.exp().ln();
+    return x.exp().ln();
 }
 
 func main() {

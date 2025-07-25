@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Complex {
     type func new(r,i) {
-        alloc(This) {
+        return alloc(This) {
             .real = r + 0.0f, # ensure floating point
             .imag = i + 0.0f, # ensure floating point
         };
@@ -33,26 +33,26 @@ struct Complex {
     }
 
     func op_radd(lhs) {
-        this.op_add(lhs);
+        return this.op_add(lhs);
     }
 
     func op_add(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
-            Complex.new(this.real + rhs, this.imag);
+            return Complex.new(this.real + rhs, this.imag);
         } elsif rhs isa Complex {
-            Complex.new(this.real + rhs.real, this.imag + rhs.imag);
+            return Complex.new(this.real + rhs.real, this.imag + rhs.imag);
         } else {
             throw alloc(Unimplemented);
         }
     }
 
     func op_rmul(lhs) {
-        this.op_mul(lhs);
+        return this.op_mul(lhs);
     }
 
     func op_mul(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
-            Complex.new(this.real * rhs, this.imag * rhs);
+            return Complex.new(this.real * rhs, this.imag * rhs);
         } elsif rhs isa Complex {
             val real_part = this.real * rhs.real - this.imag * rhs.imag;
             val imag_part = this.real * rhs.imag + this.imag * rhs.real;
@@ -76,7 +76,7 @@ struct Complex {
 
     func op_div(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
-            Complex.new(this.real / rhs, this.imag / rhs);
+            return Complex.new(this.real / rhs, this.imag / rhs);
         } elsif rhs isa Complex {
             return this * rhs.reciprocal();
         } else {
@@ -86,9 +86,9 @@ struct Complex {
 
     func op_rsub(lhs) {
         if (lhs isa Int) || (lhs isa Float) {
-            Complex.new(lhs - this.real, this.imag);
+            return Complex.new(lhs - this.real, this.imag);
         } elsif rhs isa Complex {
-            Complex.new(lhs.real - this.real, lhs.imag - this.imag);
+            return Complex.new(lhs.real - this.real, lhs.imag - this.imag);
         } else {
             throw alloc(Unimplemented);
         }
@@ -96,9 +96,9 @@ struct Complex {
 
     func op_sub(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
-            Complex.new(this.real - rhs, this.imag);
+            return Complex.new(this.real - rhs, this.imag);
         } elsif rhs isa Complex {
-            Complex.new(this.real - rhs.real, this.imag - rhs.imag);
+            return Complex.new(this.real - rhs.real, this.imag - rhs.imag);
         } else {
             throw alloc(Unimplemented);
         }

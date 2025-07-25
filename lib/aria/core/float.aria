@@ -52,7 +52,7 @@ extension Float {
 
     struct DomainError {
         type func new(msg: String) {
-            alloc(This) {
+            return alloc(This) {
                 .msg = msg
             };
         }

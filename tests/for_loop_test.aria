@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 struct IteratorValue {
     type func end() {
-        Box(){
+        return Box(){
             .done = true,
         };
     }
 
     type func more(v) {
-        Box() {
+        return Box() {
             .done = false,
             .value = v,
         };
@@ -16,7 +16,7 @@ struct IteratorValue {
 
 struct GenValues {
     type func new(f,t) {
-        alloc(This){
+        return alloc(This){
             .from = f,
             .to = t,
         };
@@ -24,7 +24,7 @@ struct GenValues {
 
     struct GenValuesIterator {
         type func new(gv) {
-            alloc(This) {
+            return alloc(This) {
                 .from = gv.from,
                 .to = gv.to,
                 .current = gv.from,
@@ -43,7 +43,7 @@ struct GenValues {
     }
 
     func iterator() {
-        GenValues.GenValuesIterator.new(this);
+        return GenValues.GenValuesIterator.new(this);
     }
 }
 

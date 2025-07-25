@@ -9,7 +9,7 @@ func _to_json_thing(this) {}
 
 struct JsonConvertError {
     type func new(why: String) {
-        alloc(This) {
+        return alloc(This) {
             .message = why,
         };
     }

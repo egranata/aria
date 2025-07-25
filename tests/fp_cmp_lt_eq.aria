@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 func lesser_or_equal(x,y) {
-    x <= y;
+    return x <= y;
 }
 
 func main() {

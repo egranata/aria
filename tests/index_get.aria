@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Increment {
     instance func read_index(n) {
-        n + 1;
+        return n + 1;
     }
 }
 

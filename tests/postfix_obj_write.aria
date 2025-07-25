@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Foo {
     type func with_one_number(x) {
-        Foo.with_two_numbers(x,x);
+        return Foo.with_two_numbers(x,x);
     }
 
     type func with_two_numbers(x,y) {

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct TakesVarArgs {
     type func new(){
-        alloc(This){
+        return alloc(This){
             .value = 0,
         };
     }

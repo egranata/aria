@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct S1 {
     type func new(x) {
-        alloc(This) {
+        return alloc(This) {
             .x = x + 1,
         };
     }
@@ -9,7 +9,7 @@ struct S1 {
 
 struct S2 {
     type func new(x) {
-        alloc(This) {
+        return alloc(This) {
             .x = x + 2,
         };
     }

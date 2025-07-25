@@ -2,10 +2,10 @@
 struct Pair{
     type func new_with_duplicate(x) {
         assert hasattr(This, "new_with_items");
-        This.new_with_items(x,x);
+        return This.new_with_items(x,x);
     }
     type func new_with_items(x,y) {
-        alloc(This){
+        return alloc(This){
             .x = x,
             .y = y,
         };

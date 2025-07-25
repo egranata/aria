@@ -12,7 +12,7 @@ func get_next(i) {
 struct Zip {
     type func new(...) {
         val iterators = varargs.iterator().map(iter_or_self).to_list();
-        alloc(This){
+        return alloc(This){
             .iterators = iterators,
         };
     }

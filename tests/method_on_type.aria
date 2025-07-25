@@ -2,7 +2,7 @@
 struct Foo {
     type func new(x,y,z) {
         val f = alloc(This);
-        f.set(x,y,z);
+        return f.set(x,y,z);
     }
 
     instance func set(x,y,z) {

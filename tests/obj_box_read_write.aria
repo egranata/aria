@@ -7,7 +7,7 @@ func make_pair(x,y) {
 }
 
 func symmetrical(p) {
-    make_pair(p.y, p.x);
+    return make_pair(p.y, p.x);
 }
 
 func main() {

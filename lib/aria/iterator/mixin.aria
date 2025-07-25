@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct FilteringIterator {
     type func new(i, f) {
-        alloc(This){
+        return alloc(This){
             .it = i,
             .clause = f,
         };
@@ -22,7 +22,7 @@ struct FilteringIterator {
 
 struct MappingIterator {
     type func new(i, f) {
-        alloc(This){
+        return alloc(This){
             .it = i,
             .clause = f,
         };
@@ -54,15 +54,15 @@ mixin Iterator {
     }
 
     func where(f) {
-        FilteringIterator.new(this,f);
+        return FilteringIterator.new(this,f);
     }
 
     func map(f) {
-        MappingIterator.new(this,f);
+        return MappingIterator.new(this,f);
     }
 
     func to_list() {
-        this.reduce(append_to_list, []);
+        return this.reduce(append_to_list, []);
     }
 
     func all(f) {

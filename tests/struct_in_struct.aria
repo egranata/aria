@@ -2,18 +2,18 @@
 struct Outer {
     struct Inner {
         type func new(x,y) {
-            alloc(This) {
+            return alloc(This) {
                 .x = x,
                 .y = y,
             };
         }
 
         func i_add() {
-            this.x + this.y;
+            return this.x + this.y;
         }
 
         func i_sub() {
-            this.x - this.y;
+            return this.x - this.y;
         }
 
         func i_swap() {
@@ -21,25 +21,26 @@ struct Outer {
             val y = this.y;
             this.x = y;
             this.y = x;
+            return this;
         }
     }
 
     type func new(x,y) {
-        alloc(This) {
+        return alloc(This) {
             .impl = Outer.Inner.new(x,y),
         };
     }
 
     func add() {
-        this.impl.i_add();
+        return this.impl.i_add();
     }
 
     func swap() {
-        this.impl.i_swap();
+        return this.impl.i_swap();
     }
 
     func sub() {
-        this.impl.i_sub();
+        return this.impl.i_sub();
     }
 }
 

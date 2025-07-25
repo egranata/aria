@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Guard {
     type func new(x: Int) {
-        alloc(This) {
+        return alloc(This) {
             .counter = x,
         };
     }

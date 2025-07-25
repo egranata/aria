@@ -7,7 +7,7 @@ struct HasOpCall {
 
 struct CanBeCalled {
     type func new() {
-        alloc(This){
+        return alloc(This){
             .op_call = alloc(HasOpCall),
         };
     }

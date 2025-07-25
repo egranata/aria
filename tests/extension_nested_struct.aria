@@ -32,7 +32,7 @@ extension A.B {
 
 extension A {
     instance func getD() {
-        A.B.C.D.new();
+        return A.B.C.D.new();
     }
 }
 
@@ -47,14 +47,14 @@ extension nested_struct {
 extension A {
     struct OneMore {
         type func new(x) {
-            alloc(This){
+            return alloc(This){
                 .x = x
             };
         }
 
         instance func increment() {
             this.x = this.x + 1;
-            this;
+            return this;
         }
     }
 }

@@ -3,7 +3,7 @@ import Enumerate from aria.iterator.enumerate;
 import aria.iterator.mixin;
 
 func double(n) {
-    n + n;
+    return n + n;
 }
 
 func main() {

@@ -28,7 +28,7 @@ extension Int {
     }
 
     func float() {
-        this + 0.0f;
+        return this + 0.0f;
     }
 
     type func parse(s: String) {

@@ -18,6 +18,6 @@ extension extensible.base.Base {
     }
 
     func prettyprint() {
-        "({0},{1})".format(this.x, this.y);
+        return "({0},{1})".format(this.x, this.y);
     }
 }

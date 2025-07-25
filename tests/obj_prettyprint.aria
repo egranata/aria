@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Pair {
     type func new(x,y) {
-        alloc(This) {
+        return alloc(This) {
             .x = x,
             .y = y,
         };
     }
 
     instance func prettyprint() {
-        "Pair({0},{1})".format(this.x, this.y);
+        return "Pair({0},{1})".format(this.x, this.y);
     }
 }
 

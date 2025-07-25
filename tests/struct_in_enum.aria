@@ -4,7 +4,7 @@ enum X {}
 extension X {
     struct Pair {
         type func new(x,y) {
-            alloc(This) {
+            return alloc(This) {
                 .x=x,
                 .y=y,
             };
@@ -14,7 +14,7 @@ extension X {
 
 extension X.Pair {
     instance func swap() {
-        X.Pair.new(this.y,this.x);
+        return X.Pair.new(this.y,this.x);
     }
 }
 

@@ -3,11 +3,11 @@ import aria.rng.mixin;
 
 struct XorshiftRng {
     type func new() {
-        XorshiftRng.new_with_seed(now());
+        return XorshiftRng.new_with_seed(now());
     }
 
     type func new_with_seed(seed) {
-        alloc(This) {
+        return alloc(This) {
             .x = seed | 1
         };
     }

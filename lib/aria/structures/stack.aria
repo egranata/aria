@@ -2,18 +2,18 @@
 
 struct Stack {
     type func new() {
-        alloc(This) {
+        return alloc(This) {
             .store = [],
             .count = 0,
         };
     }
 
     func len() {
-        this.count;
+        return this.count;
     }
 
     func is_empty() {
-        this.count == 0;
+        return this.count == 0;
     }
 
     func push(x) {
@@ -27,14 +27,14 @@ struct Stack {
 
     func peek_at(offset) {
         if offset >= this.count {
-            Maybe::None;
+            return Maybe::None;
         } else {
-            Maybe::Some(this.store[this.count - 1 - offset]);
+            return Maybe::Some(this.store[this.count - 1 - offset]);
         }
     }
 
     func peek() {
-        this.peek_at(0);
+        return this.peek_at(0);
     }
 
     func try_pop() {
@@ -49,6 +49,6 @@ struct Stack {
     }
 
     func pop() {
-        this.try_pop().unwrap_Some();
+        return this.try_pop().unwrap_Some();
     }
 }

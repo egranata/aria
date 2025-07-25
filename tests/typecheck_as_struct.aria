@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 struct Foo {
     type func new() {
-        alloc(This);
+        return alloc(This);
     }
 
     instance func truth() {
-        true;
+        return true;
     }
 }
 

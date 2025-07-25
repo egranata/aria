@@ -2,11 +2,11 @@
 import aria.iterator.mixin;
 
 func is_even(x) {
-    x % 2 == 0;
+    return x % 2 == 0;
 }
 
 func add_one(x) {
-    x + 1;
+    return x + 1;
 }
 
 func main() {

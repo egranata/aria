@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 func x_and_then_some(this,x) {
-    this.x + x;
+    return this.x + x;
 }
 
 struct Foo {
     type func new(x) {
-        alloc(This){
+        return alloc(This){
             .x = x,
         };
     }

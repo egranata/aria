@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 func rough_approx_eq(x: Float, y: Float) {
-    (x-y).abs() <= 0.00001f;
+    return (x-y).abs() <= 0.00001f;
 }
 
 func main() {

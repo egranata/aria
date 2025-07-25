@@ -3,7 +3,7 @@ import CompareResult, TotalOrdering from aria.ordering.compare;
 
 struct Ordered {
     type func new(x: Int) {
-        alloc(This){
+        return alloc(This){
             .x = x,
         };
     }

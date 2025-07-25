@@ -5,7 +5,7 @@ import aria.numerics.trig;
 val π = Float.pi;
 
 func rough_approx_eq(x: Float, y: Float) {
-    (x-y).abs() <= 0.00001f;
+    return (x-y).abs() <= 0.00001f;
 }
 
 func main() {

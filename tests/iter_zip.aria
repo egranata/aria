@@ -2,7 +2,9 @@
 import Zip from aria.iterator.zip;
 import aria.iterator.mixin;
 
-func add(x,y) { x + y; }
+func add(x,y) {
+    return x + y;
+}
 
 func main() {
     val l1 = [1,2,3,4,5];

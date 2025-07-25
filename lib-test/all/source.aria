@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
 func something(x,y) {
-    x + y - 1;
+    return x + y - 1;
 }
 
 func something_else(x,y,z) {
-    something(x,y) + z;
+    return something(x,y) + z;
 }
 
 struct SomeType {
     type func new() {
-        alloc(This) {
+        return alloc(This) {
             .x = 1,
         };
     }

@@ -4,7 +4,7 @@ struct Enumerate {
         if hasattr(iter, "iterator") {
             iter = iter.iterator();
         }
-        alloc(This) {
+        return alloc(This) {
             .iter = iter,
             .index = 0,
         };

@@ -18,7 +18,7 @@ extension Float {
             result = result + term;
         }
 
-        result;
+        return result;
     }
 
     func cos() {
@@ -39,11 +39,11 @@ extension Float {
             result = result + term;
         }
 
-        result;
+        return result;
     }
 
     func tan() {
-        this.sin() / this.cos();
+        return this.sin() / this.cos();
     }
 
     func arcsin() {
@@ -64,7 +64,7 @@ extension Float {
             n += 1;
         }
 
-        result;
+        return result;
     }
     
     func arccos() {
@@ -72,7 +72,7 @@ extension Float {
             throw Float.DomainError.new("not a valid cosine value");
         }
 
-        Float.π / 2 - this.arcsin();
+        return Float.π / 2 - this.arcsin();
     }
 
     func arctan() {
@@ -99,6 +99,6 @@ extension Float {
             result = result + term;
         }
 
-        result;
+        return result;
     }
 }

@@ -7,7 +7,7 @@ import JsonNull from aria.json.value;
 
 struct JsonStream {
     type func new(s) {
-        alloc(This) { .input = s.chars(), .pos = 0 };
+        return alloc(This) { .input = s.chars(), .pos = 0 };
     }
 
     func peek() {
@@ -53,7 +53,7 @@ extension JsonValue {
 
 struct JsonParseError {
     type func new(why: String) {
-        alloc(This) {
+        return alloc(This) {
             .message = why,
         };
     }

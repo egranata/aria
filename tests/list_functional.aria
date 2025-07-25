@@ -2,7 +2,7 @@
 import aria.iterator.mixin;
 
 func is_gt_10(x) {
-    x > 10;
+    return x > 10;
 }
 
 func test_any() {
@@ -12,7 +12,7 @@ func test_any() {
 }
 
 func is_lt_10(x) {
-    x < 10;
+    return x < 10;
 }
 
 func test_all() {
@@ -28,7 +28,7 @@ func test_where() {
 }
 
 func do_the_thing(x) {
-    2 * x + 1;
+    return 2 * x + 1;
 }
 
 func test_map() {
