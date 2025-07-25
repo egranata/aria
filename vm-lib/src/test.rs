@@ -78,7 +78,7 @@ func main() {
 fn test_func_argument_type_mismatch() {
     let input = r##"
 func add(x: Int, y: Int) {
-    x + y;
+    return x + y;
 }
 
 func main() {
@@ -95,7 +95,7 @@ fn test_method_argument_type_mismatch() {
     let input = r##"
 struct Adder {
     type func new(x) {
-        alloc(Adder){.x = x,};
+        return alloc(Adder){.x = x,};
     }
 
     instance func add(x: Int) {
