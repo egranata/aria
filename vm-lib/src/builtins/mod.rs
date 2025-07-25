@@ -186,11 +186,7 @@ impl VmBuiltins {
         Ok(RuntimeValue::EnumValue(rv))
     }
 
-    #[allow(unused)]
-    pub(in crate::builtins) fn create_unit_object(
-        &self,
-        x: RuntimeValue,
-    ) -> Result<RuntimeValue, VmErrorReason> {
+    pub(in crate::builtins) fn create_unit_object(&self) -> Result<RuntimeValue, VmErrorReason> {
         let rt_unit = crate::some_or_err!(
             self.get_builtin_type_by_id(BUILTIN_TYPE_UNIT),
             VmErrorReason::UnexpectedVmState
@@ -203,7 +199,7 @@ impl VmBuiltins {
         );
 
         let rv = crate::some_or_err!(
-            rt_unit_enum.make_value(unit_idx, Some(x)),
+            rt_unit_enum.make_value(unit_idx, None),
             VmErrorReason::UnexpectedVmState
         );
 

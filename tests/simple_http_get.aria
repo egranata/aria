@@ -4,7 +4,6 @@ import Request from aria.network.request;
 func try_fetch() {
     val request = Request.new("https://www.rust-lang.org/");
     val response = request.get();
-    println(response);
     if response.status_code != 200 {
         return false;
     }

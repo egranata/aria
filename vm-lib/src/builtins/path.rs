@@ -144,7 +144,7 @@ impl BuiltinFunctionImpl for Append {
     fn eval(
         &self,
         frame: &mut Frame,
-        _: &mut crate::vm::VirtualMachine,
+        vm: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
         let the_path =
@@ -161,6 +161,11 @@ impl BuiltinFunctionImpl for Append {
 
         let mut rfo = rust_obj.content.borrow_mut();
         rfo.push(the_path);
+
+        frame.stack.push(ok_or_err!(
+            vm.builtins.create_unit_object(),
+            VmErrorReason::UnexpectedVmState.into()
+        ));
         Ok(RunloopExit::Ok(()))
     }
 
