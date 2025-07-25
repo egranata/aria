@@ -13,6 +13,13 @@ use glob::Paths;
 use haxby_vm::{frame::Frame, vm::VirtualMachine};
 use rayon::prelude::*;
 
+#[derive(clap::ValueEnum, Clone, Debug, Default)]
+enum SortBy {
+    #[default]
+    Name,
+    Duration,
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Args {
@@ -28,6 +35,9 @@ struct Args {
     #[arg(long = "fail-fast")]
     /// Exit when any test fails, instead of running the entire suite
     fail_fast: bool,
+    #[arg(long, value_enum, default_value_t)]
+    /// Sort test results by name or duration
+    sort_by: SortBy,
 }
 
 enum TestCaseResult {
@@ -116,6 +126,17 @@ impl SuiteReport {
     fn fail(&mut self, name: &str, why: String) {
         self.fails.insert(name.to_owned(), why);
     }
+
+    fn sort_passes(&mut self, by: SortBy) {
+        match by {
+            SortBy::Name => {
+                self.passes.sort_by(|a, b| a.0.cmp(&b.0));
+            }
+            SortBy::Duration => {
+                self.passes.sort_by(|a, b| a.1.cmp(&b.1));
+            }
+        }
+    }
 }
 
 fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
@@ -170,7 +191,7 @@ fn main() {
         println!("--fail-fast is only supported in sequential mode; ignoring");
     }
 
-    let results = match glob::glob(&args.path) {
+    let mut results = match glob::glob(&args.path) {
         Ok(pattern) => run_tests_from_pattern(pattern, &args),
         Err(err) => {
             eprintln!("invalid pattern: {err}");
@@ -181,6 +202,8 @@ fn main() {
         println!("All tests passed; --verbose to print full report");
         exit(0);
     }
+
+    results.sort_passes(args.sort_by);
 
     for pass in &results.passes {
         println!(
