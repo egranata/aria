@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+func no_return_value(x,y) {
+    x + y;
+}
+
+func sometimes_returns(x,y) {
+    if (x > y) {
+        return x + y;
+    }
+}
+
+func main() {
+    val x = no_return_value(1, 2);
+    assert x isa Unit;
+    assert x.is_unit();
+
+    x = sometimes_returns(3, 2);
+    assert x isa Int;
+    assert x == 5;
+
+    x = sometimes_returns(1, 2);
+    assert x isa Unit;
+    assert x.is_unit();
+}
