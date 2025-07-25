@@ -25,6 +25,9 @@ struct Args {
     #[arg(long)]
     /// Run tests sequentially instead of in parallel
     sequential: bool,
+    #[arg(long = "fail-fast")]
+    /// Exit when any test fails, instead of running the entire suite
+    fail_fast: bool,
 }
 
 enum TestCaseResult {
@@ -115,25 +118,28 @@ impl SuiteReport {
     }
 }
 
-fn run_tests_from_pattern(pattern: Paths, args: &Args) -> SuiteReport {
+fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
     let mut results = SuiteReport::default();
 
     let start = Instant::now();
 
     let outcomes = if args.sequential {
-        pattern
-            .flatten()
-            .map(|path| {
-                let test_name = path.file_stem().unwrap().to_str().unwrap();
-                let test_path = path.as_os_str().to_str().unwrap();
-                if args.verbose {
-                    println!("Running {test_name} (at {test_path})");
-                }
-                (test_name.to_owned(), run_test_from_pattern(test_path))
-            })
-            .collect::<Vec<(String, TestCaseResult)>>()
+        let mut ret = vec![];
+        for pattern in patterns.flatten() {
+            let test_name = pattern.file_stem().unwrap().to_str().unwrap();
+            let test_path = pattern.as_os_str().to_str().unwrap();
+            if args.verbose {
+                println!("Running {test_name} (at {test_path})");
+            }
+            let result = run_test_from_pattern(test_path);
+            ret.push((test_name.to_owned(), result));
+            if args.fail_fast && matches!(ret.last().unwrap().1, TestCaseResult::Fail(_)) {
+                break;
+            }
+        }
+        ret
     } else {
-        pattern
+        patterns
             .flatten()
             .par_bridge()
             .map(|path| {
@@ -160,6 +166,10 @@ fn run_tests_from_pattern(pattern: Paths, args: &Args) -> SuiteReport {
 
 fn main() {
     let args = Args::parse();
+    if args.fail_fast && !args.sequential {
+        println!("--fail-fast is only supported in sequential mode; ignoring");
+    }
+
     let results = match glob::glob(&args.path) {
         Ok(pattern) => run_tests_from_pattern(pattern, &args),
         Err(err) => {
