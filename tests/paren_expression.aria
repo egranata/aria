@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 func main() {
-    val a = ((((((((((((((((3 + (4 + 1)))))))))))))))));
+    val a = (3 + ((((4 + 1)))));
     assert (a == 8);
 }
