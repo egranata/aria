@@ -3,7 +3,7 @@ import Map from aria.structures.map;
 
 struct Fibonacci {
     type func new() {
-        alloc(This) {
+        return alloc(This) {
             .cache = Map.new(){[0] = 0, [1] = 1},
         };
     }
@@ -19,7 +19,7 @@ struct Fibonacci {
     }
     
     func fibonacci(n) {
-        this.eval(n);
+        return this.eval(n);
     }
 }
 

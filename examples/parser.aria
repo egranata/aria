@@ -254,7 +254,7 @@ struct Parser {
         }
     }
     type func new(lexer: Lexer) {
-        alloc(This) {
+        return alloc(This) {
             .lexer = lexer,
             .current_token = lexer.next(),
         };
@@ -311,7 +311,7 @@ struct Parser {
     }
 
     func parse() {
-        this.expr();
+        return this.expr();
     }
 }
 
