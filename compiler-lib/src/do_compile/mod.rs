@@ -413,12 +413,19 @@ where
         }
     }
 
+    let enum_helper_methods = generate_case_helpers_extension_for_enum(&cases);
+    emit_type_members_compile(&enum_helper_methods, params, false)?;
+
     emit_type_members_compile(&entries, params, false)?;
 
     emit_enum_cases(&cases, params)?;
 
-    let enum_helper_methods = generate_case_helpers_extension_for_enum(&cases);
-    emit_type_members_compile(&enum_helper_methods, params, true)
+    params
+        .writer
+        .get_current_block()
+        .write_opcode_and_source_info(BasicBlockOpcode::Pop, ed.loc.clone());
+
+    Ok(())
 }
 
 fn generate_is_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {

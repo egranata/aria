@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+enum E {
+    case A(Int),
+    case B,
+    case C(String)
+
+    func is_A() {
+        return 12;
+    }
+
+    func unwrap_C() {
+        return "hello";
+    }
+}
+
+func main() {
+    val ea = E::A(5);
+    val eb = E::B;
+    val ec = E::C("world");
+
+    assert ea.is_A() == 12;
+    assert eb.is_A() == 12;
+    assert ec.is_A() == 12;
+
+    assert ea.unwrap_C() == "hello";
+    assert ea.unwrap_A() == 5;
+
+    assert eb.unwrap_C() == "hello";
+    
+    assert ec.unwrap_C() == "hello";
+}
