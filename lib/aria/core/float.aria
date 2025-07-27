@@ -40,13 +40,10 @@ extension Float {
     }
 
     func sqrt() {
-        if this < 0 {
-            throw Float.DomainError.new("square root undefined for negative values");
-        }
-
         match this {
             == 0 => { return 0.0f; },
             == 1 => { return 1.0f; },
+            < 0 => { throw Float.DomainError.new("square root undefined for negative values"); },
         }
 
         val ε = 0.000000000001f;

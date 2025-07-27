@@ -55,12 +55,12 @@ extension Float {
     }
 
     func pow(exponent: Int|Float) {
-        if exponent == 0 {
-            return 1.0f;
-        } elsif exponent == 1 {
-            return this;
-        } elsif exponent isa Int {
-            exponent = exponent + 0.0f;
+        match exponent {
+            == 0 => { return 1.0f; },
+            == 1 => { return this; }
+            isa Int => {
+                exponent += 0.0f;
+            }
         }
 
         if this < 0 && exponent % 1 != 0 {
