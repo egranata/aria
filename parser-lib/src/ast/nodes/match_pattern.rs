@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        MatchPattern, MatchPatternEnumCase, MatchPatternRelational,
+        MatchPattern, MatchPatternComp, MatchPatternEnumCase,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -11,7 +11,7 @@ use crate::{
 impl Derive for MatchPattern {
     gen_from_options!(
         match_pattern;
-        (match_pattern_rel, MatchPatternRelational),
+        (match_pattern_comp, MatchPatternComp),
         (match_pattern_enum_case, MatchPatternEnumCase),
     );
 }
@@ -19,7 +19,7 @@ impl Derive for MatchPattern {
 impl PrettyPrintable for MatchPattern {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
         match self {
-            Self::MatchPatternRelational(e) => e.prettyprint(buffer),
+            Self::MatchPatternComp(e) => e.prettyprint(buffer),
             Self::MatchPatternEnumCase(e) => e.prettyprint(buffer),
         }
     }

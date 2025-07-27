@@ -4,7 +4,7 @@ use crate::{
     func_builder::BasicBlockOpcode,
 };
 
-impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternRelational {
+impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternComp {
     fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
         self.expr.do_compile(params)?;
         match self.op {

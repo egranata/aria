@@ -718,7 +718,7 @@ pub struct IfStatement {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MatchPatternRelational {
+pub struct MatchPatternComp {
     pub loc: SourcePointer,
     pub op: CompSymbol,
     pub expr: Expression,
@@ -733,14 +733,14 @@ pub struct MatchPatternEnumCase {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MatchPattern {
-    MatchPatternRelational(MatchPatternRelational),
+    MatchPatternComp(MatchPatternComp),
     MatchPatternEnumCase(MatchPatternEnumCase),
 }
 
 impl MatchPattern {
     pub fn loc(&self) -> &SourcePointer {
         match self {
-            Self::MatchPatternRelational(e) => &e.loc,
+            Self::MatchPatternComp(e) => &e.loc,
             Self::MatchPatternEnumCase(c) => &c.loc,
         }
     }
