@@ -97,8 +97,9 @@ else_piece    = { "else" ~ code_block }
 if_stmt       = { if_piece ~ elsif_piece* ~ else_piece? }
 
 match_pattern_comp      = { comp_op ~ expression }
+match_pattern_rel       = { rel_op ~ expression }
 match_pattern_enum_case = { "case" ~ identifier ~ ("(" ~ decl_id ~ ")")? }
-match_pattern           = { match_pattern_enum_case | match_pattern_comp }
+match_pattern           = { match_pattern_enum_case | match_pattern_comp | match_pattern_rel }
 match_rule              = { match_pattern ~ ("and" ~ match_pattern)* ~ "=>" ~ code_block }
 match_stmt              = { "match" ~ expression ~ "{" ~ match_rule ~ (","? ~ match_rule)* ~ ","? ~ "}" ~ else_piece? }
 

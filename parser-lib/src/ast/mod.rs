@@ -725,6 +725,13 @@ pub struct MatchPatternComp {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MatchPatternRel {
+    pub loc: SourcePointer,
+    pub op: RelSymbol,
+    pub expr: Expression,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MatchPatternEnumCase {
     pub loc: SourcePointer,
     pub case: Identifier,
@@ -734,6 +741,7 @@ pub struct MatchPatternEnumCase {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MatchPattern {
     MatchPatternComp(MatchPatternComp),
+    MatchPatternRel(MatchPatternRel),
     MatchPatternEnumCase(MatchPatternEnumCase),
 }
 
@@ -741,6 +749,7 @@ impl MatchPattern {
     pub fn loc(&self) -> &SourcePointer {
         match self {
             Self::MatchPatternComp(e) => &e.loc,
+            Self::MatchPatternRel(e) => &e.loc,
             Self::MatchPatternEnumCase(c) => &c.loc,
         }
     }

@@ -42,6 +42,7 @@ mod log_symbol;
 mod match_pattern;
 mod match_pattern_comp;
 mod match_pattern_enum_case;
+mod match_pattern_rel;
 mod match_rule;
 mod match_statement;
 mod method_access;

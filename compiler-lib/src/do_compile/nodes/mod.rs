@@ -27,6 +27,7 @@ mod logical_operation;
 mod match_pattern;
 mod match_pattern_comp;
 mod match_pattern_enum_case;
+mod match_pattern_rel;
 mod match_statement;
 mod method_decl;
 mod mixin_decl;

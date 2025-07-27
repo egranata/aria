@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 5;
+
+    val hit = false;
+
+    match x {
+        > 10 => {
+            assert false;
+        },
+        < 0 => {
+            assert false;
+        },
+        >= 6 => {
+            assert false;
+        },
+        <= 2 => {
+            assert false;
+        }
+        >= 3 => {
+            hit = true;
+        }
+    } else {
+        assert false;
+    }
+
+    assert hit;
+}
