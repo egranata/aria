@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import aria.numerics.float.exp;
+
 func rough_approx_eq(x: Float, y: Float) {
     return (x-y).abs() <= 0.00001f;
 }

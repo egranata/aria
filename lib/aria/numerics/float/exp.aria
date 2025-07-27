@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: Apache-2.0
+extension Float {
+    func ln() {
+        if this <= 0 {
+            throw Float.DomainError.new("logarithm undefined for non-positive values");
+        }
+
+        val ε = 0.000000000001f;
+
+        val guess = this / 2.0f;
+        val current_guess = guess;
+
+        val max_iterations = 1000;
+        val iterations = 0;
+
+        while iterations < max_iterations {
+            iterations = iterations + 1;
+
+            val f = current_guess.exp() - this;
+            val f_prime = current_guess.exp();
+
+            val next_guess = current_guess - f / f_prime;
+
+            if (next_guess - current_guess).abs() < ε {
+                return next_guess;
+            }
+
+            current_guess = next_guess;
+        }
+        
+        return next_guess;
+    }
+
+    func exp() {
+        val ε = 0.000000000001f;
+
+        val result = 1.0f;
+        val term = 1.0f;
+
+        val max_iterations = 1000;
+        val iterations = 0;
+
+        while iterations < max_iterations {
+            iterations = iterations + 1;
+
+            term = term * this / iterations;
+            if term.abs() < ε {
+                break;
+            }
+
+            result = result + term;
+        }
+
+        return result;
+    }
+
+    func pow(exponent: Int|Float) {
+        if exponent == 0 {
+            return 1.0f;
+        } elsif exponent == 1 {
+            return this;
+        } elsif exponent isa Int {
+            exponent = exponent + 0.0f;
+        }
+
+        if this < 0 && exponent % 1 != 0 {
+            throw Float.DomainError.new("cannot calculate fractional power of negative integer");
+        }
+
+        val is_exponent_negative = exponent < 0;
+        val abs_exponent = exponent.abs();
+
+        val integer_part = abs_exponent.floor();
+        val fractional_part = abs_exponent - integer_part;
+
+        val result = 1.0f;
+        val temp = this;
+
+        val i = 0;
+        while i < integer_part {
+            result = result * temp;
+            i = i + 1;
+        }
+
+        if fractional_part > 0 {
+            result = result * this.sqrt().pow(fractional_part * 2);
+        }
+
+        if is_exponent_negative {
+            result = 1.0f / result;
+        }
+
+        return result;
+    }
+}
