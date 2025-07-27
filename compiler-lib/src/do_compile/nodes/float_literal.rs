@@ -9,22 +9,15 @@ use crate::{
 
 impl<'a> CompileNode<'a> for aria_parser::ast::FloatLiteral {
     fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
-        let fp_val: f64 = if let Some(fp_val) = self.val.strip_suffix("f") {
-            match fp_val.parse::<f64>() {
-                Ok(f) => f,
-                Err(_) => {
-                    return Err(CompilationError {
-                        loc: self.loc.clone(),
-                        reason: CompilationErrorReason::InvalidLiteral(self.val.clone()),
-                    });
-                }
-            }
-        } else {
-            return Err(CompilationError {
+        let fp_val = self
+            .val
+            .strip_suffix("f")
+            .unwrap_or(&self.val)
+            .parse::<f64>()
+            .map_err(|_| CompilationError {
                 loc: self.loc.clone(),
                 reason: CompilationErrorReason::InvalidLiteral(self.val.clone()),
-            });
-        };
+            })?;
         let const_idx =
             self.insert_const_or_fail(params, ConstantValue::Float(fp_val.into()), &self.loc)?;
         params

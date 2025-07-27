@@ -16,7 +16,7 @@ bin_int_literal = @{ "0b" ~ ASCII_BIN_DIGIT+ ~ ("_" ~ ASCII_BIN_DIGIT+)* }
 dec_int_literal = @{ "-"? ~ ASCII_DIGIT+ ~ ("_" ~ ASCII_DIGIT+)* }
 int_literal     = @{ hex_int_literal | oct_int_literal | bin_int_literal | dec_int_literal }
 
-fp_literal = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ ~ exp_part? ~ "f" }
+fp_literal = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ ~ exp_part? ~ "f"? }
 exp_part   =  { ("e" | "E") ~ ("+" | "-")? ~ ASCII_DIGIT+ }
 
 str_literal_dbl_qt = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
