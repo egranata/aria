@@ -454,6 +454,33 @@ func main() {
 
 The two clauses in `match` above check that ts2 is of type `TaskStatus` and the case that it covers. A `case` check would only match the name of the case, but not the type (multiple enums could have the same case name). For enums with payload, the payload can also be extracted in the `case` clause by providing an identifier.
 
+More broadly, a match statement can also be used to check some simple comparisons, for example
+
+func main() {
+    val x = 3;
+
+    match x {
+        >= 5 => { println("A very large number"); },
+        > 3 => { println("A good number"); },
+        == 3 => { println("It's three!"); }, # prints It's three!
+        > 0 => { println("A small positive number"); }
+    } else {
+        println("not sure!");
+    }
+}
+
+Valid operators are ==, !=, isa, >, >=, <, >= and they can be combined with `and` clauses:
+
+func main() {
+    val x = 3;
+
+    match x {
+        isa String and == "hello world" => { println("hi there!"); },
+        isa Int and >= 4 => { println("Four or more"); },
+        isa Int and > 0 and < 5 => { println("It might be three?"); }, # prints It might be three?
+    }
+}
+
 ## ⁉️ Maybe
 
 `Maybe` is an enum that represents a potentially missing value. It is defined as
