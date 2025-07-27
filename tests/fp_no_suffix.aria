@@ -1,0 +1,148 @@
+# SPDX-License-Identifier: Apache-2.0
+
+func basic_parsing() {
+    val x = 1.25;
+    val y = 1.25f;
+    assert x == y;
+}
+
+func arithmetic_add() {
+    val a = 3.14;
+    val b = 2.86f;
+    assert a + b == 6.0f;
+
+    val c = 1.5;
+    val d = 0.5;
+    assert c + d == 2.0f;
+}
+
+func arithmetic_sub() {
+    val a = 3.14;
+    val b = 1.14f;
+    assert a - b == 2.0f;
+
+    val c = 5.5;
+    val d = 2.5f;
+    assert c - d == 3.0f;
+}
+
+func arithmetic_mul() {
+    val a = 2.5;
+    val b = 2.0f;
+    assert a * b == 5.0f;
+
+    val c = 1.25;
+    val d = 4.0f;
+    assert c * d == 5.0f;
+}
+
+func arithmetic_div() {
+    val a = 10.0;
+    val b = 2.5f;
+    assert a / b == 4.0f;
+
+    val c = 7.5;
+    val d = 2.5f;
+    assert c / d == 3.0f;
+}
+
+func comparison_greater() {
+    assert 3.14 > 3.0f;
+    assert 4.2 > 1.1f;
+    assert 1.5 > 0.5f;
+
+    assert !(2.0 > 3.14f);
+    assert !(1.5 > 2.0f);
+}
+
+func comparison_lesser() {
+    assert 2.0 < 3.14f;
+    assert 1.1 < 4.2f;
+    assert 0.5 < 1.5f;
+
+    assert !(3.14 < 2.0f);
+    assert !(4.2 < 1.1f);
+}
+
+func comparison_greater_equal() {
+    assert 3.14 >= 3.14f;
+    assert 3.14 >= 3.0f;
+    assert 4.2 >= 1.1f;
+
+    assert !(2.0 >= 3.14f);
+    assert !(1.1 >= 4.2f);
+}
+
+func comparison_lesser_equal() {
+    assert 3.14 <= 3.14f;
+    assert 3.0 <= 3.14f;
+    assert 1.1 <= 4.2f;
+
+    assert !(3.14 <= 2.0f);
+    assert !(4.2 <= 1.1f);
+}
+
+func scientific_notation() {
+    val a = 3.14e2;
+    val b = 31.4e-1f;
+
+    assert a == 314.0f;
+    assert b == 3.14f;
+
+    val c = 1.5e1;
+    assert c == 15.0f;
+}
+
+func negative_numbers() {
+    val x = -3.14;
+    val y = -3.14f;
+    assert x == y;
+
+    val a = -2.5;
+    val b = 5.5f;
+    assert a + b == 3.0f;
+
+    val c = -1.25;
+    val d = -0.75f;
+    assert c - d == -0.5f;
+}
+
+func mixed_with_integers() {
+    val result1 = 1.5 + 2;
+    assert result1 == 3.5f;
+
+    val result2 = 3 - 1.5;
+    assert result2 == 1.5f;
+
+    val result3 = 2.5 * 3;
+    assert result3 == 7.5f;
+
+    val result4 = 7.5 / 3;
+    assert result4 == 2.5f;
+}
+
+func mixed_suffix_operations() {
+    val a = 1.25;
+    val b = 0.75f;
+    val c = 2.0;
+
+    assert a + b == c;
+    assert (a * 2.0f) == 2.5f;
+    assert (b / 0.25) == 3.0f;
+}
+
+func main() {
+    basic_parsing();
+    arithmetic_add();
+    arithmetic_sub();
+    arithmetic_mul();
+    arithmetic_div();
+    comparison_greater();
+    comparison_lesser();
+    comparison_greater_equal();
+    comparison_lesser_equal();
+    scientific_notation();
+    negative_numbers();
+    mixed_with_integers();
+    mixed_suffix_operations();
+}
