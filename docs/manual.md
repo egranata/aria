@@ -456,6 +456,7 @@ The two clauses in `match` above check that ts2 is of type `TaskStatus` and the 
 
 More broadly, a match statement can also be used to check some simple comparisons, for example
 
+```
 func main() {
     val x = 3;
 
@@ -468,9 +469,11 @@ func main() {
         println("not sure!");
     }
 }
+```
 
 Valid operators are ==, !=, isa, >, >=, <, >= and they can be combined with `and` clauses:
 
+```
 func main() {
     val x = 3;
 
@@ -480,6 +483,7 @@ func main() {
         isa Int and > 0 and < 5 => { println("It might be three?"); }, # prints It might be three?
     }
 }
+```
 
 ## ⁉️ Maybe
 
