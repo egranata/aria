@@ -1,6 +1,17 @@
-#!/bin/sh
-cargo build --workspace --profile ${ARIA_BUILD_CONFIG:-"dev"}
+#!/usr/bin/env bash
+set -e
 
-SELF_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-ARIA_LIB_DIR=${ARIA_LIB_DIR:-"${SELF_DIR}/lib:${SELF_DIR}/lib-test"} cargo test --profile ${ARIA_BUILD_CONFIG:-"dev"} --package vm-lib && \
-ARIA_TEST_DIR=${SELF_DIR}/tests RUST_MIN_STACK=16777216 ARIA_LIB_DIR=${ARIA_LIB_DIR:-"${SELF_DIR}/lib:${SELF_DIR}/lib-test"} cargo run --profile ${ARIA_BUILD_CONFIG="dev"} --package test-bin -- --path "tests/**/*.aria" --verbose $@
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ARIA_BUILD_CONFIG="${ARIA_BUILD_CONFIG:-dev}"
+ARIA_LIB_DIR="${ARIA_LIB_DIR:-${SELF_DIR}/lib:${SELF_DIR}/lib-test}"
+ARIA_TEST_DIR="${ARIA_TEST_DIR:-${SELF_DIR}/tests}"
+RUST_MIN_STACK=16777216
+
+cargo build --workspace --profile "$ARIA_BUILD_CONFIG"
+
+ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo test --profile "$ARIA_BUILD_CONFIG" --package vm-lib
+
+ARIA_TEST_DIR="$ARIA_TEST_DIR" \
+ARIA_LIB_DIR="$ARIA_LIB_DIR" \
+RUST_MIN_STACK="$RUST_MIN_STACK" \
+cargo run --profile "$ARIA_BUILD_CONFIG" --package test-bin -- --path "tests/**/*.aria" --verbose "$@"
