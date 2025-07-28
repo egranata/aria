@@ -267,7 +267,7 @@ dependencies = [
  "parser-lib",
  "pest",
  "pest_derive",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -2032,7 +2032,7 @@ dependencies = [
  "parser-lib",
  "pest",
  "pest_derive",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
