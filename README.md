@@ -1,4 +1,6 @@
 # The Aria Programming Language
+[![Build Status](https://github.com/egranata/aria/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/egranata/aria/actions/workflows/rust.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 Aria is a modern, dynamic scripting language. It is meant to be a "sweet spot" language, easy to pick-up and enjoyable to use.
 
