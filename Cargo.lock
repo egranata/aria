@@ -111,7 +111,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36f5e3dca4e09a6f340a61a0e9c7b61e030c69fc27bf29d73218f7e5e3b7638f"
 dependencies = [
  "concolor",
- "unicode-width",
+ "unicode-width 0.1.14",
  "yansi",
 ]
 
@@ -924,9 +924,9 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
 name = "itertools"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
@@ -1306,9 +1306,9 @@ dependencies = [
 
 [[package]]
 name = "reedline"
-version = "0.35.0"
+version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5289de810296f8f2ff58d35544d92ae98d0a631453388bc3e608086be0fa596"
+checksum = "b627c435d0189363b15f885f1b07193d310ec9e4e39c5627951c6e0f4d02c93a"
 dependencies = [
  "chrono",
  "crossterm",
@@ -1319,9 +1319,9 @@ dependencies = [
  "strip-ansi-escapes",
  "strum",
  "strum_macros",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
  "unicode-segmentation",
- "unicode-width",
+ "unicode-width 0.2.1",
 ]
 
 [[package]]
@@ -1979,6 +1979,12 @@ name = "unicode-width"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
+
+[[package]]
+name = "unicode-width"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a1a07cc7db3810833284e8d372ccdc6da29741639ecc70c9ec107df0fa6154c"
 
 [[package]]
 name = "untrusted"
