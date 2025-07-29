@@ -23,4 +23,8 @@ func main() {
 
     assert Decimal.parse("5.0").unwrap_Some() <= Decimal.new(5);
     assert Decimal.parse("5.0").unwrap_Some() <= Decimal.new(5.001);
+
+    assert Decimal.parse("foo").is_None();
+    assert Decimal.parse("3.14.15").is_None();
+    assert Decimal.parse("3.14e2").is_None(); # TODO: support scientific notation
 }
