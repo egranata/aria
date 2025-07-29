@@ -3,9 +3,12 @@ use aria_parser::ast::{SourcePointer, prettyprint::printout_accumulator::Printou
 use haxby_opcodes::Opcode;
 use thiserror::Error;
 
-use crate::{opcodes::prettyprint::opcode_prettyprint, runtime_module::RuntimeModule};
+use crate::{
+    error::backtrace::Backtrace, opcodes::prettyprint::opcode_prettyprint,
+    runtime_module::RuntimeModule,
+};
 
-#[derive(Error, PartialEq, Eq, Debug)]
+#[derive(Clone, Error, PartialEq, Eq, Debug)]
 pub enum VmErrorReason {
     #[error("assertion failed: {0}")]
     AssertFailed(String),
@@ -65,10 +68,12 @@ pub enum VmErrorReason {
     VmHalted,
 }
 
+#[derive(Clone)]
 pub struct VmError {
     pub reason: VmErrorReason,
     pub opcode: Option<Opcode>,
     pub loc: Option<SourcePointer>,
+    pub backtrace: Box<Backtrace>,
 }
 
 impl VmError {
@@ -100,6 +105,7 @@ impl From<VmErrorReason> for VmError {
             reason,
             opcode: None,
             loc: None,
+            backtrace: Default::default(),
         }
     }
 }

@@ -2,7 +2,7 @@
 use haxby_opcodes::function_attribs::FUNC_IS_METHOD;
 
 use crate::{
-    error::vm_error::{VmError, VmErrorReason},
+    error::vm_error::VmErrorReason,
     frame::Frame,
     runtime_value::{
         RuntimeValue, builtin_type::BuiltinType, function::BuiltinFunctionImpl,
@@ -78,11 +78,7 @@ impl BuiltinFunctionImpl for Drop {
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let this = VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
         if this.is_empty() {
-            Err(VmError {
-                reason: VmErrorReason::IndexOutOfBounds(0),
-                opcode: None,
-                loc: None,
-            })
+            Err(VmErrorReason::IndexOutOfBounds(0).into())
         } else {
             let the_value = this.get_at(this.len() - 1).unwrap();
             this.pop();

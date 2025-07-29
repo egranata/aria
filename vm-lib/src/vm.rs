@@ -169,6 +169,7 @@ macro_rules! build_vm_error {
             reason: $reason,
             opcode: Some($next),
             loc: lt,
+            backtrace: Default::default(),
         })
     }};
 }
@@ -1640,6 +1641,13 @@ impl VirtualMachine {
                         need_handle_exception = Some(exception);
                     }
                     Err(err) => {
+                        let err = if let Some(lt) = frame.get_line_entry_at_pos(op_idx as u16) {
+                            let mut new_err = err.clone();
+                            new_err.backtrace.push(lt);
+                            new_err
+                        } else {
+                            err
+                        };
                         frame.drop_all_guards(self);
                         return Err(err);
                     }

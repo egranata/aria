@@ -119,6 +119,7 @@ pub mod enum_case_attribs {
 #[allow(unused_imports)]
 use enum_case_attribs::*;
 
+#[derive(Clone)]
 pub enum Opcode {
     Nop,
     Push(u16),
