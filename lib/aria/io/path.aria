@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
-flag: no_std;
+flag: uses_dylib("aria_path");
 
-extension Path {
+struct Path {
     type func new_with_current_directory() {
         return This._cwd();
     }

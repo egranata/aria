@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+
 func main() {
     val path = getenv("ARIA_TEST_DIR").unwrap_Some();
     path = path + "/file_lines_iter.txt";

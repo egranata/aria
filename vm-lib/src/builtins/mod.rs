@@ -25,7 +25,6 @@ mod integer;
 mod list;
 mod listattrs;
 mod now;
-mod path;
 mod prettyprint;
 mod print;
 mod println;
@@ -86,7 +85,6 @@ impl Default for VmBuiltins {
         list::insert_list_builtins(&mut this);
         listattrs::insert_builtins(&mut this);
         now::insert_builtins(&mut this);
-        path::insert_builtins(&mut this);
         prettyprint::insert_builtins(&mut this);
         print::insert_builtins(&mut this);
         println::insert_builtins(&mut this);
