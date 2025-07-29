@@ -530,8 +530,9 @@ This module provides a `Decimal` number type for arbitrary-precision decimal ari
     *   `scale` (Int): The number of digits after the decimal point.
 
     **Methods:**
-    *   `type func new(v)`: Creates a new `Decimal` from an `Int`, `Float`, or `String`. Returns `Maybe::None` if conversion is not possible.
+    *   `type func new(v)`: Creates a new `Decimal` from an `Int` or `Float` value.
     *   `type func new_with_parts(v: Int, s: Int)`: Creates a new `Decimal` from an integer `value` and a `scale`.
+    *   `type func parse(s: String)`: Creates a new `Decimal` from a `String`. Returns a `Maybe` value.
     *   `op_add(other)` (Operator `+`): Adds this decimal number to `other`. `other` can be an `Int`, `Float`, or `Decimal`.
     *   `op_radd(lhs)` (Operator `+`): Handles addition when the `Decimal` number is on the right-hand side of the `+` operator.
     *   `op_sub(other)` (Operator `-`): Subtracts `other` from this decimal number. `other` can be an `Int`, `Float`, or `Decimal`.
