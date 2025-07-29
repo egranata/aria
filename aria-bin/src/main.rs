@@ -74,11 +74,15 @@ fn report_from_msg_and_location(msg: &str, locations: &[&SourcePointer]) {
 
 fn report_from_vm_error(err: &VmError) {
     let msg = err.reason.to_string();
-    let loc = &err.loc;
-    if let Some(loc) = loc {
-        report_from_msg_and_location(&msg, &[loc]);
+    if err.backtrace.is_empty() {
+        if let Some(loc) = &err.loc {
+            report_from_msg_and_location(&msg, &[loc]);
+        } else {
+            eprintln!("vm execution error: {msg}");
+        }
     } else {
-        eprintln!("vm execution error: {msg}");
+        let backtraces: Vec<_> = err.backtrace.entries_iter().collect();
+        report_from_msg_and_location(&msg, &backtraces);
     }
 }
 

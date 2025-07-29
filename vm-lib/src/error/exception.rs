@@ -5,29 +5,13 @@ use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_RUNTIME_ERROR;
 
 use crate::{
     builtins::VmBuiltins,
-    error::vm_error::{VmError, VmErrorReason},
+    error::{
+        backtrace::Backtrace,
+        vm_error::{VmError, VmErrorReason},
+    },
     runtime_value::{RuntimeValue, object::Object},
     vm::VirtualMachine,
 };
-
-#[derive(Clone, Default)]
-pub struct Backtrace {
-    entries: Vec<SourcePointer>,
-}
-
-impl Backtrace {
-    pub fn first_entry(&self) -> Option<SourcePointer> {
-        self.entries.first().cloned()
-    }
-
-    pub fn entries_iter(&self) -> std::slice::Iter<'_, SourcePointer> {
-        self.entries.iter()
-    }
-
-    fn len(&self) -> usize {
-        self.entries.len()
-    }
-}
 
 pub struct VmException {
     pub value: RuntimeValue,
@@ -56,7 +40,7 @@ impl VmException {
             self
         } else {
             let mut new_bt = self.backtrace.clone();
-            new_bt.entries.push(loc);
+            new_bt.push(loc);
             Self {
                 value: self.value.clone(),
                 backtrace: new_bt,
