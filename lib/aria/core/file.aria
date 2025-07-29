@@ -57,7 +57,10 @@ extension File {
     }
 
     type func open(path, mode: File.OpenMode) {
-        if path isa Path {
+        # this is meant to allow opening by Path, but path cannot (yet) be brought in
+        # as aria.io.path.Path from aria.core, so do it like this for now
+        # once File moves to aria.io.file, then it's fair game to use Path directly
+        if !(path isa String) {
             path = path.prettyprint();
         }
 

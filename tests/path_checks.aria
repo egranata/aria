@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+import Path from aria.io.path;
+
 func main() {
     # assumes a standard Linux host
     val binls = Path.new("/bin/ls");

@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+import Path from aria.io.path;
+
 func main() {
     val path = Path.new_with_environment_variable("ARIA_TEST_DIR").unwrap_Some();
     path = path / "path_io.txt";
