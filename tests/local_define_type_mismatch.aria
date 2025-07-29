@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val caught = false;
+    val x: Int = 1;
+
+    try {
+        x = false;
+        println(x == 1); # need to use "x", otherwise it's dropped by the optimizer
+    } catch e {
+        match e {
+            isa RuntimeError and case UnexpectedType => {
+                caught = true;
+            }
+        }
+    }
+
+    assert caught;
+}

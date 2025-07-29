@@ -49,9 +49,6 @@ pub enum VmErrorReason {
     #[error("operation failed: {0}")]
     OperationFailed(String),
 
-    #[error("typecheck failed")]
-    TypecheckFailed,
-
     #[error("unexpected value type")]
     UnexpectedType,
 
