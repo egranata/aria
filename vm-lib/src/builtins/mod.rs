@@ -143,10 +143,7 @@ impl VmBuiltins {
 }
 
 impl VmBuiltins {
-    pub(in crate::builtins) fn create_maybe_some(
-        &self,
-        x: RuntimeValue,
-    ) -> Result<RuntimeValue, VmErrorReason> {
+    pub fn create_maybe_some(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
         let rt_maybe = crate::some_or_err!(
             self.get_builtin_type_by_id(BUILTIN_TYPE_MAYBE),
             VmErrorReason::UnexpectedVmState
@@ -166,7 +163,7 @@ impl VmBuiltins {
         Ok(RuntimeValue::EnumValue(rv))
     }
 
-    pub(in crate::builtins) fn create_maybe_none(&self) -> Result<RuntimeValue, VmErrorReason> {
+    pub fn create_maybe_none(&self) -> Result<RuntimeValue, VmErrorReason> {
         let rt_maybe = crate::some_or_err!(
             self.get_builtin_type_by_id(BUILTIN_TYPE_MAYBE),
             VmErrorReason::UnexpectedVmState
@@ -186,7 +183,7 @@ impl VmBuiltins {
         Ok(RuntimeValue::EnumValue(rv))
     }
 
-    pub(in crate::builtins) fn create_unit_object(&self) -> Result<RuntimeValue, VmErrorReason> {
+    pub fn create_unit_object(&self) -> Result<RuntimeValue, VmErrorReason> {
         let rt_unit = crate::some_or_err!(
             self.get_builtin_type_by_id(BUILTIN_TYPE_UNIT),
             VmErrorReason::UnexpectedVmState
