@@ -2,26 +2,25 @@
 import Decimal from aria.numerics.decimal;
 
 func main() {
-    assert Decimal.new("3.14") + Decimal.new("3.14") == Decimal.new(6.28f);
-    assert 3 + Decimal.new("5") == Decimal.new(8);
-    assert 3.1f + Decimal.new("2.5") == Decimal.new(5.6f);
-    assert Decimal.new(5) - Decimal.new("3.1") == Decimal.new("1.9");
-    assert 4 - Decimal.new("3.5") == Decimal.new(0.5f);
+    assert Decimal.parse("3.14").unwrap_Some() + Decimal.parse("3.14").unwrap_Some() == Decimal.new(6.28f);
+    assert 3 + Decimal.parse("5").unwrap_Some() == Decimal.new(8);
+    assert 3.1f + Decimal.parse("2.5").unwrap_Some() == Decimal.new(5.6f);
+    assert Decimal.parse("5").unwrap_Some() - Decimal.parse("3.1").unwrap_Some() == Decimal.parse("1.9").unwrap_Some();
+    assert 4 - Decimal.parse("3.5").unwrap_Some() == Decimal.new(0.5f);
 
-    assert Decimal.new("3.14") * 2 == Decimal.new(6.28f);
-    assert 2 * Decimal.new("3.14") == Decimal.new(6.28f);
-    assert 3.14f * Decimal.new(2) == Decimal.new(6.28f);
-    assert Decimal.new("12") / Decimal.new("3") == Decimal.new(4);
-    assert 12 / Decimal.new(3) == Decimal.new(4);
+    assert Decimal.parse("3.14").unwrap_Some() * 2 == Decimal.new(6.28f);
+    assert 2 * Decimal.parse("3.14").unwrap_Some() == Decimal.new(6.28f);
+    assert Decimal.parse("12").unwrap_Some() / Decimal.new(3) == Decimal.new(4);
+    assert 12 / Decimal.parse("3").unwrap_Some() == Decimal.new(4);
 
-    assert Decimal.new("3.14") > Decimal.new("2.0");
-    assert Decimal.new("5.123") < Decimal.new(6.28f);
+    assert Decimal.parse("3.14").unwrap_Some() > Decimal.parse("2.0").unwrap_Some();
+    assert Decimal.parse("5.123").unwrap_Some() < Decimal.parse("6.28").unwrap_Some();
 
-    assert Decimal.new(5) != Decimal.new("6");
+    assert Decimal.parse("5").unwrap_Some() != Decimal.parse("6").unwrap_Some();
 
     assert Decimal.new(5) >= Decimal.new(4);
-    assert Decimal.new(5) >= Decimal.new("5.00000");
+    assert Decimal.new(5) >= Decimal.parse("5.00000").unwrap_Some();
 
-    assert Decimal.new("5.0") <= Decimal.new(5);
-    assert Decimal.new("5.0") <= Decimal.new(5.001f);
+    assert Decimal.parse("5.0").unwrap_Some() <= Decimal.new(5);
+    assert Decimal.parse("5.0").unwrap_Some() <= Decimal.new(5.001);
 }

@@ -17,46 +17,54 @@ func max(x,y) {
 }
 
 struct Decimal {
-    type func new(v) {
-        if v isa Int {
-            return This.new_with_parts(v, 0);
+    type func parse(v: String) {
+        val parts = v.split(".");
+        match parts.len() {
+            == 1 => {
+                val v = Int.parse(parts[0]);
+                return v.apply(|value| => This.new_with_parts(value, 0));
+            },
+            == 2 => {
+                val integer_part = Int.parse(parts[0]);
+                match integer_part {
+                    case None => { return Maybe::None; },
+                    case Some(i) => { integer_part = i; }
+                }
+                val decimal_part = parts[1];
+                val scale = decimal_part.len();
+                val combined_str = parts[0] + decimal_part;
+                val value = Int.parse(combined_str);
+                return value.apply(|v| => This.new_with_parts(v, scale));
+            }
+        } else {
+            return Maybe::None;
         }
+    }
 
-        if v isa Float {
-            val s = prettyprint(v);
-            val parts = s.split(".");
-            match parts.len() {
-                == 1 => {
-                    return This.new_with_parts(v.int(), 0);
-                },
-                == 2 => {
-                    val decimal_part = parts[1];
-                    val scale = decimal_part.len();
-                    val value = (v * pow(10, scale)).int();
-                    return This.new_with_parts(value, scale);
+    type func new(v: Int|Float) {
+        match v {
+            isa Int => {
+                return This.new_with_parts(v, 0);
+            },
+            isa Float => {
+                # relies on Float.prettyprint doing the right thing
+                # really, there should be a way on Float to extract the
+                # integer and fractional parts directly
+                val s = prettyprint(v);
+                val parts = s.split(".");
+                match parts.len() {
+                    == 1 => {
+                        return This.new_with_parts(v.int(), 0);
+                    },
+                    == 2 => {
+                        val decimal_part = parts[1];
+                        val scale = decimal_part.len();
+                        val value = (v * pow(10, scale)).int();
+                        return This.new_with_parts(value, scale);
+                    }
                 }
             }
         }
-
-        if v isa String {
-            val parts = v.split(".");
-            match parts.len() {
-                == 1 => {
-                    val v = Int.parse(parts[0]).unwrap_Some();
-                    return This.new_with_parts(v, 0);
-                },
-                == 2 => {
-                    val integer_part = Int.parse(parts[0]).unwrap_Some();
-                    val decimal_part = parts[1];
-                    val scale = decimal_part.len();
-                    val combined_str = parts[0] + decimal_part;
-                    val value = Int.parse(combined_str).unwrap_Some();
-                    return This.new_with_parts(value, scale);
-                }
-            }
-        }
-
-        return Maybe::None;
     }
 
     type func new_with_parts(v: Int, s: Int) {
