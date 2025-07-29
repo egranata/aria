@@ -804,7 +804,7 @@ impl VirtualMachine {
                 let x = pop_or_err!(next, frame, op_idx);
                 let local = &mut frame.locals[n as usize];
                 if !x.isa(&local.ty, &self.builtins) {
-                    return build_vm_error!(VmErrorReason::TypecheckFailed, next, frame, op_idx);
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 } else {
                     local.val = x;
                 }
@@ -830,7 +830,7 @@ impl VirtualMachine {
                     if let Some(sv) = ct.as_string() {
                         if !this_module.store_typechecked_named_value(sv, x, &self.builtins) {
                             return build_vm_error!(
-                                VmErrorReason::TypecheckFailed,
+                                VmErrorReason::UnexpectedType,
                                 next,
                                 frame,
                                 op_idx

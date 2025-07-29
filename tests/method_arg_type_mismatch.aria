@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Adder {
+    type func new(x) {
+        return alloc(Adder){.x = x,};
+    }
+
+    instance func add(x: Int) {
+        this.x + x;
+    }
+}
+
+func main() {
+    val caught = false;
+    val a = Adder.new(4);
+
+    try {
+        val n = a.add(false);
+        assert false;
+    } catch e {
+        match e {
+            isa RuntimeError and case UnexpectedType => {
+                caught = true;
+            }
+        }
+    }
+
+    assert caught;
+}

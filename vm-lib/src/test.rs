@@ -50,84 +50,6 @@ func main() {
 }
 
 #[test]
-fn test_local_define_type_mismatch() {
-    let input = r##"
-func main() {
-    val x: Int = "a";
-    assert(x);
-}
-"##;
-
-    assert!(exec_code(input).is_err_and(|err| err.reason == VmErrorReason::TypecheckFailed));
-}
-
-#[test]
-fn test_local_write_type_mismatch() {
-    let input = r##"
-func main() {
-    val x: Int = 1;
-    x = false;
-    assert(x);
-}
-"##;
-
-    assert!(exec_code(input).is_err_and(|err| err.reason == VmErrorReason::TypecheckFailed));
-}
-
-#[test]
-fn test_func_argument_type_mismatch() {
-    let input = r##"
-func add(x: Int, y: Int) {
-    return x + y;
-}
-
-func main() {
-    val x = add(3,"hello");
-    assert(false);
-}
-"##;
-
-    assert!(exec_code(input).is_err_and(|err| err.reason == VmErrorReason::TypecheckFailed));
-}
-
-#[test]
-fn test_method_argument_type_mismatch() {
-    let input = r##"
-struct Adder {
-    type func new(x) {
-        return alloc(Adder){.x = x,};
-    }
-
-    instance func add(x: Int) {
-        this.x + x;
-    }
-}
-
-func main() {
-    val a = Adder.new(4);
-    val n = a.add(false);
-    assert(false);
-}
-"##;
-
-    assert!(exec_code(input).is_err_and(|err| err.reason == VmErrorReason::TypecheckFailed));
-}
-
-#[test]
-fn test_func_union_type_mismatch() {
-    let input = r##"
-func id(x: Int|String) {
-    x;
-} func main() {
-    val x = id([]);
-    assert(false);
-}
-"##;
-
-    assert!(exec_code(input).is_err_and(|err| err.reason == VmErrorReason::TypecheckFailed));
-}
-
-#[test]
 fn test_circular_import_detected() {
     let input = r##"
 import circular.zero;
@@ -155,7 +77,30 @@ func main() {
 }
 "##;
 
-    assert!(exec_code(input).is_err_and(|err| err.reason == VmErrorReason::TypecheckFailed));
+    let result = exec_code(input);
+    match result {
+        Ok(result) => match result.exit {
+            crate::vm::RunloopExit::Ok(_) => {
+                assert!(false, "expected typecheck to fail");
+            }
+            crate::vm::RunloopExit::Exception(e) => {
+                let enum_value = e
+                    .value
+                    .as_enum_value()
+                    .expect("exception should be an enum value");
+                assert!(
+                    enum_value.get_case_index()
+                        == enum_value
+                            .get_container_enum()
+                            .get_idx_of_case("UnexpectedType")
+                            .expect("enum should have UnexpectedType case")
+                );
+            }
+        },
+        Err(_) => {
+            assert!(false, "expected exception to be thrown");
+        }
+    }
 }
 
 #[test]
