@@ -16,7 +16,6 @@ use crate::{
 mod alloc;
 mod boolean;
 mod cmdline_args;
-mod file_io;
 mod float;
 mod getenv;
 mod hasattr;
@@ -77,7 +76,6 @@ impl Default for VmBuiltins {
         boolean::insert_boolean_builtins(&mut this);
         cmdline_args::insert_builtins(&mut this);
         integer::insert_integer_builtins(&mut this);
-        file_io::insert_file_builtins(&mut this);
         float::insert_float_builtins(&mut this);
         getenv::insert_builtins(&mut this);
         hasattr::insert_builtins(&mut this);

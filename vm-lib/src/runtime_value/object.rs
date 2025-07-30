@@ -86,7 +86,7 @@ impl Object {
         self.imp.list_attributes()
     }
 
-    pub(crate) fn delete(&self, name: &str) {
+    pub fn delete(&self, name: &str) {
         self.imp.delete(name);
     }
 
