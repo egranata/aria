@@ -34,18 +34,6 @@ struct Path {
         return Path.new(this.prettyprint()).pop();
     }
 
-    func read() {
-        guard file = File.open(this.prettyprint(), File.OpenMode.new().read()) {
-            return file.read_all();
-        }
-    }
-
-    func write(text) {
-        guard file = File.open(this.prettyprint(), File.OpenMode.new().write().truncate()) {
-            file.write(text);
-        }
-    }
-
     func creation_ms_since_epoch() {
         return this._when_created();
     }

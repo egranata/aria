@@ -1,0 +1,13 @@
+[package]
+name = "file-lib"
+version = "0.9.0"
+edition = "2024"
+
+[lib]
+name = "aria_file"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+vm-lib = { path = "../../vm-lib" }
+opcodes-lib = { path = "../../opcodes-lib" }

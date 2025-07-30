@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
+flag: uses_dylib("aria_file");
+
 import aria.io.path;
 
-extension File {
+struct File {
     struct IOError {
         type func new(message: String) {
             return alloc(This) {
@@ -22,7 +24,7 @@ extension File {
         this._close();
     }
 
-    # the values here must be kept in sync with file_io.rs
+    # the values here must be kept in sync with native-libs/file
     struct OpenMode {
         type func new() {
             return alloc(This) {
@@ -173,6 +175,20 @@ struct FileLineIterator {
             case Some(line) => {
                 return Box(){.done = false, .value = line};
             },
+        }
+    }
+}
+
+extension aria.io.path.Path {
+    func read() {
+        guard file = File.open(this.prettyprint(), File.OpenMode.new().read()) {
+            return file.read_all();
+        }
+    }
+
+    func write(text) {
+        guard file = File.open(this.prettyprint(), File.OpenMode.new().write().truncate()) {
+            file.write(text);
         }
     }
 }

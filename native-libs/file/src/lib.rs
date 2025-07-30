@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
+
+use haxby_opcodes::function_attribs::{FUNC_IS_METHOD, METHOD_ATTRIBUTE_TYPE};
+use haxby_vm::{
+    builtins::VmBuiltins,
+    error::{dylib_load::LoadResult, exception::VmException, vm_error::VmErrorReason},
+    frame::Frame,
+    runtime_module::RuntimeModule,
+    runtime_value::{
+        RuntimeValue, function::BuiltinFunctionImpl, list::List, object::Object,
+        opaque::OpaqueValue, structure::Struct,
+    },
+    vm::{self, RunloopExit},
+};
+
 use std::{
     cell::RefCell,
     fs::{File, OpenOptions},
     io::{Read, Seek, Write},
 };
-
-use haxby_opcodes::function_attribs::{FUNC_IS_METHOD, METHOD_ATTRIBUTE_TYPE};
-
-use crate::{
-    error::exception::VmException,
-    error::vm_error::VmErrorReason,
-    frame::Frame,
-    runtime_value::{
-        RuntimeValue, function::BuiltinFunctionImpl, kind::RuntimeValueType, list::List,
-        object::Object, opaque::OpaqueValue, structure::Struct,
-    },
-    vm::RunloopExit,
-};
-
-use super::VmBuiltins;
 
 const FILE_MODE_READ: i64 = 1;
 const FILE_MODE_WRITE: i64 = 2;
@@ -481,21 +480,37 @@ impl BuiltinFunctionImpl for Flush {
     }
 }
 
-pub(super) fn insert_file_builtins(builtins: &mut VmBuiltins) {
-    let file_struct = Struct::new("File");
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult {
+    match unsafe { module.as_ref() } {
+        Some(module) => {
+            let file = match module.load_named_value("File") {
+                Some(file) => file,
+                None => {
+                    return LoadResult::error("cannot find File");
+                }
+            };
 
-    file_struct.insert_builtin::<New>();
-    file_struct.insert_builtin::<Close>();
-    file_struct.insert_builtin::<ReadAll>();
-    file_struct.insert_builtin::<ReadCount>();
-    file_struct.insert_builtin::<WriteStr>();
-    file_struct.insert_builtin::<GetPos>();
-    file_struct.insert_builtin::<SetPos>();
-    file_struct.insert_builtin::<Flush>();
-    file_struct.insert_builtin::<GetSize>();
+            let file_struct = match file.as_struct() {
+                Some(file) => file,
+                None => {
+                    return LoadResult::error("File is not a struct");
+                }
+            };
 
-    builtins.insert(
-        "File",
-        RuntimeValue::Type(RuntimeValueType::Struct(file_struct)),
-    );
+            file_struct.insert_builtin::<New>();
+            file_struct.insert_builtin::<Close>();
+            file_struct.insert_builtin::<ReadAll>();
+            file_struct.insert_builtin::<ReadCount>();
+            file_struct.insert_builtin::<WriteStr>();
+            file_struct.insert_builtin::<GetPos>();
+            file_struct.insert_builtin::<SetPos>();
+            file_struct.insert_builtin::<Flush>();
+            file_struct.insert_builtin::<GetSize>();
+
+            LoadResult::success()
+        }
+        None => LoadResult::error("invalid file module"),
+    }
 }
