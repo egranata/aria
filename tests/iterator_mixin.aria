@@ -16,6 +16,27 @@ func main() {
     for item in l.iterator().where(is_even).map(add_one) {
         sum = sum + item;
     }
-
     assert sum == 35;
+
+    val l1 = [1, 2, 3];
+    val l2 = [10, 20, 30];
+    val sum = 0;
+    for pair in l1.iterator().zip(l2.iterator()) {
+        sum += pair[0] + pair[1];
+    }
+    assert sum == 66;
+
+    assert l.iterator().find(is_even).unwrap_or(-1) == 2;
+    assert l.iterator().position(is_even).unwrap_or(-1) == 1;
+
+    assert l.iterator().sum() == 55;
+    assert l.iterator().product() == 3628800;
+    assert l.iterator().max().unwrap_or(-1) == 10;
+    assert l.iterator().min().unwrap_or(-1) == 1;
+    assert l.iterator().count() == 10;
+
+    val l = [42, 16, 55, 120, 5];
+    assert l.iterator().first().unwrap_or(-1) == 42;
+    assert l.iterator().last().unwrap_or(-1) == 5;
+    assert l.iterator().nth(2).unwrap_or(-1) == 55;
 }
