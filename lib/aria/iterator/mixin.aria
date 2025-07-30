@@ -47,6 +47,14 @@ func append_to_list(x,y) {
     return x;
 }
 
+func add(x,y) {
+    return x+y;
+}
+
+func mul(x,y) {
+    return x*y;
+}
+
 mixin Iterator {
     # allow running a for loop directly on an iterator
     func iterator() {
@@ -83,6 +91,26 @@ mixin Iterator {
         return false;
     }
 
+    func find(f) {
+        for v in this {
+            if f(v) {
+                return Maybe::Some(v);
+            }
+        }
+        return Maybe::None;
+    }
+
+    func position(f) {
+        val index = 0;
+        for v in this {
+            if f(v) {
+                return Maybe::Some(index);
+            }
+            index += 1;
+        }
+        return Maybe::None;
+    }
+
     func reduce(f, v0) {
         val acc = v0;
         for v in this {
@@ -90,7 +118,82 @@ mixin Iterator {
         }
         return acc;
     }
+
+    func sum() {
+        return this.reduce(add, 0);
+    }
+
+    func product() {
+        return this.reduce(mul, 1);
+    }
+
+    func max() {
+        val first_item = this.next();
+        if first_item.done {
+            return Maybe::None;
+        }
+        val current_max = first_item.value;
+        for v in this {
+            if v > current_max {
+                current_max = v;
+            }
+        }
+        return Maybe::Some(current_max);
+    }
+
+    func min() {
+        val first_item = this.next();
+        if first_item.done {
+            return Maybe::None;
+        }
+        val current_min = first_item.value;
+        for v in this {
+            if v < current_min {
+                current_min = v;
+            }
+        }
+        return Maybe::Some(current_min);
+    }
+
+    func count() {
+        val acc = 0;
+        for _ in this {
+            acc += 1;
+        }
+        return acc;
+    }
+
+    func first() {
+        val first_item = this.next();
+        if first_item.done {
+            return Maybe::None;
+        }
+        return Maybe::Some(first_item.value);
+    }
+
+    func last() {
+        val last_value = Maybe::None;
+        for v in this {
+            last_value = Maybe::Some(v);
+        }
+        return last_value;
+    }
+
+    func nth(n) {
+        if n < 0 {
+            return Maybe::None;
+        }
+        val current_index = 0;
+        for v in this {
+            if current_index == n {
+                return Maybe::Some(v);
+            }
+            current_index += 1;
+        }
+        return Maybe::None;
+    }
 }
+
 
 extension FilteringIterator {
     include Iterator
@@ -115,6 +218,58 @@ mixin Iterable {
 
     func reduce(f,v0) {
         return this.iterator().reduce(f,v0);
+    }
+
+    func to_list() {
+        return this.iterator().to_list();
+    }
+
+    func all(f) {
+        return this.iterator().all(f);
+    }
+
+    func any(f) {
+        return this.iterator().any(f);
+    }
+
+    func find(f) {
+        return this.iterator().find(f);
+    }
+
+    func position(f) {
+        return this.iterator().position(f);
+    }
+
+    func sum() {
+        return this.iterator().sum();
+    }
+
+    func product() {
+        return this.iterator().product();
+    }
+
+    func max() {
+        return this.iterator().max();
+    }
+
+    func min() {
+        return this.iterator().min();
+    }
+
+    func count() {
+        return this.iterator().count();
+    }
+
+    func first() {
+        return this.iterator().first();
+    }
+
+    func last() {
+        return this.iterator().last();
+    }
+
+    func nth(n) {
+        return this.iterator().nth(n);
     }
 }
 
