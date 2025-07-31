@@ -120,11 +120,11 @@ mixin Iterator {
     }
 
     func sum() {
-        return this.reduce(add, 0);
+        return this.reduce(|x,y| => x+y, 0);
     }
 
     func product() {
-        return this.reduce(mul, 1);
+        return this.reduce(|x,y| => x*y, 1);
     }
 
     func max() {
