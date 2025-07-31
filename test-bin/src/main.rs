@@ -2,7 +2,7 @@
 
 use std::{
     collections::HashMap,
-    process::exit,
+    process::{ExitCode, Termination, exit},
     time::{Duration, Instant},
 };
 
@@ -139,6 +139,16 @@ impl SuiteReport {
     }
 }
 
+impl Termination for SuiteReport {
+    fn report(self) -> ExitCode {
+        if self.num_fails() > 0 {
+            ExitCode::FAILURE
+        } else {
+            ExitCode::SUCCESS
+        }
+    }
+}
+
 fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
     let mut results = SuiteReport::default();
 
@@ -185,7 +195,7 @@ fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
     results
 }
 
-fn main() {
+fn main() -> SuiteReport {
     let args = Args::parse();
     if args.fail_fast && !args.sequential {
         println!("--fail-fast is only supported in sequential mode; ignoring");
@@ -227,4 +237,6 @@ fn main() {
         results.duration.as_secs(),
         results.duration.subsec_millis(),
     );
+
+    results
 }
