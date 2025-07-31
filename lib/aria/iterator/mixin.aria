@@ -179,7 +179,7 @@ mixin Iterator {
         return last_value;
     }
 
-    func nth(n) {
+    func nth(n: Int) {
         if n < 0 {
             return Maybe::None;
         }
