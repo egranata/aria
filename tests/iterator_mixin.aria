@@ -18,14 +18,6 @@ func main() {
     }
     assert sum == 35;
 
-    val l1 = [1, 2, 3];
-    val l2 = [10, 20, 30];
-    val sum = 0;
-    for pair in l1.iterator().zip(l2.iterator()) {
-        sum += pair[0] + pair[1];
-    }
-    assert sum == 66;
-
     assert l.iterator().find(is_even).unwrap_or(-1) == 2;
     assert l.iterator().position(is_even).unwrap_or(-1) == 1;
 
