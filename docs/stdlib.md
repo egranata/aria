@@ -337,6 +337,20 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `map(f)`: Returns a new iterator that applies the function `f` to each item yielded by this iterator.
     *   `where(f)`: Returns a new iterator that yields only the items for which the predicate function `f` returns `true`.
     *   `reduce(f, initial)`: Applies a function `f` against an accumulator and each item in the iterator (from left to right) to reduce it to a single value. `initial` is the starting value of the accumulator.
+    *   `to_list()`: Consumes the iterator and returns a `List` containing all its items.
+    *   `all(f)`: Returns `true` if the predicate function `f` returns `true` for all items in the iterator, `false` otherwise. This method short-circuits, i.e. it stops consuming the iterator as soon as the outcome is determined.
+    *   `any(f)`: Returns `true` if the predicate function `f` returns `true` for at least one item in the iterator, `false` otherwise. This method short-circuits, i.e. it stops consuming the iterator as soon as the outcome is determined.
+    *   `find(f)`: Returns `Maybe::Some(value)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
+    *   `position(f)`: Returns `Maybe::Some(index)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
+    *   `sum()`: Consumes the iterator and returns the sum of all its items. Assumes items support the `+` operator.
+    *   `product()`: Consumes the iterator and returns the product of all its items. Assumes items support the `*` operator.
+    *   `max()`: Returns `Maybe::Some(value)` with the maximum value in the iterator, or `Maybe::None` if the iterator is empty. Assumes items support the `>` operator.
+    *   `min()`: Returns `Maybe::Some(value)` with the minimum value in the iterator, or `Maybe::None` if the iterator is empty. Assumes items support the `<` operator.
+    *   `count()`: Consumes the iterator and returns the total number of items.
+    *   `first()`: Returns `Maybe::Some(value)` with the first item of the iterator, or `Maybe::None` if the iterator is empty.
+    *   `last()`: Consumes the iterator and returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterator was empty.
+    *   `nth(n: Int)`: Consumes the iterator up to the nth item and returns `Maybe::Some(value)`. Returns `Maybe::None` if `n` is negative or the iterator has fewer than `n+1` items.
+    *   `iterator()`: Returns the iterator itself, allowing an `Iterator` to be used where an iterable value is expected.
 
 *   **`Iterable`**
     A mixin that defines the contract for an object that can produce an `Iterator`. It provides convenience methods that delegate to the iterator produced by the `iterator()` method.
@@ -348,6 +362,19 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `map(f)`: Returns a new iterator that applies the function `f` to each item yielded by this iterable's iterator.
     *   `where(f)`: Returns a new iterator that yields only the items for which the predicate function `f` returns `true`.
     *   `reduce(f, initial)`: Applies a function `f` against an accumulator and each item in the iterable (from left to right) to reduce it to a single value. `initial` is the starting value of the accumulator.
+    *   `to_list()`: Returns a `List` containing all items from this iterable's iterator.
+    *   `all(f)`: Returns `true` if the predicate function `f` returns `true` for all items, `false` otherwise.
+    *   `any(f)`: Returns `true` if the predicate function `f` returns `true` for at least one item, `false` otherwise.
+    *   `find(f)`: Returns `Maybe::Some(value)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
+    *   `position(f)`: Returns `Maybe::Some(index)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
+    *   `sum()`: Returns the sum of all items. Assumes items support the `+` operator.
+    *   `product()`: Returns the product of all items. Assumes items support the `*` operator.
+    *   `max()`: Returns `Maybe::Some(value)` with the maximum value, or `Maybe::None` if the iterable is empty. Assumes items support the `>` operator.
+    *   `min()`: Returns `Maybe::Some(value)` with the minimum value, or `Maybe::None` if the iterable is empty. Assumes items support the `<` operator.
+    *   `count()`: Returns the total number of items.
+    *   `first()`: Returns `Maybe::Some(value)` with the first item, or `Maybe::None` if the iterable is empty.
+    *   `last()`: Returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterable is empty.
+    *   `nth(n: Int)`: Returns `Maybe::Some(value)` for the nth item. Returns `Maybe::None` if `n` is out of bounds.
 
 ---
 
