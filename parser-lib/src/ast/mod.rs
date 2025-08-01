@@ -621,6 +621,16 @@ impl From<&Identifier> for Expression {
     }
 }
 
+impl From<&UnaryOperation> for Expression {
+    fn from(value: &UnaryOperation) -> Self {
+        Self::from(&LogOperation::from(&CompOperation::from(
+            &RelOperation::from(&ShiftOperation::from(&AddOperation::from(
+                &MulOperation::from(value),
+            ))),
+        )))
+    }
+}
+
 impl From<&PostfixExpression> for Expression {
     fn from(value: &PostfixExpression) -> Self {
         Self::from(&LogOperation::from(&CompOperation::from(
