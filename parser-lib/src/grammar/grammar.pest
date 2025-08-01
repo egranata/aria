@@ -147,12 +147,16 @@ function_decl = { "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~
 method_access = @{ "instance" | "type" }
 method_decl   =  { method_access? ~ "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
 
-mixin_entry = { method_decl | mixin_include_decl }
+operator_direction = @{ "reverse" }
+operator_symbol    = @{ "+" | "u-" | "-" | "*" | "/" | "%" | "<<" | ">>" | "==" | "<=" | ">=" | "<" | ">" | "&" | "|" | "^" | "()" | "[]=" | "[]" }
+operator_decl      =  { operator_direction? ~ "operator" ~ operator_symbol ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+
+mixin_entry = { method_decl | operator_decl | mixin_include_decl }
 mixin_decl  = { "mixin" ~ identifier ~ "{" ~ mixin_entry* ~ "}" }
 
 mixin_include_decl = { "include" ~ expression }
 
-struct_entry = { method_decl | "type" ~ val_decl_stmt | mixin_include_decl | struct_decl | enum_decl }
+struct_entry = { method_decl | operator_decl | "type" ~ val_decl_stmt | mixin_include_decl | struct_decl | enum_decl }
 
 struct_decl    = { "struct" ~ identifier ~ "{" ~ struct_entry* ~ "}" }
 extension_decl = { "extension" ~ expression ~ "{" ~ struct_entry* ~ "}" }

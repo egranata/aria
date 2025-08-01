@@ -147,11 +147,11 @@ struct Map {
         return this.count;
     }
 
-    func read_index(k) {
+    operator [](k) {
         return this.get(k).unwrap_Some();
     }
 
-    func write_index(k,v) {
+    operator []=(k,v) {
         return this.set(k,v);
     }
 

@@ -15,7 +15,7 @@ struct MatrixIndex {
         return this.row * 31 + this.col;
     }
 
-    func op_equals(other) {
+    operator ==(other) {
         return this.row == other.row && this.col == other.col;
     }
 }
@@ -65,7 +65,7 @@ struct Matrix {
         this.data.set(MatrixIndex.new(row, col), value);
     }
 
-    func op_add(other: Matrix) {
+    operator +(other: Matrix) {
         if (this.rows != other.rows || this.cols != other.cols) {
             throw Matrix.DimensionMismatch.new("Matrix dimensions do not match for addition");
         }
@@ -80,7 +80,7 @@ struct Matrix {
         return result;
     }
 
-    func op_equals(other: Matrix) {
+    operator ==(other: Matrix) {
         if (this.rows != other.rows || this.cols != other.cols) {
             return false;
         }
@@ -96,7 +96,7 @@ struct Matrix {
         return true;
     }
 
-    func op_sub(other: Matrix) {
+    operator -(other: Matrix) {
         if (this.rows != other.rows || this.cols != other.cols) {
             throw Matrix.DimensionMismatch.new("Matrix dimensions do not match for subtraction");
         }
@@ -133,7 +133,7 @@ struct Matrix {
         return "Matrix(" + ret.join() + ")";
     }
 
-    func op_mul(other: Matrix) {
+    operator *(other: Matrix) {
         if (this.cols != other.rows) {
             throw Matrix.DimensionMismatch.new("Matrix dimensions do not match for multiplication");
         }

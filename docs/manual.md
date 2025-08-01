@@ -747,7 +747,31 @@ Error: division by zero
 
 Structs and enums can overload a subset of operators to provide custom behavior. The resolution rules are similar to those of Python, without the support for inheritance.
 
-Common operators that can be overloaded are equality (`op_equals`) and the arithmetic operators (`op_add`, `op_sub`, `op_mul`, `op_div`, `op_rem`).
+The operators that can be overloaded are as follows:
+
+| Operator Symbol | Name |
+| ------------- | ------------- |
+| `+` | `add` |
+| `-` | `sub` |
+| `*` | `mul` |
+| `/` | `div` |
+| `%` | `rem` |
+| `<<` | `lshift` |
+| `>>` | `rshift` |
+| `==` | `equals` |
+| `<` | `lt` |
+| `>` | `gt` |
+| `<=` | `lteq` |
+| `>=` | `gteq` |
+| `&` | `bwand` |
+| `\|` | `bwor` |
+| `^` | `xor` |
+| `u-` | `neg` |
+| `()` | `call` |
+| `[]` | `read_index` |
+| `[]=` | `write_index` |
+
+Operators are overloaded by an `operator` declaration:
 
 ```
 struct Integer {
@@ -757,7 +781,7 @@ struct Integer {
         };
     }
 
-    func op_rem(rhs) {
+    operator %(rhs) {
         if rhs isa Integer {
             Integer.new(this.n % rhs.n);
         } elsif rhs isa Int {
@@ -778,11 +802,46 @@ func main() {
 }
 ```
 
-If an operator does not support a combination of operands, it can throw `Unimplemented`. If the type of the second operand is different, the language will try to find and invoke `op_rX` (e.g. `op_rrem`) switching the order of the operands.
+If an operator does not support a combination of operands, it can throw `Unimplemented`. For a binary operator, if the type of the second operand is different, Aria will attempt to invoke the reverse operator. For operators other than equality, the syntax to define a reverse operator is `reverse operator`. For equality, one simply defines `operator ==` on the other type.
 
-The square bracket operator is defined by a pair of operator functions, `func read_index(n)` and `func write_index(n,val)`. The value of the index does not have to be an integer (e.g. `Map`), however only one index can be supported in this version of Aria.
+Square bracket access is defined by means of `operator [](index)` and `operator []=(index, value)`. The value of the index does not have to be an integer (e.g. `Map`), however only one index can be supported in this version of Aria.
 
-Function call syntax (i.e. the ability to call an object as if it was a function) is defined by `func op_call(<args>)`.
+Defining `operator ()` allows objects to be called as if they are functions, e.g.
+
+```
+struct CallMe {
+    type func new() { return alloc(This); }
+    operator ()(x,y,z) {
+        println("You called me? x={0} y={1} z={2}".format(x,y,z));
+        return x + y + z;
+    }
+}
+
+func main() {
+    val c = CallMe.new();
+    println(c(1,2,3)); # prints You called me? x=1 y=2 z=3 followed by 6
+}
+```
+
+Operator definitions generate an implementing function named `_op_impl_<name>`. While this is technically a part of the contract between the compiler and the VM, it is documented here because it can be useful to refer to the function underlying the operator in some cases, e.g. to implement a commutative reverse operator
+
+```
+struct Foo {
+    operator + (rhs) {
+        return 42;
+    }
+
+    reverse operator + (lhs) {
+        return this._op_impl_add(lhs);
+    }
+}
+
+func main() {
+    println(12 + alloc(Foo)); # prints 42
+}
+```
+
+To help with defining a coherent set of comparison operators, the standard library provides a `TotalOrdering` mixin at `aria.ordering.compare`.
 
 ## 👮 Guards
 

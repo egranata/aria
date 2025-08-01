@@ -6,7 +6,7 @@ struct StorePairs {
         };
     }
 
-    instance func write_index(key, val) {
+    operator []=(key, val) {
         val i = 0;
         val append = true;
         while i < this.pairs.len() {
@@ -22,7 +22,7 @@ struct StorePairs {
         }
     }
 
-    instance func read_index(key) {
+    operator [](key) {
         val i = 0;
         while i < this.pairs.len() {
             if this.pairs[i][0] == key {

@@ -22,7 +22,7 @@ struct FuzzyNumber {
         };
     }
 
-    func op_bwand(other) {
+    operator &(other) {
         if other isa FuzzyNumber {
             return FuzzyNumber.new(min(this.x, other.x));
         } else {
@@ -30,7 +30,7 @@ struct FuzzyNumber {
         }
     }
 
-    func op_bwor(other) {
+    operator |(other) {
         if other isa FuzzyNumber {
             return FuzzyNumber.new(max(this.x, other.x));
         } else {
@@ -38,11 +38,11 @@ struct FuzzyNumber {
         }
     }
 
-    func op_neg() {
+    operator u-() {
         return FuzzyNumber.new(1 - this.x);
     }
 
-    func op_xor(other) {
+    operator ^(other) {
         if other isa FuzzyNumber {
             return (this | other) & -(this & other);
         } else {
@@ -50,7 +50,7 @@ struct FuzzyNumber {
         }
     }
 
-    func op_equals(other) {
+    operator ==(other) {
         if other isa FuzzyNumber {
             return this.x == other.x;
         } else {

@@ -8,7 +8,7 @@ struct Integer {
 }
 
 extension Integer {
-    func op_mul(rhs) {
+    operator * (rhs) {
         if rhs isa Integer {
             return Integer.new(this.n * rhs.n);
         } elsif rhs isa Int {
@@ -18,14 +18,19 @@ extension Integer {
         }
     }
 
-    func op_rmul(lhs) {
-        # multiplication is commutative
-        return this.op_mul(lhs);
+    reverse operator * (lhs) {
+        if lhs isa Integer {
+            return Integer.new(lhs.n * this.n);
+        } elsif lhs isa Int {
+            return Integer.new(lhs * this.n);
+        } else {
+            throw alloc(Unimplemented);
+        }
     }
 
-    func op_equals(rhs) {
+    operator ==(rhs) {
         if rhs isa Integer {
-            return returnhs.n == this.n;
+            return rhs.n == this.n;
         } elsif rhs isa Int {
             return this.n == rhs;
         } else {
@@ -43,6 +48,8 @@ func main() {
     val y = 7;
 
     assert x * y == 28;
-
     assert y * x == 28;
+
+    assert x * y == Integer.new(28);
+    assert y * x == Integer.new(28);
 }

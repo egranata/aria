@@ -27,11 +27,15 @@
 				},
 				{
 					"name": "keyword.control.aria",
-					"match": "\\b(and|assert|break|case|catch|continue|enum|else|elsif|extension|for|from|guard|if|import|in|include|isa|func|match|mixin|return|struct|throw|try|val|while)\\b"
+					"match": "\\b(and|assert|break|case|catch|continue|enum|else|elsif|extension|for|from|guard|if|import|in|include|isa|func|match|mixin|operator|return|struct|throw|try|val|while)\\b"
 				},
 				{
-					"name": "keyword.control.contextual.aria",
+					"name": "keyword.control.contextual.func.aria",
 					"match": "\\b(instance|type)\\b(?=\\s+func)"
+				},
+				{
+					"name": "keyword.control.contextual.op.aria",
+					"match": "\\b(reverse)\\b(?=\\s+operator)"
 				},
 				{
 					"name": "keyword.control.type-val.aria",

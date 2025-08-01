@@ -15,16 +15,12 @@ extension List {
         return ret;
     }
 
-    func op_mul(rhs: Int) {
-        if rhs isa Int {
-            return this.repeat(rhs);
-        } else {
-            throw alloc(Unimplemented);
-        }
+    operator *(rhs: Int) {
+        return this.repeat(rhs);
     }
 
-    func op_rmul(lhs: Int) {
-        return this.op_mul(lhs);
+    reverse operator *(lhs: Int) {
+        return this.repeat(lhs);
     }
 
     func prettyprint() {
@@ -72,7 +68,7 @@ extension List {
         return ret;
     }
 
-    func op_equals(rhs: List) {
+    operator ==(rhs: List) {
         if rhs.len() != this.len() {
             return false;
         }
@@ -92,7 +88,7 @@ extension List {
         return true;
     }
 
-    func op_add(rhs: List) {
+    operator +(rhs: List) {
         val ret = [];
         for item in this {
             ret.append(item);

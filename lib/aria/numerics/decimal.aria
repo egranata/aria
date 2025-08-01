@@ -79,19 +79,18 @@ struct Decimal {
         };
     }
 
-    func op_radd(lhs) {
-        return this.op_add(lhs);
+    operator u-() {
+        return alloc(Decimal){
+            .value = -this.value,
+            .scale = this.scale,
+        };
     }
 
-    func op_rsub(lhs) {
-        return (this*-1).op_add(lhs);
+    reverse operator -(lhs) {
+        return -this + lhs;
     }
 
-    func op_rmul(lhs) {
-        return this.op_mul(lhs);
-    }
-
-    func op_rdiv(lhs) {
+    reverse operator /(lhs) {
         if lhs isa Int {
             lhs = Decimal.new(lhs);
         } elsif lhs isa Float {
@@ -103,13 +102,11 @@ struct Decimal {
         return lhs / this;
     }
 
-    func op_add(other) {
+    operator +(other: Int|Float|Decimal) {
         if other isa Int {
             other = Decimal.new(other);
         } elsif other isa Float {
             other = Decimal.new(other);
-        } elsif !(other isa Decimal) {
-            throw alloc(Unimplemented);
         }
 
         if this.scale == other.scale {
@@ -122,13 +119,15 @@ struct Decimal {
         }
     }
 
-    func op_sub(other) {
+    reverse operator +(lhs) {
+        return this._op_impl_add(lhs);
+    }
+
+    operator -(other: Int|Float|Decimal) {
         if other isa Int {
             other = Decimal.new(other);
         } elsif other isa Float {
             other = Decimal.new(other);
-        } elsif !(other isa Decimal) {
-            throw alloc(Unimplemented);
         }
 
         if this.scale == other.scale {
@@ -141,25 +140,25 @@ struct Decimal {
         }
     }
 
-    func op_mul(other) {
+    operator *(other: Int|Float|Decimal) {
         if other isa Int {
             other = Decimal.new(other);
         } elsif other isa Float {
             other = Decimal.new(other);
-        } elsif !(other isa Decimal) {
-            throw alloc(Unimplemented);
         }
 
         return Decimal.new_with_parts(this.value * other.value, this.scale + other.scale);
     }
 
-    func op_div(other) {
+    reverse operator *(lhs) {
+        return this._op_impl_mul(lhs);
+    }
+
+    operator /(other: Int|Float|Decimal) {
         if other isa Int {
             other = Decimal.new(other);
         } elsif other isa Float {
             other = Decimal.new(other);
-        } elsif !(other isa Decimal) {
-            throw alloc(Unimplemented);
         }
 
         return Decimal.new_with_parts(this.value * pow(10, other.scale) / other.value, this.scale);
