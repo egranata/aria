@@ -8,7 +8,7 @@ enum CompareResult {
 mixin TotalOrdering {
     # requires func comp(this,x) that returns a CompareResult
 
-    func op_equals(rhs) {
+    operator ==(rhs) {
         match this.comp(rhs) {
             isa CompareResult and case eq => {
                 return true;
@@ -18,7 +18,7 @@ mixin TotalOrdering {
         }
     }
 
-    func op_lt(rhs) {
+    operator < (rhs) {
         match this.comp(rhs) {
             isa CompareResult and case lt => {
                 return true;
@@ -28,7 +28,7 @@ mixin TotalOrdering {
         }
     }
 
-    func op_gt(rhs) {
+    operator > (rhs) {
         match this.comp(rhs) {
             isa CompareResult and case gt => {
                 return true;
@@ -38,7 +38,7 @@ mixin TotalOrdering {
         }
     }
 
-    func op_lteq(rhs) {
+    operator <= (rhs) {
         match this.comp(rhs) {
             isa CompareResult and case lt => {
                 return true;
@@ -51,7 +51,7 @@ mixin TotalOrdering {
         }
     }
 
-    func op_gteq(rhs) {
+    operator >= (rhs) {
         match this.comp(rhs) {
             isa CompareResult and case gt => {
                 return true;

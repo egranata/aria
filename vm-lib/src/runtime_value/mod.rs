@@ -222,7 +222,7 @@ impl RuntimeValue {
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> bool {
-        if let Ok(op_equals) = lhs.read_attribute("op_equals", &vm.builtins) {
+        if let Ok(op_equals) = lhs.read_attribute("_op_impl_equals", &vm.builtins) {
             match RuntimeValue::try_eval_rel_op(op_equals, rhs, cur_frame, vm) {
                 OperatorEvalAttemptOutcome::Ok(val) => {
                     return val;
@@ -243,7 +243,7 @@ impl RuntimeValue {
             return lhs.builtin_equals(rhs, cur_frame, vm);
         }
 
-        if let Ok(op_equals) = rhs.read_attribute("op_equals", &vm.builtins) {
+        if let Ok(op_equals) = rhs.read_attribute("_op_impl_equals", &vm.builtins) {
             return match RuntimeValue::try_eval_rel_op(op_equals, lhs, cur_frame, vm) {
                 OperatorEvalAttemptOutcome::Ok(val) => val,
                 OperatorEvalAttemptOutcome::Exception(_)
@@ -267,9 +267,8 @@ macro_rules! rel_op_impl {
                 cur_frame: &mut Frame,
                 vm: &mut VirtualMachine,
             ) -> OperatorEvalOutcome<RuntimeValue> {
-                if let Ok(op) =
-                    lhs.read_attribute(concat!("op_", stringify!($aria_fwd_name)), &vm.builtins)
-                {
+                let func_name = concat!("_op_impl_", stringify!($aria_fwd_name));
+                if let Ok(op) = lhs.read_attribute(func_name, &vm.builtins) {
                     match RuntimeValue::try_eval_rel_op(op, rhs, cur_frame, vm) {
                         OperatorEvalAttemptOutcome::Ok(rv) => {
                             return OperatorEvalOutcome::Ok(RuntimeValue::Boolean(rv.into()));
@@ -290,9 +289,8 @@ macro_rules! rel_op_impl {
                     return OperatorEvalOutcome::Error(VmErrorReason::UnexpectedType.into());
                 }
 
-                if let Ok(op) =
-                    rhs.read_attribute(concat!("op_", stringify!($aria_rev_name)), &vm.builtins)
-                {
+                let func_name = concat!("_op_impl_", stringify!($aria_rev_name));
+                if let Ok(op) = rhs.read_attribute(func_name, &vm.builtins) {
                     match RuntimeValue::try_eval_rel_op(op, lhs, cur_frame, vm) {
                         OperatorEvalAttemptOutcome::Ok(rv) => {
                             return OperatorEvalOutcome::Ok(RuntimeValue::Boolean(rv.into()));
@@ -322,9 +320,8 @@ macro_rules! bin_op_impl {
                 cur_frame: &mut Frame,
                 vm: &mut VirtualMachine,
             ) -> OperatorEvalOutcome<RuntimeValue> {
-                if let Ok(op) =
-                    lhs.read_attribute(concat!("op_", stringify!($aria_fn_name)), &vm.builtins)
-                {
+                let func_name = concat!("_op_impl_", stringify!($aria_fn_name));
+                if let Ok(op) = lhs.read_attribute(func_name, &vm.builtins) {
                     match RuntimeValue::try_eval_bin_op(op, rhs, cur_frame, vm) {
                         OperatorEvalAttemptOutcome::Ok(rv) => {
                             return OperatorEvalOutcome::Ok(rv);
@@ -345,9 +342,8 @@ macro_rules! bin_op_impl {
                     return OperatorEvalOutcome::Error(VmErrorReason::UnexpectedType.into());
                 }
 
-                if let Ok(op) =
-                    rhs.read_attribute(concat!("op_r", stringify!($aria_fn_name)), &vm.builtins)
-                {
+                let func_name = concat!("_op_impl_r", stringify!($aria_fn_name));
+                if let Ok(op) = rhs.read_attribute(func_name, &vm.builtins) {
                     match RuntimeValue::try_eval_bin_op(op, lhs, cur_frame, vm) {
                         OperatorEvalAttemptOutcome::Ok(rv) => OperatorEvalOutcome::Ok(rv),
                         OperatorEvalAttemptOutcome::Exception(e) => {
@@ -374,9 +370,10 @@ macro_rules! unary_op_impl {
                 cur_frame: &mut Frame,
                 vm: &mut VirtualMachine,
             ) -> OperatorEvalOutcome<RuntimeValue> {
-                if let Ok(op) =
-                    obj.read_attribute(concat!("op_", stringify!($aria_fn_name)), &vm.builtins)
-                {
+                if let Ok(op) = obj.read_attribute(
+                    concat!("_op_impl_", stringify!($aria_fn_name)),
+                    &vm.builtins,
+                ) {
                     match RuntimeValue::try_eval_unary_op(op, cur_frame, vm) {
                         OperatorEvalAttemptOutcome::Ok(rv) => OperatorEvalOutcome::Ok(rv),
                         OperatorEvalAttemptOutcome::Exception(e) => {
@@ -559,7 +556,7 @@ impl RuntimeValue {
         } else if let Some(bf) = self.as_bound_function() {
             bf.eval(argc, cur_frame, vm, discard_result)
         } else {
-            match self.read_attribute("op_call", &vm.builtins) {
+            match self.read_attribute("_op_impl_call", &vm.builtins) {
                 Ok(op_call) => op_call.eval(argc, cur_frame, vm, discard_result),
                 _ => Err(crate::error::vm_error::VmErrorReason::UnexpectedType.into()),
             }
@@ -794,7 +791,7 @@ impl RuntimeValue {
         vm: &mut VirtualMachine,
     ) -> ExecutionResult {
         if self.is_object() {
-            match self.read_attribute("read_index", &vm.builtins) {
+            match self.read_attribute("_op_impl_read_index", &vm.builtins) {
                 Ok(read_index) => {
                     cur_frame.stack.push(idx.clone());
                     read_index.eval(1_u8, cur_frame, vm, false)?;
@@ -823,7 +820,7 @@ impl RuntimeValue {
         vm: &mut VirtualMachine,
     ) -> ExecutionResult {
         if self.is_object() {
-            match self.read_attribute("write_index", &vm.builtins) {
+            match self.read_attribute("_op_impl_write_index", &vm.builtins) {
                 Ok(write_index) => {
                     cur_frame.stack.push(val.clone());
                     cur_frame.stack.push(idx.clone());

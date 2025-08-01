@@ -54,6 +54,8 @@ mod module_flag;
 mod module_flags;
 mod mul_operation;
 mod mul_symbol;
+mod operator_decl;
+mod operator_symbol;
 mod paren_expression;
 mod parsed_module;
 mod postfix_expression;

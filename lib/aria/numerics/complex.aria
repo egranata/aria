@@ -32,11 +32,7 @@ struct Complex {
         }
     }
 
-    func op_radd(lhs) {
-        return this.op_add(lhs);
-    }
-
-    func op_add(rhs) {
+    operator +(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
             return Complex.new(this.real + rhs, this.imag);
         } elsif rhs isa Complex {
@@ -46,11 +42,11 @@ struct Complex {
         }
     }
 
-    func op_rmul(lhs) {
-        return this.op_mul(lhs);
+    reverse operator +(lhs) {
+        return this._op_impl_add(lhs);
     }
 
-    func op_mul(rhs) {
+    operator *(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
             return Complex.new(this.real * rhs, this.imag * rhs);
         } elsif rhs isa Complex {
@@ -62,7 +58,11 @@ struct Complex {
         }
     }
 
-    func op_rdiv(lhs) {
+    reverse operator *(lhs) {
+        return this._op_impl_mul(lhs);
+    }
+
+    reverse operator /(lhs) {
         if (lhs isa Int) || (lhs isa Float) {
             lhs = Complex.new(lhs,0);
         }
@@ -74,7 +74,7 @@ struct Complex {
         }
     }
 
-    func op_div(rhs) {
+    operator /(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
             return Complex.new(this.real / rhs, this.imag / rhs);
         } elsif rhs isa Complex {
@@ -84,17 +84,17 @@ struct Complex {
         }
     }
 
-    func op_rsub(lhs) {
+    reverse operator -(lhs) {
         if (lhs isa Int) || (lhs isa Float) {
             return Complex.new(lhs - this.real, this.imag);
-        } elsif rhs isa Complex {
+        } elsif lhs isa Complex {
             return Complex.new(lhs.real - this.real, lhs.imag - this.imag);
         } else {
             throw alloc(Unimplemented);
         }
     }
 
-    func op_sub(rhs) {
+    operator -(rhs) {
         if (rhs isa Int) || (rhs isa Float) {
             return Complex.new(this.real - rhs, this.imag);
         } elsif rhs isa Complex {
@@ -105,7 +105,7 @@ struct Complex {
     }
 
 
-    func op_equals(rhs) {
+    operator ==(rhs) {
         if rhs isa Complex {
             return this.real == rhs.real && this.imag == rhs.imag;
         } elsif (rhs isa Int) || (rhs isa Float) {

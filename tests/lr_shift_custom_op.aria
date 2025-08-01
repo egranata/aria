@@ -6,33 +6,34 @@ struct Shifter {
         };
     }
 
-    # left shift is < 0, right shift is > 0
-    func op_lshift(n) {
-        this.offset -= n;
-        return this;
+    operator << (n: Int) {
+        return alloc(Shifter) {
+            .offset = this.offset - n,
+        };
     }
 
-    func op_rshift(n) {
-        this.offset += n;
-        return this;
+    operator >> (n: Int) {
+        return alloc(Shifter) {
+            .offset = this.offset + n,
+        };
     }
 }
 
 func main() {
     val s = Shifter.new();
 
-    s << 1;
+    s = s << 1;
     assert s.offset == -1;
 
-    s >> 6;
+    s = s >> 6;
     assert s.offset == 5;
 
-    s << 3;
+    s = s << 3;
     assert s.offset == 2;
 
-    (s << 3) >> 4;
+    s = (s << 3) >> 4;
     assert s.offset == 3;
 
-    s << 10;
+    s = s << 10;
     assert s.offset == -7;
 }

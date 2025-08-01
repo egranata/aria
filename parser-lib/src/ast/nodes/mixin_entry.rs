@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        MethodDecl, MixinEntry, MixinIncludeDecl, SourceBuffer,
+        MethodDecl, MixinEntry, MixinIncludeDecl, OperatorDecl, SourceBuffer,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -16,6 +16,9 @@ impl Derive for MixinEntry {
             Rule::method_decl => {
                 Self::Method(Box::new(MethodDecl::from_parse_tree(content, source)))
             }
+            Rule::operator_decl => {
+                Self::Operator(Box::new(OperatorDecl::from_parse_tree(content, source)))
+            }
             Rule::mixin_include_decl => {
                 Self::Include(Box::new(MixinIncludeDecl::from_parse_tree(content, source)))
             }
@@ -28,6 +31,7 @@ impl PrettyPrintable for MixinEntry {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
         match self {
             Self::Method(m) => m.prettyprint(buffer),
+            Self::Operator(o) => o.prettyprint(buffer),
             Self::Include(m) => m.prettyprint(buffer),
         }
     }

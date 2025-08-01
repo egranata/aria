@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 struct StoreFive {
-    func op_lt(x) {
+    operator < (x) {
         if x isa Int {
             return 5 < x;
         } else {
@@ -8,7 +8,7 @@ struct StoreFive {
         }
     }
 
-    func op_gt(x) {
+    operator > (x) {
         if x isa Int {
             return 5 > x;
         } else {

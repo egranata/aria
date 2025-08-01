@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 struct HasOpCall {
-    func op_call() {
+    operator ()() {
         return 123;
     }
 }
 
 struct CanBeCalled {
     type func new() {
-        return alloc(This){
-            .op_call = alloc(HasOpCall),
-        };
+        return alloc(This);
+    }
+
+    operator ()() {
+        return alloc(HasOpCall)();
     }
 }
 

@@ -2,7 +2,7 @@
 struct InvalidArgument {}
 
 struct Divider {
-    func op_div(rhs) {
+    operator /(rhs) {
         if rhs == 0 {
             throw alloc(InvalidArgument);
         } else {

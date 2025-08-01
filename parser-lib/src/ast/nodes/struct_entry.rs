@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        EnumDecl, MethodDecl, MixinIncludeDecl, SourceBuffer, StructDecl, StructEntry,
-        ValDeclStatement,
+        EnumDecl, MethodDecl, MixinIncludeDecl, OperatorDecl, SourceBuffer, StructDecl,
+        StructEntry, ValDeclStatement,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -16,6 +16,9 @@ impl Derive for StructEntry {
         match content.as_rule() {
             Rule::method_decl => {
                 Self::Method(Box::new(MethodDecl::from_parse_tree(content, source)))
+            }
+            Rule::operator_decl => {
+                Self::Operator(Box::new(OperatorDecl::from_parse_tree(content, source)))
             }
             Rule::val_decl_stmt => {
                 Self::Variable(Box::new(ValDeclStatement::from_parse_tree(content, source)))
@@ -36,6 +39,7 @@ impl PrettyPrintable for StructEntry {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
         match self {
             Self::Method(m) => m.prettyprint(buffer),
+            Self::Operator(o) => o.prettyprint(buffer),
             Self::Variable(v) => v.prettyprint(buffer << "type "),
             Self::Struct(s) => s.prettyprint(buffer),
             Self::Enum(e) => e.prettyprint(buffer),

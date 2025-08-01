@@ -107,7 +107,7 @@ func main() {
 fn test_err_in_op_is_caught() {
     let input = r##"
 struct Foo {
-    func op_add(x) {
+    operator + (rhs) {
         assert false;
     }
 }
@@ -127,7 +127,7 @@ func main() {
 fn test_err_in_rop_is_caught() {
     let input = r##"
 struct Foo {
-    func op_radd(x) {
+    reverse operator + (lhs) {
         assert false;
     }
 }

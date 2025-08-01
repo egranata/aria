@@ -4,9 +4,9 @@ use std::{collections::HashSet, rc::Rc};
 use aria_parser::ast::{
     ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl, EnumDecl,
     EnumDeclEntry, Expression, Identifier, MatchPattern, MatchPatternEnumCase, MatchRule,
-    MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl, ParsedModule, ReturnStatement,
-    SourceBuffer, SourcePointer, Statement, StringLiteral, StructDecl, StructEntry,
-    ValDeclStatement, source_to_ast,
+    MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl, OperatorDecl, ParsedModule,
+    ReturnStatement, SourceBuffer, SourcePointer, Statement, StringLiteral, StructDecl,
+    StructEntry, ValDeclStatement, prettyprint::PrettyPrintable, source_to_ast,
 };
 use haxby_opcodes::{builtin_type_ids::BUILTIN_TYPE_ANY, function_attribs::*};
 use thiserror::Error;
@@ -33,6 +33,12 @@ pub enum CompilationErrorReason {
     ReadOnlyValue,
     #[error("{0} is not a valid literal")]
     InvalidLiteral(String),
+    #[error("{0} is not a valid operator")]
+    InvalidOperator(String),
+    #[error("{0} cannot be reversed")]
+    IrreversibleOperator(String),
+    #[error("operator {0} accepts {1} arguments, but {2} were declared")]
+    OperatorArityMismatch(String, usize, usize),
     #[error("attempt to read a write-only value")]
     WriteOnlyValue,
     #[error("parser error: {0}")]
@@ -269,6 +275,242 @@ fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> Comp
     Ok(())
 }
 
+struct OperatorInfo {
+    arity: Option<usize>, // number of arguments (minus the receiver this)
+    direct_name: &'static str,
+    reverse_name: &'static str,
+}
+
+lazy_static::lazy_static! {
+    static ref OPERATOR_INFO: std::collections::HashMap<&'static str, OperatorInfo> = {
+        let mut map = std::collections::HashMap::new();
+
+        map.insert(
+            "+",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "add",
+                reverse_name: "radd",
+            },
+        );
+
+        map.insert(
+            "-",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "sub",
+                reverse_name: "rsub",
+            },
+        );
+
+        map.insert(
+            "*",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "mul",
+                reverse_name: "rmul",
+            },
+        );
+
+        map.insert(
+            "/",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "div",
+                reverse_name: "rdiv",
+            },
+        );
+
+        map.insert(
+            "%",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "rem",
+                reverse_name: "rrem",
+            },
+        );
+
+        map.insert(
+            "<<",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "lshift",
+                reverse_name: "rlshift",
+            },
+        );
+
+        map.insert(
+            ">>",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "rshift",
+                reverse_name: "rrshift",
+            },
+        );
+
+        map.insert("==",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "equals",
+                reverse_name: "",
+            },
+        );
+
+        map.insert("<",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "lt",
+                reverse_name: "gt",
+            },
+        );
+
+        map.insert(">",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "gt",
+                reverse_name: "lt",
+            },
+        );
+
+        map.insert("<=",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "lteq",
+                reverse_name: "gteq",
+            },
+        );
+
+        map.insert(">=",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "gteq",
+                reverse_name: "lteq",
+            },
+        );
+
+        map.insert("&",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "bwand",
+                reverse_name: "rbwand",
+            },
+        );
+
+        map.insert("|",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "bwor",
+                reverse_name: "rbwor",
+            },
+        );
+
+        map.insert("^",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "xor",
+                reverse_name: "rxor",
+            },
+        );
+
+        map.insert("u-",
+            OperatorInfo {
+                arity: Some(0),
+                direct_name: "neg",
+                reverse_name: "",
+            },
+        );
+
+        map.insert("()",
+            OperatorInfo {
+                arity: None, // call operator has no arity, it can take any number of arguments
+                direct_name: "call",
+                reverse_name: "",
+            },
+        );
+
+        map.insert("[]",
+            OperatorInfo {
+                arity: Some(1),
+                direct_name: "read_index",
+                reverse_name: "",
+            },
+        );
+
+        map.insert("[]=",
+            OperatorInfo {
+                arity: Some(2),
+                direct_name: "write_index",
+                reverse_name: "",
+            },
+        );
+
+        map
+    };
+}
+
+// assume your parent struct is on the stack
+fn emit_operator_decl_compile(op: &OperatorDecl, params: &mut CompileParams) -> CompilationResult {
+    let op_symbol = op
+        .symbol
+        .prettyprint(
+            aria_parser::ast::prettyprint::printout_accumulator::PrintoutAccumulator::default(),
+        )
+        .value();
+
+    let op_info = match OPERATOR_INFO.get(op_symbol.as_str()) {
+        Some(info) => info,
+        None => {
+            return Err(CompilationError {
+                loc: op.loc.clone(),
+                reason: CompilationErrorReason::InvalidOperator(op_symbol),
+            });
+        }
+    };
+
+    if let Some(arity) = op_info.arity {
+        if op.args.len() != arity {
+            return Err(CompilationError {
+                loc: op.loc.clone(),
+                reason: CompilationErrorReason::OperatorArityMismatch(
+                    op_symbol,
+                    arity,
+                    op.args.len(),
+                ),
+            });
+        }
+    }
+
+    if op.reverse && op_info.reverse_name.is_empty() {
+        return Err(CompilationError {
+            loc: op.loc.clone(),
+            reason: CompilationErrorReason::IrreversibleOperator(op_symbol),
+        });
+    }
+
+    let op_fn_name = format!(
+        "_op_impl_{}",
+        if op.reverse {
+            op_info.reverse_name
+        } else {
+            op_info.direct_name
+        }
+    );
+
+    let md = MethodDecl {
+        loc: op.loc.clone(),
+        access: MethodAccess::Instance,
+        name: Identifier {
+            loc: op.loc.clone(),
+            value: op_fn_name,
+        },
+        args: op.args.clone(),
+        vararg: op.vararg,
+        body: op.body.clone(),
+    };
+
+    emit_method_decl_compile(&md, params)
+}
+
 // assume your parent struct is on the stack
 fn emit_type_val_decl_compile(
     vd: &ValDeclStatement,
@@ -307,6 +549,7 @@ fn emit_type_members_compile(
 
         match se {
             aria_parser::ast::StructEntry::Method(md) => emit_method_decl_compile(md, params)?,
+            aria_parser::ast::StructEntry::Operator(od) => emit_operator_decl_compile(od, params)?,
             aria_parser::ast::StructEntry::Variable(vd) => emit_type_val_decl_compile(vd, params)?,
             aria_parser::ast::StructEntry::Struct(sd) => {
                 do_struct_compile(sd, params)?;

@@ -8,7 +8,7 @@ struct Integer {
 }
 
 extension Integer {
-    func op_sub(rhs) {
+    operator - (rhs) {
         if rhs isa Integer {
             return Integer.new(this.n - rhs.n);
         } elsif rhs isa Int {
@@ -18,7 +18,7 @@ extension Integer {
         }
     }
 
-    func op_rsub(lhs) {
+    reverse operator - (lhs) {
         if lhs isa Integer {
             return Integer.new(lhs.n - this.n);
         } elsif lhs isa Int {
@@ -28,7 +28,7 @@ extension Integer {
         }
     }
 
-    func op_equals(rhs) {
+    operator ==(rhs) {
         if rhs isa Integer {
             return rhs.n == this.n;
         } elsif rhs isa Int {

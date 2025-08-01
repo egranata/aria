@@ -873,8 +873,8 @@ This module provides a hash map implementation.
     *   `contains(k)`: Returns `true` if the map contains the given key, `false` otherwise.
     *   `len()`: Returns the number of key-value pairs in the map.
     *   `keys()`: Returns a `List` of all keys in the map.
-    *   `read_index(k)` (Operator `[]`): Retrieves the value for key `k`. Throws an exception if the key does not exist.
-    *   `write_index(k, v)` (Operator `[]=`): Sets the value `v` for the key `k`.
+    *   `[](k)`: Retrieves the value for key `k`. Throws an exception if the key does not exist.
+    *   `[]=(k, v)`: Sets the value `v` for the key `k`.
     *   `iterator()`: Returns an iterator that yields key-value pairs (as `Box` objects with `.key` and `.value` fields) for use in `for` loops.
     *   `prettyprint()`: Returns a string representation of the map.
 

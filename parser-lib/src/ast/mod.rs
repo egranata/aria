@@ -923,6 +923,14 @@ impl ArgumentList {
     pub fn empty(loc: SourcePointer) -> Self {
         Self { loc, names: vec![] }
     }
+
+    pub fn len(&self) -> usize {
+        self.names.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.names.is_empty()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -951,6 +959,39 @@ pub struct MethodDecl {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OperatorSymbol {
+    Plus,
+    Minus,
+    UnaryMinus,
+    Star,
+    Slash,
+    Percent,
+    LeftShift,
+    RightShift,
+    Equals,
+    LessThanEqual,
+    GreaterThanEqual,
+    LessThan,
+    GreaterThan,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    Call,
+    GetSquareBrackets,
+    SetSquareBrackets,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OperatorDecl {
+    pub loc: SourcePointer,
+    pub reverse: bool,
+    pub symbol: OperatorSymbol,
+    pub args: ArgumentList,
+    pub vararg: bool,
+    pub body: CodeBlock,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MixinIncludeDecl {
     pub loc: SourcePointer,
     pub what: Expression,
@@ -959,6 +1000,7 @@ pub struct MixinIncludeDecl {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StructEntry {
     Method(Box<MethodDecl>),
+    Operator(Box<OperatorDecl>),
     Variable(Box<ValDeclStatement>),
     Struct(Box<StructDecl>),
     Enum(Box<EnumDecl>),
@@ -969,6 +1011,7 @@ impl StructEntry {
     pub fn loc(&self) -> &SourcePointer {
         match self {
             Self::Method(m) => &m.loc,
+            Self::Operator(o) => &o.loc,
             Self::Variable(v) => &v.loc,
             Self::Struct(s) => &s.loc,
             Self::Enum(e) => &e.loc,
@@ -987,6 +1030,7 @@ pub struct StructDecl {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MixinEntry {
     Method(Box<MethodDecl>),
+    Operator(Box<OperatorDecl>),
     Include(Box<MixinIncludeDecl>),
 }
 
@@ -994,6 +1038,7 @@ impl MixinEntry {
     pub fn loc(&self) -> &SourcePointer {
         match self {
             Self::Method(m) => &m.loc,
+            Self::Operator(o) => &o.loc,
             Self::Include(i) => &i.loc,
         }
     }
@@ -1003,6 +1048,7 @@ impl From<&MixinEntry> for StructEntry {
     fn from(value: &MixinEntry) -> Self {
         match value {
             MixinEntry::Method(m) => StructEntry::Method(m.clone()),
+            MixinEntry::Operator(o) => StructEntry::Operator(o.clone()),
             MixinEntry::Include(i) => StructEntry::MixinInclude(i.clone()),
         }
     }

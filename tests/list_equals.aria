@@ -6,7 +6,7 @@ struct Integer {
         };
     }
 
-    func op_equals(rhs) {
+    operator ==(rhs) {
         if rhs isa Integer {
             return rhs.n == this.n;
         } elsif rhs isa Int {

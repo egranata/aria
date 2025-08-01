@@ -26,7 +26,7 @@ struct Path {
         return this;
     }
 
-    func op_div(rhs: String|Path) {
+    operator /(rhs: String|Path) {
         return Path.new(this.prettyprint()).append(rhs);
     }
 

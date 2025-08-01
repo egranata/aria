@@ -12,7 +12,7 @@ enum Unit {
         return "unit";
     }
 
-    func op_equals(rhs: Unit) {
+    operator ==(rhs: Unit) {
         return true;
     }
 }

@@ -1,0 +1,127 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func new(n: Int) {
+        return alloc(This) {.n = n};
+    }
+
+    operator + (rhs: Int|Foo) {
+        if rhs isa Int {
+            return alloc(Foo) {.n = this.n + rhs};
+        } else {
+            return alloc(Foo) {.n = this.n + rhs.n};
+        }
+    }
+
+    reverse operator + (lhs: Int|Foo) {
+        if lhs isa Int {
+            return alloc(Foo) {.n = this.n + lhs};
+        } else {
+            return alloc(Foo) {.n = this.n + lhs.n};
+        }
+    }
+
+    operator - (rhs: Int|Foo) {
+        if rhs isa Int {
+            return alloc(Foo) {.n = this.n - rhs};
+        } else {
+            return alloc(Foo) {.n = this.n - rhs.n};
+        }
+    }
+
+    reverse operator - (lhs: Int|Foo) {
+        if lhs isa Int {
+            return alloc(Foo) {.n = lhs - this.n};
+        } else {
+            return alloc(Foo) {.n = lhs.n - this.n};
+        }
+    }
+
+    operator * (rhs: Int|Foo) {
+        if rhs isa Int {
+            return alloc(Foo) {.n = this.n * rhs};
+        } else {
+            return alloc(Foo) {.n = this.n * rhs.n};
+        }
+    }
+
+    reverse operator * (lhs: Int|Foo) {
+        if lhs isa Int {
+            return alloc(Foo) {.n = this.n * lhs};
+        } else {
+            return alloc(Foo) {.n = this.n * lhs.n};
+        }
+    }
+
+    operator / (rhs: Int|Foo) {
+        if rhs isa Int {
+            return alloc(Foo) {.n = this.n / rhs};
+        } else {
+            return alloc(Foo) {.n = this.n / rhs.n};
+        }
+    }
+
+    reverse operator / (lhs: Int|Foo) {
+        if lhs isa Int {
+            return alloc(Foo) {.n = lhs / this.n};
+        } else {
+            return alloc(Foo) {.n = lhs.n / this.n};
+        }
+    }
+
+    operator % (rhs: Int|Foo) {
+        if rhs isa Int {
+            return alloc(Foo) {.n = this.n % rhs};
+        } else {
+            return alloc(Foo) {.n = this.n % rhs.n};
+        }
+    }
+
+    reverse operator % (lhs: Int|Foo) {
+        if lhs isa Int {
+            return alloc(Foo) {.n = lhs % this.n};
+        } else {
+            return alloc(Foo) {.n = lhs.n % this.n};
+        }
+    }
+
+
+    operator ==(rhs: Int|Foo) {
+        if rhs isa Int {
+            return this.n == rhs;
+        } else {
+            return this.n == rhs.n;
+        }
+    }
+}
+
+func main() {
+    val five = Foo.new(5);
+    val ten = Foo.new(10);
+    val six = 6;
+    val three = Foo.new(3);
+
+    assert five + ten == Foo.new(15);
+    assert five + six == Foo.new(11);
+    assert ten + five == Foo.new(15);
+    assert six + five == Foo.new(11);
+
+    assert five - ten == Foo.new(-5);
+    assert five - six == Foo.new(-1);
+    assert ten - five == Foo.new(5);
+    assert six - five == Foo.new(1);
+
+    assert five * ten == Foo.new(50);
+    assert five * six == Foo.new(30);
+    assert ten * five == Foo.new(50);
+    assert six * five == Foo.new(30);
+
+    assert (five + ten) / three == Foo.new(5);
+    assert five / six == Foo.new(0);
+    assert ten / five == Foo.new(2);
+    assert six / five == Foo.new(1);
+
+    assert five % three == Foo.new(2);
+    assert five % six == Foo.new(5);
+    assert ten % five == Foo.new(0);
+    assert six % five == Foo.new(1);
+}
