@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val l1 = [1,2,3,4];
+
+    val l2 = [];
+
+    val count_l1 = 0;
+    for x in l1 {
+        count_l1 += 1;
+    } else {
+        assert false; # this should not execute
+    }
+
+    assert count_l1 == 4;
+
+    val count_l2 = 0;
+    val else_hit = false;
+    for x in l2 {
+        count_l2 += 1;
+    } else {
+        else_hit = true;
+    }
+
+    assert count_l2 == 0;
+    assert else_hit == true;
+}

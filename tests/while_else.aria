@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 3;
+
+    while x > 0 {
+        x -= 1;
+    } else {
+        assert false; # this should not execute
+    }
+
+    assert x == 0;
+
+    while x > 0 {
+        assert false; # this should not execute
+    } else {
+        x = 5;
+    }
+
+    assert x == 5;
+}
