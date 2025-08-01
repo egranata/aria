@@ -89,6 +89,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
             loc: self.loc.clone(),
             cond: true_cond,
             then: while_body,
+            els: self.els.clone(),
         });
         let blk = CodeBlock {
             loc: self.loc.clone(),

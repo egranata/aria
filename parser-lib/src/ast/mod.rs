@@ -775,6 +775,7 @@ pub struct WhileStatement {
     pub loc: SourcePointer,
     pub cond: Expression,
     pub then: CodeBlock,
+    pub els: Option<ElsePiece>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -783,6 +784,7 @@ pub struct ForStatement {
     pub id: Identifier,
     pub expr: Expression,
     pub then: CodeBlock,
+    pub els: Option<ElsePiece>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
