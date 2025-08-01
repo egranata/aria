@@ -187,6 +187,26 @@ for x in l {
 
 Loops can be exited with `break`, or jump to the next iteration with `continue`, much like in other languages in the C family.
 
+Both `for` and `while` loops can optionally accept an `else` clause, which is executed if the body of the loop is never taken.
+
+```
+for x in [] {
+    println(x);
+} else {
+    println("This list is empty!"); # prints This list is empty
+}
+```
+
+```
+val x = 0;
+while x > 0 {
+    println("x is positive");
+    x -= 1;
+} else {
+    println("x is <= 0"); # prints x is <= 0
+}
+```
+
 A ternary operator is provided with very similar behavior to its C counterpart:
 
 ```
