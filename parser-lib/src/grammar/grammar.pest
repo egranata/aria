@@ -103,8 +103,8 @@ match_pattern           = { match_pattern_enum_case | match_pattern_comp | match
 match_rule              = { match_pattern ~ ("and" ~ match_pattern)* ~ "=>" ~ code_block }
 match_stmt              = { "match" ~ expression ~ "{" ~ match_rule ~ (","? ~ match_rule)* ~ ","? ~ "}" ~ else_piece? }
 
-while_stmt = { "while" ~ expression ~ code_block }
-for_stmt   = { "for" ~ identifier ~ "in" ~ expression ~ code_block }
+while_stmt = { "while" ~ expression ~ code_block ~ else_piece? }
+for_stmt   = { "for" ~ identifier ~ "in" ~ expression ~ code_block ~ else_piece? }
 
 return_stmt = { "return" ~ expression ~ ";" }
 assert_stmt = { "assert" ~ expression ~ ";" }
