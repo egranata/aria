@@ -120,9 +120,9 @@ statement = {
   | break_stmt
   | continue_stmt
   | expr_stmt
+  | val_write_stmt
   | val_decl_stmt
   | val_add_eq_write
-  | val_write_stmt
   | if_stmt
   | match_stmt
   | while_stmt
@@ -175,8 +175,8 @@ import_id_stmt = { "import" ~ import_target ~ "from" ~ import_path ~ ";" }
 top_level_entry = {
     import_id_stmt
   | import_stmt
-  | val_decl_stmt
   | val_write_stmt
+  | val_decl_stmt
   | struct_decl
   | mixin_decl
   | enum_decl
