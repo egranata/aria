@@ -25,13 +25,6 @@ impl Derive for CodeBlock {
 
 impl PrettyPrintable for CodeBlock {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        buffer.write_indented_list(
-            &self.entries,
-            "{
-",
-            "
-",
-            "}",
-        )
+        buffer.write_indented_list(&self.entries, "{\n", "\n", "\n}")
     }
 }
