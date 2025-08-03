@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func return_something(x) {
+    return 42;
+}
+
+func main() {
+    val value = return_something(5);
+    if value == 43 {
+        assert false;
+    } else {
+        value = 41;
+    }
+
+    assert value == 41;
+}
