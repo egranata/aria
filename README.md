@@ -4,7 +4,7 @@
 [![Docs](https://img.shields.io/badge/Docs-Available-blue.svg)](https://egranata.github.io/aria/)
 [![Contributors](https://img.shields.io/github/contributors/egranata/aria)](https://github.com/egranata/aria/graphs/contributors)
 
-Welcome to Aria. Aria is a modern, dynamic scripting language. It is meant to be a "sweet spot" language, easy to pick-up and with a good balance between ease of use, safety, and flexibility—designed to help you build great programs quickly.
+Welcome to Aria. Aria is a modern, dynamic scripting language. It is meant to be a "sweet spot" language, easy to pick-up and with a good balance between ease of use, safety, and flexibility. Aria's design choices help you build great programs quickly.
 
 Aria has modern, safer error handling: Aria replaces unreliable `None` pointer checks with a modern, multi-tiered approach to error handling. By emphasizing algebraic data types (e.g. `Maybe`), Aria makes errors explicit, safer, and easier to manage, with fewer runtime surprises.
 
@@ -118,6 +118,6 @@ User egranata has 5 public repositories.
 
 Ready to try Aria? Want to contribute to the language? Great! Whether you’re fixing bugs, adding features, or improving the documentation, we’d love your help!
 
-If it's your first time contributing, check out [good starter bugs](https://github.com/egranata/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) on GitHub.
+If it's your first time contributing, check out [good starter bugs](https://github.com/egranata/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) or [help wanted](https://github.com/egranata/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22) on GitHub.
 
 For all this and more, visit [our website](https://egranata.github.io/aria/)!
