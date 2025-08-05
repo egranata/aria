@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: Apache-2.0
+import Request from aria.network.request;
+import JsonValue from aria.json.parser;
+import Map from aria.structures.map;
+
+enum FetchResult {
+    case Success(Map),
+    case Error(String)
+}
+
+func get_rates(currency: String) {
+    val url = "https://open.er-api.com/v6/latest/{0}".format(currency.uppercase());
+
+    val response = Request.new(url).get();
+    if response.status_code == 200 {
+        val data = JsonValue.parse(response.content).flatten();
+        match data.get("rates") {
+            case Some(rates) => { return FetchResult::Success(rates); },
+            case None => { return FetchResult::Error("No rates found for {0}".format(currency)); }
+        }
+    } else {
+        return FetchResult::Error("HTTP request failed with status code {0}".format(response.status_code));
+    }
+}
+
+func convert(value, target, rates) {
+    return rates.get(target).apply(|x| => x * value);
+}
+
+func main() {
+    val args = cmdline_arguments();
+
+    if args.len() != 3 {
+        println("Usage: currency <value> <source_currency> <target_currency>");
+        println("Example: currency 100 USD EUR");
+        return Unit::unit;
+    }
+    
+    val value = Float.parse(args[0]);
+    if value.is_None() {
+        println("Please provide a valid numeric value to convert.");
+        return Unit::unit;
+    value = value.unwrap_Some();
+
+    val source_currency = args[1].uppercase();
+    val target_currency = args[2].uppercase();
+
+    val fetched_rates = get_rates(source_currency);
+    val rates = Map.new();
+    match fetched_rates {
+        case Error(e) => {
+            println("Failed to fetch exchange rates: {0}".format(e));
+            return Unit::unit;
+        }
+        case Success(r) => { rates = r; }
+    }
+
+    val converted_value = convert(value, target_currency, rates);
+    if converted_value.is_None() {
+        println("Conversion rate for {0} not found.".format(target_currency));
+    } else {
+        println("{0} {1} is equivalent to {2} {3}.".format(value, source_currency, converted_value.unwrap_Some(), target_currency));
+    }
+}
