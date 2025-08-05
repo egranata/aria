@@ -447,6 +447,30 @@ impl BasicBlock {
         }
     }
 
+    fn optimize_redundant_conditional_jumps(&self) {
+        let mut br = self.writer.borrow_mut();
+        let mut i = 0;
+        while i + 1 < br.len() {
+            match (&br[i].op, &br[i + 1].op) {
+                (BasicBlockOpcode::PushTrue, BasicBlockOpcode::JumpTrue(target))
+                | (BasicBlockOpcode::PushFalse, BasicBlockOpcode::JumpFalse(target)) => {
+                    br[i].op = BasicBlockOpcode::Jump(target.clone());
+                    br.remove(i + 1);
+                    continue;
+                }
+                (BasicBlockOpcode::PushTrue, BasicBlockOpcode::JumpFalse(_))
+                | (BasicBlockOpcode::PushFalse, BasicBlockOpcode::JumpTrue(_)) => {
+                    br[i].op = BasicBlockOpcode::Nop;
+                    br.remove(i + 1);
+                    continue;
+                }
+                _ => {}
+            }
+
+            i += 1;
+        }
+    }
+
     fn remove_instructions_after_terminal(&self) {
         let mut br = self.writer.borrow_mut();
         for i in 0..br.len() {
@@ -564,6 +588,7 @@ impl BasicBlock {
 
     fn run_optimize_passes(&self, cv: &ConstantValues) {
         self.optimize_true_false(cv);
+        self.optimize_redundant_conditional_jumps();
         self.remove_redundant_local_reads();
         self.remove_redundant_named_reads();
         self.remove_store_load_sequence();
