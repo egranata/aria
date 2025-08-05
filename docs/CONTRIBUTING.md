@@ -3,16 +3,22 @@
 
 # Contributing to Aria
 
-First of all, thank you for considering contributing to Aria! We're excited you're here and look forward to your help in making Aria a great language for everyone. This document provides guidelines to help you get started.
+First of all, thank you for considering contributing to Aria! We're excited you're here.
+
+Whether you’re fixing bugs, writing tests, or improving documentation, every contribution counts. Your help makes Aria better for everyone!
+
+This document provides guidelines to help you get started.
 
 ## How Can I Contribute?
 
 There are many ways to contribute, and all of them are valuable.
 
 *   **Reporting Bugs:** If you find a bug, please [open an issue](https://github.com/egranata/aria/issues) and provide as much detail as possible, including the version of Aria you're using (commit hash most likely), your operating system, the code that triggered the bug, and the full error message.
-*   **Suggesting Enhancements:** Have an idea for a new feature or a way to improve an existing one? We'd love to hear it. Please [open an issue](https://github.com/egranata/aria/issues) to start a discussion.
+*   **Suggesting Enhancements:** Have an idea for a new feature or an improvement? Whether it’s a core language change, an optimization, or an update to the standard library, we’d love to hear your suggestions. Please [open an issue](https://github.com/egranata/aria/issues) to start the discussion.
 *   **Improving Documentation:** Great documentation is key. If you see a typo, find something confusing, or think a section is missing, please feel free to open an issue or a pull request.
 *   **Writing Code:** If you're ready to write some code, that's fantastic! Please look for an existing issue that you'd like to work on. If you're thinking of something else that needs worked on, please file a GitHub issue to coordinate your contribution and avoid duplication of effort.
+
+Some issues are labeled [good starter bugs](https://github.com/egranata/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) or [help wanted](https://github.com/egranata/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22). If you're looking to start contributing to Aria, these could be great starting places.
 
 ## Your First Code Contribution
 
@@ -38,7 +44,7 @@ Once you know you're in a happy steady state, create a new branch for your chang
 git checkout -b fix-issue-42-json-parsing-error
 ```
 
-Please consider installing the pre-commit hooks, as they will automatically run checks on your code prior to submitting.
+We recommend installing the [pre-commit hooks](https://pre-commit.com/#install), as they automatically run checks on your code to ensure that it adheres to the project's style and quality standards.
 
 ### 3. Write Your Code
 
@@ -55,17 +61,29 @@ The Aria compiler and VM are written in Rust, as are some core parts of the Aria
 Once your changes are ready, it's time to submit a pull request.
 
 1.  Commit your changes with a clear and descriptive commit message.
-    ```shell
-    git commit -m "Fix: Correctly handle null values in JSON parser"
+    `git commit`
+
+    (in your text editor of choice)
+
     ```
+    Fix an issue with parsing nested lists in JSON
+
+    When a nested JSON list was being parsed, the parser state was incorrectly
+    set to look for a { instead of ]. Fix this by keeping track of the nesting
+    structure correctly.
+
+    Fixes #42
+    ```
+
+    There is no specific required format, as long as your commit message describes what you changed and (perhaps more importantly *why* you changed it), and adds a `Fixes` tag, if your patch is fixing a GitHub issue.
+
 2.  Push your branch to your fork on GitHub:
     ```shell
     git push origin fix-issue-42-json-parsing-error
     ```
-3.  Go to the original Aria repository on GitHub and open a pull request.
-4.  In the pull request description, please:
-    *   Describe the change you made and *why* you made it.
-    *   Link to the issue you are resolving (e.g., "Fixes #42").
-5.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged.
+
+3.  Go to the original Aria repository on GitHub and open a pull request. If you use the github tool, `gh pr create` will also guide you through some of these steps.
+
+4.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged.
 
 Thank you again for your contribution. It's an exciting time for Aria, and we're happy to have you on board!
