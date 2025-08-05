@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+import Instant from aria.date.instant;
+
+func main() {
+    val now = Instant.now();
+
+    assert now.year >= 2025;
+    assert now.month >= 1 && now.month <= 12;
+    assert now.day >= 1 && now.day <= 31;
+    assert now.hour >= 0 && now.hour <= 23;
+    assert now.minute >= 0 && now.minute <= 59;
+    assert now.second >= 0 && now.second <= 59;
+    assert now.millisecond >= 0 && now.millisecond <= 999;
+}

@@ -172,6 +172,12 @@ struct Instant {
         return i;
     }
 
+    type func now() {
+        val tz_offset = timezone_info()[0];
+
+        return Instant.from_localtime_unix_timestamp(now(), tz_offset);
+    }
+
     instance func prettyprint() {
         return "{0} {1} {2} {3:2}:{4:2}:{5:2}.{6:3}{7}".format(
             MONTH_NAMES[this.month - 1],

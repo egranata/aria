@@ -1752,6 +1752,7 @@ version = "0.9.0"
 dependencies = [
  "compiler-lib",
  "enum-as-inner",
+ "libc",
  "libloading",
  "opcodes-lib",
  "parser-lib",

@@ -64,7 +64,7 @@ Aria has a simple yet usable standard library, with date/time handling, networki
 import Instant from aria.date.instant;
 
 func main() {
-    val now = Instant.from_unix_timestamp(now());
+    val now = Instant.now();
 
     println("The current date and time is: {0}".format(now));
 }

@@ -308,6 +308,7 @@ This module provides a struct for representing a specific moment in time, simila
     *   `offset_ms` (Int): The timezone offset from UTC in milliseconds.
 
     **Methods:**
+    *   `type func now()`: Creates a new `Instant` object that represent the current time, in the local timezone.
     *   `type func from_unix_timestamp(timestamp_ms)`: Creates a new `Instant` object from a provided Unix timestamp (in milliseconds), assuming UTC.
     *   `type func from_localtime_unix_timestamp(timestamp_ms, offset_minutes)`: Creates a new `Instant` object from a provided Unix timestamp (in milliseconds), adjusted for a given timezone offset (in minutes).
     *   `instance func prettyprint()`: Returns a formatted string representation of the `Instant`.
