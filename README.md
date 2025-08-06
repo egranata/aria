@@ -1,5 +1,5 @@
 # Aria: A Fresh, Safe, and Flexible Language for High-Level Development
-[![Build Status](https://github.com/egranata/aria/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/egranata/aria/actions/workflows/rust.yml)
+[![Linux Build](https://github.com/egranata/aria/actions/workflows/linux_build_test.yml/badge.svg?branch=master)](https://github.com/egranata/aria/actions/workflows/linux_build_test.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/Docs-Available-blue.svg)](https://egranata.github.io/aria/)
 [![Contributors](https://img.shields.io/github/contributors/egranata/aria)](https://github.com/egranata/aria/graphs/contributors)
