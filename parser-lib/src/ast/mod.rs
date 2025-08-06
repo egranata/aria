@@ -800,14 +800,14 @@ pub struct ForStatement {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReturnStatement {
     pub loc: SourcePointer,
-    pub val: Expression,
+    pub val: Option<Expression>,
 }
 
 impl From<&Expression> for ReturnStatement {
     fn from(val: &Expression) -> Self {
         Self {
             loc: val.loc().clone(),
-            val: val.clone(),
+            val: Some(val.clone()),
         }
     }
 }

@@ -9,7 +9,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LambdaFunction {
             aria_parser::ast::LambaBody::Expression(e) => {
                 let ret_stmt = ReturnStatement {
                     loc: e.loc().clone(),
-                    val: e.clone(),
+                    val: Some(e.clone()),
                 };
                 CodeBlock {
                     loc: ret_stmt.loc.clone(),
