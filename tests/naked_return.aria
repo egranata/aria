@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+func returns_unit(x: Bool, y: Any) {
+    if x {
+        return y;
+    } else {
+        return;
+    }
+
+    assert false; # this should never be reached
+}
+
+func returns_fallthrough(x: Bool, y: Any) {
+    if x {
+        return y;
+    }
+}
+
+func main() {
+    val five = returns_unit(true, 5);
+    val unit = returns_unit(false, 5);
+
+    assert five == 5;
+    assert unit == Unit::unit;
+
+    val five_again = returns_fallthrough(true, 5);
+    val unit_again = returns_fallthrough(false, 5);
+
+    assert five_again == 5;
+    assert unit_again == Unit::unit;
+}
