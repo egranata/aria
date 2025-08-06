@@ -45,6 +45,7 @@ impl ariadne::Cache<&String> for StringCache {
 }
 
 fn report_from_msg_and_location(msg: &str, locations: &[&SourcePointer]) {
+    let config = ariadne::Config::default().with_index_type(ariadne::IndexType::Byte);
     let magenta = Color::Magenta;
     let primary_span = &locations[0];
     let mut report = Report::build(
@@ -54,7 +55,8 @@ fn report_from_msg_and_location(msg: &str, locations: &[&SourcePointer]) {
             primary_span.location.start..primary_span.location.stop,
         ),
     )
-    .with_message(msg);
+    .with_message(msg)
+    .with_config(config);
     let mut cache = StringCache::default();
     for loc in locations {
         report = report.with_label(
