@@ -1,4 +1,4 @@
-name: Rust
+name: LinuxBuildAndTest
 permissions:
   contents: read
 
