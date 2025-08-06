@@ -14,7 +14,7 @@ impl From<&str> for StringValue {
 
 impl StringValue {
     pub fn len(&self) -> usize {
-        self.imp.val.len()
+        self.imp.val.chars().count()
     }
 
     pub fn is_empty(&self) -> bool {

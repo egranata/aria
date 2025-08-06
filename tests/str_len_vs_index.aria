@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val message = "a😀😃😄 😁😆😅 😂🤣🥲 🥹z";
+
+    assert message.len() == 15;
+    assert message[0] == 'a';
+    assert message[1] == '😀';
+    assert message[2] == '😃';
+    assert message[3] == '😄';
+    assert message[4] == ' ';
+    assert message[5] == '😁';
+    assert message[6] == '😆';
+    assert message[7] == '😅';
+    assert message[8] == ' ';
+    assert message[9] == '😂';
+    assert message[10] == '🤣';
+    assert message[11] == '🥲';
+    assert message[12] == ' ';
+    assert message[13] == '🥹';
+    assert message[14] == 'z';
+}
