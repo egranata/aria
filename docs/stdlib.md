@@ -201,7 +201,7 @@ This module provides a `Path` struct for interacting with the file system.
     *   `is_directory()`: Returns `true` if the path points to a directory, `false` otherwise.
     *   `is_file()`: Returns `true` if the path points to a regular file, `false` otherwise.
     *   `is_symlink()`: Returns `true` if the path points to a symbolic link, `false` otherwise.
-    *   `new_canonical()`: Returns a new `Path` object representing the canonical, absolute path (resolving symlinks).
+    *   `new_canonical()`: Returns a new `Path` object representing the canonical, absolute path (resolving symlinks). Returns `Maybe::None` if the canonical path cannot be resolved.
     *   `size()`: Returns the size of the file at this path in bytes as an `Int`. Returns `Maybe::None` if not a file or path does not exist.
     *   `get_filename()`: Returns the final component of the path (the file or directory name) as a `String`. Returns `Maybe::None` if the path has no filename component.
     *   `get_extension()`: Returns the extension of the file at this path as a `String`. Returns `Maybe::None` if the path has no extension.
