@@ -3,7 +3,10 @@ import Path from aria.io.path;
 
 func main() {
     val p = Path.new("/usr/bin/../bin/../lib/../../usr/bin/ls");
-    val q = p.new_canonical();
+    val q = p.new_canonical().unwrap_Some();
 
     assert q.prettyprint() == "/usr/bin/ls";
+
+    val p = Path.new("/no/such/path/would/ever/exist/right/c:\makeit/really/confusing/too.txt");
+    assert p.new_canonical().is_None();
 }

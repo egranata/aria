@@ -422,7 +422,7 @@ impl BuiltinFunctionImpl for Canonical {
     fn eval(
         &self,
         frame: &mut Frame,
-        _: &mut vm::VirtualMachine,
+        vm: &mut vm::VirtualMachine,
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
@@ -436,7 +436,17 @@ impl BuiltinFunctionImpl for Canonical {
         );
 
         let rfo = rust_obj.content.borrow_mut();
-        let canonical_rfo = ok_or_err!(rfo.canonicalize(), VmErrorReason::UnexpectedVmState.into());
+        let canonical_rfo = match rfo.canonicalize() {
+            Ok(path) => path,
+            Err(_) => {
+                let none = ok_or_err!(
+                    vm.builtins.create_maybe_none(),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(none);
+                return Ok(RunloopExit::Ok(()));
+            }
+        };
 
         let canonical_object = Object::new(aria_object.get_struct());
         let canonical_rfo = MutablePath {
@@ -446,7 +456,13 @@ impl BuiltinFunctionImpl for Canonical {
         let canonical_path_obj = OpaqueValue::new(canonical_rfo);
         canonical_object.write("__path", RuntimeValue::Opaque(canonical_path_obj));
 
-        frame.stack.push(RuntimeValue::Object(canonical_object));
+        let canonical_object = RuntimeValue::Object(canonical_object);
+        let some = ok_or_err!(
+            vm.builtins.create_maybe_some(canonical_object),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+
+        frame.stack.push(some);
         Ok(RunloopExit::Ok(()))
     }
 
