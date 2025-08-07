@@ -6,6 +6,8 @@ use std::{
     rc::Rc,
 };
 
+use crate::runtime_value::function::{BuiltinFunctionImpl, Function};
+
 use super::{
     RuntimeValue,
     enum_case::{EnumValue, EnumValueImpl},
@@ -150,6 +152,15 @@ impl Enum {
 
     pub fn list_attributes(&self) -> HashSet<String> {
         self.imp.list_attributes()
+    }
+
+    pub fn insert_builtin<T>(&self)
+    where
+        T: 'static + Default + BuiltinFunctionImpl,
+    {
+        let t = T::default();
+        let name = t.name().to_owned();
+        self.store_named_value(&name, RuntimeValue::Function(Function::builtin_from(t)));
     }
 }
 
