@@ -130,8 +130,8 @@ struct Instant {
             months = LEAP_CUMULATIVE_DAYS;
         }
 
-        val month = 1;
-        for i in Range.from(0).through(11) {
+        val month = 12;
+        for i in Range.from(1).through(11) {
             if day_of_year < months[i] {
                 month = i;
                 break;
