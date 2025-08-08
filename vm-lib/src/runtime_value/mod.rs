@@ -564,14 +564,14 @@ impl RuntimeValue {
     }
 
     pub fn prettyprint(&self, cur_frame: &mut Frame, vm: &mut VirtualMachine) -> String {
-        if let Ok(ppf) = self.read_attribute("prettyprint", &vm.builtins) {
-            if ppf.eval(0, cur_frame, vm, false).is_ok() {
-                // either check that the stack is doing ok - or have eval return the value
-                if let Some(val) = cur_frame.stack.try_pop() {
-                    if let Some(sv) = val.as_string() {
-                        return sv.raw_value().clone();
-                    }
-                }
+        if let Ok(ppf) = self.read_attribute("prettyprint", &vm.builtins)
+            && ppf.eval(0, cur_frame, vm, false).is_ok()
+        {
+            // either check that the stack is doing ok - or have eval return the value
+            if let Some(val) = cur_frame.stack.try_pop()
+                && let Some(sv) = val.as_string()
+            {
+                return sv.raw_value().clone();
             }
         }
 
@@ -767,7 +767,7 @@ impl RuntimeValue {
             let val = t.read_attribute(attrib_name)?;
             if let Some(rf) = val.as_function() {
                 if !rf.attribute().is_type_method() {
-                    return Err(AttributeError::InvalidFunctionBinding);
+                    Err(AttributeError::InvalidFunctionBinding)
                 } else {
                     Ok(self.bind(rf.clone()))
                 }

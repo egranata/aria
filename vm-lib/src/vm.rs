@@ -819,34 +819,28 @@ impl VirtualMachine {
                 }
             }
             Opcode::ReadNamed(n) => {
-                if let Some(ct) = this_module.load_indexed_const(n) {
-                    if let Some(sv) = ct.as_string() {
-                        frame.stack.push(self.read_named_symbol(this_module, sv)?);
-                    }
+                if let Some(ct) = this_module.load_indexed_const(n)
+                    && let Some(sv) = ct.as_string()
+                {
+                    frame.stack.push(self.read_named_symbol(this_module, sv)?);
                 }
             }
             Opcode::WriteNamed(n) => {
                 let x = pop_or_err!(next, frame, op_idx);
-                if let Some(ct) = this_module.load_indexed_const(n) {
-                    if let Some(sv) = ct.as_string() {
-                        if !this_module.store_typechecked_named_value(sv, x, &self.builtins) {
-                            return build_vm_error!(
-                                VmErrorReason::UnexpectedType,
-                                next,
-                                frame,
-                                op_idx
-                            );
-                        }
-                    }
+                if let Some(ct) = this_module.load_indexed_const(n)
+                    && let Some(sv) = ct.as_string()
+                    && !this_module.store_typechecked_named_value(sv, x, &self.builtins)
+                {
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
             Opcode::TypedefNamed(n) => {
                 let t = pop_or_err!(next, frame, op_idx);
                 if let Some(t) = t.as_type() {
-                    if let Some(ct) = this_module.load_indexed_const(n) {
-                        if let Some(sv) = ct.as_string() {
-                            this_module.typedef_named_value(sv, t.clone());
-                        }
+                    if let Some(ct) = this_module.load_indexed_const(n)
+                        && let Some(sv) = ct.as_string()
+                    {
+                        this_module.typedef_named_value(sv, t.clone());
                     }
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
