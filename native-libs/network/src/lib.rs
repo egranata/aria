@@ -31,13 +31,13 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
             .timeout(std::time::Duration::from_secs_f64(this_timeout.raw_value()));
         for i in 0..headers.len() {
             let header = headers.get_at(i).unwrap();
-            if let Some(list) = header.as_list() {
-                if list.len() == 2 {
-                    let key = list.get_at(0).unwrap();
-                    let value = list.get_at(1).unwrap();
-                    if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
-                        client = client.header(key.raw_value(), value.raw_value());
-                    }
+            if let Some(list) = header.as_list()
+                && list.len() == 2
+            {
+                let key = list.get_at(0).unwrap();
+                let value = list.get_at(1).unwrap();
+                if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
+                    client = client.header(key.raw_value(), value.raw_value());
                 }
             }
         }
@@ -132,13 +132,13 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
             .timeout(std::time::Duration::from_secs_f64(this_timeout.raw_value()));
         for i in 0..headers.len() {
             let header = headers.get_at(i).unwrap();
-            if let Some(list) = header.as_list() {
-                if list.len() == 2 {
-                    let key = list.get_at(0).unwrap();
-                    let value = list.get_at(1).unwrap();
-                    if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
-                        client = client.header(key.raw_value(), value.raw_value());
-                    }
+            if let Some(list) = header.as_list()
+                && list.len() == 2
+            {
+                let key = list.get_at(0).unwrap();
+                let value = list.get_at(1).unwrap();
+                if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
+                    client = client.header(key.raw_value(), value.raw_value());
                 }
             }
         }

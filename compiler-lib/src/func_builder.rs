@@ -434,14 +434,13 @@ impl BasicBlock {
     fn optimize_true_false(&self, cv: &ConstantValues) {
         let mut br = self.writer.borrow_mut();
         for i in 0..br.len() {
-            if let BasicBlockOpcode::ReadNamed(idx) = &br[i].op {
-                if let Some(crate::constant_value::ConstantValue::String(x)) = cv.get(*idx as usize)
-                {
-                    if x == "true" {
-                        br[i].op = BasicBlockOpcode::PushTrue;
-                    } else if x == "false" {
-                        br[i].op = BasicBlockOpcode::PushFalse;
-                    }
+            if let BasicBlockOpcode::ReadNamed(idx) = &br[i].op
+                && let Some(crate::constant_value::ConstantValue::String(x)) = cv.get(*idx as usize)
+            {
+                if x == "true" {
+                    br[i].op = BasicBlockOpcode::PushTrue;
+                } else if x == "false" {
+                    br[i].op = BasicBlockOpcode::PushFalse;
                 }
             }
         }
@@ -546,13 +545,12 @@ impl BasicBlock {
         }
 
         for i in 0..br.len() - 1 {
-            if let BasicBlockOpcode::WriteLocal(x) = br[i].op {
-                if let BasicBlockOpcode::ReadLocal(y) = br[i + 1].op {
-                    if x == y {
-                        br[i].op = BasicBlockOpcode::Dup;
-                        br[i + 1].op = BasicBlockOpcode::WriteLocal(x);
-                    }
-                }
+            if let BasicBlockOpcode::WriteLocal(x) = br[i].op
+                && let BasicBlockOpcode::ReadLocal(y) = br[i + 1].op
+                && x == y
+            {
+                br[i].op = BasicBlockOpcode::Dup;
+                br[i + 1].op = BasicBlockOpcode::WriteLocal(x);
             }
         }
     }

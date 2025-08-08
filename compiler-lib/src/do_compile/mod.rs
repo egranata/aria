@@ -467,17 +467,13 @@ fn emit_operator_decl_compile(op: &OperatorDecl, params: &mut CompileParams) -> 
         }
     };
 
-    if let Some(arity) = op_info.arity {
-        if op.args.len() != arity {
-            return Err(CompilationError {
-                loc: op.loc.clone(),
-                reason: CompilationErrorReason::OperatorArityMismatch(
-                    op_symbol,
-                    arity,
-                    op.args.len(),
-                ),
-            });
-        }
+    if let Some(arity) = op_info.arity
+        && op.args.len() != arity
+    {
+        return Err(CompilationError {
+            loc: op.loc.clone(),
+            reason: CompilationErrorReason::OperatorArityMismatch(op_symbol, arity, op.args.len()),
+        });
     }
 
     if op.reverse && op_info.reverse_name.is_empty() {
