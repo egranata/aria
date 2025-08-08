@@ -8,6 +8,9 @@ use crate::{
     grammar::Rule,
 };
 
+// TODO: process string literals in the compiler code, not the parser
+// the parser has no good way to report an error, so complete the processing
+// in the compiler where we can fail on an invalid escape sequence
 fn process_string_literal(s: &str) -> String {
     fn process_string_escapes(s: &str) -> String {
         let mut result = String::new();
@@ -28,6 +31,35 @@ fn process_string_literal(s: &str) -> String {
                         '\\' => {
                             result.push('\\');
                             chars.next();
+                        }
+                        'X' | 'x' => {
+                            let _ = chars.next();
+                            if let (Some(high), Some(low)) = (chars.next(), chars.next())
+                                && let (Some(high), Some(low)) =
+                                    (high.to_digit(16), low.to_digit(16))
+                            {
+                                result.push((high << 4 | low) as u8 as char);
+                            }
+                        }
+                        'U' | 'u' => {
+                            let _ = chars.next();
+                            if chars.peek() == Some(&'{') {
+                                let _ = chars.next();
+                                let mut hex_digits = String::new();
+                                while let Some(&next) = chars.peek() {
+                                    if next == '}' {
+                                        let _ = chars.next();
+                                        break;
+                                    } else {
+                                        hex_digits.push(chars.next().unwrap());
+                                    }
+                                }
+                                if let Ok(codepoint) = u32::from_str_radix(&hex_digits, 16)
+                                    && let Some(chr) = char::from_u32(codepoint)
+                                {
+                                    result.push(chr);
+                                }
+                            }
                         }
                         _ => {
                             result.push(c);
