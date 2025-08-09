@@ -1,5 +1,6 @@
 # Aria: A Fresh, Safe, and Flexible Language for High-Level Development
 [![Linux Build](https://github.com/egranata/aria/actions/workflows/linux_build_test.yml/badge.svg?branch=master)](https://github.com/egranata/aria/actions/workflows/linux_build_test.yml)
+[![Mac Build](https://github.com/egranata/aria/actions/workflows/macos_build_test.yml/badge.svg?branch=master)](https://github.com/egranata/aria/actions/workflows/macos_build_test.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/Docs-Available-blue.svg)](https://egranata.github.io/aria/)
 [![Contributors](https://img.shields.io/github/contributors/egranata/aria)](https://github.com/egranata/aria/graphs/contributors)
@@ -79,7 +80,7 @@ func main() {
 }
 ```
 
-Aria is currently only supported on Linux. Contributions for other operating systems are welcome and encouraged!
+Aria is currently supported on Linux and macOS. Contributions for other operating systems are welcome and encouraged!
 
 ## A Taste of Aria
 
