@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 func main() {
-    # only run a very minimal test; this is likely to only work on Linux but it should do something
+    # only run a very minimal test
 
+    # TODO: on macOS, this is nominally deprecated and it should be "id -un" instead
+    # however, it appears to still work
     val whoami = system("whoami");
     assert whoami == 0;
     assert whoami.stdout != "";

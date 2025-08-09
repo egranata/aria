@@ -20,7 +20,7 @@ Aria offers:
 
 Aria has a simple yet usable standard library, with date/time handling, networking, file system access, JSON support and more.
 
-Aria is currently only supported on Linux. Contributions for other operating systems are welcome and encouraged!
+Aria is currently supported on Linux and macOS. Contributions for other operating systems are welcome and encouraged!
 
 ## A Taste of Aria
 
