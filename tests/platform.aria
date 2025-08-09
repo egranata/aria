@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+import Platform from aria.system.platform;
+
+func main() {
+    val platform = Platform.local();
+
+    assert platform.is_Linux() || platform.is_macOS();
+
+    match platform {
+        case Linux(platform) => {
+            assert platform.name() == "Linux";
+            assert platform.prettyprint().has_prefix("Linux");
+        }
+        case macOS(platform) => {
+            assert platform.name() == "macOS";
+            assert platform.prettyprint().has_prefix("macOS");
+        }
+    }
+}

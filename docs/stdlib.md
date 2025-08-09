@@ -676,6 +676,60 @@ This module provides utility functions for finding minimum, maximum, and min-max
 *   `min_max_with_comparator(l: List, cmp)`: Returns a `Box` object with `.min` and `.max` fields, containing the minimum and maximum values in the provided list `l` using a custom comparator function `cmp`. The `cmp` function should take two arguments and return a `CompareResult`.
 
 ---
+
+# `aria.system` Module Reference
+
+This document provides a reference for the `aria.system` module, which contains utilities for interacting with the operating system.
+
+---
+
+## Modules
+
+### `aria.platform.system` Module Reference
+
+This module provides functionality for representing and identifying the operating system platform at runtime.
+
+#### Enums
+
+*   **`Platform`**
+An enumeration representing the supported operating system platforms.
+
+    **Cases:**
+    *   `Linux(Platform.LinuxPlatform)`: Represents a Linux platform, with kernel version information.
+    *   `macOS(Platform.macOSPlatform)`: Represents a macOS platform, with OS build information.
+    *   `Unknown`: Represents an unrecognized or unsupported platform.
+
+    **Methods:**
+    *   `prettyprint()`: Returns a formatted string describing the platform.  
+    *   name()`: Returns the platform name as a `String`.  
+
+---
+
+## Structs
+
+*   **`Platform.LinuxPlatform`**
+Represents Linux-specific platform data.
+
+    **Fields:**
+    *   `kernel_version` (`String`): The Linux kernel version string.
+
+    **Methods:**
+    *   `type func new(kernel_version: String)`: Creates a new `LinuxPlatform` instance with the specified kernel version.
+    *   `name()`: Returns `"Linux"`.
+
+---
+
+*   **`Platform.macOSPlatform`**
+Represents macOS-specific platform data.
+
+    **Fields:**
+    *   `os_build` (`String`): The macOS build identifier.
+
+    **Methods:**
+    *   `type func new(os_build: String)`: Creates a new `macOSPlatform` instance with the specified OS build identifier.
+    *   `name()`: Returns `"macOS"`.
+---
+
 # `aria.range` Module Reference
 
 This document provides a reference for the `aria.range` module, which contains utilities for creating and manipulating numeric ranges.
