@@ -121,6 +121,43 @@ impl BuiltinFunctionImpl for FpInt {
     }
 }
 
+fn float_format(n: f64, fmt: &str) -> String {
+    if let Some(dot_pos) = fmt.find('.') {
+        let digits = fmt[dot_pos + 1..].parse::<usize>().unwrap_or(0);
+        format!("{n:.digits$}")
+    } else {
+        n.to_string()
+    }
+}
+
+#[derive(Default)]
+struct Prettyprint {}
+impl BuiltinFunctionImpl for Prettyprint {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        _: &mut crate::vm::VirtualMachine,
+    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        let this = VmBuiltins::extract_arg(frame, |x| x.as_float().cloned())?.raw_value();
+        let format_style = VmBuiltins::extract_arg(frame, |x| x.as_string().cloned())?.raw_value();
+        let output_string = float_format(this, &format_style);
+        frame.stack.push(RuntimeValue::String(output_string.into()));
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> u8 {
+        2_u8
+    }
+
+    fn name(&self) -> &str {
+        "prettyprint"
+    }
+}
+
 pub(super) fn insert_float_builtins(builtins: &mut VmBuiltins) {
     let fp_builtin = BuiltinType::new(crate::runtime_value::builtin_type::BuiltinValueKind::Float);
 
@@ -128,6 +165,8 @@ pub(super) fn insert_float_builtins(builtins: &mut VmBuiltins) {
     fp_builtin.insert_builtin::<FpFloor>();
     fp_builtin.insert_builtin::<FpCeil>();
     fp_builtin.insert_builtin::<FpInt>();
+
+    fp_builtin.insert_builtin::<Prettyprint>();
 
     fp_builtin.write("inf", RuntimeValue::Float(f64::INFINITY.into()));
     fp_builtin.write("nan", RuntimeValue::Float(f64::NAN.into()));

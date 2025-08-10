@@ -199,7 +199,7 @@ struct Decimal {
         }
     }
 
-    func prettyprint() {
+    func prettyprint(format: String) {
         val abs_value_str = prettyprint(this.value.abs());
         val sign = "";
         if this.value < 0 { sign = "-"; }
@@ -211,14 +211,33 @@ struct Decimal {
         val value_str = abs_value_str;
         val len = value_str.len();
 
-        if len <= this.scale {
-            return sign + "0." + "0" * (this.scale - len) + value_str;
+        val integer_part = sign + (len <= this.scale ? "0" : value_str.substring(0, len - this.scale - 1));
+        val fractional_part = len <= this.scale ? "0" * (this.scale - len) + value_str : value_str.substring(len - this.scale, len - 1);
+
+        if format.len() > 0 && format[0] == '.' {
+            format = format.substring(1, format.len());
+            match Int.parse(format) {
+                case Some(count) => {
+                    if count == 0 {
+                        return integer_part;
+                    } else {
+                        if count < fractional_part.len() {
+                            val next_digit = fractional_part[count-1];
+                            if next_digit == '5' || next_digit == '6' || next_digit == '7' || next_digit == '8' || next_digit == '9' {
+                                val incremented = Int.parse(fractional_part.substring(0, count-1)).unwrap_Some() + 1;
+                                fractional_part = "{0}".format(incremented);
+                            } else {
+                                fractional_part = fractional_part.substring(0, count-1);
+                            }
+                        } else {
+                            fractional_part = fractional_part.substring(0, count-1);
+                        }
+                    }
+                }
+            }
         }
 
-        val integer_part = value_str.substring(0, len - this.scale - 1);
-        val fractional_part = value_str.substring(len - this.scale, len - 1);
-        
-        return sign + integer_part + "." + fractional_part;
+        return integer_part + "." + fractional_part;
     }
 
     include TotalOrdering

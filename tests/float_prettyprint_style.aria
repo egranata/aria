@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val f = 123.4567;
+    val g = -0.004321;
+
+    assert "{0}".format(f) == "123.4567";
+    assert "{0:.2}".format(f) == "123.46";
+    assert "{0:.0}".format(f) == "123";
+    assert "{0:.4}".format(f) == "123.4567";
+    assert "{0:.1}".format(g) == "-0.0";
+    assert "{0:.3}".format(g) == "-0.004";
+}
