@@ -2,4 +2,4 @@
 *    @egranata
 
 # List more specific code owners here
-
+.github/workflows/macos* @enricobolzonello
