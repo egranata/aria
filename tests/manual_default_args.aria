@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+# accepts up to 5 arguments:
+# x,y required
+# z,w,t optional Ints
+# z defaults to 1
+# w defaults to 2
+# t defaults to 5
+func foo(x,y,...) {
+    if varargs.len() > 3 {
+        throw RuntimeError.MismatchedArgumentCount(RuntimeError.ArgcMismatch.new(5, 2 + varargs.len()));
+    }
+    val z = varargs.len() > 0 ? varargs[0] : 1;
+    val w = varargs.len() > 1 ? varargs[1] : 2;
+    val t = varargs.len() > 2 ? varargs[2] : 5;
+
+    return x + y + z * (w + t);
+}
+
+func main() {
+    assert foo(3,4) == 14;
+    assert foo(3,4,2) == 21;
+    assert foo(3,4,6,3) == 55;
+    assert foo(3,4,0,3,3) == 7;
+}
