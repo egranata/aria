@@ -41,6 +41,7 @@ impl BoundFunction {
         discard_result: bool,
     ) -> ExecutionResult<CallResult> {
         let mut new_frame = Frame::new_with_function(self.func().clone());
+        new_frame.set_argc(argc);
 
         if self.func().attribute().is_vararg() {
             if 1 + argc < self.func().arity() {

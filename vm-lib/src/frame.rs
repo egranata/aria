@@ -31,6 +31,7 @@ pub enum ControlBlock {
 
 pub struct Frame {
     pub stack: Stack<RuntimeValue>,
+    pub argc: u8,
     pub(crate) line_table: Option<LineTable>,
     pub(crate) ctrl_blocks: Stack<ControlBlock>,
     pub(crate) locals: Vec<LocalVariable>,
@@ -78,6 +79,7 @@ impl Frame {
     pub fn new_with_n_locals(n: u8) -> Self {
         let mut this = Self {
             stack: Default::default(),
+            argc: 0,
             line_table: None,
             ctrl_blocks: Default::default(),
             locals: Vec::with_capacity(n as usize),
@@ -91,6 +93,11 @@ impl Frame {
 
     pub(crate) fn set_line_table(&mut self, lt: Option<&LineTable>) -> &mut Self {
         self.line_table = lt.cloned();
+        self
+    }
+
+    pub(crate) fn set_argc(&mut self, argc: u8) -> &mut Self {
+        self.argc = argc;
         self
     }
 

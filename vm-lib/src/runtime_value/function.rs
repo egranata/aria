@@ -289,6 +289,7 @@ impl Function {
         discard_result: bool,
     ) -> ExecutionResult<CallResult> {
         let mut new_frame = Frame::new_with_function(self.clone());
+        new_frame.set_argc(argc);
 
         if self.attribute().is_vararg() {
             if argc < self.arity() {

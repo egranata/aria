@@ -7,7 +7,9 @@ use std::{
 use aria_compiler::{bc_reader::BytecodeReader, compile_from_source, module::CompiledModule};
 use aria_parser::ast::{SourceBuffer, prettyprint::printout_accumulator::PrintoutAccumulator};
 use haxby_opcodes::{
-    Opcode, enum_case_attribs::CASE_HAS_PAYLOAD, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE,
+    Opcode,
+    enum_case_attribs::CASE_HAS_PAYLOAD,
+    runtime_value_ids::{RUNTIME_VALUE_FRAME_ARGC, RUNTIME_VALUE_THIS_MODULE},
 };
 
 use crate::{
@@ -470,6 +472,11 @@ impl VirtualMachine {
             Opcode::PushRuntimeValue(n) => match n {
                 RUNTIME_VALUE_THIS_MODULE => {
                     frame.stack.push(RuntimeValue::Module(this_module.clone()));
+                }
+                RUNTIME_VALUE_FRAME_ARGC => {
+                    frame
+                        .stack
+                        .push(RuntimeValue::Integer((frame.argc as i64).into()));
                 }
                 _ => {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);

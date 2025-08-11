@@ -89,6 +89,7 @@ use function_attribs::*;
 #[rustfmt::skip]
 pub mod runtime_value_ids {
     pub const RUNTIME_VALUE_THIS_MODULE:   u8 = 1;
+    pub const RUNTIME_VALUE_FRAME_ARGC:    u8 = 2;
 }
 
 #[allow(unused_imports)]
