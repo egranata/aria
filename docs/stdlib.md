@@ -685,7 +685,7 @@ This document provides a reference for the `aria.system` module, which contains 
 
 ## Modules
 
-### `aria.platform.system` Module Reference
+### `aria.system.platform` Module Reference
 
 This module provides functionality for representing and identifying the operating system platform at runtime.
 
@@ -728,6 +728,61 @@ Represents macOS-specific platform data.
     **Methods:**
     *   `type func new(os_build: String)`: Creates a new `macOSPlatform` instance with the specified OS build identifier.
     *   `name()`: Returns `"macOS"`.
+---
+
+### `aria.system.coloring`
+
+This module provides utilities for coloring terminal output using ANSI escape codes.
+
+#### **Enums**
+
+*   **`Color`**
+    An enumeration representing standard terminal colors.
+
+    **Cases:**
+    *   `Black`, `Red`, `Green`, `Yellow`, `Blue`, `Magenta`, `Cyan`, `White`
+    *   `BrightBlack`, `BrightRed`, `BrightGreen`, `BrightYellow`, `BrightBlue`, `BrightMagenta`, `BrightCyan`, `BrightWhite`
+    *   `RGB(Color.RGB)`: Represents a 24-bit RGB color.
+
+#### **Structs**
+
+*   **`Color.RGB`**
+    A struct to represent a 24-bit RGB color value.
+
+    **Fields:**
+    *   `red` (Int): The red component (0-255).
+    *   `green` (Int): The green component (0-255).
+    *   `blue` (Int): The blue component (0-255).
+
+    **Methods:**
+    *   `type func new(red: Int, green: Int, blue: Int)`: Creates a new `RGB` color. Values are clamped to the 0-255 range.
+    *   `type func new_with_hex_string(s: String)`: Creates a new `RGB` color from a hex string (e.g., `#RRGGBB` or `RRGGBB`). Returns `Maybe::Some(Color.RGB)` on success, `Maybe::None` on failure.
+
+*   **`ColorScheme`**
+    A struct for defining a combination of text styles (foreground color, background color, bold).
+
+    **Methods:**
+    *   `type func new()`: Creates a new, empty `ColorScheme`.
+    *   `reset()`: Resets the color scheme to its default (empty) state.
+    *   `with_background_color(c: Color)`: Sets the background color for the scheme. Returns `this` for chaining.
+    *   `with_foreground_color(c: Color)`: Sets the foreground color for the scheme. Returns `this` for chaining.
+    *   `with_bold(b: Bool)`: Enables or disables the bold attribute for the scheme. Returns `this` for chaining.
+    *   `apply(s: String)`: Applies the defined color scheme to a given string `s`, returning a new string with the appropriate ANSI escape codes.
+
+#### **Extensions**
+
+*   **`extension String`**
+    Extends the built-in `String` type with methods for easily applying colors and styles.
+
+    **Methods:**
+    *   `with_background_color(c: Color)`: Applies the specified `Color` to the string's background.
+    *   `with_foreground_color(c: Color)`: Applies the specified `Color` to the string's foreground.
+    *   `with_bold()`: Applies bold styling to the string.
+    *   `with_style(s: ColorScheme)`: Applies a full `ColorScheme` to the string.
+    *   `black()`, `red()`, `green()`, `yellow()`, `blue()`, `magenta()`, `cyan()`, `white()`: Shorthand methods for setting the foreground color.
+    *   `black_bg()`, `red_bg()`, `green_bg()`, `yellow_bg()`, `blue_bg()`, `magenta_bg()`, `cyan_bg()`, `white_bg()`: Shorthand methods for setting the background color.
+    *   `bright_black()`, `bright_red()`, etc.: Shorthand methods for setting the bright foreground color.
+    *   `bright_black_bg()`, `bright_red_bg()`, etc.: Shorthand methods for setting the bright background color.
 ---
 
 # `aria.range` Module Reference
