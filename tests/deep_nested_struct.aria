@@ -9,7 +9,7 @@ struct A {
             }
 
             type func subtract(x,y) {
-                x - y;
+                return x - y;
             }
         }
         type func getD() {
@@ -26,7 +26,7 @@ struct A {
     }
 
     instance func multiply(x,y) {
-        x * y;
+        return x * y;
     }
 }
 

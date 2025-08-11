@@ -7,12 +7,12 @@ struct AddNumber {
     }
 
     func add(x) {
-        this.n + x;
+        return this.n + x;
     }
 }
 
 func perform_op(f,n) {
-    f(n);
+    return f(n);
 }
 
 func main() {
