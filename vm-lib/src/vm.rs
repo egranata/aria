@@ -1038,6 +1038,11 @@ impl VirtualMachine {
             Opcode::Jump(n) => {
                 reader.jump_to_index(n as usize);
             }
+            Opcode::JumpIfArgSupplied(arg, dst) => {
+                if frame.argc > arg {
+                    reader.jump_to_index(dst as usize);
+                }
+            }
             Opcode::Call(argc) => {
                 let x = pop_or_err!(next, frame, op_idx);
                 match x.eval(argc, frame, self, false) {

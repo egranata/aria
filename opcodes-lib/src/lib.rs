@@ -48,6 +48,7 @@ pub const OPCODE_BITWISE_OR: u8 = 61;
 pub const OPCODE_JUMP: u8 = 62;
 pub const OPCODE_JUMP_TRUE: u8 = 63;
 pub const OPCODE_JUMP_FALSE: u8 = 64;
+pub const OPCODE_JUMP_IF_ARG_SUPPLIED: u8 = 65;
 // ...
 pub const OPCODE_GUARD_ENTER: u8 = 70;
 pub const OPCODE_GUARD_EXIT: u8 = 71;
@@ -167,6 +168,7 @@ pub enum Opcode {
     JumpTrue(u16),
     JumpFalse(u16),
     Jump(u16),
+    JumpIfArgSupplied(u8, u16),
     Call(u8),
     Return,
     GuardEnter,
@@ -242,6 +244,7 @@ impl std::fmt::Display for Opcode {
             Self::JumpTrue(arg0) => write!(f, "JUMP_TRUE {arg0}"),
             Self::JumpFalse(arg0) => write!(f, "JUMP_FALSE {arg0}"),
             Self::Jump(arg0) => write!(f, "JUMP {arg0}"),
+            Self::JumpIfArgSupplied(arg0, arg1) => write!(f, "JUMP_IF_ARG_SUPPLIED {arg0} {arg1}"),
             Self::Call(arg0) => write!(f, "CALL {arg0}"),
             Self::Return => write!(f, "RETURN"),
             Self::GuardEnter => write!(f, "ENTER_GUARD"),
@@ -319,6 +322,7 @@ impl Opcode {
             Self::JumpTrue(_) => 3,
             Self::JumpFalse(_) => 3,
             Self::Jump(_) => 3,
+            Self::JumpIfArgSupplied(..) => 4,
             Self::Call(_) => 2,
             Self::Return => 1,
             Self::GuardEnter => 1,
