@@ -3,6 +3,7 @@ use std::cell::Cell;
 use crate::{SyntaxKind, lexer};
 use rowan::GreenNode;
 use rowan::GreenNodeBuilder;
+use SyntaxKind::*;
 
 impl From<SyntaxKind> for rowan::SyntaxKind {
     fn from(kind: SyntaxKind) -> Self {
@@ -15,7 +16,7 @@ enum Lang {}
 impl rowan::Language for Lang {
     type Kind = SyntaxKind;
     fn kind_from_raw(raw: rowan::SyntaxKind) -> Self::Kind {
-        assert!(raw.0 <= SyntaxKind::Arg as u16);
+        assert!(raw.0 <= Arg as u16);
         unsafe { std::mem::transmute::<u16, SyntaxKind>(raw.0) }
     }
     fn kind_to_raw(kind: Self::Kind) -> rowan::SyntaxKind {
@@ -50,30 +51,98 @@ pub fn parse(text: &str) -> Parse {
     
     impl Parser<'_> {
         fn parse(&mut self) {
-            self.file();
-        }
-
-        fn file(&mut self) {
             let m: MarkOpened = self.open(); 
 
-            while !self.eof() { 
-              if self.at(SyntaxKind::FuncKwd) {
-                self.func()
-              } else {
-                self.advance_with_error("expected a function"); 
-              }
+            while !self.eof() {
+                println!("current token: {:?}", self.tokens[self.pos]);
+                if self.at(FuncKwd) {
+                    self.func()
+                } else {
+                    self.advance_with_error("expected a function"); 
+                }
             }
-          
-            self.close(m, SyntaxKind::File); 
+            
+            self.close(m, File); 
         }
 
         fn func(&mut self) {
+            assert!(self.at(FuncKwd)); 
+            let m = self.open(); 
+          
+            self.expect(FuncKwd);
+            self.expect(Identifier);
+
+            if self.at(LeftParen) { 
+                self.param_list();
+            }
+            if self.eat(Arrow) {
+                self.type_expr();
+            }
+            if self.at(LeftBrace) { 
+                self.block();
+            }
+          
+            self.close(m, Func);
+        }
+
+        fn param_list(&mut self) {
+            assert!(self.at(LeftParen));
+            let m = self.open();
+          
+            self.expect(LeftParen); 
+            while !self.at(RightParen) && !self.eof() { 
+              if self.at(Identifier) { 
+                self.param();
+              } else {
+                break; 
+              }
+            }
+            self.expect(RightParen); 
+          
+            self.close(m, ParamList);
+        }
+
+        fn param(&mut self) {
+            assert!(self.at(Identifier));
+            let m = self.open();
+          
+            self.expect(Identifier);
+            self.expect(Colon);
+
+            self.type_expr();
             
+            if !self.at(RightParen) { 
+              self.expect(Comma);
+            }
+          
+            self.close(m, Param);
+        }
+
+        fn type_expr(&mut self) {
+            let m = self.open();
+            self.expect(Identifier);
+            self.close(m, TypeExpr);
+        }
+
+        fn block(&mut self) {
+            assert!(self.at(LeftBrace));
+            let m = self.open();
+          
+            self.expect(LeftBrace);
+            while !self.at(RightBrace) && !self.eof() {
+                //   match self.nth(0) {
+                //     _ => stmt_expr(p),
+                //   }
+                break
+            }
+            self.expect(RightBrace);
+          
+            self.close(m, Block);
         }
 
         fn open(&mut self) -> MarkOpened { 
             let mark = MarkOpened { index: self.events.len() };
-            self.events.push(Event::Open { kind: SyntaxKind::ErrorTree });
+            self.events.push(Event::Open { kind: ErrorTree });
             mark
         }
     
@@ -99,7 +168,7 @@ pub fn parse(text: &str) -> Parse {
             }
             self.fuel.set(self.fuel.get() - 1);
             self.tokens.get(self.pos + lookahead)
-                .map_or(SyntaxKind::Eof, |it| it.0)
+                .map_or(Eof, |it| it.0)
         }
     
         fn at(&self, kind: SyntaxKind) -> bool { 
@@ -128,7 +197,7 @@ pub fn parse(text: &str) -> Parse {
             // TODO: Error reporting.
             eprintln!("{error}");
             self.advance();
-            self.close(m, SyntaxKind::ErrorTree);
+            self.close(m, ErrorTree);
         }
 
         fn build_tree(self) -> Parse {
@@ -158,10 +227,8 @@ pub fn parse(text: &str) -> Parse {
         }
     }  
 
-    let mut tokens = lexer::lex(text);
-    tokens.reverse();
-    
-    let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(0), events: Vec::new(), errors: Vec::new() };
+    let tokens = lexer::lex(text);    
+    let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
     parser.parse();
     parser.build_tree()
 }
@@ -185,8 +252,37 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_basic() {
+    fn test_empty() {
         let input = "";
-        let parse_result = parse(input);
+        let node = parse(input).syntax();
+        assert_eq!(
+            format!("{:?}", node),
+            "File@0..0"
+        );
+        assert_eq!(node.children().count(), 0);
+    }
+
+    #[test]
+    fn test_empty_function() {
+        let input = "func empty_func() {}";
+        let node = parse(input).syntax();
+        assert_eq!(
+            format!("{:?}", node),
+            "File@0..18"
+        );
+        
+        assert_eq!(
+            convert_nodes_to_string(node),
+            vec![
+                "Func@0..18".to_string(),
+            ]
+        );
+    }
+
+    fn convert_nodes_to_string(node: SyntaxNode) -> Vec<String> {
+        node
+        .children_with_tokens()
+        .map(|child| format!("{:?}@{:?}", child.kind(), child.text_range()))
+        .collect::<Vec<_>>()
     }
 }

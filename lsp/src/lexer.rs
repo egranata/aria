@@ -174,12 +174,6 @@ pub enum SyntaxKind {
 
     #[token("u-")]
     UnaryMinus,
-    #[token("()")]
-    CallOperator,
-    #[token("[]=")]
-    IndexAssignOperator,
-    #[token("[]")]
-    IndexOperator,
 
     // compound types
     File,
@@ -194,6 +188,7 @@ pub enum SyntaxKind {
     ExprName,
     ExprCall,
     ExprBinary,
+    TypeExpr,
     Mixin,
     Struct,
     Ext,
