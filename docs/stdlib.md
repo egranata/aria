@@ -131,8 +131,8 @@ This module provides extensions to the built-in `Int` type.
     *   `hash()`: Returns the integer itself as its hash value.
     *   `abs()`: Returns the absolute value of the integer.
     *   `float()`: Converts the integer to a `Float`.
-    *   `type func parse(s: String)`: Attempts to parse a `String` into an `Int`. Returns `Maybe::Some(Int)` on success, `Maybe::None` on failure.
-
+    *   `type func parse(s: String)`: Attempts to parse a `String` into an `Int`. It attempts to automatically detect the base used (10 by default, with support for `0x`, `0b` and `0o` prefixes). Returns `Maybe::Some(Int)` on success, `Maybe::None` on failure.
+    *   `type func parse_radix(s: String, base: Int)`: Attempts to parse a `String` into an `Int` using the specified `base`. Returns `Maybe::Some(Int)` on success, `Maybe::None` on failure. Supports bases from 2 to 36, only supports a sequence of digits in the given base (no prefixes).
 ---
 
 ### `aria.core.list`
