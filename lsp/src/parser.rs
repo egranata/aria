@@ -1,8 +1,7 @@
 use std::cell::Cell;
 
 use crate::{SyntaxKind, lexer};
-use rowan::GreenNode;
-use rowan::GreenNodeBuilder;
+use rowan::{GreenNode, GreenNodeBuilder};
 use SyntaxKind::*;
 
 impl From<SyntaxKind> for rowan::SyntaxKind {
@@ -50,7 +49,7 @@ pub fn parse(text: &str) -> Parse {
     }
     
     impl Parser<'_> {
-        fn parse(&mut self) {
+        fn file(&mut self) {
             let m: MarkOpened = self.open(); 
 
             while !self.eof() {
@@ -229,7 +228,7 @@ pub fn parse(text: &str) -> Parse {
 
     let tokens = lexer::lex(text);    
     let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
-    parser.parse();
+    parser.file();
     parser.build_tree()
 }
 
@@ -250,39 +249,72 @@ impl Parse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
+
+    fn tree_to_string(node: SyntaxNode) -> String {
+        let mut result = Vec::new();
+        tree_to_string_impl(&node, 0, &mut result);
+        result.join("\n")
+    }
+
+    fn tree_to_string_impl(node: &SyntaxNode, depth: usize, result: &mut Vec<String>) {
+        let indent = "  ".repeat(depth);
+        result.push(format!("{}{:?}@{:?}", indent, node.kind(), node.text_range()));
+        
+        for child in node.children_with_tokens() {
+            match child {
+                rowan::NodeOrToken::Node(child_node) => {
+                    tree_to_string_impl(&child_node, depth + 1, result);
+                }
+                rowan::NodeOrToken::Token(token) => {
+                    let token_indent = "  ".repeat(depth + 1);
+                    result.push(format!("{}{:?}@{:?} {:?}", 
+                        token_indent, 
+                        token.kind(), 
+                        token.text_range(),
+                        token.text()
+                    ));
+                }
+            }
+        }
+    }
+
+    fn expected_tree(lines: &[&str]) -> String {
+        lines.join("\n")
+    }
 
     #[test]
     fn test_empty() {
         let input = "";
         let node = parse(input).syntax();
-        assert_eq!(
-            format!("{:?}", node),
+        
+        let tree_str = tree_to_string(node);
+        let expected = expected_tree(&[
             "File@0..0"
-        );
-        assert_eq!(node.children().count(), 0);
+        ]);
+        
+        assert_eq!(tree_str, expected);
     }
 
     #[test]
     fn test_empty_function() {
         let input = "func empty_func() {}";
         let node = parse(input).syntax();
-        assert_eq!(
-            format!("{:?}", node),
-            "File@0..18"
-        );
         
-        assert_eq!(
-            convert_nodes_to_string(node),
-            vec![
-                "Func@0..18".to_string(),
-            ]
-        );
-    }
-
-    fn convert_nodes_to_string(node: SyntaxNode) -> Vec<String> {
-        node
-        .children_with_tokens()
-        .map(|child| format!("{:?}@{:?}", child.kind(), child.text_range()))
-        .collect::<Vec<_>>()
+        let tree_str = tree_to_string(node);
+        let expected = expected_tree(&[
+            "File@0..18",
+            "  Func@0..18",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..14 \"empty_func\"",
+            "    ParamList@14..16",
+            "      LeftParen@14..15 \"(\"",
+            "      RightParen@15..16 \")\"",
+            "    Block@16..18",
+            "      LeftBrace@16..17 \"{\"",
+            "      RightBrace@17..18 \"}\""
+        ]);
+        
+        assert_eq!(tree_str, expected);
     }
 }

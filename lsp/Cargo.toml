@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 logos = "0.15.1"
+pretty_assertions = "1.4.1"
 rowan = "0.16.1"
