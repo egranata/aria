@@ -1,73 +1,74 @@
 use logos::Logos;
 
-#[derive(Logos, Debug, Clone, PartialEq)]
+#[derive(Logos, Debug, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, Copy)]
 #[logos(skip r"[ \t\n\f]+")]
 #[logos(skip r"#[^\n]*")]
-pub enum Token {
+#[repr(u16)]
+pub enum SyntaxKind {
     #[token("assert")]
-    Assert,
+    AssertKwd,
     #[token("break")]
-    Break,
+    BreakKwd,
     #[token("case")]
-    Case,
+    CaseKwd,
     #[token("catch")]
-    Catch,
+    CatchKwd,
     #[token("continue")]
-    Continue,
+    ContinueKwd,
     #[token("else")]
-    Else,
+    ElseKwd,
     #[token("elsif")]
-    Elsif,
+    ElsifKwd,
     #[token("enum")]
-    Enum,
+    EnumKwd,
     #[token("extension")]
-    Extension,
+    ExtensionKwd,
     #[token("flag")]
-    Flag,
+    FlagKwd,
     #[token("for")]
-    For,
+    ForKwd,
     #[token("from")]
-    From,
+    FromKwd,
     #[token("func")]
-    Func,
+    FuncKwd,
     #[token("guard")]
-    Guard,
+    GuardKwd,
     #[token("if")]
-    If,
+    IfKwd,
     #[token("import")]
-    Import,
+    ImportKwd,
     #[token("in")]
-    In,
+    InKwd,
     #[token("include")]
-    Include,
+    IncludeKwd,
     #[token("instance")]
-    Instance,
+    InstanceKwd,
     #[token("isa")]
-    Isa,
+    IsaKwd,
     #[token("match")]
-    Match,
+    MatchKwd,
     #[token("mixin")]
-    Mixin,
+    MixinKwd,
     #[token("operator")]
-    Operator,
+    OperatorKwd,
     #[token("return")]
-    Return,
+    ReturnKwd,
     #[token("reverse")]
-    Reverse,
+    ReverseKwd,
     #[token("struct")]
-    Struct,
+    StructKwdKwd,
     #[token("throw")]
-    Throw,
+    ThrowKwd,
     #[token("try")]
-    Try,
+    TryKwd,
     #[token("type")]
-    Type,
+    TypeKwd,
     #[token("val")]
-    Val,
+    ValKwd,
     #[token("while")]
-    While,
+    WhileKwd,
     #[token("and")]
-    And,
+    AndKwd,
 
     #[token("+")]
     Plus,
@@ -179,6 +180,39 @@ pub enum Token {
     IndexAssignOperator,
     #[token("[]")]
     IndexOperator,
+
+    // compound types
+    File,
+    ErrorTree,
+    Func,
+    Block,
+    ParamList,
+    Param,
+    StmtVal,
+    StmtReturn,
+    StmtExpr,
+    ExprName,
+    ExprCall,
+    ExprBinary,
+    Mixin,
+    Struct,
+    Ext,
+    ArgList,
+    Arg,
+    Eof
+}
+
+pub fn lex(s: &str) -> Vec<(SyntaxKind, &str)> {
+    let mut lexer = SyntaxKind::lexer(s);
+    let mut tokens = Vec::new();
+    
+    while let Some(token_result) = lexer.next() {
+        let token = token_result.unwrap_or(SyntaxKind::ErrorTree);
+        let slice = lexer.slice();
+        tokens.push((token, slice));
+    }
+    
+    tokens
 }
 
 
@@ -188,80 +222,80 @@ mod tests {
 
     #[test]
     fn test_keywords() {
-        let lexer = Token::lexer("func if else while");
+        let lexer = SyntaxKind::lexer("func if else while");
         let tokens: Vec<_> = lexer.collect();
         
         assert_eq!(tokens.len(), 4);
-        assert_eq!(tokens[0], Ok(Token::Func));
-        assert_eq!(tokens[1], Ok(Token::If));
-        assert_eq!(tokens[2], Ok(Token::Else));
-        assert_eq!(tokens[3], Ok(Token::While));
+        assert_eq!(tokens[0], Ok(SyntaxKind::FuncKwd));
+        assert_eq!(tokens[1], Ok(SyntaxKind::IfKwd));
+        assert_eq!(tokens[2], Ok(SyntaxKind::ElseKwd));
+        assert_eq!(tokens[3], Ok(SyntaxKind::WhileKwd));
     }
 
     #[test]
     fn test_identifiers() {
-        let lexer = Token::lexer("myVar _private $special");
+        let lexer = SyntaxKind::lexer("myVar _private $special");
         let tokens: Vec<_> = lexer.collect();
         
         assert_eq!(tokens.len(), 3);
-        assert!(matches!(tokens[0], Ok(Token::Identifier)));
-        assert!(matches!(tokens[1], Ok(Token::Identifier)));
-        assert!(matches!(tokens[2], Ok(Token::Identifier)));
+        assert!(matches!(tokens[0], Ok(SyntaxKind::Identifier)));
+        assert!(matches!(tokens[1], Ok(SyntaxKind::Identifier)));
+        assert!(matches!(tokens[2], Ok(SyntaxKind::Identifier)));
     }
 
     #[test]
     fn test_literals() {
-        let lexer = Token::lexer(r#"42 0x1A 0o77 0b101 3.14 "hello" 'world'"#);
+        let lexer = SyntaxKind::lexer(r#"42 0x1A 0o77 0b101 3.14 "hello" 'world'"#);
         let tokens: Vec<_> = lexer.collect();
         
         assert_eq!(tokens.len(), 7);
-        assert!(matches!(tokens[0], Ok(Token::DecIntLiteral)));
-        assert!(matches!(tokens[1], Ok(Token::HexIntLiteral)));
-        assert!(matches!(tokens[2], Ok(Token::OctIntLiteral)));
-        assert!(matches!(tokens[3], Ok(Token::BinIntLiteral)));
-        assert!(matches!(tokens[4], Ok(Token::FloatLiteral)));
-        assert!(matches!(tokens[5], Ok(Token::StringLiteral)));
-        assert!(matches!(tokens[6], Ok(Token::StringLiteral)));
+        assert!(matches!(tokens[0], Ok(SyntaxKind::DecIntLiteral)));
+        assert!(matches!(tokens[1], Ok(SyntaxKind::HexIntLiteral)));
+        assert!(matches!(tokens[2], Ok(SyntaxKind::OctIntLiteral)));
+        assert!(matches!(tokens[3], Ok(SyntaxKind::BinIntLiteral)));
+        assert!(matches!(tokens[4], Ok(SyntaxKind::FloatLiteral)));
+        assert!(matches!(tokens[5], Ok(SyntaxKind::StringLiteral)));
+        assert!(matches!(tokens[6], Ok(SyntaxKind::StringLiteral)));
     }
 
     #[test]
     fn test_operators() {
-        let lexer = Token::lexer("+ - * / % == != <= >= << >> && ||");
+        let lexer = SyntaxKind::lexer("+ - * / % == != <= >= << >> && ||");
         let tokens: Vec<_> = lexer.collect();
         
         assert_eq!(tokens.len(), 13);
-        assert_eq!(tokens[0], Ok(Token::Plus));
-        assert_eq!(tokens[1], Ok(Token::Minus));
-        assert_eq!(tokens[2], Ok(Token::Star));
-        assert_eq!(tokens[3], Ok(Token::Slash));
-        assert_eq!(tokens[4], Ok(Token::Percent));
-        assert_eq!(tokens[5], Ok(Token::Equal));
-        assert_eq!(tokens[6], Ok(Token::NotEqual));
-        assert_eq!(tokens[7], Ok(Token::LessEqual));
-        assert_eq!(tokens[8], Ok(Token::GreaterEqual));
-        assert_eq!(tokens[9], Ok(Token::LeftShift));
-        assert_eq!(tokens[10], Ok(Token::RightShift));
-        assert_eq!(tokens[11], Ok(Token::LogicalAnd));
-        assert_eq!(tokens[12], Ok(Token::LogicalOr));
+        assert_eq!(tokens[0], Ok(SyntaxKind::Plus));
+        assert_eq!(tokens[1], Ok(SyntaxKind::Minus));
+        assert_eq!(tokens[2], Ok(SyntaxKind::Star));
+        assert_eq!(tokens[3], Ok(SyntaxKind::Slash));
+        assert_eq!(tokens[4], Ok(SyntaxKind::Percent));
+        assert_eq!(tokens[5], Ok(SyntaxKind::Equal));
+        assert_eq!(tokens[6], Ok(SyntaxKind::NotEqual));
+        assert_eq!(tokens[7], Ok(SyntaxKind::LessEqual));
+        assert_eq!(tokens[8], Ok(SyntaxKind::GreaterEqual));
+        assert_eq!(tokens[9], Ok(SyntaxKind::LeftShift));
+        assert_eq!(tokens[10], Ok(SyntaxKind::RightShift));
+        assert_eq!(tokens[11], Ok(SyntaxKind::LogicalAnd));
+        assert_eq!(tokens[12], Ok(SyntaxKind::LogicalOr));
     }
 
     #[test]
     fn test_comments_and_whitespace() {
-        let lexer = Token::lexer("func # this is a comment\n  main");
+        let lexer = SyntaxKind::lexer("func # this is a comment\n  main");
         let tokens: Vec<_> = lexer.collect();
         
         assert_eq!(tokens.len(), 2);
-        assert_eq!(tokens[0], Ok(Token::Func));
-        assert!(matches!(tokens[1], Ok(Token::Identifier)));
+        assert_eq!(tokens[0], Ok(SyntaxKind::FuncKwd));
+        assert!(matches!(tokens[1], Ok(SyntaxKind::Identifier)));
     }
 
     #[test]
     fn test_complex_expression() {
-        let lexer = Token::lexer("val x = func(a, b) { return a + b; }");
+        let lexer = SyntaxKind::lexer("val x = func(a, b) { return a + b; }");
         let tokens: Vec<_> = lexer.collect();
         
         assert!(!tokens.is_empty());
-        assert_eq!(tokens[0], Ok(Token::Val));
+        assert_eq!(tokens[0], Ok(SyntaxKind::ValKwd));
     }
 
     #[test]
@@ -289,7 +323,7 @@ mod tests {
                 let content = fs::read_to_string(&path)
                     .expect(&format!("Failed to read file: {}", filename));
                 
-                let lexer = Token::lexer(&content);
+                let lexer = SyntaxKind::lexer(&content);
                 let tokens: Vec<_> = lexer.collect();
                 
                 let errors: Vec<_> = tokens.iter()

@@ -1,3 +1,5 @@
-pub mod lex;
+pub mod lexer;
+pub mod parser;
 
-pub use lex::Token;
+pub use lexer::SyntaxKind;
+pub use parser::parse;
