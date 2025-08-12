@@ -185,12 +185,35 @@ fn emit_arg_at_target(arg: &DeclarationId, params: &mut CompileParams) -> Compil
     Ok(())
 }
 
+#[allow(dead_code)]
+struct ArgumentCountInfo {
+    user_args: u8,
+    total_args: u8,
+    varargs: bool,
+}
+
 fn emit_args_at_target(
     prefix_args: &[DeclarationId],
     args: &ArgumentList,
     suffix_args: &[DeclarationId],
     params: &mut CompileParams,
-) -> CompilationResult {
+) -> CompilationResult<ArgumentCountInfo> {
+    ensure_unique_arg_names(args)?;
+
+    let total_args = prefix_args.len() + args.names.len() + suffix_args.len();
+    if total_args > u8::MAX.into() {
+        return Err(CompilationError {
+            loc: args.loc.clone(),
+            reason: CompilationErrorReason::TooManyArguments,
+        });
+    }
+
+    let argc_info = ArgumentCountInfo {
+        user_args: args.len() as u8,
+        total_args: total_args as u8,
+        varargs: args.vararg,
+    };
+
     for arg in prefix_args {
         emit_arg_at_target(arg, params)?;
     }
@@ -211,7 +234,7 @@ fn emit_args_at_target(
             args.loc.clone(),
         )?;
     }
-    Ok(())
+    Ok(argc_info)
 }
 
 // assume your parent struct is on the stack

@@ -6,8 +6,8 @@ use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_UNIT;
 use crate::{
     constant_value::{CompiledCodeObject, ConstantValue},
     do_compile::{
-        CompilationError, CompilationErrorReason, CompilationResult, CompileNode, CompileParams,
-        ControlFlowTargets, emit_args_at_target, ensure_unique_arg_names,
+        CompilationError, CompilationResult, CompileNode, CompileParams, ControlFlowTargets,
+        emit_args_at_target,
     },
     func_builder::{BasicBlockOpcode, FunctionBuilder},
     scope::CompilationScope,
@@ -15,13 +15,6 @@ use crate::{
 
 impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
     fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
-        if self.args.names.len() > u8::MAX.into() {
-            return Err(CompilationError {
-                loc: self.loc.clone(),
-                reason: CompilationErrorReason::TooManyArguments,
-            });
-        }
-
         let f_scope = CompilationScope::function(params.scope);
         let cflow = ControlFlowTargets::default();
         let mut writer = FunctionBuilder::default();
@@ -32,8 +25,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
             cflow: &cflow,
             options: params.options,
         };
-
-        ensure_unique_arg_names(&self.args)?;
 
         let this_arg = DeclarationId {
             loc: self.loc.clone(),
@@ -47,7 +38,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
             },
             ty: None,
         };
-        emit_args_at_target(&[this_arg], &self.args, &[], &mut c_params)?;
+        let argc = emit_args_at_target(&[this_arg], &self.args, &[], &mut c_params)?;
 
         let unit = self.insert_const_or_fail(
             &mut c_params,
@@ -81,7 +72,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
         let cco = CompiledCodeObject {
             name: self.name.value.clone(),
             body: co,
-            arity: 1 + self.args.names.len() as u8,
+            arity: argc.total_args,
             loc: self.loc.clone(),
             line_table,
             frame_size,
