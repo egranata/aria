@@ -183,6 +183,15 @@ fn emit_args_at_target(args: &ArgumentList, params: &mut CompileParams) -> Compi
             arg.loc.clone(),
         )?;
     }
+
+    if args.vararg {
+        params.scope.emit_untyped_define(
+            "varargs",
+            &mut params.module.constants,
+            params.writer.get_current_block(),
+            args.loc.clone(),
+        )?;
+    }
     Ok(())
 }
 
@@ -213,8 +222,11 @@ fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> Comp
         .get_current_block()
         .write_opcode_and_source_info(
             BasicBlockOpcode::BindMethod(
-                if md.vararg { FUNC_ACCEPTS_VARARG } else { 0 }
-                    | FUNC_IS_METHOD
+                if md.args.vararg {
+                    FUNC_ACCEPTS_VARARG
+                } else {
+                    0
+                } | FUNC_IS_METHOD
                     | if md.access == MethodAccess::Type {
                         METHOD_ATTRIBUTE_TYPE
                     } else {
@@ -453,7 +465,6 @@ fn emit_operator_decl_compile(op: &OperatorDecl, params: &mut CompileParams) -> 
             value: op_fn_name,
         },
         args: op.args.clone(),
-        vararg: op.vararg,
         body: op.body.clone(),
     };
 
@@ -665,7 +676,6 @@ fn generate_is_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
             value: format!("is_{}", case.name.value),
         },
         args: ArgumentList::empty(case.loc.clone()),
-        vararg: false,
         body: method_body,
     }
 }
@@ -727,7 +737,6 @@ fn generate_unwap_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
             value: format!("unwrap_{}", case.name.value),
         },
         args: ArgumentList::empty(case.loc.clone()),
-        vararg: false,
         body: method_body,
     }
 }

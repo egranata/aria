@@ -21,18 +21,11 @@ impl Derive for FunctionDecl {
         } else {
             ArgumentList::empty(source.pointer(loc))
         };
-        let vararg = if inner.peek().unwrap().as_rule() == Rule::vararg_marker {
-            let _ = inner.next();
-            true
-        } else {
-            false
-        };
         let body = CodeBlock::from_parse_tree(inner.next().expect("need body"), source);
         Self {
             loc: source.pointer(loc),
             name,
             args,
-            vararg,
             body,
         }
     }
@@ -40,13 +33,6 @@ impl Derive for FunctionDecl {
 
 impl PrettyPrintable for FunctionDecl {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        buffer
-            << "func "
-            << &self.name
-            << " ("
-            << &self.args
-            << if self.vararg { "..." } else { "" }
-            << ") "
-            << &self.body
+        buffer << "func " << &self.name << " (" << &self.args << ") " << &self.body
     }
 }

@@ -32,14 +32,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
         ensure_unique_arg_names(&self.args)?;
 
         emit_args_at_target(&self.args, &mut c_params)?;
-        if self.vararg {
-            c_params.scope.emit_untyped_define(
-                "varargs",
-                &mut c_params.module.constants,
-                c_params.writer.get_current_block(),
-                self.loc.clone(),
-            )?;
-        }
 
         let unit = self.insert_const_or_fail(
             &mut c_params,
@@ -79,7 +71,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
         };
         let cco_idx =
             self.insert_const_or_fail(params, ConstantValue::CompiledCodeObject(cco), &self.loc)?;
-        let a = if self.vararg {
+        let a = if self.args.vararg {
             FUNC_ACCEPTS_VARARG
         } else {
             0_u8
