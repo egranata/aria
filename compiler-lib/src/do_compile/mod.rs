@@ -13,7 +13,7 @@ use thiserror::Error;
 
 use crate::{
     CompilationOptions,
-    constant_value::{CompiledCodeObject, ConstantValue, ConstantValuesError},
+    constant_value::{ConstantValue, ConstantValuesError},
     func_builder::{BasicBlock, BasicBlockOpcode, FunctionBuilder},
     module::CompiledModule,
     scope::{CompilationScope, ScopeError, ScopeErrorReason},
@@ -186,54 +186,6 @@ fn emit_args_at_target(args: &ArgumentList, params: &mut CompileParams) -> Compi
     Ok(())
 }
 
-fn compile_method_decl(pf: &MethodDecl, params: &mut CompileParams) -> CompilationResult {
-    if pf.args.names.len() > u8::MAX.into() {
-        return Err(CompilationError {
-            loc: pf.loc.clone(),
-            reason: CompilationErrorReason::TooManyArguments,
-        });
-    }
-
-    let scope = CompilationScope::function(params.scope);
-    let mut writer = FunctionBuilder::default();
-    let cflow = ControlFlowTargets::default();
-    let mut c_params = CompileParams {
-        module: params.module,
-        scope: &scope,
-        writer: &mut writer,
-        cflow: &cflow,
-        options: params.options,
-    };
-    let arity: u8 = pf.args.names.len() as u8 + 1;
-    pf.do_compile(&mut c_params)?;
-    let co = match writer.write(&params.module.constants, params.options) {
-        Ok(c) => c,
-        Err(er) => {
-            return Err(CompilationError {
-                loc: pf.loc.clone(),
-                reason: er,
-            });
-        }
-    };
-    let frame_size = scope.as_function_root().unwrap().num_locals();
-    let line_table = writer.write_line_table().clone();
-    let cco = CompiledCodeObject {
-        name: pf.name.value.clone(),
-        body: co,
-        arity,
-        loc: pf.loc.clone(),
-        line_table,
-        frame_size,
-    };
-    let cco_idx =
-        pf.insert_const_or_fail(params, ConstantValue::CompiledCodeObject(cco), &pf.loc)?;
-    params
-        .writer
-        .get_current_block()
-        .write_opcode_and_source_info(BasicBlockOpcode::Push(cco_idx), pf.loc.clone());
-    Ok(())
-}
-
 // assume your parent struct is on the stack
 fn emit_type_mixin_include_decl_compile(
     mi: &MixinIncludeDecl,
@@ -249,7 +201,8 @@ fn emit_type_mixin_include_decl_compile(
 
 // assume your parent struct is on the stack
 fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> CompilationResult {
-    compile_method_decl(md, params)?;
+    md.do_compile(params)?;
+
     let name_idx = md.insert_const_or_fail(
         params,
         ConstantValue::String(md.name.value.clone()),

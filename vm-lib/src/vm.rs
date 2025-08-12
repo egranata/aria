@@ -151,10 +151,10 @@ impl VirtualMachine {
             imported_modules: Default::default(),
             loaded_dylibs: Default::default(),
         }
+        .load_unit_into_builtins()
         .load_unimplemented_into_builtins()
         .load_maybe_into_builtins()
         .load_runtime_error_into_builtins()
-        .load_unit_into_builtins()
     }
 }
 
