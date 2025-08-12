@@ -2,8 +2,8 @@
 use std::{collections::HashSet, rc::Rc};
 
 use aria_parser::ast::{
-    ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl, EnumDecl,
-    EnumDeclEntry, Expression, Identifier, MatchPattern, MatchPatternEnumCase, MatchRule,
+    ArgumentDecl, ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl,
+    EnumDecl, EnumDeclEntry, Expression, Identifier, MatchPattern, MatchPatternEnumCase, MatchRule,
     MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl, OperatorDecl, ParsedModule,
     ReturnStatement, SourceBuffer, SourcePointer, Statement, StringLiteral, StructDecl,
     StructEntry, ValDeclStatement, prettyprint::PrettyPrintable, source_to_ast,
@@ -144,21 +144,21 @@ mod postfix;
 fn ensure_unique_arg_names(args: &ArgumentList) -> CompilationResult {
     let mut arg_set = HashSet::new();
     for arg in &args.names {
-        if arg_set.contains(&arg.name.value) {
+        if arg_set.contains(arg.name()) {
             return Err(CompilationError {
                 loc: arg.loc.clone(),
-                reason: CompilationErrorReason::DuplicateArgumentName(arg.name.value.clone()),
+                reason: CompilationErrorReason::DuplicateArgumentName(arg.name().to_owned()),
             });
         } else {
-            arg_set.insert(arg.name.value.clone());
+            arg_set.insert(arg.name().to_owned());
         }
     }
 
     Ok(())
 }
 
-fn emit_arg_at_target(arg: &DeclarationId, params: &mut CompileParams) -> CompilationResult {
-    if let Some(ty) = &arg.ty {
+fn emit_arg_at_target(arg: &ArgumentDecl, params: &mut CompileParams) -> CompilationResult {
+    if let Some(ty) = arg.type_info() {
         ty.do_compile(params)?;
     } else {
         params
@@ -170,13 +170,13 @@ fn emit_arg_at_target(arg: &DeclarationId, params: &mut CompileParams) -> Compil
             );
     }
     params.scope.emit_typed_define(
-        &arg.name.value,
+        arg.name(),
         &mut params.module.constants,
         params.writer.get_current_block(),
         arg.loc.clone(),
     )?;
     params.scope.emit_write(
-        &arg.name.value,
+        arg.name(),
         &mut params.module.constants,
         params.writer.get_current_block(),
         arg.loc.clone(),
@@ -193,9 +193,9 @@ struct ArgumentCountInfo {
 }
 
 fn emit_args_at_target(
-    prefix_args: &[DeclarationId],
+    prefix_args: &[ArgumentDecl],
     args: &ArgumentList,
-    suffix_args: &[DeclarationId],
+    suffix_args: &[ArgumentDecl],
     params: &mut CompileParams,
 ) -> CompilationResult<ArgumentCountInfo> {
     ensure_unique_arg_names(args)?;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        ArgumentList, DeclarationId, SourceBuffer,
+        ArgumentDecl, ArgumentList, SourceBuffer,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -18,8 +18,8 @@ impl Derive for ArgumentList {
         for e in inner {
             if e.as_rule() == Rule::vararg_marker {
                 vararg = true;
-            } else if e.as_rule() == Rule::decl_id {
-                names.push(DeclarationId::from_parse_tree(e, source));
+            } else if e.as_rule() == Rule::arg_decl {
+                names.push(ArgumentDecl::from_parse_tree(e, source));
             } else {
                 panic!("Unexpected rule in argument list: {:?}", e.as_rule());
             }

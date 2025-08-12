@@ -26,7 +26,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
             options: params.options,
         };
 
-        let this_arg = DeclarationId {
+        let this_arg = From::from(&DeclarationId {
             loc: self.loc.clone(),
             name: Identifier {
                 loc: self.loc.clone(),
@@ -37,7 +37,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
                 .to_owned(),
             },
             ty: None,
-        };
+        });
         let argc = emit_args_at_target(&[this_arg], &self.args, &[], &mut c_params)?;
 
         let unit = self.insert_const_or_fail(

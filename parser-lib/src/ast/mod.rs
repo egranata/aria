@@ -914,9 +914,34 @@ impl From<&Statement> for CodeBlock {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArgumentDecl {
+    pub loc: SourcePointer,
+    pub id: DeclarationId,
+}
+
+impl ArgumentDecl {
+    pub fn name(&self) -> &String {
+        &self.id.name.value
+    }
+
+    pub fn type_info(&self) -> Option<&Expression> {
+        self.id.ty.as_ref()
+    }
+}
+
+impl From<&DeclarationId> for ArgumentDecl {
+    fn from(value: &DeclarationId) -> Self {
+        Self {
+            loc: value.loc.clone(),
+            id: value.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArgumentList {
     pub loc: SourcePointer,
-    pub names: Vec<DeclarationId>,
+    pub names: Vec<ArgumentDecl>,
     pub vararg: bool,
 }
 
