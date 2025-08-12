@@ -157,31 +157,50 @@ fn ensure_unique_arg_names(args: &ArgumentList) -> CompilationResult {
     Ok(())
 }
 
-fn emit_args_at_target(args: &ArgumentList, params: &mut CompileParams) -> CompilationResult {
+fn emit_arg_at_target(arg: &DeclarationId, params: &mut CompileParams) -> CompilationResult {
+    if let Some(ty) = &arg.ty {
+        ty.do_compile(params)?;
+    } else {
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(
+                BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
+                arg.loc.clone(),
+            );
+    }
+    params.scope.emit_typed_define(
+        &arg.name.value,
+        &mut params.module.constants,
+        params.writer.get_current_block(),
+        arg.loc.clone(),
+    )?;
+    params.scope.emit_write(
+        &arg.name.value,
+        &mut params.module.constants,
+        params.writer.get_current_block(),
+        arg.loc.clone(),
+    )?;
+
+    Ok(())
+}
+
+fn emit_args_at_target(
+    prefix_args: &[DeclarationId],
+    args: &ArgumentList,
+    suffix_args: &[DeclarationId],
+    params: &mut CompileParams,
+) -> CompilationResult {
+    for arg in prefix_args {
+        emit_arg_at_target(arg, params)?;
+    }
+
     for arg in &args.names {
-        if let Some(ty) = &arg.ty {
-            ty.do_compile(params)?;
-        } else {
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(
-                    BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
-                    arg.loc.clone(),
-                );
-        }
-        params.scope.emit_typed_define(
-            &arg.name.value,
-            &mut params.module.constants,
-            params.writer.get_current_block(),
-            arg.loc.clone(),
-        )?;
-        params.scope.emit_write(
-            &arg.name.value,
-            &mut params.module.constants,
-            params.writer.get_current_block(),
-            arg.loc.clone(),
-        )?;
+        emit_arg_at_target(arg, params)?;
+    }
+
+    for arg in suffix_args {
+        emit_arg_at_target(arg, params)?;
     }
 
     if args.vararg {

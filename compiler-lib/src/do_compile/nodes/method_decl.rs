@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+use aria_parser::ast::{DeclarationId, Identifier};
 use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_UNIT;
 
 use crate::{
@@ -34,16 +35,19 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
 
         ensure_unique_arg_names(&self.args)?;
 
-        c_params.scope.emit_untyped_define(
-            match self.access {
-                aria_parser::ast::MethodAccess::Instance => "this",
-                aria_parser::ast::MethodAccess::Type => "This",
+        let this_arg = DeclarationId {
+            loc: self.loc.clone(),
+            name: Identifier {
+                loc: self.loc.clone(),
+                value: match self.access {
+                    aria_parser::ast::MethodAccess::Instance => "this",
+                    aria_parser::ast::MethodAccess::Type => "This",
+                }
+                .to_owned(),
             },
-            &mut c_params.module.constants,
-            c_params.writer.get_current_block(),
-            self.loc.clone(),
-        )?;
-        emit_args_at_target(&self.args, &mut c_params)?;
+            ty: None,
+        };
+        emit_args_at_target(&[this_arg], &self.args, &[], &mut c_params)?;
 
         let unit = self.insert_const_or_fail(
             &mut c_params,
