@@ -31,7 +31,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
 
         ensure_unique_arg_names(&self.args)?;
 
-        emit_args_at_target(&self.args, &mut c_params)?;
+        emit_args_at_target(&[], &self.args, &[], &mut c_params)?;
 
         let unit = self.insert_const_or_fail(
             &mut c_params,
