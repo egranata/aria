@@ -47,6 +47,8 @@ pub enum CompilationErrorReason {
     TooManyConstants,
     #[error("function accepts too many arguments")]
     TooManyArguments,
+    #[error("argument without a default value follows argument with default value")]
+    DefaultArgsMustTrail,
     #[error("flow control statement not permitted in current context")]
     FlowControlNotAllowed,
     #[error("argument name '{0}' is already defined for this function")]
@@ -141,6 +143,12 @@ trait CompileNode<'a, T = (), E = CompilationError> {
 mod nodes;
 mod postfix;
 
+fn ensure_arg_list_is_correct(args: &ArgumentList) -> CompilationResult {
+    ensure_unique_arg_names(args)?;
+    ensure_default_args_trailing(args)?;
+    Ok(())
+}
+
 fn ensure_unique_arg_names(args: &ArgumentList) -> CompilationResult {
     let mut arg_set = HashSet::new();
     for arg in &args.names {
@@ -151,6 +159,22 @@ fn ensure_unique_arg_names(args: &ArgumentList) -> CompilationResult {
             });
         } else {
             arg_set.insert(arg.name().to_owned());
+        }
+    }
+
+    Ok(())
+}
+
+fn ensure_default_args_trailing(args: &ArgumentList) -> CompilationResult {
+    let mut found_default = false;
+    for arg in &args.names {
+        if arg.deft.is_some() {
+            found_default = true;
+        } else if found_default {
+            return Err(CompilationError {
+                loc: arg.loc.clone(),
+                reason: CompilationErrorReason::DefaultArgsMustTrail,
+            });
         }
     }
 
@@ -188,6 +212,8 @@ fn emit_arg_at_target(arg: &ArgumentDecl, params: &mut CompileParams) -> Compila
 #[allow(dead_code)]
 struct ArgumentCountInfo {
     user_args: u8,
+    required_args: u8,
+    default_args: u8,
     total_args: u8,
     varargs: bool,
 }
@@ -198,7 +224,7 @@ fn emit_args_at_target(
     suffix_args: &[ArgumentDecl],
     params: &mut CompileParams,
 ) -> CompilationResult<ArgumentCountInfo> {
-    ensure_unique_arg_names(args)?;
+    ensure_arg_list_is_correct(args)?;
 
     let total_args = prefix_args.len() + args.names.len() + suffix_args.len();
     if total_args > u8::MAX.into() {
@@ -208,8 +234,10 @@ fn emit_args_at_target(
         });
     }
 
-    let argc_info = ArgumentCountInfo {
+    let mut argc_info = ArgumentCountInfo {
         user_args: args.len() as u8,
+        required_args: 0,
+        default_args: 0,
         total_args: total_args as u8,
         varargs: args.vararg,
     };
@@ -220,7 +248,14 @@ fn emit_args_at_target(
 
     for arg in &args.names {
         emit_arg_at_target(arg, params)?;
+        if arg.deft.is_some() {
+            argc_info.default_args += 1;
+        } else {
+            argc_info.required_args += 1;
+        }
     }
+
+    assert!(argc_info.required_args + argc_info.default_args == argc_info.user_args);
 
     for arg in suffix_args {
         emit_arg_at_target(arg, params)?;
