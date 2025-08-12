@@ -44,14 +44,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
             self.loc.clone(),
         )?;
         emit_args_at_target(&self.args, &mut c_params)?;
-        if self.vararg {
-            c_params.scope.emit_untyped_define(
-                "varargs",
-                &mut c_params.module.constants,
-                c_params.writer.get_current_block(),
-                self.loc.clone(),
-            )?;
-        }
 
         let unit = self.insert_const_or_fail(
             &mut c_params,

@@ -917,11 +917,16 @@ impl From<&Statement> for CodeBlock {
 pub struct ArgumentList {
     pub loc: SourcePointer,
     pub names: Vec<DeclarationId>,
+    pub vararg: bool,
 }
 
 impl ArgumentList {
     pub fn empty(loc: SourcePointer) -> Self {
-        Self { loc, names: vec![] }
+        Self {
+            loc,
+            names: vec![],
+            vararg: false,
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -938,7 +943,6 @@ pub struct FunctionDecl {
     pub loc: SourcePointer,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub vararg: bool,
     pub body: CodeBlock,
 }
 
@@ -954,7 +958,6 @@ pub struct MethodDecl {
     pub access: MethodAccess,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub vararg: bool,
     pub body: CodeBlock,
 }
 
@@ -987,7 +990,6 @@ pub struct OperatorDecl {
     pub reverse: bool,
     pub symbol: OperatorSymbol,
     pub args: ArgumentList,
-    pub vararg: bool,
     pub body: CodeBlock,
 }
 

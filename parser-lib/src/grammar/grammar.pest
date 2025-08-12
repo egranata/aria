@@ -140,16 +140,16 @@ code_block  = { "{" ~ (statement)* ~ "}" }
 guard_block = { "guard" ~ identifier ~ "=" ~ expression ~ code_block }
 try_block   = { "try" ~ code_block ~ "catch" ~ identifier ~ code_block }
 
-arg_list      = { decl_id ~ ("," ~ decl_id)* ~ ","? }
 vararg_marker = { "..." ~ ","? }
-function_decl = { "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+arg_list      = { (decl_id ~ ("," ~ decl_id)* ~ ","?)? ~ vararg_marker? }
+function_decl = { "func" ~ identifier ~ "(" ~ arg_list? ~ ")" ~ code_block }
 
 method_access = @{ "instance" | "type" }
-method_decl   =  { method_access? ~ "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+method_decl   =  { method_access? ~ "func" ~ identifier ~ "(" ~ arg_list? ~ ")" ~ code_block }
 
 operator_direction = @{ "reverse" }
 operator_symbol    = @{ "+" | "u-" | "-" | "*" | "/" | "%" | "<<" | ">>" | "==" | "<=" | ">=" | "<" | ">" | "&" | "|" | "^" | "()" | "[]=" | "[]" }
-operator_decl      =  { operator_direction? ~ "operator" ~ operator_symbol ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+operator_decl      =  { operator_direction? ~ "operator" ~ operator_symbol ~ "(" ~ arg_list? ~ ")" ~ code_block }
 
 mixin_entry = { method_decl | operator_decl | mixin_include_decl }
 mixin_decl  = { "mixin" ~ identifier ~ "{" ~ mixin_entry* ~ "}" }
