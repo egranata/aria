@@ -917,6 +917,7 @@ impl From<&Statement> for CodeBlock {
 pub struct ArgumentDecl {
     pub loc: SourcePointer,
     pub id: DeclarationId,
+    pub deft: Option<Expression>,
 }
 
 impl ArgumentDecl {
@@ -934,6 +935,7 @@ impl From<&DeclarationId> for ArgumentDecl {
         Self {
             loc: value.loc.clone(),
             id: value.clone(),
+            deft: None,
         }
     }
 }
