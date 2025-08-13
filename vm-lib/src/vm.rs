@@ -397,6 +397,12 @@ impl VirtualMachine {
         self.modules.get(name).cloned()
     }
 
+    pub(crate) fn find_imported_module(&self, name: &str) -> Option<RuntimeModule> {
+        self.imported_modules
+            .get(name)
+            .map(|mli| mli.module.clone())
+    }
+
     pub fn execute_module(&mut self, m: &RuntimeModule) -> ExecutionResult<RunloopExit> {
         let main_f = match m.load_named_value("main") {
             Some(RuntimeValue::Function(f)) => f,
