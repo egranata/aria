@@ -189,7 +189,7 @@ fn emit_arg_at_target(
     if let Some(deft_expr) = arg.deft.as_ref() {
         let block = params
             .writer
-            .append_block_at_end(&format!("supplied_arg_{}", idx));
+            .append_block_at_end(&format!("supplied_arg_{idx}"));
         params
             .writer
             .get_current_block()
