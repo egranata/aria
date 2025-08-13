@@ -31,8 +31,8 @@ impl BuiltinFunctionImpl for ListLen {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -59,8 +59,8 @@ impl BuiltinFunctionImpl for ListAppend {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -91,8 +91,8 @@ impl BuiltinFunctionImpl for Drop {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {

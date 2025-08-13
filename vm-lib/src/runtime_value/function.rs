@@ -9,6 +9,7 @@ use aria_parser::ast::SourcePointer;
 use haxby_opcodes::function_attribs::{FUNC_ACCEPTS_VARARG, FUNC_IS_METHOD, METHOD_ATTRIBUTE_TYPE};
 
 use crate::{
+    arity::Arity,
     frame::Frame,
     runtime_module::RuntimeModule,
     vm::{ExecutionResult, RunloopExit, VirtualMachine},
@@ -20,10 +21,7 @@ use super::{
 
 pub trait BuiltinFunctionImpl {
     fn eval(&self, frame: &mut Frame, vm: &mut VirtualMachine) -> ExecutionResult<RunloopExit>;
-    fn required_argc(&self) -> u8;
-    fn default_argc(&self) -> u8 {
-        0
-    }
+    fn arity(&self) -> Arity;
     fn attrib_byte(&self) -> u8 {
         0
     }
@@ -47,8 +45,7 @@ impl BuiltinFunction {
 pub struct BytecodeFunction {
     pub name: String,
     pub body: Rc<[u8]>,
-    pub required_argc: u8,
-    pub default_argc: u8,
+    pub arity: Arity,
     pub frame_size: u8,
     pub line_table: Rc<LineTable>,
     pub loc: SourcePointer,
@@ -94,17 +91,10 @@ impl FunctionImpl {
         }
     }
 
-    pub(crate) fn required_argc(&self) -> u8 {
+    pub(crate) fn arity(&self) -> Arity {
         match self {
-            Self::BytecodeFunction(bc) => bc.required_argc,
-            Self::BuiltinFunction(bf) => bf.body.required_argc(),
-        }
-    }
-
-    pub(crate) fn default_argc(&self) -> u8 {
-        match self {
-            Self::BytecodeFunction(bc) => bc.default_argc,
-            Self::BuiltinFunction(bf) => bf.body.default_argc(),
+            Self::BytecodeFunction(bc) => bc.arity,
+            Self::BuiltinFunction(bf) => bf.body.arity(),
         }
     }
 
@@ -139,12 +129,8 @@ impl Function {
         self.imp.line_table()
     }
 
-    pub fn required_argc(&self) -> u8 {
-        self.imp.required_argc()
-    }
-
-    pub fn default_argc(&self) -> u8 {
-        self.imp.default_argc()
+    pub fn arity(&self) -> Arity {
+        self.imp.arity()
     }
 
     pub fn frame_size(&self) -> u8 {
@@ -221,8 +207,10 @@ impl FunctionImpl {
         let bcf = BytecodeFunction {
             name: co.name.clone(),
             body: rc,
-            required_argc: co.required_argc,
-            default_argc: co.default_argc,
+            arity: Arity {
+                required: co.required_argc,
+                optional: co.default_argc,
+            },
             frame_size: co.frame_size,
             line_table: lt,
             loc: co.loc.clone(),
@@ -309,10 +297,10 @@ impl Function {
         let mut new_frame = Frame::new_with_function(self.clone());
 
         if self.attribute().is_vararg() {
-            if argc < self.required_argc() {
+            if argc < self.arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.required_argc() as usize,
+                        self.arity().required as usize,
                         argc as usize,
                     )
                     .into(),
@@ -321,7 +309,7 @@ impl Function {
 
             let l = List::default();
             for i in 0..argc {
-                if i < self.required_argc() {
+                if i < self.arity().required {
                     new_frame.stack.at_head(cur_frame.stack.pop());
                 } else {
                     l.append(cur_frame.stack.pop());
@@ -330,10 +318,10 @@ impl Function {
 
             new_frame.stack.at_head(super::RuntimeValue::List(l));
         } else {
-            if argc != self.required_argc() {
+            if argc != self.arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.required_argc() as usize,
+                        self.arity().required as usize,
                         argc as usize,
                     )
                     .into(),

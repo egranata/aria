@@ -2,6 +2,7 @@
 use aria_compiler::module::CompiledModule;
 use vm::{ExecutionResult, RunloopExit, VirtualMachine, VmOptions};
 
+pub mod arity;
 pub mod builtins;
 pub mod error;
 pub mod frame;

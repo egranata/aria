@@ -133,8 +133,8 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
         Ok(RunloopExit::Ok(()))
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn attrib_byte(&self) -> u8 {

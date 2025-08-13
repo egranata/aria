@@ -49,8 +49,8 @@ impl BuiltinFunctionImpl for New {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -87,8 +87,8 @@ impl BuiltinFunctionImpl for Cwd {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -130,8 +130,8 @@ impl BuiltinFunctionImpl for Prettyprint {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -174,8 +174,8 @@ impl BuiltinFunctionImpl for Append {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -212,8 +212,8 @@ impl BuiltinFunctionImpl for Pop {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -251,8 +251,8 @@ impl BuiltinFunctionImpl for IsAbsolutePath {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -290,8 +290,8 @@ impl BuiltinFunctionImpl for Exists {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -329,8 +329,8 @@ impl BuiltinFunctionImpl for IsDirectory {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -368,8 +368,8 @@ impl BuiltinFunctionImpl for IsFile {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -407,8 +407,8 @@ impl BuiltinFunctionImpl for IsSymlink {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -470,8 +470,8 @@ impl BuiltinFunctionImpl for Canonical {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -520,8 +520,8 @@ impl BuiltinFunctionImpl for Size {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -581,8 +581,8 @@ impl BuiltinFunctionImpl for CreatedTime {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -647,8 +647,8 @@ impl BuiltinFunctionImpl for AccessedTime {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -696,8 +696,8 @@ impl BuiltinFunctionImpl for Filename {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -745,8 +745,8 @@ impl BuiltinFunctionImpl for Extension {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -798,8 +798,8 @@ impl BuiltinFunctionImpl for Entries {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -837,8 +837,8 @@ impl BuiltinFunctionImpl for MakeDirectory {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -876,8 +876,8 @@ impl BuiltinFunctionImpl for RemoveDirectory {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -915,8 +915,8 @@ impl BuiltinFunctionImpl for RemoveFile {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -968,8 +968,8 @@ impl BuiltinFunctionImpl for Copy {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {

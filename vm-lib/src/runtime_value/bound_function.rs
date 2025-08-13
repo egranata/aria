@@ -43,10 +43,10 @@ impl BoundFunction {
         let mut new_frame = Frame::new_with_function(self.func().clone());
 
         if self.func().attribute().is_vararg() {
-            if 1 + argc < self.func().required_argc() {
+            if 1 + argc < self.func().arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.func().required_argc() as usize,
+                        self.func().arity().required as usize,
                         argc as usize,
                     )
                     .into(),
@@ -56,7 +56,7 @@ impl BoundFunction {
             let l = List::default();
             for i in 0..argc {
                 let arg = cur_frame.stack.pop();
-                if i < self.func().required_argc() - 1 {
+                if i < self.func().arity().required - 1 {
                     new_frame.stack.at_head(arg);
                 } else {
                     l.append(arg);
@@ -65,10 +65,10 @@ impl BoundFunction {
 
             new_frame.stack.at_head(super::RuntimeValue::List(l));
         } else {
-            if 1 + argc != self.func().required_argc() {
+            if 1 + argc != self.func().arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.func().required_argc() as usize,
+                        self.func().arity().required as usize,
                         argc as usize,
                     )
                     .into(),

@@ -95,8 +95,8 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -196,8 +196,8 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {

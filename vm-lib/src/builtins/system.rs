@@ -53,8 +53,8 @@ impl BuiltinFunctionImpl for System {
         }
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
