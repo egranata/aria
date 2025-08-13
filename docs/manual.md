@@ -282,6 +282,11 @@ func main() {
 }
 ```
 
+One-line functions are supported by putting a `=` after the function declaration:
+```
+func sum(x, y) = x + y;
+```
+
 ## 🧱 Structs
 
 Structs are defined as a set of operations, not data. For example
@@ -730,15 +735,15 @@ Error: division by zero
     ╭─[/tmp/program.aria:2:12]
     │
   2 │     return x / y;
-    │            ──┬──  
+    │            ──┬──
     │              ╰──── here
-    │ 
+    │
   9 │     val d = do_division(x,y);
-    │                        ──┬──  
+    │                        ──┬──
     │                          ╰──── here
-    │ 
+    │
  15 │     println(complex_math(7,0));
-    │                         ──┬──  
+    │                         ──┬──
     │                           ╰──── here
 ────╯
 ```
