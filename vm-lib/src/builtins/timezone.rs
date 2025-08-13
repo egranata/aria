@@ -54,7 +54,7 @@ impl BuiltinFunctionImpl for TimezoneInfo {
         Ok(RunloopExit::Ok(()))
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         0_u8
     }
 

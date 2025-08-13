@@ -41,7 +41,7 @@ impl BuiltinFunctionImpl for WriteAttr {
         }
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         3_u8
     }
 

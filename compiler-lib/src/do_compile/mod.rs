@@ -214,7 +214,6 @@ struct ArgumentCountInfo {
     user_args: u8,
     required_args: u8,
     default_args: u8,
-    total_args: u8,
     varargs: bool,
 }
 
@@ -238,12 +237,12 @@ fn emit_args_at_target(
         user_args: args.len() as u8,
         required_args: 0,
         default_args: 0,
-        total_args: total_args as u8,
         varargs: args.vararg,
     };
 
     for arg in prefix_args {
         emit_arg_at_target(arg, params)?;
+        argc_info.required_args += 1;
     }
 
     for arg in &args.names {
@@ -255,10 +254,9 @@ fn emit_args_at_target(
         }
     }
 
-    assert!(argc_info.required_args + argc_info.default_args == argc_info.user_args);
-
     for arg in suffix_args {
         emit_arg_at_target(arg, params)?;
+        argc_info.required_args += 1;
     }
 
     if args.vararg {

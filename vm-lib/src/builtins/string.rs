@@ -35,7 +35,7 @@ impl BuiltinFunctionImpl for StringLen {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -73,7 +73,7 @@ impl BuiltinFunctionImpl for StringHasPrefix {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -111,7 +111,7 @@ impl BuiltinFunctionImpl for StringHasSuffix {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -157,7 +157,7 @@ impl BuiltinFunctionImpl for StringReplace {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         3_u8
     }
 
@@ -199,7 +199,7 @@ impl BuiltinFunctionImpl for StringSplit {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -236,7 +236,7 @@ impl BuiltinFunctionImpl for StringChars {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -273,7 +273,7 @@ impl BuiltinFunctionImpl for StringBytes {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -337,7 +337,7 @@ impl BuiltinFunctionImpl for FromBytes {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -374,7 +374,7 @@ impl BuiltinFunctionImpl for ToNumericEncoding {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -407,7 +407,7 @@ impl BuiltinFunctionImpl for TrimHead {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -440,7 +440,7 @@ impl BuiltinFunctionImpl for TrimTail {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -473,7 +473,7 @@ impl BuiltinFunctionImpl for Uppercase {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -506,7 +506,7 @@ impl BuiltinFunctionImpl for Lowercase {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -536,7 +536,7 @@ impl BuiltinFunctionImpl for Contains {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 

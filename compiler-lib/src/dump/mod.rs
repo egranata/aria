@@ -42,8 +42,10 @@ impl ModuleDump for CompiledCodeObject {
         let mut dest = buffer
             << "cco(name:\""
             << self.name.as_str()
-            << "\" arity:"
-            << self.arity
+            << " required arguments:"
+            << self.required_argc
+            << " default arguments:"
+            << self.default_argc
             << " frame size:"
             << self.frame_size
             << ") bc=\n";

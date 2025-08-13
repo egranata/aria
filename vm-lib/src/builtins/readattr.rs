@@ -37,7 +37,7 @@ impl BuiltinFunctionImpl for ReadAttr {
         }
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 

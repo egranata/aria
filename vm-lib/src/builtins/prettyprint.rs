@@ -20,7 +20,7 @@ impl BuiltinFunctionImpl for Prettyprint {
         Ok(RunloopExit::Ok(()))
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 

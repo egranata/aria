@@ -53,7 +53,7 @@ impl BuiltinFunctionImpl for System {
         }
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
