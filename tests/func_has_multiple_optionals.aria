@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func test(a,b,c=2,d=5,e=7) {
+    return a + b * c + d * e;
+}
+
+func main() {
+    assert test(1,2) == 40;
+    assert test(1,2,3) == 42;
+    assert test(1,2,3,4) == 35;
+    assert test(1,2,3,4,5) == 27;
+}

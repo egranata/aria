@@ -56,7 +56,7 @@ impl BoundFunction {
             let l = List::default();
             for i in 0..argc {
                 let arg = cur_frame.stack.pop();
-                if i < self.func().arity().required - 1 {
+                if i < self.func().arity().required + self.func().arity().optional - 1 {
                     new_frame.stack.at_head(arg);
                 } else {
                     l.append(arg);
@@ -65,10 +65,20 @@ impl BoundFunction {
 
             new_frame.stack.at_head(super::RuntimeValue::List(l));
         } else {
-            if 1 + argc != self.func().arity().required {
+            if argc + 1 < self.func().arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
                         self.func().arity().required as usize,
+                        argc as usize,
+                    )
+                    .into(),
+                );
+            }
+            if argc + 1 > self.func().arity().required + self.func().arity().optional {
+                return Err(
+                    crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
+                        self.func().arity().required as usize
+                            + self.func().arity().optional as usize,
                         argc as usize,
                     )
                     .into(),
@@ -82,7 +92,7 @@ impl BoundFunction {
 
         new_frame.stack.push(self.this().clone());
 
-        match self.imp.func.eval_in_frame(argc, &mut new_frame, vm)? {
+        match self.imp.func.eval_in_frame(argc + 1, &mut new_frame, vm)? {
             RunloopExit::Ok(()) => match new_frame.stack.try_pop() {
                 Some(ret) => {
                     if !discard_result {

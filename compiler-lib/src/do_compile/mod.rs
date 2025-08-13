@@ -181,7 +181,29 @@ fn ensure_default_args_trailing(args: &ArgumentList) -> CompilationResult {
     Ok(())
 }
 
-fn emit_arg_at_target(arg: &ArgumentDecl, params: &mut CompileParams) -> CompilationResult {
+fn emit_arg_at_target(
+    arg: &ArgumentDecl,
+    idx: u8,
+    params: &mut CompileParams,
+) -> CompilationResult {
+    if let Some(deft_expr) = arg.deft.as_ref() {
+        let block = params
+            .writer
+            .append_block_at_end(&format!("supplied_arg_{}", idx));
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(
+                BasicBlockOpcode::JumpIfArgSupplied(idx, block.clone()),
+                arg.loc.clone(),
+            );
+        deft_expr.do_compile(params)?;
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(BasicBlockOpcode::Jump(block.clone()), arg.loc.clone());
+        params.writer.set_current_block(block);
+    }
     if let Some(ty) = arg.type_info() {
         ty.do_compile(params)?;
     } else {
@@ -240,23 +262,28 @@ fn emit_args_at_target(
         varargs: args.vararg,
     };
 
+    let mut arg_idx: u8 = 0;
+
     for arg in prefix_args {
-        emit_arg_at_target(arg, params)?;
+        emit_arg_at_target(arg, arg_idx, params)?;
         argc_info.required_args += 1;
+        arg_idx += 1;
     }
 
     for arg in &args.names {
-        emit_arg_at_target(arg, params)?;
+        emit_arg_at_target(arg, arg_idx, params)?;
         if arg.deft.is_some() {
             argc_info.default_args += 1;
         } else {
             argc_info.required_args += 1;
         }
+        arg_idx += 1;
     }
 
     for arg in suffix_args {
-        emit_arg_at_target(arg, params)?;
+        emit_arg_at_target(arg, arg_idx, params)?;
         argc_info.required_args += 1;
+        arg_idx += 1;
     }
 
     if args.vararg {
