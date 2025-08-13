@@ -309,7 +309,7 @@ impl Function {
 
             let l = List::default();
             for i in 0..argc {
-                if i < self.arity().required {
+                if i < self.arity().required + self.arity().optional {
                     new_frame.stack.at_head(cur_frame.stack.pop());
                 } else {
                     l.append(cur_frame.stack.pop());
@@ -318,10 +318,19 @@ impl Function {
 
             new_frame.stack.at_head(super::RuntimeValue::List(l));
         } else {
-            if argc != self.arity().required {
+            if argc < self.arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
                         self.arity().required as usize,
+                        argc as usize,
+                    )
+                    .into(),
+                );
+            }
+            if argc > self.arity().required + self.arity().optional {
+                return Err(
+                    crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
+                        self.arity().required as usize + self.arity().optional as usize,
                         argc as usize,
                     )
                     .into(),

@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func test(a,b=1,...) {
+    val ret = a + b;
+    for arg in varargs {
+        ret += arg;
+    }
+    return ret;
+}
+
+func main() {
+    assert test(5) == 6;
+    assert test(5, 2) == 7;
+    assert test(5, 2, 3) == 10;
+    assert test(5, 2, 3, 4) == 14;
+}
