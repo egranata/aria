@@ -31,8 +31,8 @@ impl BuiltinFunctionImpl for FpHash {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -58,8 +58,8 @@ impl BuiltinFunctionImpl for FpFloor {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -85,8 +85,8 @@ impl BuiltinFunctionImpl for FpCeil {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -112,8 +112,8 @@ impl BuiltinFunctionImpl for FpInt {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {

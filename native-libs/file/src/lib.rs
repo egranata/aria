@@ -110,8 +110,8 @@ impl BuiltinFunctionImpl for New {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn required_argc(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {
@@ -146,8 +146,8 @@ impl BuiltinFunctionImpl for Close {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        0_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::zero()
     }
 
     fn name(&self) -> &str {
@@ -192,8 +192,8 @@ impl BuiltinFunctionImpl for ReadAll {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -248,8 +248,8 @@ impl BuiltinFunctionImpl for ReadCount {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -292,8 +292,8 @@ impl BuiltinFunctionImpl for WriteStr {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -338,8 +338,8 @@ impl BuiltinFunctionImpl for GetPos {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -386,8 +386,8 @@ impl BuiltinFunctionImpl for SetPos {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -431,8 +431,8 @@ impl BuiltinFunctionImpl for GetSize {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -471,8 +471,8 @@ impl BuiltinFunctionImpl for Flush {
         FUNC_IS_METHOD
     }
 
-    fn required_argc(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {

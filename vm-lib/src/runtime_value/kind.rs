@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use enum_as_inner::EnumAsInner;
 
-use crate::builtins::VmBuiltins;
+use crate::{arity::Arity, builtins::VmBuiltins};
 
 use super::{
     AttributeError, RuntimeValue, builtin_type::BuiltinType, enumeration::Enum, structure::Struct,
@@ -12,8 +12,7 @@ use super::{
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct FunctionType {
-    pub required_argc: u8,
-    pub default_argc: u8,
+    pub arity: Arity,
     pub varargs: bool,
 }
 
@@ -22,8 +21,8 @@ impl std::fmt::Debug for FunctionType {
         write!(
             f,
             "({}, {}{})",
-            self.required_argc,
-            self.default_argc,
+            self.arity.required,
+            self.arity.optional,
             if self.varargs { ", ..." } else { "" }
         )
     }
@@ -82,13 +81,11 @@ impl RuntimeValueType {
             RuntimeValue::Mixin(_) => Self::Mixin,
             RuntimeValue::Opaque(_) => Self::Opaque,
             RuntimeValue::Function(f) => Self::Function(FunctionType {
-                required_argc: f.required_argc(),
-                default_argc: f.default_argc(),
+                arity: f.arity(),
                 varargs: f.varargs(),
             }),
             RuntimeValue::BoundFunction(bf) => Self::Function(FunctionType {
-                required_argc: bf.func().required_argc(),
-                default_argc: bf.func().default_argc(),
+                arity: bf.func().arity(),
                 varargs: bf.func().varargs(),
             }),
             RuntimeValue::Type(t) => Self::Type(Box::new(t.clone())),
