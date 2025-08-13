@@ -246,7 +246,7 @@ func main() {
 }
 ```
 
-Functions can accept a variable number of arguments, with 0 or more fixed (required) arguments before that. Variable arguments are stored in a list provided to the function named `varargs`
+Functions can accept 0 or more required arguments, 0 or more optional arguments and possibly a variable number of arguments at the end. Variable arguments are stored in a list provided to the function named `varargs`
 
 ```
 func add_all_values(x, ...) {
@@ -259,6 +259,19 @@ func add_all_values(x, ...) {
 func main() {
     println(add_all_values(1,2,4,6,8)); # prints 21
     println(add_all_values(5)); # prints 5
+}
+```
+
+Optional arguments are given by name and a default value
+
+```
+func add(x,y=1) {
+    return x + y;
+}
+
+func main() {
+    println(add(3)); # prints 4
+    println(add(2,3)); # prints 5
 }
 ```
 

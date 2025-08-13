@@ -128,7 +128,8 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
         let __entry_cco = CompiledCodeObject {
             name: "__entry".to_owned(),
             body: co,
-            arity: 0,
+            required_argc: 0,
+            default_argc: 0,
             loc: self.loc.clone(),
             line_table,
             frame_size,

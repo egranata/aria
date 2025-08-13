@@ -27,7 +27,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LambdaFunction {
                 value: f_name.clone(),
             },
             args: self.args.clone(),
-            vararg: false,
             body: f_body,
         };
 

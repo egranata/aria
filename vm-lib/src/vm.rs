@@ -151,10 +151,10 @@ impl VirtualMachine {
             imported_modules: Default::default(),
             loaded_dylibs: Default::default(),
         }
+        .load_unit_into_builtins()
         .load_unimplemented_into_builtins()
         .load_maybe_into_builtins()
         .load_runtime_error_into_builtins()
-        .load_unit_into_builtins()
     }
 }
 
@@ -1030,6 +1030,11 @@ impl VirtualMachine {
             }
             Opcode::Jump(n) => {
                 reader.jump_to_index(n as usize);
+            }
+            Opcode::JumpIfArgSupplied(arg, dest) => {
+                if frame.argc > arg {
+                    reader.jump_to_index(dest as usize);
+                }
             }
             Opcode::Call(argc) => {
                 let x = pop_or_err!(next, frame, op_idx);

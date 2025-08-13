@@ -65,7 +65,6 @@ impl Derive for OperatorDecl {
             reverse,
             symbol,
             args,
-            vararg,
             body,
         }
     }
@@ -82,7 +81,6 @@ impl PrettyPrintable for OperatorDecl {
             << &self.symbol
             << " ("
             << &self.args
-            << if self.vararg { "..." } else { "" }
             << ") "
             << &self.body
     }

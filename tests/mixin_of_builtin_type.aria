@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 mixin Double {
     func double() {
-        this + this;
+        return this + this;
     }
 }
 

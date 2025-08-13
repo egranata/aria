@@ -22,8 +22,8 @@ impl BuiltinFunctionImpl for Now {
         Ok(RunloopExit::Ok(()))
     }
 
-    fn arity(&self) -> u8 {
-        0_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::zero()
     }
 
     fn name(&self) -> &str {

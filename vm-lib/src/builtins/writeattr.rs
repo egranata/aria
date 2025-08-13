@@ -41,8 +41,8 @@ impl BuiltinFunctionImpl for WriteAttr {
         }
     }
 
-    fn arity(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {

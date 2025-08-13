@@ -63,8 +63,8 @@ impl BuiltinFunctionImpl for New {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -99,8 +99,8 @@ impl BuiltinFunctionImpl for AnyMatch {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -154,8 +154,8 @@ impl BuiltinFunctionImpl for Matches {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -196,8 +196,8 @@ impl BuiltinFunctionImpl for Replace {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {

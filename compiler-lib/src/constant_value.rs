@@ -10,7 +10,8 @@ use crate::line_table::LineTable;
 pub struct CompiledCodeObject {
     pub name: String,
     pub body: Vec<u8>,
-    pub arity: u8,
+    pub required_argc: u8, // arguments that are required to call this function
+    pub default_argc: u8,  // additional arguments that this function can accept
     pub loc: SourcePointer,
     pub line_table: LineTable,
     pub frame_size: u8,

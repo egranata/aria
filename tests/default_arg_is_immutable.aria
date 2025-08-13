@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+func add_to_list(n,l=[]) {
+    l.append(n);
+    return l;
+}
+
+func main() {
+    val l1 = add_to_list(3);
+    assert l1 == [3];
+
+    val l2 = add_to_list(5);
+    assert l1 == [3];
+    assert l2 == [5];
+
+    l2 = add_to_list(7,l2);
+    assert l2 == [5,7];
+    assert l1 == [3];
+}

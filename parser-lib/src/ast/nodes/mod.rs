@@ -2,6 +2,7 @@
 mod add_eq_symbol;
 mod add_operation;
 mod add_symbol;
+mod argument_decl;
 mod argument_list;
 mod assert_statement;
 mod assign_statement;

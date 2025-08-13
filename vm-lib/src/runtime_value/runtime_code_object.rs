@@ -8,7 +8,8 @@ use aria_parser::ast::SourcePointer;
 pub struct CodeObject {
     pub name: String,
     pub body: Rc<[u8]>,
-    pub arity: u8,
+    pub required_argc: u8,
+    pub default_argc: u8,
     pub frame_size: u8,
     pub loc: SourcePointer,
     pub line_table: Rc<LineTable>,
@@ -25,7 +26,8 @@ impl From<&CompiledCodeObject> for CodeObject {
         Self {
             name: value.name.clone(),
             body: Rc::from(value.body.as_slice()),
-            arity: value.arity,
+            required_argc: value.required_argc,
+            default_argc: value.default_argc,
             frame_size: value.frame_size,
             loc: value.loc.clone(),
             line_table: Rc::from(value.line_table.clone()),

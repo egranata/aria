@@ -56,7 +56,6 @@ impl Derive for FunctionDecl {
             loc: source.pointer(loc),
             name,
             args,
-            vararg,
             body,
         }
     }
@@ -64,13 +63,6 @@ impl Derive for FunctionDecl {
 
 impl PrettyPrintable for FunctionDecl {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        buffer
-            << "func "
-            << &self.name
-            << " ("
-            << &self.args
-            << if self.vararg { "..." } else { "" }
-            << ") "
-            << &self.body
+        buffer << "func " << &self.name << " (" << &self.args << ") " << &self.body
     }
 }

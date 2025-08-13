@@ -914,14 +914,46 @@ impl From<&Statement> for CodeBlock {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArgumentDecl {
+    pub loc: SourcePointer,
+    pub id: DeclarationId,
+    pub deft: Option<Expression>,
+}
+
+impl ArgumentDecl {
+    pub fn name(&self) -> &String {
+        &self.id.name.value
+    }
+
+    pub fn type_info(&self) -> Option<&Expression> {
+        self.id.ty.as_ref()
+    }
+}
+
+impl From<&DeclarationId> for ArgumentDecl {
+    fn from(value: &DeclarationId) -> Self {
+        Self {
+            loc: value.loc.clone(),
+            id: value.clone(),
+            deft: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArgumentList {
     pub loc: SourcePointer,
-    pub names: Vec<DeclarationId>,
+    pub names: Vec<ArgumentDecl>,
+    pub vararg: bool,
 }
 
 impl ArgumentList {
     pub fn empty(loc: SourcePointer) -> Self {
-        Self { loc, names: vec![] }
+        Self {
+            loc,
+            names: vec![],
+            vararg: false,
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -938,7 +970,6 @@ pub struct FunctionDecl {
     pub loc: SourcePointer,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub vararg: bool,
     pub body: CodeBlock,
 }
 
@@ -954,7 +985,6 @@ pub struct MethodDecl {
     pub access: MethodAccess,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub vararg: bool,
     pub body: CodeBlock,
 }
 
@@ -987,7 +1017,6 @@ pub struct OperatorDecl {
     pub reverse: bool,
     pub symbol: OperatorSymbol,
     pub args: ArgumentList,
-    pub vararg: bool,
     pub body: CodeBlock,
 }
 

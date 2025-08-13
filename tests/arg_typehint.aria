@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 func add(x: Int, y: Int) {
-    x + y;
+    return x + y;
 }
 
 func len_plus_one(x: List) {
-    add(x.len(), 1);
+    return add(x.len(), 1);
 }
 
 func main() {

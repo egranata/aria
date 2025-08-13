@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use enum_as_inner::EnumAsInner;
 
-use crate::builtins::VmBuiltins;
+use crate::{arity::Arity, builtins::VmBuiltins};
 
 use super::{
     AttributeError, RuntimeValue, builtin_type::BuiltinType, enumeration::Enum, structure::Struct,
@@ -12,7 +12,7 @@ use super::{
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct FunctionType {
-    pub arity: u8,
+    pub arity: Arity,
     pub varargs: bool,
 }
 
@@ -20,8 +20,9 @@ impl std::fmt::Debug for FunctionType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "({}{})",
-            self.arity,
+            "({}, {}{})",
+            self.arity.required,
+            self.arity.optional,
             if self.varargs { ", ..." } else { "" }
         )
     }

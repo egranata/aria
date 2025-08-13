@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+struct UseOptionalArguments {
+    type func new(value: Int) {
+        return alloc(This) {
+            .value = value,
+        };
+    }
+
+    func only_optionals(x=1,y=2) {
+        return x + y * this.value;
+    }
+
+    func some_optionals(x, y=3,z=4) {
+        return x * y + this.value + z;
+    }
+
+    func opt_with_vararg(x,y=1,...) {
+        val ret = x+y;
+        for arg in varargs {
+            ret *= arg;
+        }
+        return ret;
+    }
+}
+
+func main() {
+    val uoa = UseOptionalArguments.new(5);
+    
+    assert uoa.only_optionals() == 11;
+    assert uoa.only_optionals(2) == 12; 
+    assert uoa.only_optionals(3,4) == 23;
+
+    assert uoa.some_optionals(2) == 15;
+    assert uoa.some_optionals(2, 5) == 19;
+    assert uoa.some_optionals(2, 4, 3) == 16;
+
+    assert uoa.opt_with_vararg(1) == 2;
+    assert uoa.opt_with_vararg(1, 2) == 3;
+    assert uoa.opt_with_vararg(1, 2, 3) == 9;
+    assert uoa.opt_with_vararg(1, 2, 3, 4) == 36;
+}

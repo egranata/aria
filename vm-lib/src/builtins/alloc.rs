@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    arity::Arity,
     builtins::VmBuiltins,
     error::vm_error::VmErrorReason,
     frame::Frame,
@@ -52,8 +53,11 @@ impl BuiltinFunctionImpl for Alloc {
         Ok(RunloopExit::Ok(()))
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> Arity {
+        Arity {
+            required: 1,
+            optional: 0,
+        }
     }
 
     fn name(&self) -> &str {

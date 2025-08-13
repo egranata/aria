@@ -63,7 +63,6 @@ impl Derive for MethodDecl {
             access,
             name,
             args,
-            vararg,
             body,
         }
     }
@@ -71,14 +70,6 @@ impl Derive for MethodDecl {
 
 impl PrettyPrintable for MethodDecl {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        buffer
-            << &self.access
-            << " func "
-            << &self.name
-            << " ("
-            << &self.args
-            << if self.vararg { "..." } else { "" }
-            << ") "
-            << &self.body
+        buffer << &self.access << " func " << &self.name << " (" << &self.args << ") " << &self.body
     }
 }

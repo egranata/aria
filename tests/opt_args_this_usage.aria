@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+struct S {
+    func f(a=1,...) {
+        return a + varargs.len();
+    }
+}
+
+func main() {
+    val s = alloc(S);
+    assert s.f() == 1;
+    assert s.f(2) == 2;
+    assert s.f(2,3,4) == 2+2;
+}
