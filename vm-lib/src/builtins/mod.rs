@@ -14,6 +14,7 @@ use crate::{
 };
 
 mod alloc;
+mod arity;
 mod boolean;
 mod cmdline_args;
 mod float;
@@ -74,6 +75,7 @@ impl Default for VmBuiltins {
         };
 
         alloc::insert_builtins(&mut this);
+        arity::insert_builtins(&mut this);
         boolean::insert_boolean_builtins(&mut this);
         cmdline_args::insert_builtins(&mut this);
         integer::insert_integer_builtins(&mut this);

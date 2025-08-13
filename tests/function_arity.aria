@@ -1,0 +1,177 @@
+# SPDX-License-Identifier: Apache-2.0
+func f1(x,y,z) {}
+
+func f2(x,y,z=1) {}
+
+func f3(x, ...) {}
+
+func f4(...) {}
+
+func f5(x,y=1,...) {}
+
+func f6(x=1,y=2) {}
+
+func f7(x=1,y=2,...) {}
+
+struct S {
+    func f1(x,y=1) {}
+    func f2(x=0,y=1,...) {}
+
+    type func f3() {}
+    func f4() {}
+}
+
+func check_arity(f, min_wanted, should_accept, should_not_accept, is_va) {
+    val f_arity = arity(f);
+    assert f_arity.min == min_wanted;
+    assert f_arity.can_call_with_argc(should_accept);
+    assert !f_arity.can_call_with_argc(should_not_accept);
+    assert f_arity.is_Varargs() == is_va;
+}
+
+func main() {
+    check_arity(f1,
+        3, # min argc wanted
+        3, # acceptable argc
+        4, # should not accept
+        false);
+    assert !arity(f1).has_receiver;
+
+    check_arity(f2,
+        2, # min argc wanted
+        3, # acceptable argc
+        4, # should not accept
+        false);
+    check_arity(f2,
+        2, # min argc wanted
+        2, # acceptable argc
+        0, # should not accept
+        false);
+    assert !arity(f2).has_receiver;
+
+    check_arity(f3,
+        1, # min argc wanted
+        2, # acceptable argc
+        0, # should not accept
+        true);
+    check_arity(f3,
+        1, # min argc wanted
+        4, # acceptable argc
+        0, # should not accept
+        true);
+    assert !arity(f3).has_receiver;
+
+    check_arity(f4,
+        0, # min argc wanted
+        2, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(f4,
+        0, # min argc wanted
+        0, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(f4,
+        0, # min argc wanted
+        5, # acceptable argc
+        -1, # should not accept
+        true);
+    assert !arity(f4).has_receiver;
+    assert arity(f4).can_call_with_argc(250);
+
+    check_arity(f5,
+        1, # min argc wanted
+        2, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(f5,
+        1, # min argc wanted
+        4, # acceptable argc
+        -1, # should not accept
+        true);
+    assert !arity(f5).has_receiver;
+
+    check_arity(f6,
+        0, # min argc wanted
+        0, # acceptable argc
+        3, # should not accept
+        false);
+    check_arity(f6,
+        0, # min argc wanted
+        1, # acceptable argc
+        3, # should not accept
+        false);
+    check_arity(f6,
+        0, # min argc wanted
+        2, # acceptable argc
+        4, # should not accept
+        false);
+    assert !arity(f6).has_receiver;
+
+    check_arity(f7,
+        0, # min argc wanted
+        0, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(f7,
+        0, # min argc wanted
+        1, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(f7,
+        0, # min argc wanted
+        2, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(f7,
+        0, # min argc wanted
+        4, # acceptable argc
+        -1, # should not accept
+        true);
+    assert !arity(f7).has_receiver;
+
+    val s = alloc(S);
+
+    check_arity(s.f1,
+        1, # min argc wanted
+        1, # acceptable argc
+        3, # should not accept
+        false);
+    check_arity(s.f1,
+        1, # min argc wanted
+        2, # acceptable argc
+        3, # should not accept
+        false);
+    assert arity(s.f1).has_receiver;
+
+    check_arity(s.f2,
+        0, # min argc wanted
+        1, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(s.f2,
+        0, # min argc wanted
+        2, # acceptable argc
+        -1, # should not accept
+        true);
+    check_arity(s.f2,
+        0, # min argc wanted
+        3, # acceptable argc
+        -1, # should not accept
+        true);
+    assert arity(s.f2).has_receiver;
+
+    check_arity(S.f3,
+        0, # min argc wanted
+        0, # acceptable argc
+        1, # should not accept
+        false);
+    assert arity(S.f3).has_receiver;
+
+    check_arity(s.f4,
+        0, # min argc wanted
+        0, # acceptable argc
+        1, # should not accept
+        false);
+    assert arity(s.f4).has_receiver;
+}
