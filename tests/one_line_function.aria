@@ -1,0 +1,29 @@
+func sum(x, y) = x + y;
+func assign() = 42;
+
+struct TestStruct {
+    type func new(x) {
+        return alloc(This) {
+            .x = x
+        };
+    }
+
+    func get_x() = this.x;
+    func add_to_x(n) = this.x + n;
+    func multiply_x(n) = this.x * n;
+
+    operator + (other) = this.x + other.x;
+}
+
+func main() {
+    assert 5 == sum(3,2);
+    assert 42 == assign();
+
+    val obj = TestStruct.new(20);
+    assert 20 == obj.get_x();
+    assert 25 == obj.add_to_x(5);
+    assert 40 == obj.multiply_x(2);
+
+    val obj2 = TestStruct.new(10);
+    assert 30 == obj + obj2;
+}
