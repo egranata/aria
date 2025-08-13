@@ -20,7 +20,10 @@ use super::{
 
 pub trait BuiltinFunctionImpl {
     fn eval(&self, frame: &mut Frame, vm: &mut VirtualMachine) -> ExecutionResult<RunloopExit>;
-    fn arity(&self) -> u8;
+    fn required_argc(&self) -> u8;
+    fn default_argc(&self) -> u8 {
+        0
+    }
     fn attrib_byte(&self) -> u8 {
         0
     }
@@ -44,7 +47,8 @@ impl BuiltinFunction {
 pub struct BytecodeFunction {
     pub name: String,
     pub body: Rc<[u8]>,
-    pub arity: u8,
+    pub required_argc: u8,
+    pub default_argc: u8,
     pub frame_size: u8,
     pub line_table: Rc<LineTable>,
     pub loc: SourcePointer,
@@ -90,10 +94,17 @@ impl FunctionImpl {
         }
     }
 
-    pub(crate) fn arity(&self) -> u8 {
+    pub(crate) fn required_argc(&self) -> u8 {
         match self {
-            Self::BytecodeFunction(bc) => bc.arity,
-            Self::BuiltinFunction(bf) => bf.body.arity(),
+            Self::BytecodeFunction(bc) => bc.required_argc,
+            Self::BuiltinFunction(bf) => bf.body.required_argc(),
+        }
+    }
+
+    pub(crate) fn default_argc(&self) -> u8 {
+        match self {
+            Self::BytecodeFunction(bc) => bc.default_argc,
+            Self::BuiltinFunction(bf) => bf.body.default_argc(),
         }
     }
 
@@ -128,8 +139,12 @@ impl Function {
         self.imp.line_table()
     }
 
-    pub fn arity(&self) -> u8 {
-        self.imp.arity()
+    pub fn required_argc(&self) -> u8 {
+        self.imp.required_argc()
+    }
+
+    pub fn default_argc(&self) -> u8 {
+        self.imp.default_argc()
     }
 
     pub fn frame_size(&self) -> u8 {
@@ -206,7 +221,8 @@ impl FunctionImpl {
         let bcf = BytecodeFunction {
             name: co.name.clone(),
             body: rc,
-            arity: co.arity,
+            required_argc: co.required_argc,
+            default_argc: co.default_argc,
             frame_size: co.frame_size,
             line_table: lt,
             loc: co.loc.clone(),
@@ -270,11 +286,13 @@ impl Function {
     // DO NOT CALL unless you are Function or BoundFunction
     pub(super) fn eval_in_frame(
         &self,
+        argc: u8,
         target_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> ExecutionResult<RunloopExit> {
         match self.imp.as_ref() {
             FunctionImpl::BytecodeFunction(bcf) => {
+                target_frame.set_argc(argc);
                 vm.eval_bytecode_in_frame(&bcf.module, &bcf.body, target_frame)
             }
             FunctionImpl::BuiltinFunction(bnf) => bnf.body.eval(target_frame, vm),
@@ -291,10 +309,10 @@ impl Function {
         let mut new_frame = Frame::new_with_function(self.clone());
 
         if self.attribute().is_vararg() {
-            if argc < self.arity() {
+            if argc < self.required_argc() {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.arity() as usize,
+                        self.required_argc() as usize,
                         argc as usize,
                     )
                     .into(),
@@ -303,7 +321,7 @@ impl Function {
 
             let l = List::default();
             for i in 0..argc {
-                if i < self.arity() {
+                if i < self.required_argc() {
                     new_frame.stack.at_head(cur_frame.stack.pop());
                 } else {
                     l.append(cur_frame.stack.pop());
@@ -312,10 +330,10 @@ impl Function {
 
             new_frame.stack.at_head(super::RuntimeValue::List(l));
         } else {
-            if argc != self.arity() {
+            if argc != self.required_argc() {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.arity() as usize,
+                        self.required_argc() as usize,
                         argc as usize,
                     )
                     .into(),
@@ -327,7 +345,7 @@ impl Function {
             }
         }
 
-        match self.eval_in_frame(&mut new_frame, vm)? {
+        match self.eval_in_frame(argc, &mut new_frame, vm)? {
             RunloopExit::Ok(_) => match new_frame.stack.try_pop() {
                 Some(ret) => {
                     if !discard_result {

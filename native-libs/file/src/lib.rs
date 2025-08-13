@@ -110,7 +110,7 @@ impl BuiltinFunctionImpl for New {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         3_u8
     }
 
@@ -146,7 +146,7 @@ impl BuiltinFunctionImpl for Close {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         0_u8
     }
 
@@ -192,7 +192,7 @@ impl BuiltinFunctionImpl for ReadAll {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -248,7 +248,7 @@ impl BuiltinFunctionImpl for ReadCount {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -292,7 +292,7 @@ impl BuiltinFunctionImpl for WriteStr {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -338,7 +338,7 @@ impl BuiltinFunctionImpl for GetPos {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -386,7 +386,7 @@ impl BuiltinFunctionImpl for SetPos {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -431,7 +431,7 @@ impl BuiltinFunctionImpl for GetSize {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -471,7 +471,7 @@ impl BuiltinFunctionImpl for Flush {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 

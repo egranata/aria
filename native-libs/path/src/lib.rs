@@ -49,7 +49,7 @@ impl BuiltinFunctionImpl for New {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -87,7 +87,7 @@ impl BuiltinFunctionImpl for Cwd {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -130,7 +130,7 @@ impl BuiltinFunctionImpl for Prettyprint {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -174,7 +174,7 @@ impl BuiltinFunctionImpl for Append {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 
@@ -212,7 +212,7 @@ impl BuiltinFunctionImpl for Pop {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -251,7 +251,7 @@ impl BuiltinFunctionImpl for IsAbsolutePath {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -290,7 +290,7 @@ impl BuiltinFunctionImpl for Exists {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -329,7 +329,7 @@ impl BuiltinFunctionImpl for IsDirectory {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -368,7 +368,7 @@ impl BuiltinFunctionImpl for IsFile {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -407,7 +407,7 @@ impl BuiltinFunctionImpl for IsSymlink {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -470,7 +470,7 @@ impl BuiltinFunctionImpl for Canonical {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -520,7 +520,7 @@ impl BuiltinFunctionImpl for Size {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -581,7 +581,7 @@ impl BuiltinFunctionImpl for CreatedTime {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -647,7 +647,7 @@ impl BuiltinFunctionImpl for AccessedTime {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -696,7 +696,7 @@ impl BuiltinFunctionImpl for Filename {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -745,7 +745,7 @@ impl BuiltinFunctionImpl for Extension {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -798,7 +798,7 @@ impl BuiltinFunctionImpl for Entries {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -837,7 +837,7 @@ impl BuiltinFunctionImpl for MakeDirectory {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -876,7 +876,7 @@ impl BuiltinFunctionImpl for RemoveDirectory {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -915,7 +915,7 @@ impl BuiltinFunctionImpl for RemoveFile {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -968,7 +968,7 @@ impl BuiltinFunctionImpl for Copy {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         2_u8
     }
 

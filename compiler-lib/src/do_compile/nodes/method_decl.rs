@@ -72,7 +72,8 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
         let cco = CompiledCodeObject {
             name: self.name.value.clone(),
             body: co,
-            arity: argc.total_args,
+            required_argc: argc.required_args,
+            default_argc: argc.default_args,
             loc: self.loc.clone(),
             line_table,
             frame_size,

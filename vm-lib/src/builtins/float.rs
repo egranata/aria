@@ -31,7 +31,7 @@ impl BuiltinFunctionImpl for FpHash {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -58,7 +58,7 @@ impl BuiltinFunctionImpl for FpFloor {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -85,7 +85,7 @@ impl BuiltinFunctionImpl for FpCeil {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 
@@ -112,7 +112,7 @@ impl BuiltinFunctionImpl for FpInt {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
+    fn required_argc(&self) -> u8 {
         1_u8
     }
 

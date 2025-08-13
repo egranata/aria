@@ -12,7 +12,8 @@ use super::{
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct FunctionType {
-    pub arity: u8,
+    pub required_argc: u8,
+    pub default_argc: u8,
     pub varargs: bool,
 }
 
@@ -20,8 +21,9 @@ impl std::fmt::Debug for FunctionType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "({}{})",
-            self.arity,
+            "({}, {}{})",
+            self.required_argc,
+            self.default_argc,
             if self.varargs { ", ..." } else { "" }
         )
     }
@@ -80,11 +82,13 @@ impl RuntimeValueType {
             RuntimeValue::Mixin(_) => Self::Mixin,
             RuntimeValue::Opaque(_) => Self::Opaque,
             RuntimeValue::Function(f) => Self::Function(FunctionType {
-                arity: f.arity(),
+                required_argc: f.required_argc(),
+                default_argc: f.default_argc(),
                 varargs: f.varargs(),
             }),
             RuntimeValue::BoundFunction(bf) => Self::Function(FunctionType {
-                arity: bf.func().arity(),
+                required_argc: bf.func().required_argc(),
+                default_argc: bf.func().default_argc(),
                 varargs: bf.func().varargs(),
             }),
             RuntimeValue::Type(t) => Self::Type(Box::new(t.clone())),
