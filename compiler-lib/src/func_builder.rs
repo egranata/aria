@@ -55,6 +55,7 @@ pub enum BasicBlockOpcode {
     JumpTrue(Rc<BasicBlock>),
     JumpFalse(Rc<BasicBlock>),
     Jump(Rc<BasicBlock>),
+    JumpIfArgSupplied(u8, Rc<BasicBlock>),
     Call(u8),
     Return,
     GuardEnter,
@@ -130,6 +131,7 @@ impl BasicBlockOpcode {
             Self::JumpTrue(_) => false,
             Self::JumpFalse(_) => false,
             Self::Jump(_) => true,
+            Self::JumpIfArgSupplied(..) => false,
             Self::Call(_) => false,
             Self::Return => true,
             Self::GuardEnter => false,
@@ -205,6 +207,7 @@ impl BasicBlockOpcode {
             Self::JumpTrue(_) => 3,
             Self::JumpFalse(_) => 3,
             Self::Jump(_) => 3,
+            Self::JumpIfArgSupplied(..) => 4,
             Self::Call(_) => 2,
             Self::Return => 1,
             Self::GuardEnter => 1,
@@ -288,6 +291,10 @@ impl BasicBlockOpcode {
             Self::Jump(dst) => {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
                 vec![Opcode::Jump(offset)]
+            }
+            Self::JumpIfArgSupplied(arg, dst) => {
+                let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
+                vec![Opcode::JumpIfArgSupplied(*arg, offset)]
             }
             Self::Call(n) => vec![Opcode::Call(*n)],
             Self::Return => vec![Opcode::Return],
