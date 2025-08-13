@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+func format_assert(x, y) {
+    # println("actual: '{0}' expected: '{1}'".format(x, y));
+    assert x == y;
+}
+func main() {
+    format_assert("{a}".format(), "{a}");
+    format_assert("{12a}".format(0), "{12a}");
+    format_assert("{0:".format(5), "{0:");
+    format_assert("{".format(), "{");
+    format_assert("}".format(), "}");
+    format_assert("{{{0}}}".format(7), "{7}");
+    format_assert("{0}{1}".format("a","b"), "ab");
+    format_assert("{2}".format(1,2), "{2}");
+}

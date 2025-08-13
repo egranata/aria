@@ -69,18 +69,19 @@ extension String {
     func format(...) {
         val ret = "";
         val chars = this.chars();
+        val len = this.len();
         val idx = 0;
 
-        while idx < chars.len() {
+        while idx < len {
             val c = chars[idx];
 
-            if c == "{" && idx + 1 < chars.len() && chars[idx + 1] == "{" {
+            if c == "{" && idx + 1 < len && chars[idx + 1] == "{" {
                 ret += "{";
                 idx += 2;
                 continue;
             }
 
-            if c == "}" && idx + 1 < chars.len() && chars[idx + 1] == "}" {
+            if c == "}" && idx + 1 < len && chars[idx + 1] == "}" {
                 ret += "}";
                 idx += 2;
                 continue;
@@ -91,27 +92,34 @@ extension String {
                 val num_str = "";
                 val style_str = "";
                 val has_style = false;
+                val found_closing_brace = false;
 
-                while idx < chars.len() {
+                while idx < len {
                     val c = chars[idx];
 
                     if c == "}" {
                         idx += 1;
+                        found_closing_brace = true;
                         break;
                     } elsif c == ":" && !has_style {
                         has_style = true;
                         idx += 1;
                     } elsif !has_style {
-                        if is_digit(c) {
-                            num_str += c;
-                            idx += 1;
-                        } else {
-                            break;
-                        }
+                        num_str += c;
+                        idx += 1;
                     } else {
                         style_str += c;
                         idx += 1;
                     }
+                }
+
+                if !found_closing_brace {
+                    if has_style {
+                        ret += "{" + num_str + ":" + style_str;
+                    } else {
+                        ret += "{" + num_str;
+                    }
+                    continue;
                 }
 
                 match Int.parse(num_str) {
