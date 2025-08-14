@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        AssertStatement, AssignStatement, EnumDecl, ExtensionDecl, FunctionDecl,
-        ImportFromStatement, ImportStatement, MixinDecl, StructDecl, TopLevelEntry,
+        AssertStatement, AssignStatement, EnumDecl, ExpressionStatement, ExtensionDecl,
+        FunctionDecl, ImportFromStatement, ImportStatement, MixinDecl, StructDecl, TopLevelEntry,
         ValDeclStatement,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
@@ -15,6 +15,7 @@ impl Derive for TopLevelEntry {
         top_level_entry;
         (assert_stmt, AssertStatement),
         (enum_decl, EnumDecl),
+        (expr_stmt, ExpressionStatement),
         (extension_decl, ExtensionDecl),
         (function_decl, FunctionDecl),
         (import_id_stmt, ImportFromStatement),
@@ -37,6 +38,7 @@ impl PrettyPrintable for TopLevelEntry {
             Self::EnumDecl(e) => e.prettyprint(buffer),
             Self::ExtensionDecl(e) => e.prettyprint(buffer),
             Self::AssertStatement(a) => a.prettyprint(buffer),
+            Self::ExpressionStatement(e) => e.prettyprint(buffer),
             Self::ImportStatement(i) => i.prettyprint(buffer),
             Self::ImportFromStatement(i) => i.prettyprint(buffer),
         }
