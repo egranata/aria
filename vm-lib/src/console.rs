@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: Apache-2.0
+pub trait Console {
+    fn print(&mut self, s: &str) -> std::io::Result<()> {
+        print!("{}", s);
+        Ok(())
+    }
+    fn println(&mut self, s: &str) -> std::io::Result<()> {
+        println!("{}", s);
+        Ok(())
+    }
+    fn eprintln(&mut self, s: &str) -> std::io::Result<()> {
+        eprintln!("{}", s);
+        Ok(())
+    }
+}
+
+#[derive(Default, Clone, Copy)]
+pub struct StdConsole;
+impl Console for StdConsole {}
+
+#[derive(Default, Clone)]
+pub struct TestConsole {
+    pub stdout: String,
+    pub stderr: String,
+}
+
+impl Console for TestConsole {
+    fn print(&mut self, s: &str) -> std::io::Result<()> {
+        self.stdout.push_str(s);
+        Ok(())
+    }
+
+    fn println(&mut self, s: &str) -> std::io::Result<()> {
+        self.stdout.push_str(s);
+        self.stdout.push('\n');
+        Ok(())
+    }
+
+    fn eprintln(&mut self, s: &str) -> std::io::Result<()> {
+        self.stderr.push_str(s);
+        self.stderr.push('\n');
+        Ok(())
+    }
+}
