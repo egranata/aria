@@ -1203,6 +1203,7 @@ impl ModuleFlags {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::large_enum_variant)]
 pub enum TopLevelEntry {
+    ExpressionStatement(ExpressionStatement),
     ValDeclStatement(ValDeclStatement),
     AssignStatement(AssignStatement),
     FunctionDecl(FunctionDecl),

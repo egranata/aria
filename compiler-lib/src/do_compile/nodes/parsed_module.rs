@@ -64,6 +64,9 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
                 aria_parser::ast::TopLevelEntry::ExtensionDecl(e) => {
                     collate_error_if_any!(e.do_compile(params), errors)
                 }
+                aria_parser::ast::TopLevelEntry::ExpressionStatement(e) => {
+                    collate_error_if_any!(e.do_compile(params), errors)
+                }
                 aria_parser::ast::TopLevelEntry::AssertStatement(a) => {
                     collate_error_if_any!(a.do_compile(params), errors)
                 }
