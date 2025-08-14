@@ -840,9 +840,15 @@ impl VirtualMachine {
                 let x = pop_or_err!(next, frame, op_idx);
                 if let Some(ct) = this_module.load_indexed_const(n)
                     && let Some(sv) = ct.as_string()
-                    && !this_module.store_typechecked_named_value(sv, x, &self.builtins)
                 {
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    let write_result =
+                        this_module.store_typechecked_named_value(sv, x, &self.builtins);
+                    match write_result {
+                        Ok(_) => {}
+                        Err(e) => {
+                            return build_vm_error!(e, next, frame, op_idx);
+                        }
+                    }
                 }
             }
             Opcode::TypedefNamed(n) => {
@@ -1497,7 +1503,12 @@ impl VirtualMachine {
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 };
-                dest.lift_all_symbols_from_other(src, self);
+                match dest.lift_all_symbols_from_other(src, self) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        return build_vm_error!(e, next, frame, op_idx);
+                    }
+                }
             }
             Opcode::Import(n) => {
                 let ipath = if let Some(ct) = this_module.load_indexed_const(n) {

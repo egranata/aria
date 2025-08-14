@@ -115,7 +115,7 @@ impl ModuleRootScope {
     pub fn emit_write(
         &self,
         name: &str,
-        _: &mut ConstantValues,
+        consts: &mut ConstantValues,
         dest: Rc<BasicBlock>,
         loc: SourcePointer,
     ) -> ScopeResult {
@@ -123,10 +123,19 @@ impl ModuleRootScope {
             dest.write_opcode_and_source_info(BasicBlockOpcode::WriteNamed(*existing_idx), loc);
             Ok(())
         } else {
-            Err(ScopeError {
-                loc,
-                reason: ScopeErrorReason::NoSuchIdentifier(name.to_owned()),
-            })
+            let symbol_idx = match consts.insert(crate::constant_value::ConstantValue::String(
+                name.to_owned(),
+            )) {
+                Ok(c) => c,
+                Err(_) => {
+                    return Err(ScopeError {
+                        loc,
+                        reason: ScopeErrorReason::TooManyConstants,
+                    });
+                }
+            };
+            dest.write_opcode_and_source_info(BasicBlockOpcode::WriteNamed(symbol_idx), loc);
+            Ok(())
         }
     }
 

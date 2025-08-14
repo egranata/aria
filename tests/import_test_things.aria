@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+import * from test_things;
+
+func main() {
+    assert x == 1;
+    assert foo(3,4) == 7;
+    assert bar(5) == 6;
+    x = 2;
+    assert x == 2;
+    assert foo(3,4) == 7;
+    assert bar(5) == 6;
+}
