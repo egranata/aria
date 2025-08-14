@@ -651,6 +651,102 @@ impl Expression {
     }
 }
 
+impl Expression {
+    pub fn call_function_passing_me(&self, func_name: &str) -> Expression {
+        use crate::ast::{
+            Expression, ExpressionList, Identifier, PostfixExpression, PostfixTerm,
+            PostfixTermCall, Primary,
+        };
+
+        let loc = self.loc().clone();
+
+        let func_ident = Identifier {
+            loc: loc.clone(),
+            value: func_name.to_owned(),
+        };
+
+        let base = Primary::Identifier(func_ident);
+
+        let args = ExpressionList {
+            loc: loc.clone(),
+            expressions: vec![self.clone()],
+        };
+
+        let call = PostfixTerm::PostfixTermCall(PostfixTermCall {
+            loc: loc.clone(),
+            args,
+        });
+
+        let pfe = PostfixExpression {
+            loc,
+            base,
+            terms: vec![call],
+        };
+
+        Expression::from(&pfe)
+    }
+
+    pub fn is_function_call(&self) -> (bool, Option<String>) {
+        fn peel(log: &LogOperation) -> Option<&PostfixExpression> {
+            if !log.right.is_empty() {
+                return None;
+            }
+            let comp: &CompOperation = &log.left;
+            if comp.right.is_some() {
+                return None;
+            }
+            let rel: &RelOperation = &comp.left;
+            if rel.right.is_some() {
+                return None;
+            }
+            let shift: &ShiftOperation = &rel.left;
+            if shift.right.is_some() {
+                return None;
+            }
+            let add: &AddOperation = &shift.left;
+            if !add.right.is_empty() {
+                return None;
+            }
+            let mul: &MulOperation = &add.left;
+            if !mul.right.is_empty() {
+                return None;
+            }
+            let UnaryOperation { postfix, .. } = &mul.left;
+            Some(&postfix.expr)
+        }
+
+        fn resolve_name(pfe: &PostfixExpression) -> Option<String> {
+            let last = pfe.terms.last()?;
+            if !matches!(last, PostfixTerm::PostfixTermCall(_)) {
+                return None;
+            }
+            if pfe.terms.len() == 1
+                && let crate::ast::Primary::Identifier(id) = &pfe.base
+            {
+                return Some(id.value.clone());
+            }
+            if pfe.terms.len() >= 2
+                && let PostfixTerm::PostfixTermAttribute(attr) = &pfe.terms[pfe.terms.len() - 2]
+            {
+                return Some(attr.id.value.clone());
+            }
+            None
+        }
+
+        match self {
+            Expression::LogOperation(log) => {
+                if let Some(pfe) = peel(log)
+                    && matches!(pfe.terms.last(), Some(PostfixTerm::PostfixTermCall(_)))
+                {
+                    return (true, resolve_name(pfe));
+                }
+                (false, None)
+            }
+            _ => (false, None),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DeclarationId {
     pub loc: SourcePointer,
