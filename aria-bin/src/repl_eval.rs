@@ -19,72 +19,53 @@ use crate::{
     },
 };
 
-fn matching_closer(c: char) -> char {
-    match c {
-        '(' => ')',
-        '[' => ']',
-        '{' => '}',
-        _ => panic!("unexpected call"),
-    }
-}
-
 struct ReplValidator;
 impl Validator for ReplValidator {
     fn validate(&self, line: &str) -> reedline::ValidationResult {
-        use reedline::ValidationResult::Complete;
-        use reedline::ValidationResult::Incomplete;
+        use reedline::ValidationResult::{Complete, Incomplete};
 
-        enum InString {
-            Yes(char),
-            No,
-        }
-
-        impl InString {
-            fn next(self, c: char) -> InString {
-                match self {
-                    InString::Yes(cc) => {
-                        if cc == c {
-                            InString::No
-                        } else {
-                            self
-                        }
-                    }
-                    InString::No => Self::Yes(c),
-                }
-            }
-
-            fn as_bool(&self) -> bool {
-                match self {
-                    InString::Yes(_) => true,
-                    InString::No => false,
-                }
-            }
-        }
-
-        let mut in_string = InString::No;
+        let mut quote: Option<char> = None; // '" or '\''
+        let mut escaped = false;
         let mut balance: Vec<char> = Vec::new();
 
         for c in line.chars() {
-            match c {
-                '"' | '\'' => in_string = in_string.next(c),
-                '(' | '[' | '{' => {
-                    if !in_string.as_bool() {
-                        balance.push(matching_closer(c));
-                    }
+            // inside string
+            if let Some(q) = quote {
+                if escaped {
+                    escaped = false;
+                    continue;
                 }
+                if c == '\\' {
+                    escaped = true;
+                    continue;
+                }
+                if c == q {
+                    quote = None;
+                }
+                continue;
+            }
+
+            if c == '#' {
+                break;
+            }
+
+            match c {
+                '"' | '\'' => quote = Some(c),
+                '(' => balance.push(')'),
+                '[' => balance.push(']'),
+                '{' => balance.push('}'),
                 ')' | ']' | '}' => {
-                    if !in_string.as_bool()
-                        && let Some(last) = balance.last()
-                        && *last == c
-                    {
+                    if matches!(balance.last(), Some(&need) if need == c) {
                         balance.pop();
-                    }
+                    } else {
+                        return Incomplete;
+                    } // early mismatch
                 }
                 _ => {}
             }
         }
 
-        if !in_string.as_bool() && balance.is_empty() {
+        if quote.is_none() && balance.is_empty() {
             Complete
         } else {
             Incomplete
@@ -171,44 +152,33 @@ fn setup_aria_vm(args: &Args) -> Result<(VirtualMachine, RuntimeModule), ()> {
 }
 
 fn is_call_to_print_or_println(expr: &ExpressionStatement) -> bool {
-    if let Some(val) = &expr.val {
-        let result = val.is_function_call();
-        if result.0 {
-            if let Some(name) = result.1 {
-                name == "print" || name == "println"
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    } else {
-        false
+    if let Some(v) = &expr.val {
+        let (is_call, name) = v.is_function_call();
+        return is_call && matches!(name, Some("print") | Some("println"));
     }
+    false
 }
 
 fn massage_ast_for_repl(ast: &mut aria_parser::ast::ParsedModule) -> bool {
-    if ast.entries.len() != 2 {
+    if ast.entries.is_empty() {
         return false;
     }
+    let idx = ast.entries.len() - 1;
 
-    let entry_1 = &ast.entries[1];
-    if let TopLevelEntry::ExpressionStatement(expr) = entry_1 {
-        if is_call_to_print_or_println(expr) {
-            false
-        } else if let Some(val) = &expr.val {
-            let new_node = val.call_function_passing_me("println");
-            ast.entries[1] = TopLevelEntry::ExpressionStatement(ExpressionStatement {
-                loc: val.loc().clone(),
-                val: Some(new_node),
-            });
-            true
-        } else {
-            false
-        }
-    } else {
-        false
+    let TopLevelEntry::ExpressionStatement(expr) = &ast.entries[idx] else {
+        return false;
+    };
+    if is_call_to_print_or_println(expr) {
+        return false;
     }
+    let Some(val) = &expr.val else { return false };
+
+    let new_node = val.call_function_passing_me("println");
+    ast.entries[idx] = TopLevelEntry::ExpressionStatement(ExpressionStatement {
+        loc: val.loc().clone(),
+        val: Some(new_node),
+    });
+    true
 }
 
 #[allow(clippy::unit_arg)]
@@ -284,9 +254,10 @@ pub(crate) fn repl_eval(args: &Args) {
         if eof {
             break;
         }
-        if input.trim() == "" {
+        if input.trim().is_empty() {
             continue;
         }
+
         let new_module = process_buffer(loop_idx, &input, &mut vm, &repl_module, args);
         loop_idx += 1;
         if let Ok(new_module) = new_module {

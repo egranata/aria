@@ -653,11 +653,6 @@ impl Expression {
 
 impl Expression {
     pub fn call_function_passing_me(&self, func_name: &str) -> Expression {
-        use crate::ast::{
-            Expression, ExpressionList, Identifier, PostfixExpression, PostfixTerm,
-            PostfixTermCall, Primary,
-        };
-
         let loc = self.loc().clone();
 
         let func_ident = Identifier {
@@ -686,7 +681,7 @@ impl Expression {
         Expression::from(&pfe)
     }
 
-    pub fn is_function_call(&self) -> (bool, Option<String>) {
+    pub fn is_function_call(&self) -> (bool, Option<&str>) {
         fn peel(log: &LogOperation) -> Option<&PostfixExpression> {
             if !log.right.is_empty() {
                 return None;
@@ -715,7 +710,7 @@ impl Expression {
             Some(&postfix.expr)
         }
 
-        fn resolve_name(pfe: &PostfixExpression) -> Option<String> {
+        fn resolve_name(pfe: &PostfixExpression) -> Option<&str> {
             let last = pfe.terms.last()?;
             if !matches!(last, PostfixTerm::PostfixTermCall(_)) {
                 return None;
@@ -723,12 +718,12 @@ impl Expression {
             if pfe.terms.len() == 1
                 && let crate::ast::Primary::Identifier(id) = &pfe.base
             {
-                return Some(id.value.clone());
+                return Some(&id.value);
             }
             if pfe.terms.len() >= 2
                 && let PostfixTerm::PostfixTermAttribute(attr) = &pfe.terms[pfe.terms.len() - 2]
             {
-                return Some(attr.id.value.clone());
+                return Some(&attr.id.value);
             }
             None
         }
