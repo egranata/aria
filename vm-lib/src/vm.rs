@@ -403,6 +403,11 @@ impl VirtualMachine {
             .map(|mli| mli.module.clone())
     }
 
+    pub fn inject_imported_module(&mut self, name: &str, module: RuntimeModule) {
+        self.imported_modules
+            .insert(name.to_owned(), ModuleLoadInfo { module });
+    }
+
     pub fn execute_module(&mut self, m: &RuntimeModule) -> ExecutionResult<RunloopExit> {
         let main_f = match m.load_named_value("main") {
             Some(RuntimeValue::Function(f)) => f,
