@@ -9,6 +9,7 @@ use aria_compiler::{constant_value::ConstantValue, module::CompiledModule};
 
 use crate::{
     builtins::VmBuiltins,
+    error::vm_error::VmErrorReason,
     runtime_value::{RuntimeValue, kind::RuntimeValueType},
 };
 
@@ -65,25 +66,18 @@ impl RuntimeModuleImpl {
         name: &str,
         val: RuntimeValue,
         builtins: &VmBuiltins,
-    ) -> bool {
+    ) -> Result<(), VmErrorReason> {
         let mut bm = self.values.borrow_mut();
         if let Some(nval) = bm.get_mut(name) {
             if !val.isa(&nval.ty, builtins) {
-                return false;
+                Err(VmErrorReason::UnexpectedType)
             } else {
                 nval.val = val;
+                Ok(())
             }
         } else {
-            bm.insert(
-                name.to_owned(),
-                NamedValue {
-                    val,
-                    ty: RuntimeValueType::Any,
-                },
-            );
+            Err(VmErrorReason::NoSuchIdentifier(name.to_owned()))
         }
-
-        true
     }
 
     fn store_named_value(&self, name: &str, val: RuntimeValue) {
@@ -151,7 +145,7 @@ impl RuntimeModule {
         name: &str,
         val: RuntimeValue,
         builtins: &VmBuiltins,
-    ) -> bool {
+    ) -> Result<(), VmErrorReason> {
         self.imp.store_typechecked_named_value(name, val, builtins)
     }
 
@@ -159,11 +153,16 @@ impl RuntimeModule {
         self.imp.load_indexed_const(idx)
     }
 
-    pub fn lift_all_symbols_from_other(&self, prior_art: &Self, vm: &crate::VirtualMachine) {
+    pub fn lift_all_symbols_from_other(
+        &self,
+        prior_art: &Self,
+        vm: &crate::VirtualMachine,
+    ) -> Result<(), VmErrorReason> {
         for (name, val) in prior_art.named_values_of_this() {
             self.typedef_named_value(&name, val.ty.clone());
-            self.store_typechecked_named_value(&name, val.val.clone(), &vm.builtins);
+            self.store_typechecked_named_value(&name, val.val.clone(), &vm.builtins)?;
         }
+        Ok(())
     }
 
     pub fn identity(&self) -> usize {
