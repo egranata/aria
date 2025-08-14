@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 use aria_compiler::{CompilationOptions, compile_from_ast};
-use aria_parser::ast::{SourceBuffer, source_to_ast};
+use aria_parser::ast::{
+    ExpressionStatement, SourceBuffer, TopLevelEntry,
+    prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
+    source_to_ast,
+};
 use haxby_vm::{
     runtime_module::RuntimeModule,
     vm::{VirtualMachine, VmOptions},
@@ -166,22 +170,76 @@ fn setup_aria_vm(args: &Args) -> Result<(VirtualMachine, RuntimeModule), ()> {
     Ok((vm, r_module))
 }
 
+fn is_call_to_print_or_println(expr: &ExpressionStatement) -> bool {
+    if let Some(val) = &expr.val {
+        let result = val.is_function_call();
+        if result.0 {
+            if let Some(name) = result.1 {
+                name == "print" || name == "println"
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    } else {
+        false
+    }
+}
+
+fn massage_ast_for_repl(ast: &mut aria_parser::ast::ParsedModule) -> bool {
+    if ast.entries.len() != 2 {
+        return false;
+    }
+
+    let entry_1 = &ast.entries[1];
+    if let TopLevelEntry::ExpressionStatement(expr) = entry_1 {
+        if is_call_to_print_or_println(expr) {
+            false
+        } else if let Some(val) = &expr.val {
+            let new_node = val.call_function_passing_me("println");
+            ast.entries[1] = TopLevelEntry::ExpressionStatement(ExpressionStatement {
+                loc: val.loc().clone(),
+                val: Some(new_node),
+            });
+            true
+        } else {
+            false
+        }
+    } else {
+        false
+    }
+}
+
 #[allow(clippy::unit_arg)]
 fn process_buffer(
     counter: u64,
     buffer: &str,
     vm: &mut VirtualMachine,
     repl_module: &RuntimeModule,
+    args: &Args,
 ) -> Result<RuntimeModule, ()> {
     let module_name = format!("__repl_chunk_{}", counter);
     let module_source_code = format!("import * from repl;\n{}\n", buffer);
     let sb = SourceBuffer::stdin_with_name(&module_source_code, &module_name);
-    let ast = match source_to_ast(&sb) {
+
+    let mut ast = match source_to_ast(&sb) {
         Ok(ast) => ast,
         Err(err) => {
             return Err(report_from_parser_error(&err));
         }
     };
+
+    let mutated = massage_ast_for_repl(&mut ast);
+
+    if args.dump_ast {
+        let ast_buffer = PrintoutAccumulator::default();
+        let output = ast.prettyprint(ast_buffer).value();
+        println!("AST dump:\n{output}\n");
+        if mutated {
+            println!("note: AST mutated for REPL purposes");
+        }
+    }
 
     let comp_opts = CompilationOptions::default();
 
@@ -192,6 +250,12 @@ fn process_buffer(
             return Err(());
         }
     };
+
+    if args.dump_mod {
+        let mod_buffer = PrintoutAccumulator::default();
+        let output = c_module.prettyprint(mod_buffer).value();
+        println!("Module dump:\n{output}\n");
+    }
 
     let r_module = RuntimeModule::new(c_module);
     if r_module
@@ -223,7 +287,7 @@ pub(crate) fn repl_eval(args: &Args) {
         if input.trim() == "" {
             continue;
         }
-        let new_module = process_buffer(loop_idx, &input, &mut vm, &repl_module);
+        let new_module = process_buffer(loop_idx, &input, &mut vm, &repl_module, args);
         loop_idx += 1;
         if let Ok(new_module) = new_module {
             let _ = repl_module.lift_all_symbols_from_other(&new_module, &vm);
