@@ -194,7 +194,12 @@ fn process_buffer(
     };
 
     let r_module = RuntimeModule::new(c_module);
-    r_module.lift_all_symbols_from_other(repl_module, vm);
+    if r_module
+        .lift_all_symbols_from_other(repl_module, vm)
+        .is_err()
+    {
+        return Err(());
+    }
     match vm.load_into_module("repl", r_module) {
         Ok(rle) => match rle {
             haxby_vm::vm::RunloopExit::Ok(m) => Ok(m.module),
@@ -221,7 +226,7 @@ pub(crate) fn repl_eval(args: &Args) {
         let new_module = process_buffer(loop_idx, &input, &mut vm, &repl_module);
         loop_idx += 1;
         if let Ok(new_module) = new_module {
-            repl_module.lift_all_symbols_from_other(&new_module, &vm);
+            let _ = repl_module.lift_all_symbols_from_other(&new_module, &vm);
         }
     }
 }
