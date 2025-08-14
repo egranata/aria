@@ -182,9 +182,8 @@ func main() {
         exec_code_with_vm_options(
             input,
             VmOptions {
-                tracing: false,
-                dump_stack: false,
                 vm_args: vec!["foo".to_owned(), "bar".to_owned()],
+                ..Default::default()
             }
         )
         .is_ok()

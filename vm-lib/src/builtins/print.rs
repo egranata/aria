@@ -13,7 +13,9 @@ impl BuiltinFunctionImpl for Print {
         vm: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let the_value = cur_frame.stack.pop();
-        print!("{}", the_value.prettyprint(cur_frame, vm));
+        let fmt = the_value.prettyprint(cur_frame, vm);
+        let mut console = vm.console().borrow_mut();
+        assert!(console.print(&fmt).is_ok());
 
         cur_frame.stack.push(ok_or_err!(
             vm.builtins.create_unit_object(),
