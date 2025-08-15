@@ -10,6 +10,7 @@ RUST_MIN_STACK=16777216
 cargo build --workspace --profile "$ARIA_BUILD_CONFIG"
 
 ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo test --profile "$ARIA_BUILD_CONFIG" --package vm-lib
+ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo test --profile "$ARIA_BUILD_CONFIG" --package aria-bin
 
 ARIA_TEST_DIR="$ARIA_TEST_DIR" \
 ARIA_LIB_DIR="$ARIA_LIB_DIR" \
