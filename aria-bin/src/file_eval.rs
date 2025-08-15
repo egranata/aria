@@ -13,8 +13,8 @@ use haxby_vm::{
 use crate::{
     Args,
     error_reporting::{
-        report_from_compiler_error, report_from_parser_error, report_from_vm_error,
-        report_from_vm_exception,
+        print_report_from_compiler_error, print_report_from_parser_error,
+        print_report_from_vm_error, print_report_from_vm_exception,
     },
 };
 
@@ -36,7 +36,7 @@ fn eval_buffer(
     let ast = match source_to_ast(&sb) {
         Ok(ast) => ast,
         Err(err) => {
-            return Err(report_from_parser_error(&err));
+            return Err(print_report_from_parser_error(&err));
         }
     };
 
@@ -51,7 +51,7 @@ fn eval_buffer(
     let c_module = match compile_from_ast(&ast, &comp_opts) {
         Ok(module) => module,
         Err(err) => {
-            err.iter().for_each(report_from_compiler_error);
+            err.iter().for_each(print_report_from_compiler_error);
             return Err(());
         }
     };
@@ -68,11 +68,11 @@ fn eval_buffer(
         Ok(rle) => match rle {
             haxby_vm::vm::RunloopExit::Ok(m) => m.module,
             haxby_vm::vm::RunloopExit::Exception(exc) => {
-                return Err(report_from_vm_exception(vm, &exc));
+                return Err(print_report_from_vm_exception(vm, &exc));
             }
         },
         Err(err) => {
-            return Err(report_from_vm_error(&err));
+            return Err(print_report_from_vm_error(&err));
         }
     };
 
@@ -81,9 +81,11 @@ fn eval_buffer(
     match exec_result {
         Ok(rle) => match rle {
             haxby_vm::vm::RunloopExit::Ok(_) => Ok(r_module),
-            haxby_vm::vm::RunloopExit::Exception(exc) => Err(report_from_vm_exception(vm, &exc)),
+            haxby_vm::vm::RunloopExit::Exception(exc) => {
+                Err(print_report_from_vm_exception(vm, &exc))
+            }
         },
-        Err(err) => Err(report_from_vm_error(&err)),
+        Err(err) => Err(print_report_from_vm_error(&err)),
     }
 }
 
