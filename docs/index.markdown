@@ -8,6 +8,7 @@ Welcome to the official documentation for the Aria project.
 *   [Standard Library](stdlib.md)
 *   [Roadmap](ROADMAP.md)
 *   [Contributing](CONTRIBUTING.md)
+*   [Blog](blog/index.md)
 
 ## What is Aria?
 
