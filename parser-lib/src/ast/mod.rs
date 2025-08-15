@@ -1305,6 +1305,10 @@ pub enum TopLevelEntry {
     AssertStatement(AssertStatement),
     ImportStatement(ImportStatement),
     ImportFromStatement(ImportFromStatement),
+    IfStatement(IfStatement),
+    MatchStatement(MatchStatement),
+    WhileStatement(WhileStatement),
+    ForStatement(ForStatement),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -79,6 +79,18 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
                 aria_parser::ast::TopLevelEntry::ImportFromStatement(i) => {
                     collate_error_if_any!(i.do_compile(params), errors)
                 }
+                aria_parser::ast::TopLevelEntry::IfStatement(i) => {
+                    collate_error_if_any!(i.do_compile(params), errors)
+                }
+                aria_parser::ast::TopLevelEntry::MatchStatement(m) => {
+                    collate_error_if_any!(m.do_compile(params), errors)
+                }
+                aria_parser::ast::TopLevelEntry::WhileStatement(w) => {
+                    collate_error_if_any!(w.do_compile(params), errors)
+                }
+                aria_parser::ast::TopLevelEntry::ForStatement(f) => {
+                    collate_error_if_any!(f.do_compile(params), errors)
+                }
             }
         }
 
