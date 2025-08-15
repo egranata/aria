@@ -185,6 +185,10 @@ top_level_entry = {
   | extension_decl
   | function_decl
   | assert_stmt
+  | if_stmt
+  | match_stmt
+  | while_stmt
+  | for_stmt
 }
 
 module_flag  = { "flag:" ~ identifier ~ ("(" ~ str_literal ~ ")")? ~ ";" }

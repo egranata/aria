@@ -2,8 +2,8 @@
 use crate::{
     ast::{
         AssertStatement, AssignStatement, EnumDecl, ExpressionStatement, ExtensionDecl,
-        FunctionDecl, ImportFromStatement, ImportStatement, MixinDecl, StructDecl, TopLevelEntry,
-        ValDeclStatement,
+        ForStatement, FunctionDecl, IfStatement, ImportFromStatement, ImportStatement,
+        MatchStatement, MixinDecl, StructDecl, TopLevelEntry, ValDeclStatement, WhileStatement,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -24,6 +24,10 @@ impl Derive for TopLevelEntry {
         (struct_decl, StructDecl),
         (val_decl_stmt, ValDeclStatement),
         (val_write_stmt, AssignStatement),
+        (if_stmt, IfStatement),
+        (match_stmt, MatchStatement),
+        (while_stmt, WhileStatement),
+        (for_stmt, ForStatement),
     );
 }
 
@@ -41,6 +45,10 @@ impl PrettyPrintable for TopLevelEntry {
             Self::ExpressionStatement(e) => e.prettyprint(buffer),
             Self::ImportStatement(i) => i.prettyprint(buffer),
             Self::ImportFromStatement(i) => i.prettyprint(buffer),
+            Self::IfStatement(i) => i.prettyprint(buffer),
+            Self::MatchStatement(m) => m.prettyprint(buffer),
+            Self::WhileStatement(w) => w.prettyprint(buffer),
+            Self::ForStatement(f) => f.prettyprint(buffer),
         }
     }
 }

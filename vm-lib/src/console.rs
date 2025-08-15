@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pub trait Console {
+pub trait Console: std::any::Any {
     fn print(&mut self, s: &str) -> std::io::Result<()> {
         print!("{}", s);
         Ok(())
@@ -12,11 +12,17 @@ pub trait Console {
         eprintln!("{}", s);
         Ok(())
     }
+
+    fn as_any(&self) -> &dyn std::any::Any;
 }
 
 #[derive(Default, Clone, Copy)]
 pub struct StdConsole;
-impl Console for StdConsole {}
+impl Console for StdConsole {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
 
 #[derive(Default, Clone)]
 pub struct TestConsole {
@@ -40,6 +46,10 @@ impl Console for TestConsole {
         self.stderr.push_str(s);
         self.stderr.push('\n');
         Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 

@@ -11,7 +11,7 @@ use haxby_vm::{
     runtime_module::RuntimeModule,
     vm::{VirtualMachine, VmOptions},
 };
-use reedline::{DefaultPrompt, FileBackedHistory, Reedline, Validator};
+use reedline::{DefaultPrompt, Reedline, Validator};
 
 use crate::{
     Args,
@@ -59,11 +59,11 @@ impl Validator for ReplValidator {
                 '[' => balance.push(']'),
                 '{' => balance.push('}'),
                 ')' | ']' | '}' => {
-                    if matches!(balance.last(), Some(&need) if need == c) {
-                        balance.pop();
+                    if !matches!(balance.last(), Some(&need) if need == c) {
+                        return Complete;
                     } else {
-                        return Incomplete;
-                    } // early mismatch
+                        balance.pop();
+                    }
                 }
                 _ => {}
             }
@@ -85,18 +85,21 @@ struct LineEditor {
 impl LineEditor {
     pub fn new() -> Self {
         let validator = Box::new(ReplValidator);
-        let history = Box::new(
-            FileBackedHistory::with_file(1024, "history.aria".into())
-                .expect("Error configuring history with file"),
-        );
         let prompt = DefaultPrompt {
             left_prompt: reedline::DefaultPromptSegment::Empty,
             right_prompt: reedline::DefaultPromptSegment::Empty,
         };
+        #[cfg(test)]
+        let line_editor = Reedline::create().with_validator(validator);
+        #[cfg(not(test))]
+        let line_editor = Reedline::create()
+            .with_validator(validator)
+            .with_history(Box::new(
+                reedline::FileBackedHistory::with_file(1024, "history.aria".into())
+                    .expect("history"),
+            ));
         Self {
-            line_editor: Reedline::create()
-                .with_validator(validator)
-                .with_history(history),
+            line_editor,
             prompt,
         }
     }
@@ -142,6 +145,14 @@ fn massage_ast_for_repl(ast: &mut aria_parser::ast::ParsedModule) -> bool {
         val: Some(new_node),
     });
     true
+}
+
+#[cfg(test)]
+pub struct ReplStepResult {
+    pub stdout: String,
+    #[allow(dead_code)]
+    pub stderr: String,
+    pub ok: bool,
 }
 
 pub struct Repl<'a> {
@@ -273,6 +284,47 @@ impl<'a> Repl<'a> {
         let console = console_borrow.deref_mut();
         let _ = report.0.write(report.1, console);
     }
+
+    #[cfg(test)]
+    pub fn eval_line(&mut self, src: &str) -> ReplStepResult {
+        fn diff(before: &str, after: &str) -> String {
+            if after.len() >= before.len() {
+                after[before.len()..].to_string()
+            } else {
+                String::new()
+            }
+        }
+
+        let before_console = self
+            .vm
+            .console()
+            .borrow()
+            .as_any()
+            .downcast_ref::<haxby_vm::console::TestConsole>()
+            .unwrap()
+            .clone();
+        let before_stdout = before_console.stdout.clone();
+        let before_stderr = before_console.stderr.clone();
+
+        let ok = self.process_buffer(src).is_ok();
+
+        let after_console = self
+            .vm
+            .console()
+            .borrow()
+            .as_any()
+            .downcast_ref::<haxby_vm::console::TestConsole>()
+            .unwrap()
+            .clone();
+        let after_stdout = after_console.stdout.clone();
+        let after_stderr = after_console.stderr.clone();
+
+        ReplStepResult {
+            stdout: diff(&before_stdout, &after_stdout),
+            stderr: diff(&before_stderr, &after_stderr),
+            ok,
+        }
+    }
 }
 
 pub(crate) fn repl_eval(args: &Args) {
@@ -283,13 +335,18 @@ pub(crate) fn repl_eval(args: &Args) {
 
     loop {
         let (input, eof) = ed.read_input();
+
         if eof {
             break;
         }
-        if input.trim().is_empty() {
-            continue;
-        }
 
-        let _ = repl.process_buffer(&input);
+        let input = input.trim();
+        if input.is_empty() {
+            continue;
+        } else if input == ":quit" {
+            break;
+        } else {
+            let _ = repl.process_buffer(input);
+        }
     }
 }
