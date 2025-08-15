@@ -43,6 +43,13 @@ impl Console for TestConsole {
     }
 }
 
+impl TestConsole {
+    pub fn clear(&mut self) {
+        self.stdout.clear();
+        self.stderr.clear();
+    }
+}
+
 impl std::io::Write for dyn Console {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let s = std::str::from_utf8(buf)
