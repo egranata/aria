@@ -4,10 +4,13 @@ mod error_reporting;
 mod file_eval;
 mod repl_eval;
 
+#[cfg(test)]
+mod test;
+
 use clap::Parser;
 use haxby_vm::vm::VmOptions;
 
-#[derive(Parser, Debug)]
+#[derive(Default, Parser, Debug)]
 #[command(author, version, about, trailing_var_arg = true)]
 struct Args {
     /// The name of the program file to run

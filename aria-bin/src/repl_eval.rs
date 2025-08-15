@@ -144,7 +144,7 @@ fn massage_ast_for_repl(ast: &mut aria_parser::ast::ParsedModule) -> bool {
     true
 }
 
-struct Repl<'a> {
+pub struct Repl<'a> {
     vm: VirtualMachine,
     module: RuntimeModule,
     args: &'a Args,
@@ -199,7 +199,7 @@ impl<'a> Repl<'a> {
     }
 
     #[allow(clippy::unit_arg)]
-    fn process_buffer(&mut self, buffer: &str) -> Result<RuntimeModule, ()> {
+    pub fn process_buffer(&mut self, buffer: &str) -> Result<RuntimeModule, ()> {
         let module_name = format!("__repl_chunk_{}", self.counter);
         self.counter += 1;
 
