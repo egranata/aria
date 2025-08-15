@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+use std::ops::DerefMut;
+
 use aria_compiler::{CompilationOptions, compile_from_ast};
 use aria_parser::ast::{
     ExpressionStatement, SourceBuffer, TopLevelEntry,
@@ -14,8 +16,10 @@ use reedline::{DefaultPrompt, FileBackedHistory, Reedline, Validator};
 use crate::{
     Args,
     error_reporting::{
-        report_from_compiler_error, report_from_parser_error, report_from_vm_error,
-        report_from_vm_exception,
+        build_report_from_compiler_error, build_report_from_parser_error,
+        build_report_from_vm_error, build_report_from_vm_exception,
+        print_report_from_compiler_error, print_report_from_parser_error,
+        print_report_from_vm_error, print_report_from_vm_exception,
     },
 };
 
@@ -110,47 +114,6 @@ impl LineEditor {
     }
 }
 
-#[allow(clippy::unit_arg)]
-fn setup_aria_vm(args: &Args) -> Result<(VirtualMachine, RuntimeModule), ()> {
-    let mut vm = VirtualMachine::with_options(VmOptions::from(args));
-    let repl_module_preamble = "";
-
-    let sb = SourceBuffer::stdin_with_name(repl_module_preamble, "repl");
-    let ast = match source_to_ast(&sb) {
-        Ok(ast) => ast,
-        Err(err) => {
-            return Err(report_from_parser_error(&err));
-        }
-    };
-
-    let comp_opts = CompilationOptions::default();
-
-    let c_module = match compile_from_ast(&ast, &comp_opts) {
-        Ok(module) => module,
-        Err(err) => {
-            err.iter().for_each(report_from_compiler_error);
-            return Err(());
-        }
-    };
-
-    let r_module = RuntimeModule::new(c_module);
-
-    let r_module = match vm.load_into_module("repl", r_module) {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(m) => m.module,
-            haxby_vm::vm::RunloopExit::Exception(exc) => {
-                return Err(report_from_vm_exception(&mut vm, &exc));
-            }
-        },
-        Err(err) => {
-            return Err(report_from_vm_error(&err));
-        }
-    };
-
-    vm.inject_imported_module("repl", r_module.clone());
-    Ok((vm, r_module))
-}
-
 fn is_call_to_print_or_println(expr: &ExpressionStatement) -> bool {
     if let Some(v) = &expr.val {
         let (is_call, name) = v.is_function_call();
@@ -181,73 +144,142 @@ fn massage_ast_for_repl(ast: &mut aria_parser::ast::ParsedModule) -> bool {
     true
 }
 
-#[allow(clippy::unit_arg)]
-fn process_buffer(
+struct Repl<'a> {
+    vm: VirtualMachine,
+    module: RuntimeModule,
+    args: &'a Args,
     counter: u64,
-    buffer: &str,
-    vm: &mut VirtualMachine,
-    repl_module: &RuntimeModule,
-    args: &Args,
-) -> Result<RuntimeModule, ()> {
-    let module_name = format!("__repl_chunk_{}", counter);
-    let module_source_code = format!("import * from repl;\n{}\n", buffer);
-    let sb = SourceBuffer::stdin_with_name(&module_source_code, &module_name);
+}
 
-    let mut ast = match source_to_ast(&sb) {
-        Ok(ast) => ast,
-        Err(err) => {
-            return Err(report_from_parser_error(&err));
-        }
-    };
+impl<'a> Repl<'a> {
+    #[allow(clippy::unit_arg)]
+    pub fn new(vm_options: VmOptions, args: &'a Args) -> Result<Self, ()> {
+        let mut vm = VirtualMachine::with_options(vm_options);
+        let repl_module_preamble = "";
 
-    let mutated = massage_ast_for_repl(&mut ast);
+        let sb = SourceBuffer::stdin_with_name(repl_module_preamble, "repl");
+        let ast = match source_to_ast(&sb) {
+            Ok(ast) => ast,
+            Err(err) => {
+                return Err(print_report_from_parser_error(&err));
+            }
+        };
 
-    if args.dump_ast {
-        let ast_buffer = PrintoutAccumulator::default();
-        let output = ast.prettyprint(ast_buffer).value();
-        println!("AST dump:\n{output}\n");
-        if mutated {
-            println!("note: AST mutated for REPL purposes");
-        }
+        let comp_opts = CompilationOptions::default();
+
+        let c_module = match compile_from_ast(&ast, &comp_opts) {
+            Ok(module) => module,
+            Err(err) => {
+                err.iter().for_each(print_report_from_compiler_error);
+                return Err(());
+            }
+        };
+
+        let r_module = RuntimeModule::new(c_module);
+
+        let r_module = match vm.load_into_module("repl", r_module) {
+            Ok(rle) => match rle {
+                haxby_vm::vm::RunloopExit::Ok(m) => m.module,
+                haxby_vm::vm::RunloopExit::Exception(exc) => {
+                    return Err(print_report_from_vm_exception(&mut vm, &exc));
+                }
+            },
+            Err(err) => {
+                return Err(print_report_from_vm_error(&err));
+            }
+        };
+
+        vm.inject_imported_module("repl", r_module.clone());
+        Ok(Repl {
+            vm,
+            module: r_module,
+            args,
+            counter: 0,
+        })
     }
 
-    let comp_opts = CompilationOptions::default();
+    #[allow(clippy::unit_arg)]
+    fn process_buffer(&mut self, buffer: &str) -> Result<RuntimeModule, ()> {
+        let module_name = format!("__repl_chunk_{}", self.counter);
+        self.counter += 1;
 
-    let c_module = match compile_from_ast(&ast, &comp_opts) {
-        Ok(module) => module,
-        Err(err) => {
-            err.iter().for_each(report_from_compiler_error);
+        let module_source_code = format!("import * from repl;\n{}\n", buffer);
+        let sb = SourceBuffer::stdin_with_name(&module_source_code, &module_name);
+
+        let mut ast = match source_to_ast(&sb) {
+            Ok(ast) => ast,
+            Err(err) => {
+                return Err(self.print_error_report(build_report_from_parser_error(&err)));
+            }
+        };
+
+        let mutated = massage_ast_for_repl(&mut ast);
+
+        if self.args.dump_ast {
+            let ast_buffer = PrintoutAccumulator::default();
+            let output = ast.prettyprint(ast_buffer).value();
+            println!("AST dump:\n{output}\n");
+            if mutated {
+                println!("note: AST mutated for REPL purposes");
+            }
+        }
+
+        let comp_opts = CompilationOptions::default();
+
+        let c_module = match compile_from_ast(&ast, &comp_opts) {
+            Ok(module) => module,
+            Err(err) => {
+                err.iter()
+                    .for_each(|e| self.print_error_report(build_report_from_compiler_error(e)));
+                return Err(());
+            }
+        };
+
+        if self.args.dump_mod {
+            let mod_buffer = PrintoutAccumulator::default();
+            let output = c_module.prettyprint(mod_buffer).value();
+            println!("Module dump:\n{output}\n");
+        }
+
+        let r_module = RuntimeModule::new(c_module);
+        if r_module
+            .lift_all_symbols_from_other(&self.module, &self.vm)
+            .is_err()
+        {
             return Err(());
         }
-    };
-
-    if args.dump_mod {
-        let mod_buffer = PrintoutAccumulator::default();
-        let output = c_module.prettyprint(mod_buffer).value();
-        println!("Module dump:\n{output}\n");
+        let load_result = self.vm.load_into_module("repl", r_module);
+        match load_result {
+            Ok(rle) => match rle {
+                haxby_vm::vm::RunloopExit::Ok(m) => {
+                    let new_module = m.module;
+                    let _ = self
+                        .module
+                        .lift_all_symbols_from_other(&new_module, &self.vm);
+                    Ok(new_module)
+                }
+                haxby_vm::vm::RunloopExit::Exception(exc) => {
+                    let report = build_report_from_vm_exception(&mut self.vm, &exc);
+                    Err(self.print_error_report(report))
+                }
+            },
+            Err(err) => Err(self.print_error_report(build_report_from_vm_error(&err))),
+        }
     }
 
-    let r_module = RuntimeModule::new(c_module);
-    if r_module
-        .lift_all_symbols_from_other(repl_module, vm)
-        .is_err()
-    {
-        return Err(());
-    }
-    match vm.load_into_module("repl", r_module) {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(m) => Ok(m.module),
-            haxby_vm::vm::RunloopExit::Exception(exc) => Err(report_from_vm_exception(vm, &exc)),
-        },
-        Err(err) => Err(report_from_vm_error(&err)),
+    fn print_error_report(&mut self, report: crate::error_reporting::PrintableReport<'_>) {
+        let console_rc = self.vm.console();
+        let mut console_borrow = console_rc.borrow_mut();
+        let console = console_borrow.deref_mut();
+        let _ = report.0.write(report.1, console);
     }
 }
 
 pub(crate) fn repl_eval(args: &Args) {
-    let (mut vm, repl_module) = setup_aria_vm(args).unwrap();
+    let vm_opts = VmOptions::from(args);
+    let mut repl = Repl::new(vm_opts, args).unwrap();
 
     let mut ed = LineEditor::new();
-    let mut loop_idx: u64 = 0;
 
     loop {
         let (input, eof) = ed.read_input();
@@ -258,10 +290,6 @@ pub(crate) fn repl_eval(args: &Args) {
             continue;
         }
 
-        let new_module = process_buffer(loop_idx, &input, &mut vm, &repl_module, args);
-        loop_idx += 1;
-        if let Ok(new_module) = new_module {
-            let _ = repl_module.lift_all_symbols_from_other(&new_module, &vm);
-        }
+        let _ = repl.process_buffer(&input);
     }
 }
