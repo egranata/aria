@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+struct PrettyPrintable {
+    type func new() {
+        return alloc(This);
+    }
+
+    func prettyprint(style="xyz") {
+        return "PrettyPrintable({0})".format(style);
+    }
+}
+
+func main() {
+    val pp = PrettyPrintable.new();
+
+    val s1 = "{0}".format(pp);
+    val s2 = "{0:abc}".format(pp);
+    val s3 = "{0:}".format(pp);
+
+    assert s1 == "PrettyPrintable(xyz)";
+    assert s2 == "PrettyPrintable(abc)";
+    assert s3 == "PrettyPrintable()";
+}
