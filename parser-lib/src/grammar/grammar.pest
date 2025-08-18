@@ -176,6 +176,7 @@ import_id_stmt = { "import" ~ import_target ~ "from" ~ import_path ~ ";" }
 top_level_entry = {
     import_id_stmt
   | import_stmt
+  | expr_stmt
   | val_write_stmt
   | val_decl_stmt
   | struct_decl
@@ -184,6 +185,10 @@ top_level_entry = {
   | extension_decl
   | function_decl
   | assert_stmt
+  | if_stmt
+  | match_stmt
+  | while_stmt
+  | for_stmt
 }
 
 module_flag  = { "flag:" ~ identifier ~ ("(" ~ str_literal ~ ")")? ~ ";" }

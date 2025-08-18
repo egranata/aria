@@ -14,6 +14,6 @@ parser-lib = { path = "../parser-lib" }
 compiler-lib = { path = "../compiler-lib" }
 opcodes-lib = { path = "../opcodes-lib" }
 enum-as-inner = "0.6.1"
-thiserror = "2.0.12"
+thiserror = "2.0.15"
 libloading = "0.8.8"
-libc = "0.2.174"
+libc = "0.2.175"

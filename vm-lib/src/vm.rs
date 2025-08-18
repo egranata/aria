@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::{
+    cell::RefCell,
     collections::HashMap,
     path::{Path, PathBuf},
+    rc::Rc,
 };
 
 use aria_compiler::{bc_reader::BytecodeReader, compile_from_source, module::CompiledModule};
@@ -12,6 +14,7 @@ use haxby_opcodes::{
 
 use crate::{
     builtins::VmBuiltins,
+    console::{Console, StdConsole},
     error::{
         dylib_load::{LoadResult, LoadStatus},
         exception::VmException,
@@ -34,11 +37,25 @@ use crate::{
     stack::Stack,
 };
 
-#[derive(Clone, Default)]
+pub type ConsoleHandle = Rc<RefCell<dyn Console>>;
+
+#[derive(Clone)]
 pub struct VmOptions {
     pub tracing: bool,
     pub dump_stack: bool,
     pub vm_args: Vec<String>,
+    pub console: ConsoleHandle,
+}
+
+impl Default for VmOptions {
+    fn default() -> Self {
+        Self {
+            tracing: Default::default(),
+            dump_stack: Default::default(),
+            vm_args: Default::default(),
+            console: Rc::new(RefCell::new(StdConsole {})),
+        }
+    }
 }
 
 pub struct VirtualMachine {
@@ -51,6 +68,10 @@ pub struct VirtualMachine {
 }
 
 impl VirtualMachine {
+    pub fn console(&self) -> &ConsoleHandle {
+        &self.options.console
+    }
+
     fn load_core_file_into_builtins(&mut self, name: &str, source: &str) -> RuntimeModule {
         let sb = SourceBuffer::stdin_with_name(source, name);
         let cmod = match aria_compiler::compile_from_source(&sb, &Default::default()) {
@@ -401,6 +422,11 @@ impl VirtualMachine {
         self.imported_modules
             .get(name)
             .map(|mli| mli.module.clone())
+    }
+
+    pub fn inject_imported_module(&mut self, name: &str, module: RuntimeModule) {
+        self.imported_modules
+            .insert(name.to_owned(), ModuleLoadInfo { module });
     }
 
     pub fn execute_module(&mut self, m: &RuntimeModule) -> ExecutionResult<RunloopExit> {
@@ -835,9 +861,15 @@ impl VirtualMachine {
                 let x = pop_or_err!(next, frame, op_idx);
                 if let Some(ct) = this_module.load_indexed_const(n)
                     && let Some(sv) = ct.as_string()
-                    && !this_module.store_typechecked_named_value(sv, x, &self.builtins)
                 {
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    let write_result =
+                        this_module.store_typechecked_named_value(sv, x, &self.builtins);
+                    match write_result {
+                        Ok(_) => {}
+                        Err(e) => {
+                            return build_vm_error!(e, next, frame, op_idx);
+                        }
+                    }
                 }
             }
             Opcode::TypedefNamed(n) => {
@@ -1492,7 +1524,12 @@ impl VirtualMachine {
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 };
-                dest.lift_all_symbols_from_other(src, self);
+                match dest.lift_all_symbols_from_other(src, self) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        return build_vm_error!(e, next, frame, op_idx);
+                    }
+                }
             }
             Opcode::Import(n) => {
                 let ipath = if let Some(ct) = this_module.load_indexed_const(n) {

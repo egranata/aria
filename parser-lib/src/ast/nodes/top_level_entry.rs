@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        AssertStatement, AssignStatement, EnumDecl, ExtensionDecl, FunctionDecl,
-        ImportFromStatement, ImportStatement, MixinDecl, StructDecl, TopLevelEntry,
-        ValDeclStatement,
+        AssertStatement, AssignStatement, EnumDecl, ExpressionStatement, ExtensionDecl,
+        ForStatement, FunctionDecl, IfStatement, ImportFromStatement, ImportStatement,
+        MatchStatement, MixinDecl, StructDecl, TopLevelEntry, ValDeclStatement, WhileStatement,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -15,6 +15,7 @@ impl Derive for TopLevelEntry {
         top_level_entry;
         (assert_stmt, AssertStatement),
         (enum_decl, EnumDecl),
+        (expr_stmt, ExpressionStatement),
         (extension_decl, ExtensionDecl),
         (function_decl, FunctionDecl),
         (import_id_stmt, ImportFromStatement),
@@ -23,6 +24,10 @@ impl Derive for TopLevelEntry {
         (struct_decl, StructDecl),
         (val_decl_stmt, ValDeclStatement),
         (val_write_stmt, AssignStatement),
+        (if_stmt, IfStatement),
+        (match_stmt, MatchStatement),
+        (while_stmt, WhileStatement),
+        (for_stmt, ForStatement),
     );
 }
 
@@ -37,8 +42,13 @@ impl PrettyPrintable for TopLevelEntry {
             Self::EnumDecl(e) => e.prettyprint(buffer),
             Self::ExtensionDecl(e) => e.prettyprint(buffer),
             Self::AssertStatement(a) => a.prettyprint(buffer),
+            Self::ExpressionStatement(e) => e.prettyprint(buffer),
             Self::ImportStatement(i) => i.prettyprint(buffer),
             Self::ImportFromStatement(i) => i.prettyprint(buffer),
+            Self::IfStatement(i) => i.prettyprint(buffer),
+            Self::MatchStatement(m) => m.prettyprint(buffer),
+            Self::WhileStatement(w) => w.prettyprint(buffer),
+            Self::ForStatement(f) => f.prettyprint(buffer),
         }
     }
 }
