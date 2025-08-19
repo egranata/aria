@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: Apache-2.0
+enum RetryResult {
+    case Pass(Any),
+    case Fail(Maybe), # last value if any
+    case Exception(Any), # last exception from f/check
+}
+
+func retry(f, check, attempts_count = 3, delay_ms = 500) {
+    if attempts_count <= 0 {
+        return RetryResult::Fail(Maybe::None);
+    }
+    if delay_ms < 0 {
+        return RetryResult::Fail(Maybe::None);
+    }
+
+    val last_result = Maybe::None;
+    val last_exception = Maybe::None;
+
+    while attempts_count > 0 {
+        last_exception = Maybe::None;
+
+        # same as a do { } while(false) in C, since there is no path but out
+        while true {
+            val result = Maybe::None;
+            try {
+                result = f();
+            } catch e {
+                last_exception = Maybe::Some(e);
+                break;
+            }
+
+            val checked = false;
+            try {
+                checked = check(result);
+            } catch e {
+                last_exception = Maybe::Some(e);
+                break;
+            }
+
+            if checked {
+                return RetryResult::Pass(result);
+            } else {
+                last_result = Maybe::Some(result);
+            }
+
+            break;
+        }
+
+        attempts_count -= 1;
+
+        if attempts_count > 0 {
+            sleep_ms(delay_ms);
+        }
+    }
+
+    if last_exception.is_Some() {
+        return RetryResult::Exception(last_exception.unwrap_Some());
+    } else {
+        return RetryResult::Fail(last_result);
+    }
+}
