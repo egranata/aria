@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 import Request from aria.network.request;
 import JsonValue from aria.json.parser;
+import * from aria.network.retry;
 
 func main() {
     val request = Request.new("https://httpbin.org/headers");
     request.headers["User-Agent"] = "Aria";
     request.headers["Custom-Header"] = "Answer_Is_42";
 
-    val result = request.get();
-    assert result.status_code == 200;
+    val result = retry(|| => request.get(), |result| => result.status_code == 200);
+    assert result.is_Pass();
+    val json_result = JsonValue.parse(result.unwrap_Pass().content);
 
-    val json_result = JsonValue.parse(result.content);
     val json_map = json_result.unwrap_Object();
     val json_headers = json_map["headers"].unwrap_Object();
     assert json_headers["User-Agent"].unwrap_String() == "Aria";

@@ -2,16 +2,17 @@
 import Request from aria.network.request;
 import JsonValue from aria.json.parser;
 import Map from aria.structures.map;
+import * from aria.network.retry;
 
 func main() {
     val request = Request.new("https://httpbin.org/post");
 
-    val result = request.post_as_json(Map.new() {
+    val result = retry(|| => request.post_as_json(Map.new() {
         ["message"] = "hello world",
-    });
+    }), |result| => result.status_code == 200);
 
-    assert result.status_code == 200;
+    assert result.is_Pass();
+    val json_result = JsonValue.parse(result.unwrap_Pass().content).flatten();
 
-    val json_result = JsonValue.parse(result.content).flatten();
     assert json_result["json"]["message"] == "hello world";
 }
