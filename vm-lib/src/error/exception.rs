@@ -120,6 +120,10 @@ impl VmException {
                 case: some_or_err!(rt_err.get_idx_of_case("NoSuchIdentifier"), err),
                 payload: Some(RuntimeValue::String(s.clone().into())),
             },
+            VmErrorReason::OperationFailed(s) => ExceptionData {
+                case: some_or_err!(rt_err.get_idx_of_case("OperationFailed"), err),
+                payload: Some(RuntimeValue::String(s.clone().into())),
+            },
             VmErrorReason::UnexpectedType => ExceptionData {
                 case: some_or_err!(rt_err.get_idx_of_case("UnexpectedType"), err),
                 payload: None,

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val before = now();
+    sleep_ms(50);
+    val after = now();
+
+    assert after - before >= 30; # allow some slack, but check that it didn't just return instantly
+    
+    val caught = false;
+    try {
+        sleep_ms(-100);
+    } catch e {
+        match e {
+            isa RuntimeError and case OperationFailed(msg) => {
+                caught = true;
+            }
+        }
+    }
+
+    assert caught;
+}
