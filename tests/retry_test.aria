@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: Apache-2.0
+import * from aria.network.retry;
+
+val global = 3;
+
+func return_global() {
+    if global < 0 {
+        throw global;
+    }
+
+    global -= 1;
+    return global;
+}
+
+func main() {
+    val ok = retry(return_global, |x| => x == 1, 3, 10);
+    assert ok.is_Pass();
+    assert ok.unwrap_Pass() == 1;
+
+    global = 5;
+    val ok = retry(return_global, |x| => x == 1, 3, 10);
+    assert ok.is_Fail();
+    assert ok.unwrap_Fail().is_Some();
+    assert ok.unwrap_Fail().unwrap_Some() == 2;
+    assert global == 2;
+
+    global = 0;
+    val ok = retry(return_global, |x| => x == 1, 3, 10);
+    assert ok.is_Exception();
+    assert ok.unwrap_Exception() == -1;
+
+    global = 5;
+    val ok = retry(return_global, |x| => {
+        throw 42;
+    }, 3, 10);
+    assert ok.is_Exception();
+    assert ok.unwrap_Exception() == 42;
+
+    val ok = retry(return_global, |x| => x == 1, 0, 10);
+    assert ok.is_Fail();
+    assert ok.unwrap_Fail().is_None();
+}
