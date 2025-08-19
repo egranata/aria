@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import Request from aria.network.request;
+import * from aria.network.retry;
 
 func main() {
     val request = Request.new("https://httpbin.org/status/418");
 
-    val result = request.get();
-    assert result.status_code == 418;
+    val result = retry(|| => request.get(), |result| => result.status_code == 418);
+    assert result.is_Pass();
 }
