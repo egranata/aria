@@ -295,10 +295,11 @@ func main() {
 }
 ```
 
-One-line functions are supported by putting a `=` after the function declaration:
+One-line functions are a shorthand form for functions that consist of a single return expression. Instead of writing a full block, you can use = after the declaration:
 ```
 func sum(x, y) = x + y;
 ```
+This is equivalent to writing a normal function that returns `x+y`.
 
 ## 🧱 Structs
 

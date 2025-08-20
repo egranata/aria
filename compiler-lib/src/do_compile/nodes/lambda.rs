@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-use aria_parser::ast::{CodeBlock, FunctionDecl, Identifier, ReturnStatement, Statement};
+use aria_parser::ast::{
+    CodeBlock, FunctionBody, FunctionDecl, Identifier, ReturnStatement, Statement,
+};
 
 use crate::do_compile::{CompilationResult, CompileNode, CompileParams};
 
@@ -27,7 +29,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LambdaFunction {
                 value: f_name.clone(),
             },
             args: self.args.clone(),
-            body: f_body,
+            body: FunctionBody { code: f_body },
         };
 
         let f_body_scope = params.scope.closure(params.writer.get_current_block());

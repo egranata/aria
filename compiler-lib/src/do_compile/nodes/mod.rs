@@ -14,6 +14,7 @@ mod expression_statement;
 mod extension_decl;
 mod float_literal;
 mod for_statement;
+mod function_body;
 mod function_decl;
 mod guard_block;
 mod identifier;

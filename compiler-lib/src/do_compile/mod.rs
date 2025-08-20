@@ -3,10 +3,11 @@ use std::{collections::HashSet, rc::Rc};
 
 use aria_parser::ast::{
     ArgumentDecl, ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl,
-    EnumDecl, EnumDeclEntry, Expression, Identifier, MatchPattern, MatchPatternEnumCase, MatchRule,
-    MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl, OperatorDecl, ParsedModule,
-    ReturnStatement, SourceBuffer, SourcePointer, Statement, StringLiteral, StructDecl,
-    StructEntry, ValDeclStatement, prettyprint::PrettyPrintable, source_to_ast,
+    EnumDecl, EnumDeclEntry, Expression, FunctionBody, Identifier, MatchPattern,
+    MatchPatternEnumCase, MatchRule, MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl,
+    OperatorDecl, ParsedModule, ReturnStatement, SourceBuffer, SourcePointer, Statement,
+    StringLiteral, StructDecl, StructEntry, ValDeclStatement, prettyprint::PrettyPrintable,
+    source_to_ast,
 };
 use haxby_opcodes::{builtin_type_ids::BUILTIN_TYPE_ANY, function_attribs::*};
 use thiserror::Error;
@@ -769,7 +770,9 @@ fn generate_is_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
         }),
     };
 
-    let method_body = CodeBlock::from(&Statement::MatchStatement(match_statement));
+    let method_body = FunctionBody {
+        code: CodeBlock::from(&Statement::MatchStatement(match_statement)),
+    };
     MethodDecl {
         loc: case.loc.clone(),
         access: MethodAccess::Instance,
@@ -830,7 +833,9 @@ fn generate_unwap_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
         }),
     };
 
-    let method_body = CodeBlock::from(&Statement::MatchStatement(match_statement));
+    let method_body = FunctionBody {
+        code: CodeBlock::from(&Statement::MatchStatement(match_statement)),
+    };
     MethodDecl {
         loc: case.loc.clone(),
         access: MethodAccess::Instance,

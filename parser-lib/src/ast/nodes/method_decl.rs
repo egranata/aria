@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        ArgumentList, CodeBlock, Expression, Identifier, MethodAccess, MethodDecl, ReturnStatement,
-        SourceBuffer, Statement,
+        ArgumentList, FunctionBody, Identifier, MethodAccess, MethodDecl, SourceBuffer,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -28,30 +27,7 @@ impl Derive for MethodDecl {
         } else {
             ArgumentList::empty(source.pointer(loc))
         };
-        let b = inner.next().expect("need body");
-        let body = match b.as_rule() {
-            Rule::code_block => CodeBlock::from_parse_tree(b, source),
-            Rule::function_body => {
-                let mut inner_body = b.into_inner();
-                let i = inner_body.next().expect("need inner body part");
-                match i.as_rule() {
-                    Rule::code_block => CodeBlock::from_parse_tree(i, source),
-                    Rule::expression => {
-                        let expr = Expression::from_parse_tree(i, source);
-                        let return_stmt = ReturnStatement {
-                            loc: source.pointer(loc),
-                            val: Some(expr),
-                        };
-                        CodeBlock {
-                            loc: source.pointer(loc),
-                            entries: vec![Statement::ReturnStatement(return_stmt)],
-                        }
-                    }
-                    _ => panic!("Unexpected rule for inner function body: {i:?}"),
-                }
-            }
-            _ => panic!("Unexpected rule for function body: {b:?}"),
-        };
+        let body = FunctionBody::from_parse_tree(inner.next().expect("need body"), source);
         Self {
             loc: source.pointer(loc),
             access,
