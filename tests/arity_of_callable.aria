@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Callable {
+    operator()(n,m=0) {
+        return n + m + 1;
+    }
+}
+
+func main() {
+    val c = alloc(Callable);
+    val a = arity(c);
+
+    assert a.min == 1;
+    assert a.max.is_Bounded();
+    assert a.max.unwrap_Bounded() == 2;
+    assert a.has_receiver == true;
+
+    assert c(1) == 2;
+    assert c(0, 2) == 3;
+}
