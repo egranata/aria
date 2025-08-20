@@ -591,6 +591,10 @@ pub struct LambdaFunction {
     pub args: ArgumentList,
     pub body: Box<LambaBody>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FunctionBody {
+    pub code: CodeBlock,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TernaryExpression {
@@ -1061,7 +1065,7 @@ pub struct FunctionDecl {
     pub loc: SourcePointer,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub body: CodeBlock,
+    pub body: FunctionBody,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1076,7 +1080,7 @@ pub struct MethodDecl {
     pub access: MethodAccess,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub body: CodeBlock,
+    pub body: FunctionBody,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1108,7 +1112,7 @@ pub struct OperatorDecl {
     pub reverse: bool,
     pub symbol: OperatorSymbol,
     pub args: ArgumentList,
-    pub body: CodeBlock,
+    pub body: FunctionBody,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
