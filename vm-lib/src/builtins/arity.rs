@@ -74,30 +74,36 @@ impl Arity {
         }
     }
 }
+
+fn get_to_function_for_callable(
+    val: &RuntimeValue,
+    vm: &mut crate::vm::VirtualMachine,
+) -> Option<(crate::runtime_value::function::Function, bool)> {
+    if let Some(f) = val.as_function() {
+        Some((f.clone(), false))
+    } else if let Some(bf) = val.as_bound_function() {
+        Some((bf.func().clone(), true))
+    } else if let Ok(call) = val.read_attribute("_op_impl_call", &vm.builtins) {
+        get_to_function_for_callable(&call, vm)
+    } else {
+        None
+    }
+}
+
 impl BuiltinFunctionImpl for Arity {
     fn eval(
         &self,
         frame: &mut Frame,
         vm: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
-        let mut has_receiver_receiver = false;
-        let f_this = VmBuiltins::extract_arg(frame, |val| {
-            if let Some(f) = val.as_function() {
-                Some(f)
-            } else if let Some(bf) = val.as_bound_function() {
-                has_receiver_receiver = true;
-                Some(bf.func())
-            } else {
-                None
-            }
-            .cloned()
-        })?;
+        let (f_this, has_receiver) =
+            VmBuiltins::extract_arg(frame, |val| get_to_function_for_callable(&val, vm))?;
         let arity_cache = self.fill_in_cache(vm)?;
 
         let f_arity = f_this.arity();
         let is_vararg = f_this.attribute().is_vararg();
 
-        let argc_offset = if has_receiver_receiver { 1 } else { 0 };
+        let argc_offset = if has_receiver { 1 } else { 0 };
 
         let upper_bound_value = RuntimeValue::EnumValue(some_or_err!(
             if is_vararg {
@@ -121,10 +127,7 @@ impl BuiltinFunctionImpl for Arity {
         let arity_object = Object::new(&arity_cache.arity_struct)
             .with_value("min", lower_bound_value)
             .with_value("max", upper_bound_value)
-            .with_value(
-                "has_receiver",
-                RuntimeValue::Boolean(has_receiver_receiver.into()),
-            );
+            .with_value("has_receiver", RuntimeValue::Boolean(has_receiver.into()));
 
         frame.stack.push(RuntimeValue::Object(arity_object));
         Ok(RunloopExit::Ok(()))
