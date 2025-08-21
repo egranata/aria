@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 func sum(x, y) = x + y;
 func assign() = 42;
 
