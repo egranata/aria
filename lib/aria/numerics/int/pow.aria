@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+extension Int {
+    func pow(y: Int) {
+        if y < 0 {
+            throw Int.DomainError.new("Negative exponent not supported");
+        }
+
+        if y == 0 { return 1; }
+        if this == 0 { return 0; }
+
+        val base = this;
+        val exp = y;
+        val res = 1;
+
+        while exp > 0 {
+            if exp % 2 != 0 {
+                res *= base;
+            }
+            if exp == 1 { break; }
+            base *= base;
+            exp /= 2;
+        }
+
+        return res;
+    }
+}

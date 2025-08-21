@@ -108,3 +108,17 @@ extension Int {
         return Maybe::Some(ret);
     }
 }
+
+extension Int {
+    struct DomainError {
+        type func new(msg: String) {
+            return alloc(This) {
+                .msg = msg
+            };
+        }
+
+        instance func prettyprint() {
+            return "integer domain error: {0}".format(this.msg);
+        }
+    }
+}
