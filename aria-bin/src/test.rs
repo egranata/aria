@@ -133,3 +133,33 @@ match n {
         &["10 or less"],
     );
 }
+
+#[test]
+fn repl_printout_maybe() {
+    let cmdline_options = Args::default();
+    let mut repl = build_test_repl(&cmdline_options);
+
+    run_passing_repl_line(
+        &mut repl,
+        r#"
+struct Pair {
+    type func new(x,y) {
+        return alloc(This) {
+            .x = x, .y = y,
+        };
+    }
+    func prettyprint() {
+        return "Pair({0},{1})".format(this.x,this.y);
+    }
+}
+"#,
+        &[""],
+    );
+
+    run_passing_repl_line(
+        &mut repl,
+        "Maybe::Some(Pair.new(4,5));",
+        &["Some(Pair(4,5))"],
+    );
+    run_passing_repl_line(&mut repl, "Maybe::None;", &["None"]);
+}

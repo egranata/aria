@@ -13,6 +13,8 @@ import aria.core.int;
 
 import aria.core.list;
 
+import aria.core.maybe;
+
 import aria.core.string;
 
 import Nothing from aria.core.nothing;
