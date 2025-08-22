@@ -76,7 +76,7 @@ impl Frame {
         this
     }
 
-    pub fn new_with_n_locals(n: u8) -> Self {
+    pub(crate) fn new_with_n_locals(n: u8) -> Self {
         let mut this = Self {
             stack: Default::default(),
             line_table: None,
@@ -116,6 +116,6 @@ impl Frame {
 
 impl Default for Frame {
     fn default() -> Self {
-        Self::new_with_n_locals(u8::MAX)
+        Self::new_with_n_locals(0)
     }
 }
