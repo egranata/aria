@@ -10,7 +10,7 @@ use aria_compiler::compile_from_source;
 use aria_parser::ast::SourceBuffer;
 use clap::{Parser, command};
 use glob::Paths;
-use haxby_vm::{frame::Frame, vm::VirtualMachine};
+use haxby_vm::vm::VirtualMachine;
 use rayon::prelude::*;
 
 #[derive(clap::ValueEnum, Clone, Debug, Default)]
@@ -73,7 +73,7 @@ fn run_test_from_pattern(path: &str) -> TestCaseResult {
         Ok(rle) => match rle {
             haxby_vm::vm::RunloopExit::Ok(m) => m.module,
             haxby_vm::vm::RunloopExit::Exception(e) => {
-                let mut frame = Frame::default();
+                let mut frame = Default::default();
                 let epp = e.value.prettyprint(&mut frame, &mut vm);
                 return TestCaseResult::Fail(epp);
             }
@@ -90,7 +90,7 @@ fn run_test_from_pattern(path: &str) -> TestCaseResult {
                 TestCaseResult::Pass(duration)
             }
             haxby_vm::vm::RunloopExit::Exception(e) => {
-                let mut frame = Frame::default();
+                let mut frame = Default::default();
                 let epp = e.value.prettyprint(&mut frame, &mut vm);
                 TestCaseResult::Fail(epp)
             }

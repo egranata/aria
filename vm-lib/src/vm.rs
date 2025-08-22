@@ -393,7 +393,7 @@ impl VirtualMachine {
         let entry_cco = entry_cm.load_entry_code_object();
         let entry_co: CodeObject = Into::into(&entry_cco);
         let entry_f = Function::from_code_object(&entry_co, 0, &r_mod);
-        let mut entry_frame: Frame = Frame::default();
+        let mut entry_frame: Frame = Default::default();
 
         let entry_result = entry_f.eval(0, &mut entry_frame, self, true);
         match entry_result {
@@ -435,12 +435,7 @@ impl VirtualMachine {
             _ => return Err(VmErrorReason::NoSuchIdentifier("main".to_owned()).into()),
         };
 
-        match main_f.eval(
-            0,
-            &mut Frame::new_with_n_locals(main_f.frame_size()),
-            self,
-            true,
-        )? {
+        match main_f.eval(0, &mut Default::default(), self, true)? {
             crate::runtime_value::CallResult::OkNoValue
             | crate::runtime_value::CallResult::Ok(_) => Ok(RunloopExit::Ok(())),
             crate::runtime_value::CallResult::Exception(e) => Ok(RunloopExit::Exception(e)),

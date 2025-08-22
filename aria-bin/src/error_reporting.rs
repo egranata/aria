@@ -6,7 +6,6 @@ use aria_parser::ast::{ParserError, SourcePointer};
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use haxby_vm::{
     error::{exception::VmException, vm_error::VmError},
-    frame::Frame,
     vm::VirtualMachine,
 };
 
@@ -115,7 +114,7 @@ pub(crate) fn build_report_from_vm_exception<'a>(
     vm: &mut VirtualMachine,
     exc: &'a VmException,
 ) -> PrintableReport<'a> {
-    let mut cur_frame = Frame::default();
+    let mut cur_frame = Default::default();
     let msg = exc.value.prettyprint(&mut cur_frame, vm);
     let backtraces: Vec<_> = exc.backtrace.entries_iter().cloned().collect();
     build_report_from_msg_and_location(&msg, backtraces)
