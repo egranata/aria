@@ -225,11 +225,12 @@ This module provides extensions to the built-in `String` type.
     *   `repeat(n: Int)`: Returns a new string containing `this` string repeated `n` times.
     *   `op_mul(rhs: Int)` (Operator `*`): Returns a new string containing `this` string repeated `rhs` times.
     *   `op_rmul(lhs: Int)` (Operator `*`): Handles multiplication when the `String` is on the right-hand side of the `*` operator.
-    *   `trim()`: Returns a new string with leading and trailing whitespace removed.
+    *   `trim_head()`: Returns a new string with leading whitespace removed.
+    *   `trim_tail()`: Returns a new string with trailing whitespace removed.
     *   `format(...)`: Formats the string using positional arguments. Placeholders like `{0}` are replaced by corresponding arguments. Supports `{{` and `}}` for literal braces.
     *   `substring(from: Int, to: Int)`: Returns a new string that is a substring of `this` string, starting at `from` (inclusive) and ending at `to` (inclusive).
     *   `hash()`: Returns an integer hash value for the string.
-    *   `len()`: Returns the length of the string in bytes.
+    *   `len()`: Returns the length of the string in characters.
     *   `has_prefix(prefix: String)`: Returns `true` if the string starts with `prefix`, `false` otherwise.
     *   `has_suffix(suffix: String)`: Returns `true` if the string ends with `suffix`, `false` otherwise.
     *   `replace(current: String, wanted: String)`: Returns a new string with all occurrences of `current` replaced by `wanted`.
@@ -1102,3 +1103,117 @@ This module provides the core components for defining test cases and organizing 
     *   `type func new(name)`: Creates a new `TestSuite` with the given `name`.
     *   `add_test(test)`: Adds a `TestCase` instance to the suite. Returns the `TestSuite` instance for chaining.
     *   `run()`: Executes all test cases added to the suite. Prints the result of each test and a summary of passed/failed tests. Returns the number of failed tests.
+
+---
+# Built-in Functions
+
+This section provides a reference for the built-in functions of the Aria language.
+
+### `alloc(type)`
+Allocates a new object of the given type with a default value.
+*   **Arguments:**
+    *   `type`: The type to allocate (e.g. a struct type).
+*   **Returns:** A new object of the specified type.
+
+### `arity(callable)`
+Returns the arity of a callable object (function, bound function, etc.).
+*   **Arguments:**
+    *   `callable`: The callable object.
+*   **Returns:** A struct with the following fields:
+    *   `min` (Int): The minimum number of arguments.
+    *   `max` (Int or `UpperBound`): The maximum number of arguments.
+    *   `has_receiver` (Bool): Whether the callable has a receiver (`this`).
+
+### `cmdline_arguments()`
+Returns a list of strings representing the command-line arguments passed to the VM.
+*   **Returns:** A `List` of `String`s.
+
+### `getenv(name)`
+Returns the value of an environment variable.
+*   **Arguments:**
+    *   `name` (String): The name of the environment variable.
+*   **Returns:** `Maybe::Some(String)` if the variable is found, `Maybe::None` otherwise.
+
+### `hasattr(object, name)`
+Checks if an object has a specific attribute.
+*   **Arguments:**
+    *   `object`: The object to inspect.
+    *   `name` (String): The name of the attribute.
+*   **Returns:** `true` if the attribute exists, `false` otherwise.
+
+### `identity(object)`
+Returns a unique integer identifier for the given object.
+*   **Arguments:**
+    *   `object`: The object to identify.
+*   **Returns:** An `Int` representing the object's identity.
+
+### `listattrs(object)`
+Returns a list of an object's attributes.
+*   **Arguments:**
+    *   `object`: The object to inspect.
+*   **Returns:** A `List` of `String`s representing the attribute names.
+
+### `now()`
+Returns the current time as the number of milliseconds since the Unix epoch.
+*   **Returns:** An `Int`.
+
+### `prettyprint(object)`
+Returns a string representation of an object.
+*   **Arguments:**
+    *   `object`: The object to represent.
+*   **Returns:** A `String`.
+
+### `print(object)`
+Prints a string representation of an object to the console.
+*   **Arguments:**
+    *   `object`: The object to print.
+*   **Returns:** `Unit`.
+
+### `println(object)`
+Prints a string representation of an object to the console, followed by a newline.
+*   **Arguments:**
+    *   `object`: The object to print.
+*   **Returns:** `Unit`.
+
+### `readattr(object, name)`
+Reads the value of an attribute from an object.
+*   **Arguments:**
+    *   `object`: The object to read from.
+    *   `name` (String): The name of the attribute.
+*   **Returns:** The value of the attribute.
+
+### `readln(prompt)`
+Reads a line of input from the user after displaying a prompt.
+=*   **Arguments:**
+    *   `prompt` (String): The prompt to display.
+*   **Returns:** A `String` containing the user's input.
+
+### `sleep_ms(milliseconds)`
+Pauses execution for a specified duration.
+*   **Arguments:**
+    *   `milliseconds` (Int): The number of milliseconds to sleep.
+*   **Returns:** `Unit`.
+
+### `system(command)`
+Executes a shell command.
+*   **Arguments:**
+    *   `command` (String): The command to execute.
+*   **Returns:** An `Int` object representing the exit code, with `stdout` and `stderr` attributes containing the command's output.
+
+### `timezone_info()`
+Returns information about the local timezone.
+*   **Returns:** A `List` containing the timezone offset in minutes (Int) and the timezone name (String).
+
+### `typeof(object)`
+Returns the type of an object.
+*   **Arguments:**
+    *   `object`: The object to inspect.
+*   **Returns:** A `Type` object.
+
+### `writeattr(object, name, value)`
+Writes a value to an attribute of an object.
+*   **Arguments:**
+    *   `object`: The object to modify.
+    *   `name` (String): The name of the attribute.
+    *   `value`: The value to write.
+*   **Returns:** `Unit`.
