@@ -629,8 +629,8 @@ impl BasicBlock {
 
     fn calculate_locals_access(&self, dest: &mut LocalValuesAccess) {
         let br = self.writer.borrow();
-        for src_op in br.as_slice() {
-            match src_op.op {
+        for i in 0..br.len() {
+            match br[i].op {
                 BasicBlockOpcode::ReadLocal(x) | BasicBlockOpcode::StoreUplevel(x) => {
                     dest.reads.insert(x);
                 }
@@ -638,7 +638,20 @@ impl BasicBlock {
                     dest.writes.insert(x);
                 }
                 BasicBlockOpcode::TypedefLocal(x) => {
-                    dest.writes.insert(x);
+                    if i > 0 {
+                        if let BasicBlockOpcode::PushBuiltinTy(x) = br[i - 1].op
+                            && x == 1
+                        {
+                            dest.writes.insert(x);
+                        } else {
+                            dest.reads.insert(x);
+                            dest.writes.insert(x);
+                        }
+                    } else {
+                        // this is quite odd, as there would have to be something else defining
+                        // the type of the local on the stack, but just keep going for sake of completeness
+                        dest.writes.insert(x);
+                    }
                 }
                 _ => {}
             }
