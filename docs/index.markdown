@@ -5,10 +5,12 @@ Welcome to the official documentation for the Aria project.
 ## Table of Contents
 
 *   [Manual](manual.md)
-*   [Standard Library](stdlib.md)
-*   [Roadmap](ROADMAP.md)
-*   [Contributing](CONTRIBUTING.md)
+*   [Standard Library Reference](stdlib.md)
+
 *   [Blog](blog/index.md)
+*   [Contributing](CONTRIBUTING.md)
+*   [Roadmap](ROADMAP.md)
+*   [Style Guide](style_guide.md)
 
 ## What is Aria?
 
