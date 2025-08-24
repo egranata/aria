@@ -8,7 +8,7 @@ mod repl_eval;
 mod test;
 
 use clap::Parser;
-use haxby_vm::vm::VmOptions;
+use haxby_vm::vm::{VirtualMachine, VmOptions};
 
 #[derive(Default, Parser, Debug)]
 #[command(author, version, about, trailing_var_arg = true)]
@@ -32,6 +32,8 @@ struct Args {
     disable_optimizer: bool,
     #[arg(trailing_var_arg = true)]
     extra_args: Vec<String>,
+    #[arg(long("print-lib-path"))]
+    print_lib_path: bool,
 }
 
 impl From<&Args> for VmOptions {
@@ -51,8 +53,21 @@ impl From<&Args> for VmOptions {
     }
 }
 
+fn print_lib_paths() {
+    let lib_paths = VirtualMachine::get_aria_library_paths();
+    for path in lib_paths {
+        println!("{}", path.display());
+    }
+}
+
 fn main() {
     let args = Args::parse();
+
+    if args.print_lib_path {
+        print_lib_paths();
+        return;
+    }
+
     if let Some(path) = &args.path {
         file_eval::file_eval(path, &args);
     } else {
