@@ -1065,9 +1065,28 @@ Any Aria file can be a module.
 
 Modules are imported with the `import` statement, which follows a dotted structure, e.g. `import aria.rng.xorshift;`. `aria` is the name of the Aria standard library module, which contains submodules defined via filesystem paths. Documentation for the Aria library is contained in [stdlib.md](stdlib.md).
 
-Modules are located via the `ARIA_LIB_DIR` environment variable, which is a list of paths, separated by a colon. Each path is scanned in order until the module is found or all are exhausted.
+The following algorithm is used to resolve where to look for imports:
+- if `ARIA_LIB_DIR` is defined, it is a list of paths separated by the platform separator; the system looks in each path in the order provided until the module is found;
+- if there is a `lib/aria` directory next to the running binary, then the system looks in `lib/` for modules;
+- if there is a `lib/aria` directory in the parent directory of the running binary, then the system looks in `lib/` for modules.
 
-`aria.rng.xorshift` is defined in `lib/aria/rng/xorshift.aria`. Directories may contain other directories, or files, or a combination thereof. A directory is scanned by virtue of its name being used, and does not need contain any files. Directories may be arbitrarily nested.
+If running on Linux, four additional paths are searched:
+- `/usr/local/aria<version>/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/local/aria/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/lib/aria<version>` which is used if it contains an `aria` subdirectory;
+- `/usr/lib/aria` which is used if it contains an `aria` subdirectory.
+
+If running on macOS, four additional paths are searched:
+- `/opt/homebrew/opt/aria<version>/lib` which is used if it contains an `aria` subdirectory;
+- `/opt/homebrew/opt/aria/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/local/opt/aria<version>/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/local/opt/aria/lib` which is used if it contains an `aria` subdirectory.
+
+If `ARIA_LIB_DIR_EXTRA` is defined, it is a list of paths separated by the platform separator; each existing directory in that list is added to the end of the search path.
+
+If no valid path exists, import modules cannot be located. Running Aria without its standard library is not a supported configuration.
+
+As an example, `aria.rng.xorshift` is defined in `lib/aria/rng/xorshift.aria`. Directories may contain other directories, or files, or a combination thereof. A directory is scanned by virtue of its name being used, and does not need contain any marker files to be recognized as a module. Directories may be arbitrarily nested.
 
 A module can be imported more than once, but only the first import will load the module, others will act as a no-op. An import of a module brings that module into the visible set of symbols, and names inside the module can be referenced via a fully-dotted path. For example
 
