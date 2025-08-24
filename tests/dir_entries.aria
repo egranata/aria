@@ -22,7 +22,7 @@ func main() {
 
     println("Created {0} ms since epoch".format(entries[0].creation_ms_since_epoch()));
 
-    val creation = Instant.from_unix_timestamp(entries[0].creation_ms_since_epoch());
+    val creation = Instant.new_with_utc_timestamp(entries[0].creation_ms_since_epoch());
 
     assert creation.year >= 2025;
     if creation.year == 2025 {

@@ -2,7 +2,7 @@
 import Instant from aria.date.instant;
 
 func main() {
-    val moment = Instant.from_unix_timestamp(1623602460000);
+    val moment = Instant.new_with_utc_timestamp(1623602460000);
     assert moment.year == 2021;
     assert moment.month == 6;
     assert moment.day == 13;
@@ -12,7 +12,7 @@ func main() {
     assert moment.millisecond == 0;
     assert "{0}".format(moment) == "Jun 13 2021 16:41:00.000";
 
-    moment = Instant.from_unix_timestamp(1736142835000);
+    moment = Instant.new_with_utc_timestamp(1736142835000);
     assert moment.year == 2025;
     assert moment.month == 1;
     assert moment.day == 6;
@@ -21,7 +21,7 @@ func main() {
     assert moment.second == 55;
     assert moment.millisecond == 0;
 
-    moment = Instant.from_unix_timestamp(-85399999000);
+    moment = Instant.new_with_utc_timestamp(-85399999000);
     assert moment.year == 1967;
     assert moment.month == 4;
     assert moment.day == 18;
@@ -30,7 +30,7 @@ func main() {
     assert moment.second == 41;
     assert moment.millisecond == 0;
 
-    moment = Instant.from_unix_timestamp(-783264174000);
+    moment = Instant.new_with_utc_timestamp(-783264174000);
     assert moment.year == 1945;
     assert moment.month == 3;
     assert moment.day == 7;
