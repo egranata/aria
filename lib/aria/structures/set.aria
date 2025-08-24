@@ -8,7 +8,7 @@ struct Set {
         };
     }
 
-    type func new_from_items(...) {
+    type func new_with_items(...) {
         val ret = Set.new();
         for item in varargs {
             ret.set(item);

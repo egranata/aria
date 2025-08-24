@@ -73,7 +73,7 @@ struct Request {
     }
 
     func post_as_json(data) {
-        val the_val = JsonValue.new_from_value(data).to_json_string();
+        val the_val = JsonValue.new_with_value(data).to_json_string();
         this.headers["Content-Type"] = "application/json";
         return this.post(the_val);
     }

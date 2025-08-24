@@ -20,7 +20,7 @@ struct JsonConvertError {
 }
 
 extension JsonValue {
-    type func new_from_value(x) {
+    type func new_with_value(x) {
         match x {
             isa String => {
                 return JsonValue::String(x);
@@ -37,7 +37,7 @@ extension JsonValue {
             isa List => {
                 val ret = [];
                 for item in x {
-                    ret.append(JsonValue.new_from_value(item));
+                    ret.append(JsonValue.new_with_value(item));
                 }
                 return JsonValue::Array(ret);
             }
@@ -48,7 +48,7 @@ extension JsonValue {
                     if !(key isa String) {
                         key = format("{0}", key);
                     }
-                    val value = JsonValue.new_from_value(item.value);
+                    val value = JsonValue.new_with_value(item.value);
                     ret.set(key, value);
                 }
                 return JsonValue::Object(ret);
