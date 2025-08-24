@@ -2,7 +2,7 @@
 import Instant from aria.date.instant;
 
 func main() {
-    val instant = Instant.from_localtime_unix_timestamp(1623602460000, -360);
+    val instant = Instant.new_with_timestamp_and_offset(1623602460000, -360);
     assert instant.year == 2021;
     assert instant.month == 6;
     assert instant.day == 13;
@@ -11,7 +11,7 @@ func main() {
     assert instant.second == 0;
     assert instant.millisecond == 0;
 
-    instant = Instant.from_localtime_unix_timestamp(1623602460000, 150);
+    instant = Instant.new_with_timestamp_and_offset(1623602460000, 150);
     assert instant.year == 2021;
     assert instant.month == 6;
     assert instant.day == 13;

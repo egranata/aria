@@ -3,7 +3,7 @@ import Instant from aria.date.instant;
 
 func main() {
     val ts = 1735446958423;
-    val instant = Instant.from_unix_timestamp(ts);
+    val instant = Instant.new_with_utc_timestamp(ts);
 
     println(instant);
 

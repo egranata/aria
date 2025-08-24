@@ -38,7 +38,7 @@ func offset_ms_to_string(offset_ms) {
 }
 
 struct Instant {
-    type func before_epoch(timestamp_ms) {
+    type func _before_epoch(timestamp_ms) {
         val millisecond = timestamp_ms.abs() % 1000;
 
         val timestamp_s = timestamp_ms / 1000;
@@ -108,7 +108,7 @@ struct Instant {
         };
     }
 
-    type func after_epoch(timestamp_ms) {
+    type func _after_epoch(timestamp_ms) {
         val total_seconds = timestamp_ms / 1000;
         
         val year = EPOCH_YEAR + (total_seconds / (DAYS_PER_YEAR * SECONDS_PER_DAY));
@@ -158,24 +158,38 @@ struct Instant {
         };
     }
 
-    type func from_unix_timestamp(timestamp_ms) {
-        val i = timestamp_ms >= 0 ? Instant.after_epoch(timestamp_ms) : Instant.before_epoch(timestamp_ms);
+    type func new_with_utc_timestamp(timestamp_ms) {
+        val i = timestamp_ms >= 0 ? Instant._after_epoch(timestamp_ms) : Instant._before_epoch(timestamp_ms);
         i.unix_ts = timestamp_ms;
         i.offset_ms = 0;
         return i;
     }
 
-    type func from_localtime_unix_timestamp(timestamp_ms, offset_minutes) {
+    type func new_with_timestamp_and_offset(timestamp_ms, offset_minutes) {
         val offset_ms = offset_minutes * SECONDS_PER_MINUTE * 1000;
-        val i = Instant.from_unix_timestamp(timestamp_ms + offset_ms);
+        val i = Instant.new_with_utc_timestamp(timestamp_ms + offset_ms);
         i.offset_ms = offset_ms;
         return i;
+    }
+
+    type func new_with_local_timestamp(timestamp_ms) {
+        val tz_offset = timezone_info()[0];
+        val offset_ms = tz_offset * SECONDS_PER_MINUTE * 1000;
+
+        val this = Instant.new_with_utc_timestamp(timestamp_ms - offset_ms);
+        return this.with_timezone_offset(tz_offset);
     }
 
     type func now() {
         val tz_offset = timezone_info()[0];
 
-        return Instant.from_localtime_unix_timestamp(now(), tz_offset);
+        return Instant.new_with_timestamp_and_offset(now(), tz_offset);
+    }
+
+    instance func with_timezone_offset(offset_minutes) {
+        val offset_ms = offset_minutes * SECONDS_PER_MINUTE * 1000;
+        this.offset_ms = offset_ms;
+        return this;
     }
 
     instance func prettyprint() {
