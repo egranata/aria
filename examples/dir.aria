@@ -22,7 +22,7 @@ func run_over_dir(path: Path) {
                 mod_time = 0;
             }
         }
-        val mod_time = Instant.from_unix_timestamp(mod_time);
+        val mod_time = Instant.new_with_local_timestamp(mod_time);
 
         val month = pad(mod_time.month);
         val month = pad(mod_time.month);
