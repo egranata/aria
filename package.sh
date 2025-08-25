@@ -1,8 +1,8 @@
 set -euo pipefail
 
-BIN_TARGETS="aria"
-DYLIB_CRATES="aria_file aria_http aria_path aria_platform aria_regex"
-EXTRA_FILES=""
+BIN_TARGETS="${BIN_TARGETS:aria}"
+DYLIB_CRATES="${DYLIB_CRATES:aria_file aria_http aria_path aria_platform aria_regex}"
+EXTRA_FILES="${EXTRA_FILES:-}"
 
 NAME="aria"
 VER=`awk '/^\[package\]/{p=1;next} /^\[/{p=0} p && $1=="version" {match($0, /"([^"]+)"/, m); print m[1]; exit}' aria-bin/Cargo.toml`
