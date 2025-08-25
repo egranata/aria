@@ -11,6 +11,7 @@ use aria_parser::ast::{SourceBuffer, prettyprint::printout_accumulator::Printout
 use haxby_opcodes::{
     Opcode, enum_case_attribs::CASE_HAS_PAYLOAD, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE,
 };
+use std::sync::OnceLock;
 
 use crate::{
     builtins::VmBuiltins,
@@ -283,18 +284,131 @@ fn get_lib_path(lib_name: &str) -> PathBuf {
     exe_dir.join(lib_name)
 }
 
+fn unique_insert<T>(vec: &mut Vec<T>, item: T) -> &Vec<T>
+where
+    T: PartialEq,
+{
+    if !vec.contains(&item) {
+        vec.push(item);
+    }
+    vec
+}
+
 impl VirtualMachine {
-    fn try_get_import_path_from_name(aria_lib_dir: &Path, ipath: &str) -> Option<PathBuf> {
-        if !aria_lib_dir.is_absolute() || !aria_lib_dir.exists() {
-            None
-        } else {
-            let mut module_path = aria_lib_dir.to_path_buf();
-            module_path.push(ipath);
-            if module_path.exists() {
-                Some(module_path)
-            } else {
-                None
+    fn get_system_import_paths() -> Vec<PathBuf> {
+        if let Ok(env_var) = std::env::var("ARIA_LIB_DIR") {
+            let mut paths = Vec::new();
+            for candidate_dir in std::env::split_paths(env_var.as_str()) {
+                if candidate_dir.exists() && candidate_dir.is_dir() {
+                    paths.push(candidate_dir);
+                }
             }
+
+            if !paths.is_empty() {
+                return paths;
+            }
+        }
+
+        if let Ok(exe_path) = std::env::current_exe()
+            && let Some(exe_dir) = exe_path.parent()
+        {
+            let lib_aria_path = exe_dir.join("lib");
+            if lib_aria_path.join("aria").is_dir() {
+                return vec![lib_aria_path];
+            }
+
+            if let Some(exe_parent_dir) = exe_dir.parent() {
+                let lib_aria_path = exe_parent_dir.join("lib");
+                if lib_aria_path.join("aria").is_dir() {
+                    return vec![lib_aria_path];
+                }
+            }
+        }
+
+        let version = env!("CARGO_PKG_VERSION");
+
+        #[cfg(target_os = "linux")]
+        {
+            let system_lib_path = PathBuf::from(format!("/usr/local/aria{}/lib", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/usr/local/aria/lib");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from(format!("/usr/lib/aria{}", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/usr/lib/aria");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let system_lib_path = PathBuf::from(format!("/opt/homebrew/opt/aria{}/lib", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/opt/homebrew/opt/aria/lib");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let version = env!("CARGO_PKG_VERSION");
+            let system_lib_path = PathBuf::from(format!("/usr/local/opt/aria{}/lib", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/usr/local/opt/aria/lib");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+        }
+
+        Vec::new()
+    }
+
+    pub fn get_aria_library_paths() -> &'static Vec<PathBuf> {
+        static ARIA_LIBRARY_PATHS: OnceLock<Vec<PathBuf>> = OnceLock::new();
+
+        ARIA_LIBRARY_PATHS.get_or_init(|| {
+            let mut paths = Self::get_system_import_paths();
+
+            if let Ok(env_var) = std::env::var("ARIA_LIB_DIR_EXTRA") {
+                for candidate_dir in std::env::split_paths(env_var.as_str()) {
+                    if candidate_dir.exists() && candidate_dir.is_dir() {
+                        paths.push(candidate_dir);
+                    }
+                }
+            }
+
+            let mut ret_paths = vec![];
+            for path in paths {
+                if let Ok(can) = std::fs::canonicalize(path) {
+                    unique_insert(&mut ret_paths, can);
+                }
+            }
+
+            ret_paths
+        })
+    }
+
+    fn try_get_import_path_from_name(aria_lib_dir: &Path, ipath: &str) -> Option<PathBuf> {
+        let mut module_path = aria_lib_dir.to_path_buf();
+        module_path.push(ipath);
+        if module_path.exists() {
+            Some(module_path)
+        } else {
+            None
         }
     }
 
@@ -304,14 +418,7 @@ impl VirtualMachine {
         let err_ret =
             VmErrorReason::ImportNotAvailable(ipath.to_owned(), "no such path".to_owned());
 
-        let env_var = match std::env::var("ARIA_LIB_DIR") {
-            Ok(path) => path,
-            Err(_) => {
-                return Err(err_ret);
-            }
-        };
-
-        let aria_lib_dirs = env_var.split(':').map(Path::new).collect::<Vec<_>>();
+        let aria_lib_dirs = VirtualMachine::get_aria_library_paths();
         for aria_lib_dir in aria_lib_dirs {
             if let Some(path) = Self::try_get_import_path_from_name(aria_lib_dir, &ipath) {
                 return Ok(path);
