@@ -539,7 +539,7 @@ impl VirtualMachine {
     pub fn execute_module(&mut self, m: &RuntimeModule) -> ExecutionResult<RunloopExit> {
         let main_f = match m.load_named_value("main") {
             Some(RuntimeValue::Function(f)) => f,
-            _ => return Err(VmErrorReason::NoSuchIdentifier("main".to_owned()).into()),
+            _ => return Ok(RunloopExit::Ok(())),
         };
 
         match main_f.eval(0, &mut Default::default(), self, true)? {
