@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 mod error_reporting;
 mod file_eval;
