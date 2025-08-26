@@ -12,10 +12,12 @@ impl BuiltinFunctionImpl for Println {
         cur_frame: &mut Frame,
         vm: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
-        let the_value = cur_frame.stack.pop();
-        let fmt = the_value.prettyprint(cur_frame, vm);
-        let mut console = vm.console().borrow_mut();
-        assert!(console.println(&fmt).is_ok());
+        if let Some(the_value) = cur_frame.stack.try_pop() {
+            let fmt = the_value.prettyprint(cur_frame, vm);
+            assert!(vm.console().borrow_mut().println(&fmt).is_ok());
+        } else {
+            assert!(vm.console().borrow_mut().println("").is_ok());
+        }
 
         cur_frame.stack.push(ok_or_err!(
             vm.builtins.create_unit_object(),
@@ -25,7 +27,10 @@ impl BuiltinFunctionImpl for Println {
     }
 
     fn arity(&self) -> crate::arity::Arity {
-        crate::arity::Arity::required(1)
+        crate::arity::Arity {
+            required: 0,
+            optional: 1,
+        }
     }
 
     fn name(&self) -> &str {
