@@ -10,6 +10,11 @@ members = [
 ]
 resolver = "2"
 
-[profile.release]
+[profile.dist]
+inherits = "release"
 codegen-units = 1
 lto = "fat"
+
+[profile.release]
+lto = "thin"
+
