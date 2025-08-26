@@ -1,5 +1,7 @@
 set -euo pipefail
 
+PROFILE=${PROFILE:-dist}
+
 BIN_TARGETS="${BIN_TARGETS:-aria}"
 DYLIB_CRATES="${DYLIB_CRATES:-aria_file aria_http aria_path aria_platform aria_regex}"
 EXTRA_FILES="${EXTRA_FILES:-}"
@@ -25,8 +27,8 @@ case "$RUNOS" in
   Linux)   LIB_PREFIX="lib"; LIB_EXT="so" ;;
 esac
 
-cargo build --workspace --release
-./t
+cargo build --workspace --profile "$PROFILE"
+ARIA_BUILD_CONFIG=${PROFILE} ./t
 
 STAGING_ROOT="$(mktemp -d)"
 trap 'rm -rf "$STAGING_ROOT"' EXIT
@@ -35,7 +37,7 @@ DEST="$STAGING_ROOT/$ARCHIVE_DIR"
 
 if [[ -n "$BIN_TARGETS" ]]; then
   for b in $BIN_TARGETS; do
-    src="target/release/${b}"
+    src="target/${PROFILE}/${b}"
     [[ -f "$src" ]] || { echo "Missing binary: $src" >&2; exit 2; }
     mkdir -p "$DEST/bin"
     cp -v "$src" "$DEST/bin/"
@@ -47,7 +49,7 @@ fi
 if [[ -n "$DYLIB_CRATES" ]]; then
   for c in $DYLIB_CRATES; do
     libname="${LIB_PREFIX}${c}.${LIB_EXT}"
-    src="target/release/${libname}"
+    src="target/${PROFILE}/${libname}"
     [[ -f "$src" ]] || { echo "Missing cdylib: $src" >&2; exit 3; }
     mkdir -p "$DEST/bin"
     cp -v "$src" "$DEST/bin/"
