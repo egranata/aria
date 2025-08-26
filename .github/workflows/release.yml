@@ -1,3 +1,5 @@
+permissions:
+  contents: write
 name: release
 on:
   push:
