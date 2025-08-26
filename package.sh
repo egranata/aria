@@ -57,6 +57,10 @@ if [[ -n "$DYLIB_CRATES" ]]; then
 fi
 
 [[ -d lib ]] && mkdir -p "$DEST/lib" && cp -a lib/. "$DEST/lib/"
+[[ -d examples ]] && mkdir -p "$DEST/share/examples" && cp -a examples/. "$DEST/share/examples"
+[[ -f docs/manual.md ]] && mkdir -p "$DEST/share/docs" && cp -a docs/manual.md "$DEST/share/docs"
+[[ -f docs/stdlib.md ]] && mkdir -p "$DEST/share/docs" && cp -a docs/stdlib.md "$DEST/share/docs"
+[[ -f docs/style_guide.md ]] && mkdir -p "$DEST/share/docs" && cp -a docs/style_guide.md "$DEST/share/docs"
 
 if [[ -n "$EXTRA_FILES" ]]; then
   shopt -s nullglob dotglob
