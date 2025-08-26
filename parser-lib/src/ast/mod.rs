@@ -286,7 +286,7 @@ pub struct PostfixTermEnumCase {
 pub struct PostfixTermFieldSet {
     pub loc: SourcePointer,
     pub id: Identifier,
-    pub val: Expression,
+    pub val: Option<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

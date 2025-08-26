@@ -259,12 +259,15 @@ impl From<&aria_parser::ast::PostfixExpression> for PostfixValue {
                     )
                 }
                 aria_parser::ast::PostfixTerm::PostfixTermObjectWrite(wrt) => {
-                    let terms = wrt
-                        .terms
-                        .terms
-                        .iter()
-                        .map(|w| (w.id.clone(), w.val.clone()))
-                        .collect();
+                    let mut terms = vec![];
+                    for term in &wrt.terms.terms {
+                        if let Some(expr) = &term.val {
+                            terms.push((term.id.clone(), expr.clone()));
+                        } else {
+                            let expr = Expression::from(&term.id);
+                            terms.push((term.id.clone(), expr));
+                        }
+                    }
                     current = PostfixValue::ObjWrite(Box::new(current), terms)
                 }
                 aria_parser::ast::PostfixTerm::PostfixTermContainerWrite(wrt) => {
