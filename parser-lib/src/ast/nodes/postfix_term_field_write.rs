@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        Expression, Identifier, PostfixTermFieldSet, SourceBuffer,
+        Expression, Identifier, PostfixTermFieldWrite, SourceBuffer,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
     grammar::Rule,
 };
 
-impl Derive for PostfixTermFieldSet {
+impl Derive for PostfixTermFieldWrite {
     fn from_parse_tree(p: pest::iterators::Pair<'_, Rule>, source: &SourceBuffer) -> Self {
-        assert!(p.as_rule() == Rule::postfix_field_set);
+        assert!(p.as_rule() == Rule::postfix_term_field_write);
         let loc = From::from(&p.as_span());
         let mut inner = p.into_inner();
         let id = Identifier::from_parse_tree(inner.next().expect("postfix need id"), source);
@@ -23,7 +23,7 @@ impl Derive for PostfixTermFieldSet {
     }
 }
 
-impl PrettyPrintable for PostfixTermFieldSet {
+impl PrettyPrintable for PostfixTermFieldWrite {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
         let buffer = buffer << "." << &self.id;
         if let Some(val) = &self.val {

@@ -599,6 +599,65 @@ func main() {
 
 Custom types can be used as keys in maps, as long as they define a `func hash()`.
 
+## 🏷️ Object Initialization
+
+Aria offers a quick syntax to write multiple values into the same object. Any expression can be followed by a write-list, e.g.
+
+```
+val x = [] {
+    [0] = 1,
+    [1] = 2,
+    [2] = 3
+};
+```
+
+will initialize a list with [1, 2, 3].
+
+It can also be done for structs, for example
+
+```
+val x = Box() {
+    .a = 1,
+    .b = 2,
+    .c = 3,
+};
+```
+
+which will create an object with fields `a`, `b`, and `c`.
+
+Indices and fields can be freely mixed:
+
+```
+val m = Map.new() {
+    ["hello"] = "world",
+    .something = "else",
+    ["foo"] = "bar",
+};
+
+println(m); # prints Map([foo]->bar, [hello]->world)
+println(m.something); # prints else
+```
+
+As a shortcut, a field can be initialized by a local variable of the same name without duplicating the name, as in
+
+```
+struct StringWrapper {
+    type func new(msg) = alloc(This) { .msg };
+
+    func prettyprint() { return this.msg; }
+}
+
+println(StringWrapper.new("hello world")); # prints hello world
+```
+
+This syntax is most often used for initializing objects and containers, but it is generally available:
+
+```
+println("x"{.hello = "world"}.hello); # prints world
+```
+
+Writes are performed in the order they are provided, and duplicated writes to the same index or name are not discarded. In general, the user should expect a "last write wins" behavior.
+
 ## 🚛 Extensions
 
 Extensions allow to add new functions to already defined types. They are introduced by the `extension` keyword, and they otherwise look the same as a definition of a type

@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+val s = "x"{.hello = "world"}.hello;
+assert s == "world";
