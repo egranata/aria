@@ -1,11 +1,18 @@
 set -euo pipefail
 
-BIN_TARGETS="${BIN_TARGETS:aria}"
-DYLIB_CRATES="${DYLIB_CRATES:aria_file aria_http aria_path aria_platform aria_regex}"
+BIN_TARGETS="${BIN_TARGETS:-aria}"
+DYLIB_CRATES="${DYLIB_CRATES:-aria_file aria_http aria_path aria_platform aria_regex}"
 EXTRA_FILES="${EXTRA_FILES:-}"
 
 NAME="aria"
-VER=`awk '/^\[package\]/{p=1;next} /^\[/{p=0} p && $1=="version" {match($0, /"([^"]+)"/, m); print m[1]; exit}' aria-bin/Cargo.toml`
+VER=`awk '/^\[package\]/{p=1;next} /^\[/{p=0}
+     p && $1=="version" {
+       if (match($0, /"[^"]+"/)) {
+         v=substr($0, RSTART+1, RLENGTH-2) # strip quotes
+         print v
+         exit
+       }
+     }' aria-bin/Cargo.toml`
 TS="$(date -u +%Y%m%d%H%M%S)"
 
 RUNOS="${RUNNER_OS:-$(uname -s)}"
