@@ -41,9 +41,7 @@ struct Song {
     }
 }
 
-func main() {
-    val song = Song.new(99);
-    for verse in song {
-        println(verse);
-    }
+val song = Song.new(99);
+for verse in song {
+    println(verse);
 }

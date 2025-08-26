@@ -9,6 +9,4 @@ func fibonacci(n) {
     }
 }
 
-func main() {
-    println(fibonacci(28));
-}
+println(fibonacci(28));

@@ -19,6 +19,4 @@ func calc_pi() {
     return s;
 }
 
-func main() {
-    println("pi = {0}".format(calc_pi()));
-}
+println("pi = {0}".format(calc_pi()));
