@@ -14,7 +14,7 @@ HOST_TRIPLE="$(rustc -vV | sed -n 's/^host: //p')"
 LIB_PREFIX="lib"
 LIB_EXT="so"
 case "$RUNOS" in
-  macOS)   LIB_PREFIX="lib"; LIB_EXT="dylib" ;;
+  macOS|Darwin)   LIB_PREFIX="lib"; LIB_EXT="dylib" ;;
   Linux)   LIB_PREFIX="lib"; LIB_EXT="so" ;;
 esac
 
