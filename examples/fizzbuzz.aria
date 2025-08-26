@@ -21,8 +21,6 @@ extension Int {
     }
 }
 
-func main() {
-    for n in Range.from(1).through(20) {
-        println("{0} -> {1}".format(n, n.to_fizzbuzz_string()));
-    }
+for n in Range.from(1).through(20) {
+    println("{0} -> {1}".format(n, n.to_fizzbuzz_string()));
 }

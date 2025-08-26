@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-func main() {
-    val args = cmdline_arguments();
-    for arg in args {
-        println("argument = '{0}'".format(arg));
-    }
+
+for arg in cmdline_arguments() {
+    println("argument = '{0}'".format(arg));
 }

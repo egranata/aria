@@ -23,7 +23,5 @@ struct Fibonacci {
     }
 }
 
-func main() {
-    val f = Fibonacci.new();
-    println(f.fibonacci(28));
-}
+val f = Fibonacci.new();
+println(f.fibonacci(28));
