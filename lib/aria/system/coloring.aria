@@ -34,9 +34,9 @@ enum Color {
             blue = blue % 256;
 
             return alloc(This) {
-                .red = red,
-                .green = green,
-                .blue = blue
+                .red,
+                .green,
+                .blue
             };
         }
 
@@ -148,9 +148,7 @@ func join_list_with_sep(l: List, sep: String) {
 }
 
 struct ColorScheme {
-    type func new() {
-        return alloc(This).reset();
-    }
+    type func new() = alloc(This).reset();
 
     func reset() {
         this.bold = false;
@@ -241,39 +239,39 @@ extension String {
         return s.apply(this);
     }
 
-    func black() { return this.with_foreground_color(Color::Black); }
-    func red() { return this.with_foreground_color(Color::Red); }
-    func green() { return this.with_foreground_color(Color::Green); }
-    func yellow() { return this.with_foreground_color(Color::Yellow); }
-    func blue() { return this.with_foreground_color(Color::Blue); }
-    func magenta() { return this.with_foreground_color(Color::Magenta); }
-    func cyan() { return this.with_foreground_color(Color::Cyan); }
-    func white() { return this.with_foreground_color(Color::White); }
+    func black() = this.with_foreground_color(Color::Black);
+    func red() = this.with_foreground_color(Color::Red);
+    func green() = this.with_foreground_color(Color::Green);
+    func yellow() = this.with_foreground_color(Color::Yellow);
+    func blue() = this.with_foreground_color(Color::Blue);
+    func magenta() = this.with_foreground_color(Color::Magenta);
+    func cyan() = this.with_foreground_color(Color::Cyan);
+    func white() = this.with_foreground_color(Color::White);
 
-    func black_bg() { return this.with_background_color(Color::Black); }
-    func red_bg() { return this.with_background_color(Color::Red); }
-    func green_bg() { return this.with_background_color(Color::Green); }
-    func yellow_bg() { return this.with_background_color(Color::Yellow); }
-    func blue_bg() { return this.with_background_color(Color::Blue); }
-    func magenta_bg() { return this.with_background_color(Color::Magenta); }
-    func cyan_bg() { return this.with_background_color(Color::Cyan); }
-    func white_bg() { return this.with_background_color(Color::White); }
+    func black_bg() = this.with_background_color(Color::Black);
+    func red_bg() = this.with_background_color(Color::Red);
+    func green_bg() = this.with_background_color(Color::Green);
+    func yellow_bg() = this.with_background_color(Color::Yellow);
+    func blue_bg() = this.with_background_color(Color::Blue);
+    func magenta_bg() = this.with_background_color(Color::Magenta);
+    func cyan_bg() = this.with_background_color(Color::Cyan);
+    func white_bg() = this.with_background_color(Color::White);
 
-    func bright_black() { return this.with_foreground_color(Color::BrightBlack); }
-    func bright_red() { return this.with_foreground_color(Color::BrightRed); }
-    func bright_green() { return this.with_foreground_color(Color::BrightGreen); }
-    func bright_yellow() { return this.with_foreground_color(Color::BrightYellow); }
-    func bright_blue() { return this.with_foreground_color(Color::BrightBlue); }
-    func bright_magenta() { return this.with_foreground_color(Color::BrightMagenta); }
-    func bright_cyan() { return this.with_foreground_color(Color::BrightCyan); }
-    func bright_white() { return this.with_foreground_color(Color::BrightWhite); }
+    func bright_black() = this.with_foreground_color(Color::BrightBlack);
+    func bright_red() = this.with_foreground_color(Color::BrightRed);
+    func bright_green() = this.with_foreground_color(Color::BrightGreen);
+    func bright_yellow() = this.with_foreground_color(Color::BrightYellow);
+    func bright_blue() = this.with_foreground_color(Color::BrightBlue);
+    func bright_magenta() = this.with_foreground_color(Color::BrightMagenta);
+    func bright_cyan() = this.with_foreground_color(Color::BrightCyan);
+    func bright_white() = this.with_foreground_color(Color::BrightWhite);
 
-    func bright_black_bg() { return this.with_background_color(Color::BrightBlack); }
-    func bright_red_bg() { return this.with_background_color(Color::BrightRed); }
-    func bright_green_bg() { return this.with_background_color(Color::BrightGreen); }
-    func bright_yellow_bg() { return this.with_background_color(Color::BrightYellow); }
-    func bright_blue_bg() { return this.with_background_color(Color::BrightBlue); }
-    func bright_magenta_bg() { return this.with_background_color(Color::BrightMagenta); }
-    func bright_cyan_bg() { return this.with_background_color(Color::BrightCyan); }
-    func bright_white_bg() { return this.with_background_color(Color::BrightWhite); }
+    func bright_black_bg() = this.with_background_color(Color::BrightBlack);
+    func bright_red_bg() = this.with_background_color(Color::BrightRed);
+    func bright_green_bg() = this.with_background_color(Color::BrightGreen);
+    func bright_yellow_bg() = this.with_background_color(Color::BrightYellow);
+    func bright_blue_bg() = this.with_background_color(Color::BrightBlue);
+    func bright_magenta_bg() = this.with_background_color(Color::BrightMagenta);
+    func bright_cyan_bg() = this.with_background_color(Color::BrightCyan);
+    func bright_white_bg() = this.with_background_color(Color::BrightWhite);
 }
