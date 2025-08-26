@@ -30,7 +30,7 @@ expr_list = { expression ~ ("," ~ expression)* ~ ","? }
 paren_expr = { "(" ~ expression ~ ")" }
 primary    = { identifier | fp_literal | str_literal | int_literal | list_literal | paren_expr }
 
-postfix_field_set      = { "." ~ identifier ~ "=" ~ expression }
+postfix_field_set      = { "." ~ identifier ~ ("=" ~ expression)? }
 postfix_field_set_list = { postfix_field_set ~ ("," ~ postfix_field_set)* ~ ","? }
 
 postfix_index_set      = { "[" ~ expression ~ "]" ~ "=" ~ expression }

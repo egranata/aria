@@ -2,11 +2,7 @@
 import Iterator,Iterable from aria.iterator.mixin;
 
 struct InvalidRangeError {
-    type func new(msg: String){
-        return alloc(This) {
-            .msg = msg,
-        };
-    }
+    type func new(msg: String) = alloc(This) {.msg};
 
     func prettyprint() {
         return "range error: {0}".format(this.msg);
@@ -57,12 +53,7 @@ struct RangeIterator {
 }
 
 struct RangeImpl {
-    type func new(from, to) {
-        return alloc(This) {
-            .from = from,
-            .to = to,
-        };
-    }
+    type func new(from, to) = alloc(This) {.from, .to};
 
     func step(n) {
         return RangeIterator.new(this.from, this.to, n);

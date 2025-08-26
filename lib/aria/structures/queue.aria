@@ -1,18 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 struct PriorityQueue {
-    type func new() {
-        return alloc(This) {
-            .data = [],
-            .cmp = |x,y| => x < y,
-        };
-    }
+    type func new() = This.new_with_comparator(|x,y| => x < y);
 
-    type func new_with_comparator(cmp) {
-        return alloc(This) {
-            .data = [],
-            .cmp = cmp,
-        };
-    }
+    type func new_with_comparator(cmp) = alloc(This) {
+        .data = [],
+        .cmp,
+    };
 
     func push(item) {
         this.data.append(item);

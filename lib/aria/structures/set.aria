@@ -2,11 +2,9 @@
 import Map from aria.structures.map;
 
 struct Set {
-    type func new() {
-        return alloc(This) {
-            .impl = Map.new(),
-        };
-    }
+    type func new() = alloc(This) {
+        .impl = Map.new(),
+    };
 
     type func new_with_items(...) {
         val ret = Set.new();

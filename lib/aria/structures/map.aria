@@ -7,12 +7,7 @@ func empty_list(n) {
 
 struct Map {
     struct Entry {
-        type func new(k,v) {
-            return alloc(This) {
-                .key = k,
-                .value = v,
-            };
-        }
+        type func new(key, value) = alloc(This) {.key, .value};
     }
 
     func calc_hash(k) {
@@ -23,14 +18,12 @@ struct Map {
         return Map.new_with_capacity(128);
     }
 
-    type func new_with_capacity(n: Int) {
-        return alloc(This){
-            .buckets = List.from_function(empty_list, n),
+    type func new_with_capacity(capacity: Int) = alloc(This) {
+            .buckets = List.from_function(empty_list, capacity),
             .count = 0,
-            .capacity = n,
+            .capacity,
             .key_list = [],
-        };
-    }
+    };
 
     func keys() {
         val remaining = this.len();
