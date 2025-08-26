@@ -41,6 +41,9 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
                 aria_parser::ast::TopLevelEntry::ValDeclStatement(v) => {
                     collate_error_if_any!(v.do_compile(params), errors)
                 }
+                aria_parser::ast::TopLevelEntry::WriteOpEqStatement(w) => {
+                    collate_error_if_any!(w.do_compile(params), errors)
+                }
                 aria_parser::ast::TopLevelEntry::AssignStatement(a) => {
                     collate_error_if_any!(a.do_compile(params), errors)
                 }
@@ -90,6 +93,15 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
                 }
                 aria_parser::ast::TopLevelEntry::ForStatement(f) => {
                     collate_error_if_any!(f.do_compile(params), errors)
+                }
+                aria_parser::ast::TopLevelEntry::CodeBlock(c) => {
+                    collate_error_if_any!(c.do_compile(params), errors)
+                }
+                aria_parser::ast::TopLevelEntry::GuardBlock(g) => {
+                    collate_error_if_any!(g.do_compile(params), errors)
+                }
+                aria_parser::ast::TopLevelEntry::TryBlock(t) => {
+                    collate_error_if_any!(t.do_compile(params), errors)
                 }
             }
         }

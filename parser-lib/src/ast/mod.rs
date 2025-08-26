@@ -1300,6 +1300,7 @@ impl ModuleFlags {
 pub enum TopLevelEntry {
     ExpressionStatement(ExpressionStatement),
     ValDeclStatement(ValDeclStatement),
+    WriteOpEqStatement(WriteOpEqStatement),
     AssignStatement(AssignStatement),
     FunctionDecl(FunctionDecl),
     StructDecl(StructDecl),
@@ -1313,6 +1314,9 @@ pub enum TopLevelEntry {
     MatchStatement(MatchStatement),
     WhileStatement(WhileStatement),
     ForStatement(ForStatement),
+    CodeBlock(CodeBlock),
+    GuardBlock(GuardBlock),
+    TryBlock(TryBlock),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

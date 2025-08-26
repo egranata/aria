@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+val worked = false;
+
+val q = 10;
+
+{
+    val x = 1;
+    val y = 2;
+    assert x + y == 3;
+    while q > 0 {
+        if q == 3 {
+            break;
+        }
+        q -= 1;
+    }
+    worked = (q == 3);
+}
+
+func main() {
+    assert worked;
+    assert q == 3; # right now, all things top level are visible
+}
