@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+val x = 42;
+
+val l = [] {
+    [0] = 1,
+    [1] = 2,
+    .foo = "bar",
+    .bar = "hello",
+    [2] = 3,
+    .x,
+    [3] = 4,
+};
+
+assert l[0] == 1;
+assert l[1] == 2;
+assert l.foo == "bar";
+assert l.bar == "hello";
+assert l[2] == 3;
+assert l[3] == 4;
+assert l.x == 42;

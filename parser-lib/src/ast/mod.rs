@@ -283,41 +283,45 @@ pub struct PostfixTermEnumCase {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermFieldSet {
+pub struct PostfixTermFieldWrite {
     pub loc: SourcePointer,
     pub id: Identifier,
     pub val: Option<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermFieldSetList {
-    pub loc: SourcePointer,
-    pub terms: Vec<PostfixTermFieldSet>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermObjectWrite {
-    pub loc: SourcePointer,
-    pub terms: PostfixTermFieldSetList,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermIndexSet {
+pub struct PostfixTermIndexWrite {
     pub loc: SourcePointer,
     pub idx: Expression,
     pub val: Expression,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermFieldIndexList {
-    pub loc: SourcePointer,
-    pub terms: Vec<PostfixTermIndexSet>,
+pub enum PostfixTermWrite {
+    PostfixTermFieldWrite(PostfixTermFieldWrite),
+    PostfixTermIndexWrite(PostfixTermIndexWrite),
+}
+
+impl PostfixTermWrite {
+    pub fn loc(&self) -> &SourcePointer {
+        match self {
+            Self::PostfixTermFieldWrite(fw) => &fw.loc,
+            Self::PostfixTermIndexWrite(iw) => &iw.loc,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermContainerWrite {
+pub struct PostfixTermWriteList {
     pub loc: SourcePointer,
-    pub terms: PostfixTermFieldIndexList,
+    pub terms: Vec<PostfixTermWrite>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PostfixTermObjectWrite {
+    pub loc: SourcePointer,
+    pub terms: PostfixTermWriteList,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -326,7 +330,6 @@ pub enum PostfixTerm {
     PostfixTermIndex(PostfixTermIndex),
     PostfixTermCall(PostfixTermCall),
     PostfixTermObjectWrite(PostfixTermObjectWrite),
-    PostfixTermContainerWrite(PostfixTermContainerWrite),
     PostfixTermEnumCase(PostfixTermEnumCase),
 }
 

@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+val o = Box() {
+    .a = 1,
+    .a = 2,
+    .a = 3,
+};
+
+assert o.a == 3;
+
+val p = [] {
+    [0] = 1,
+    [0] = 2,
+    [0] = 3
+};
+
+assert p[0] == 3;

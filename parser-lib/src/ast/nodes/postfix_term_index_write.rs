@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        PostfixTermContainerWrite, PostfixTermFieldIndexList,
+        Expression, PostfixTermIndexWrite,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
     gen_from_components,
 };
 
-impl Derive for PostfixTermContainerWrite {
-    gen_from_components!(postfix_term_idx_write; terms: PostfixTermFieldIndexList);
+impl Derive for PostfixTermIndexWrite {
+    gen_from_components!(postfix_term_index_write; idx: Expression, val: Expression);
 }
 
-impl PrettyPrintable for PostfixTermContainerWrite {
+impl PrettyPrintable for PostfixTermIndexWrite {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        buffer << "{" << &self.terms << "}"
+        buffer << "[" << &self.idx << "] = " << &self.val
     }
 }

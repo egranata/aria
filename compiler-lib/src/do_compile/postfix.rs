@@ -7,6 +7,34 @@ use super::{
     CompilationError, CompilationErrorReason, CompilationResult, CompileNode, CompileParams,
 };
 
+#[derive(Debug)]
+pub(super) struct FieldWrite {
+    pub(super) field: Identifier,
+    pub(super) value: Expression,
+}
+
+#[derive(Debug)]
+pub(super) struct IndexWrite {
+    pub(super) index: Expression,
+    pub(super) value: Expression,
+}
+
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug)]
+pub(super) enum ObjWrite {
+    Field(FieldWrite),
+    Index(IndexWrite),
+}
+
+impl ObjWrite {
+    fn loc(&self) -> &SourcePointer {
+        match self {
+            ObjWrite::Field(f) => &f.field.loc,
+            ObjWrite::Index(i) => i.index.loc(),
+        }
+    }
+}
+
 #[allow(clippy::large_enum_variant)]
 pub(super) enum PostfixValue {
     Primary(Box<aria_parser::ast::Primary>),
@@ -14,14 +42,7 @@ pub(super) enum PostfixValue {
     Call(Box<PostfixValue>, Box<ExpressionList>, SourcePointer),
     Case(Box<PostfixValue>, Box<Identifier>, Option<Expression>),
     Index(Box<PostfixValue>, Box<aria_parser::ast::Expression>),
-    ObjWrite(
-        Box<PostfixValue>,
-        Vec<(Identifier, aria_parser::ast::Expression)>,
-    ),
-    ContainerWrite(
-        Box<PostfixValue>,
-        Vec<(aria_parser::ast::Expression, aria_parser::ast::Expression)>,
-    ),
+    ObjWrite(Box<PostfixValue>, Vec<ObjWrite>),
 }
 
 impl<'a> PostfixValue {
@@ -106,47 +127,39 @@ impl<'a> PostfixValue {
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(BasicBlockOpcode::Dup, term.0.loc.clone());
-                    term.1.do_compile(params)?;
-                    let identifier_idx = match params
-                        .module
-                        .constants
-                        .insert(ConstantValue::String(term.0.value.clone()))
-                    {
-                        Ok(c) => c,
-                        Err(_) => {
-                            return Err(CompilationError {
-                                loc: term.0.loc.clone(),
-                                reason: CompilationErrorReason::TooManyConstants,
-                            });
+                        .write_opcode_and_source_info(BasicBlockOpcode::Dup, term.loc().clone());
+                    match term {
+                        ObjWrite::Field(field_write) => {
+                            let identifier_idx = params
+                                .module
+                                .constants
+                                .insert(ConstantValue::String(field_write.field.value.clone()))
+                                .map_err(|_| CompilationError {
+                                    loc: field_write.field.loc.clone(),
+                                    reason: CompilationErrorReason::TooManyConstants,
+                                })?;
+
+                            field_write.value.do_compile(params)?;
+                            params
+                                .writer
+                                .get_current_block()
+                                .write_opcode_and_source_info(
+                                    BasicBlockOpcode::WriteAttribute(identifier_idx),
+                                    term.loc().clone(),
+                                );
                         }
-                    };
-                    params
-                        .writer
-                        .get_current_block()
-                        .write_opcode_and_source_info(
-                            BasicBlockOpcode::WriteAttribute(identifier_idx),
-                            term.0.loc.clone(),
-                        );
-                }
-                Ok(())
-            }
-            PostfixValue::ContainerWrite(base, terms) => {
-                base.emit_read(params)?;
-                for term in terms {
-                    params
-                        .writer
-                        .get_current_block()
-                        .write_opcode_and_source_info(BasicBlockOpcode::Dup, term.0.loc().clone());
-                    term.0.do_compile(params)?;
-                    term.1.do_compile(params)?;
-                    params
-                        .writer
-                        .get_current_block()
-                        .write_opcode_and_source_info(
-                            BasicBlockOpcode::WriteIndex,
-                            term.0.loc().clone(),
-                        );
+                        ObjWrite::Index(index_write) => {
+                            index_write.index.do_compile(params)?;
+                            index_write.value.do_compile(params)?;
+                            params
+                                .writer
+                                .get_current_block()
+                                .write_opcode_and_source_info(
+                                    BasicBlockOpcode::WriteIndex,
+                                    term.loc().clone(),
+                                );
+                        }
+                    }
                 }
                 Ok(())
             }
@@ -221,14 +234,13 @@ impl<'a> PostfixValue {
                     );
                 Ok(())
             }
-            PostfixValue::ObjWrite(_, terms) => Err(CompilationError {
-                loc: terms[0].0.loc.clone(),
-                reason: CompilationErrorReason::WriteOnlyValue,
-            }),
-            PostfixValue::ContainerWrite(_, terms) => Err(CompilationError {
-                loc: terms[0].0.loc().clone(),
-                reason: CompilationErrorReason::WriteOnlyValue,
-            }),
+            PostfixValue::ObjWrite(_, terms) => {
+                let loc = terms.first().map(|x| x.loc()).unwrap_or(val.loc()).clone();
+                Err(CompilationError {
+                    loc,
+                    reason: CompilationErrorReason::WriteOnlyValue,
+                })
+            }
         }
     }
 }
@@ -259,25 +271,33 @@ impl From<&aria_parser::ast::PostfixExpression> for PostfixValue {
                     )
                 }
                 aria_parser::ast::PostfixTerm::PostfixTermObjectWrite(wrt) => {
+                    use aria_parser::ast::PostfixTermWrite::{
+                        PostfixTermFieldWrite, PostfixTermIndexWrite,
+                    };
+
                     let mut terms = vec![];
                     for term in &wrt.terms.terms {
-                        if let Some(expr) = &term.val {
-                            terms.push((term.id.clone(), expr.clone()));
-                        } else {
-                            let expr = Expression::from(&term.id);
-                            terms.push((term.id.clone(), expr));
+                        match term {
+                            PostfixTermFieldWrite(term) => {
+                                let expr = if let Some(expr) = &term.val {
+                                    expr.clone()
+                                } else {
+                                    Expression::from(&term.id)
+                                };
+                                terms.push(ObjWrite::Field(FieldWrite {
+                                    field: term.id.clone(),
+                                    value: expr,
+                                }));
+                            }
+                            PostfixTermIndexWrite(term) => {
+                                terms.push(ObjWrite::Index(IndexWrite {
+                                    index: term.idx.clone(),
+                                    value: term.val.clone(),
+                                }));
+                            }
                         }
                     }
                     current = PostfixValue::ObjWrite(Box::new(current), terms)
-                }
-                aria_parser::ast::PostfixTerm::PostfixTermContainerWrite(wrt) => {
-                    let terms = wrt
-                        .terms
-                        .terms
-                        .iter()
-                        .map(|w| (w.idx.clone(), w.val.clone()))
-                        .collect();
-                    current = PostfixValue::ContainerWrite(Box::new(current), terms)
                 }
             }
         }

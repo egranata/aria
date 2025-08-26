@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        PostfixTermFieldSetList, PostfixTermObjectWrite,
+        PostfixTermObjectWrite, PostfixTermWriteList,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -9,7 +9,7 @@ use crate::{
 };
 
 impl Derive for PostfixTermObjectWrite {
-    gen_from_components!(postfix_term_dot_write; terms: PostfixTermFieldSetList);
+    gen_from_components!(postfix_term_object_write; terms: PostfixTermWriteList);
 }
 
 impl PrettyPrintable for PostfixTermObjectWrite {
