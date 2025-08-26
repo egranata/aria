@@ -180,6 +180,7 @@ top_level_entry = {
   | expr_stmt
   | val_write_stmt
   | val_decl_stmt
+  | val_add_eq_write
   | struct_decl
   | mixin_decl
   | enum_decl
@@ -190,6 +191,9 @@ top_level_entry = {
   | match_stmt
   | while_stmt
   | for_stmt
+  | code_block
+  | guard_block
+  | try_block
 }
 
 module_flag  = { "flag:" ~ identifier ~ ("(" ~ str_literal ~ ")")? ~ ";" }

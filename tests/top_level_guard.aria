@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Guard {
+    type val COUNTER = 0;
+
+    instance func guard_exit() {
+        Guard.COUNTER = Guard.COUNTER + 1;
+    }
+}
+
+val in_guard = false;
+guard g = alloc(Guard) {
+    assert 3 == 3;
+    in_guard = true;
+}
+
+func main() {
+    assert Guard.COUNTER == 1;
+    assert in_guard;
+}
