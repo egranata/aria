@@ -50,6 +50,19 @@ func main() {
 }
 
 #[test]
+fn test_toplevel_assert_can_fail() {
+    let input = r##"
+val x = 1;
+assert x == 2;
+"##;
+
+    assert!(
+        exec_code(input)
+            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x==2".to_owned()))
+    );
+}
+
+#[test]
 fn test_circular_import_detected() {
     let input = r##"
 import circular.zero;
