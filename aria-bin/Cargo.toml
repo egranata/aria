@@ -11,6 +11,7 @@ vm-lib = { path = "../vm-lib" }
 clap = { version = "4.5.45", features = ["derive"] }
 ariadne = { version = "0.5.0", features = ["auto-color"] }
 reedline = "0.41.0"
+tikv-jemallocator = "0.6.0"
 
 [[bin]]
 name = "aria"

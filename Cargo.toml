@@ -9,3 +9,7 @@ members = [
     "vm-lib",
 ]
 resolver = "2"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
