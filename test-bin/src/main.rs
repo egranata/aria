@@ -12,6 +12,7 @@ use clap::{Parser, command};
 use glob::Paths;
 use haxby_vm::vm::VirtualMachine;
 use rayon::prelude::*;
+use regex::Regex;
 
 #[derive(clap::ValueEnum, Clone, Debug, Default)]
 enum SortBy {
@@ -38,11 +39,21 @@ struct Args {
     #[arg(long, value_enum, default_value_t)]
     /// Sort test results by name or duration
     sort_by: SortBy,
+    /// Skip tests whose file name matches any of these regexes. May repeat.
+    #[arg(long = "skip-pattern")]
+    skip_pattern: Vec<String>,
 }
 
 enum TestCaseResult {
     Pass(Duration),
     Fail(String),
+}
+
+fn should_skip_file_name(path: &std::path::Path, skip_regex: &[Regex]) -> bool {
+    let Some(fname) = path.file_name().and_then(|s| s.to_str()) else {
+        return false;
+    };
+    skip_regex.iter().any(|re| re.is_match(fname))
 }
 
 fn run_test_from_pattern(path: &str) -> TestCaseResult {
@@ -149,7 +160,7 @@ impl Termination for SuiteReport {
     }
 }
 
-fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
+fn run_tests_from_pattern(patterns: Paths, args: &Args, skip_regex: &[Regex]) -> SuiteReport {
     let mut results = SuiteReport::default();
 
     let start = Instant::now();
@@ -157,6 +168,10 @@ fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
     let outcomes = if args.sequential {
         let mut ret = vec![];
         for pattern in patterns.flatten() {
+            if should_skip_file_name(&pattern, skip_regex) {
+                continue;
+            }
+
             let test_name = pattern.file_stem().unwrap().to_str().unwrap();
             let test_path = pattern.as_os_str().to_str().unwrap();
             if args.verbose {
@@ -172,6 +187,7 @@ fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
     } else {
         patterns
             .flatten()
+            .filter(|p| !should_skip_file_name(p, skip_regex))
             .par_bridge()
             .map(|path| {
                 let test_name = path.file_stem().unwrap().to_str().unwrap();
@@ -201,8 +217,19 @@ fn main() -> SuiteReport {
         println!("--fail-fast is only supported in sequential mode; ignoring");
     }
 
+    let mut skip_regex = Vec::new();
+    for pattern in &args.skip_pattern {
+        match Regex::new(pattern) {
+            Ok(re) => skip_regex.push(re),
+            Err(e) => {
+                eprintln!("invalid --skip-pattern `{pattern}`: {e}");
+                exit(2);
+            }
+        }
+    }
+
     let mut results = match glob::glob(&args.path) {
-        Ok(pattern) => run_tests_from_pattern(pattern, &args),
+        Ok(pattern) => run_tests_from_pattern(pattern, &args, &skip_regex),
         Err(err) => {
             eprintln!("invalid pattern: {err}");
             exit(1);
