@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
+
+### TAGS: FLAKEY
+
 import Request from aria.network.request;
 import * from aria.network.retry;
 

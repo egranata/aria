@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     process::{ExitCode, Termination, exit},
     time::{Duration, Instant},
 };
@@ -56,58 +56,104 @@ fn should_skip_file_name(path: &std::path::Path, skip_regex: &[Regex]) -> bool {
     skip_regex.iter().any(|re| re.is_match(fname))
 }
 
-fn run_test_from_pattern(path: &str) -> TestCaseResult {
-    let start = Instant::now();
-
-    let buffer = match SourceBuffer::file(path) {
-        Ok(buffer) => buffer,
-        Err(err) => {
-            let fail_msg = format!("I/O error: {err}");
-            return TestCaseResult::Fail(fail_msg);
-        }
+fn parse_tags_from_file(path: &str) -> HashSet<String> {
+    let mut tags = HashSet::new();
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return tags;
     };
 
-    let entry_cm = match compile_from_source(&buffer, &Default::default()) {
-        Ok(m) => m,
-        Err(e) => {
-            let err_msg = e
-                .iter()
-                .map(|e| e.to_string())
-                .collect::<Vec<_>>()
-                .join("\n");
-            return TestCaseResult::Fail(format!("compilation error: {err_msg}"));
-        }
-    };
+    static TAGS_RE: once_cell::sync::Lazy<Regex> =
+        once_cell::sync::Lazy::new(|| Regex::new(r"(?i)^\s*###\s*TAGS:\s*(.+)\s*$").unwrap());
 
-    let mut vm = VirtualMachine::default();
-    let entry_rm = match vm.load_module("", entry_cm) {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(m) => m.module,
-            haxby_vm::vm::RunloopExit::Exception(e) => {
-                let mut frame = Default::default();
-                let epp = e.value.prettyprint(&mut frame, &mut vm);
-                return TestCaseResult::Fail(epp);
+    for line in text.lines() {
+        if let Some(cap) = TAGS_RE.captures(line)
+            && let Some(list) = cap.get(1)
+        {
+            for t in list.as_str().split(',') {
+                let t = t.trim();
+                if !t.is_empty() {
+                    tags.insert(t.to_ascii_uppercase());
+                }
             }
-        },
-        Err(err) => {
-            return TestCaseResult::Fail(err.prettyprint(None));
         }
-    };
-
-    match vm.execute_module(&entry_rm) {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(_) => {
-                let duration = start.elapsed();
-                TestCaseResult::Pass(duration)
-            }
-            haxby_vm::vm::RunloopExit::Exception(e) => {
-                let mut frame = Default::default();
-                let epp = e.value.prettyprint(&mut frame, &mut vm);
-                TestCaseResult::Fail(epp)
-            }
-        },
-        Err(err) => TestCaseResult::Fail(err.prettyprint(Some(entry_rm))),
     }
+    tags
+}
+
+fn run_test_from_pattern(path: &str) -> TestCaseResult {
+    let tags = parse_tags_from_file(path);
+    let start_wall = Instant::now();
+
+    let run_once = || -> TestCaseResult {
+        let start = Instant::now();
+
+        let buffer = match SourceBuffer::file(path) {
+            Ok(buffer) => buffer,
+            Err(err) => return TestCaseResult::Fail(format!("I/O error: {err}")),
+        };
+
+        let entry_cm = match compile_from_source(&buffer, &Default::default()) {
+            Ok(m) => m,
+            Err(e) => {
+                let err_msg = e
+                    .iter()
+                    .map(|e| e.to_string())
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                return TestCaseResult::Fail(format!("compilation error: {err_msg}"));
+            }
+        };
+
+        let mut vm = VirtualMachine::default();
+        let entry_rm = match vm.load_module("", entry_cm) {
+            Ok(rle) => match rle {
+                haxby_vm::vm::RunloopExit::Ok(m) => m.module,
+                haxby_vm::vm::RunloopExit::Exception(e) => {
+                    let mut frame = Default::default();
+                    let epp = e.value.prettyprint(&mut frame, &mut vm);
+                    return TestCaseResult::Fail(epp);
+                }
+            },
+            Err(err) => return TestCaseResult::Fail(err.prettyprint(None)),
+        };
+
+        match vm.execute_module(&entry_rm) {
+            Ok(rle) => match rle {
+                haxby_vm::vm::RunloopExit::Ok(_) => TestCaseResult::Pass(start.elapsed()),
+                haxby_vm::vm::RunloopExit::Exception(e) => {
+                    let mut frame = Default::default();
+                    let epp = e.value.prettyprint(&mut frame, &mut vm);
+                    TestCaseResult::Fail(epp)
+                }
+            },
+            Err(err) => TestCaseResult::Fail(err.prettyprint(Some(entry_rm))),
+        }
+    };
+
+    let mut outcome = run_once();
+
+    let is_flaky = tags.contains("FLAKEY") || tags.contains("FLAKY");
+    if is_flaky && let TestCaseResult::Fail(_) = outcome {
+        let retry = run_once();
+        outcome = match retry {
+            ok @ TestCaseResult::Pass(_) => ok,
+            fail @ TestCaseResult::Fail(_) => fail,
+        };
+    }
+
+    let is_xfail = tags.contains("XFAIL");
+    if is_xfail {
+        match outcome {
+            TestCaseResult::Pass(_) => {
+                return TestCaseResult::Fail("unexpected pass (XFAIL)".into());
+            }
+            TestCaseResult::Fail(_) => {
+                return TestCaseResult::Pass(start_wall.elapsed());
+            }
+        }
+    }
+
+    outcome
 }
 
 #[derive(Default)]
