@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
+
+### TAGS: FLAKEY
+
 import Request from aria.network.request;
 import JsonValue from aria.json.parser;
 import Map from aria.structures.map;

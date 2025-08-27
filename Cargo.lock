@@ -1806,6 +1806,7 @@ dependencies = [
  "clap",
  "compiler-lib",
  "glob",
+ "once_cell",
  "parser-lib",
  "rayon",
  "regex",
