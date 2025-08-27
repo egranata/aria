@@ -11,6 +11,7 @@ rayon = "1.11.0"
 parser-lib = { path = "../parser-lib" }
 compiler-lib = { path = "../compiler-lib" }
 vm-lib = { path = "../vm-lib" }
+regex = "1.11.2"
 
 [[bin]]
 name = "test"
