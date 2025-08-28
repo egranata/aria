@@ -1032,6 +1032,36 @@ Mixins may have requirements of their types, for example `Double` expects to be 
 
 A mixin can be included in multiple types, and a type can include multiple mixins. Mixins can be included in the type definition or an extension of it.
 
+## 💌 Sigils
+
+Sigils are user-defined postfix operators that allow for more expressive and readable code. They provide a way to create custom unary operators that operate on the value immediately to their left.
+
+A sigil is written as an underscore followed by an identifier: `_identifier`. When used in an expression, the sigil appears after the value it operates on.
+```
+value_sigil
+```
+This is equivalent to calling a function named `sigil` with `value` as the argument.
+Before using a sigil, you must register using the `register_sigil` built-in function, which takes two arguments:
+1. The sigil name (as a string)
+2. The function to call when the sigil is used
+```
+register_sigil("sigil_name", function_to_call);
+```
+
+Complete example:
+```
+func celsius_to_fahrenheit(celsius) {
+    return celsius * 9.0 / 5.0 + 32.0;
+}
+
+func main() {
+    register_sigil("F", celsius_to_fahrenheit);
+
+    val temp = 25_F;  # converts 25°C to 77°F
+    println(temp);    # prints 77
+}
+```
+
 ## 🎡 Iterators
 
 `for` loops work by leveraging iterators. An iterator is an object that has a `next` method with no arguments. This method is expected to return an object with a specific layout:

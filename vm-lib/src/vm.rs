@@ -35,6 +35,7 @@ use crate::{
         runtime_code_object::CodeObject,
         structure::Struct,
     },
+    sigil_registry::SigilRegistry,
     stack::Stack,
 };
 
@@ -66,6 +67,7 @@ pub struct VirtualMachine {
     pub import_stack: Stack<String>,
     pub imported_modules: HashMap<String, ModuleLoadInfo>,
     pub loaded_dylibs: HashMap<String, libloading::Library>,
+    pub sigil_registry: SigilRegistry,
 }
 
 impl VirtualMachine {
@@ -172,6 +174,7 @@ impl VirtualMachine {
             import_stack: Default::default(),
             imported_modules: Default::default(),
             loaded_dylibs: Default::default(),
+            sigil_registry: Default::default(),
         }
         .load_unit_into_builtins()
         .load_unimplemented_into_builtins()
@@ -558,7 +561,16 @@ impl VirtualMachine {
             Some(nv) => Ok(nv),
             _ => match self.builtins.load_named_value(name) {
                 Some(nv) => Ok(nv),
-                _ => Err(VmErrorReason::NoSuchIdentifier(name.to_owned())),
+                _ => {
+                    if name.starts_with("__sigil_") {
+                        match self.sigil_registry.lookup_sigil(name) {
+                            Some(sigil_func) => Ok(sigil_func),
+                            _ => Err(VmErrorReason::NoSuchIdentifier(name.to_owned())),
+                        }
+                    } else {
+                        Err(VmErrorReason::NoSuchIdentifier(name.to_owned()))
+                    }
+                }
             },
         }
     }
