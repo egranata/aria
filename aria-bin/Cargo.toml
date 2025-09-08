@@ -8,7 +8,7 @@ opcodes-lib = { path = "../opcodes-lib" }
 parser-lib = { path = "../parser-lib" }
 compiler-lib = { path = "../compiler-lib" }
 vm-lib = { path = "../vm-lib" }
-clap = { version = "4.5.45", features = ["derive"] }
+clap = { version = "4.5.47", features = ["derive"] }
 ariadne = { version = "0.5.0", features = ["auto-color"] }
 reedline = "0.41.0"
 
