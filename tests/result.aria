@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import ok, err, Result from aria.core.result;
+
+func divide_even(x: Int) {
+    if x % 2 != 0 {
+        return err("not even");
+    }
+    return ok(x / 2);
+}
+
+func main() {
+    val r1 = divide_even(4);
+    val r2 = divide_even(5);
+
+    assert r1.is_Ok();
+    assert r2.is_Err();
+
+    assert r1.unwrap_Ok() == 2;
+    assert r2.unwrap_Err() == "not even";
+
+    assert Maybe.new_with_result(r1) == Maybe::Some(2);
+    assert Maybe.new_with_result(r2) == Maybe::None;
+
+    assert Result.new_with_maybe(Maybe::Some(3)) == Result::Ok(3);
+    assert Result.new_with_maybe(Maybe::None) == Result::Err(Unit.new());
+}
