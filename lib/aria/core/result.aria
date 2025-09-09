@@ -38,6 +38,27 @@ extension Result {
             case Err(e) => { return "Err({0})".format(e); }
         }
     }
+
+    func apply(f) {
+        match this {
+            case Ok(v)  => { return Result::Ok(f(v)); },
+            case Err(e) => { return Result::Err(e); }
+        }
+    }
+
+    func unwrap_or(x) {
+        match this {
+            case Ok(v)  => { return v; },
+            case Err(_) => { return x; }
+        }
+    }
+
+    func hash() {
+        match this {
+            case Ok(v)  => { return v.hash(); },
+            case Err(e) => { return e.hash(); }
+        }
+    }
 }
 
 extension Maybe {
