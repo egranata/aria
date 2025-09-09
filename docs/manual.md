@@ -524,7 +524,7 @@ func main() {
 }
 ```
 
-## ⁉️ Maybe
+## ⁉️ Maybe and Result
 
 `Maybe` is an enum that represents a potentially missing value. It is defined as
 
@@ -536,6 +536,21 @@ enum Maybe {
 ```
 
 As an enum, it can be used in `match` or checked with `is_X` helpers. APIs where a value may be returned or not, and neither condition is an error, use `Maybe` to represent that fact.
+
+`Result` is an enum that represents a successful or failed operation. It is defined as
+
+```
+enum Result {
+    case Ok(Any),
+    case Err(Any),
+}
+```
+
+Use `Result` to represent operations that can succeed or fail, where both conditions are expected and need to be handled. Generally, the value of the `Err` case should itself be a struct or enum that describes the error in more detail.
+
+While `Maybe` is intended to convey the (non-)existence of a value, `Result` is intended to convey the (non-)success of an operation. For this reason,` Result` has bridges to-and-from exceptions, while `Maybe` does not.
+
+To convert an exception into a `Result`, use `Result.new_with_try`, which takes a closure that may throw, and returns a `Result`. To convert a `Result` into an exception, use `Result.or_throw`, which returns the value of the `Ok` case, or throws the value of the `Err` case.
 
 ## 🗺️ Maps
 
@@ -747,20 +762,20 @@ func main() {
 `catch` cannot discriminate on the type of the exception or its parameters. If a `catch` block is unable to resolve an exception, it can throw it again.
 
 The error handling philosophy of Aria is generally inspired by Rust and Midori:
-- Some scenarios are expected and anticipated (e.g. getting an element out of a Map, but there is nothing with that key); for cases like these return Maybe::None or a similar placeholder "missing" value;
-- Some scenarios are erroneous, but can be recovered from (e.g. file not found, network connection failed); in these cases throw an exception and handle it somewhere else;
+- Some scenarios are expected and anticipated even if not the happy path (e.g. getting an element out of a Map, but there is nothing with that key); for cases like these return `Maybe::None` (if the absence of a value is not an error) or `Result::Err` (if the absence of a value is an error);
+- Some scenarios are erroneous, but can be recovered from (e.g. disk removed during a file write); in these cases throw an exception and handle it somewhere else;
 - Some errors are beyond recovering (e.g. the VM expected two operands but only one is present on the stack); in these cases the VM itself will throw a fatal error, or you can assert in your code. `assert` fails by throwing a non-recoverable VM error.
 
 Aria itself defines a set of common exceptions in the `RuntimeError` enum:
 
-- DivisionByZero: see example above;
-- EnumWithoutPayload: you attempted to extract payload from an enum value that has none;
-- IndexOutOfBounds: attempting to access an element beyond the end of a container;
-- MismatchedArgumentCount: called a function with fewer/more arguments than it needed;
-- NoSuchCase: attempting to access an enum's case that does not exist;
-- NoSuchIdentifier: attempting to read/write a value that does not exist;
-- OperationFailed: some task could not be completed for reasons outside of Aria's control (e.g. running an external program);
-- UnexpectedType: an operation required a value of one type, but a value of a different one was provided
+- `DivisionByZero`: see example above;
+- `EnumWithoutPayload`: you attempted to extract payload from an enum value that has none;
+- `IndexOutOfBounds`: attempting to access an element beyond the end of a container;
+- `MismatchedArgumentCount`: called a function with fewer/more arguments than it needed;
+- `NoSuchCase`: attempting to access an enum's case that does not exist;
+- `NoSuchIdentifier`: attempting to read/write a value that does not exist;
+- `OperationFailed`: some task could not be completed for reasons outside of Aria's control (e.g. running an external program);
+- `UnexpectedType`: an operation required a value of one type, but a value of a different one was provided
 
 These values can be reused by user code, or new exception types can be created. The usual pattern for an exception is to create an ad-hoc struct
 

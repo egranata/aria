@@ -357,14 +357,31 @@ Follow these principles for robust error handling:
     }
     ```
 
-2.  **For recoverable errors**, `throw` an exception. This is for situations that are erroneous but potentially recoverable by an upstream caller, such as a network failure or invalid input file. Define custom `struct`s or `enum`s for your exceptions.
+2.  **For expected failure of an operation**, return a `Result`. This is for expected conditions, like attempting to read a file. The caller is expected to handle `Result::Err`.
 
     ```aria
-    struct FileReadError { ... }
+    # Good: File might not exist, might not be readable, ...
+    func read_config() {
+        if !config_path.exists() {
+            return Result::Err(FileReadError.new("Configuration file not found at {0}".format(config_path)));
+        }
+        if !config_path.readable() {
+            return Result::Err(FileReadError.new("Configuration file not readable at {0}".format(config_path)));
+        }
+        return Result::Ok(config_path.read());
+    }
+    ```
 
-    func read_config(path) {
-        if !path.exists() {
-            throw FileReadError.new("Configuration file not found at {0}".format(path));
+For the purposes of this sample code, of course, ignore time-of-check/time-of-use issues.
+
+3.  **For recoverable errors**, `throw` an exception. This is for situations that are erroneous but potentially recoverable by an upstream caller, such as a transient failure. Define custom `struct`s or `enum`s for your exceptions.
+
+    ```aria
+    struct ExpiredCertificate { ... }
+
+    func validate_certificate(path) {
+        if certificate_is_expired(path) {
+            throw ExpiredCertificate.new("Certificate has expired at {0}".format(path));
         }
         # ...
     }
@@ -429,7 +446,7 @@ struct PasswordFileNotFound {
 }
 ```
 
-3.  **For irrecoverable errors**, `assert` the condition. Prefer exceptions or error returns in library code as `assert` is non-recoverable for the user. In program code, `assert` liberally. In library code, `assert` sparingly and only to uphold invariants that would lead to corrupted state or operation if violated.
+4.  **For irrecoverable errors**, `assert` the condition. Prefer exceptions or error returns in library code as `assert` is non-recoverable for the user. In program code, `assert` liberally. In library code, `assert` sparingly and only to uphold invariants that would lead to corrupted state or operation if violated.
 
 ### 6.7 `match` statements
 
