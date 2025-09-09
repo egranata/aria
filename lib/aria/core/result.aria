@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+enum Result {
+    case Ok(Any),
+    case Err(Any),
+}
+
+func ok(v)  { return Result::Ok(v); }
+func err(e) { return Result::Err(e); }
+
+extension Result {
+    type func new_with_maybe(m: Maybe) {
+        match m {
+            case Some(v) => { return ok(v); }
+            case None => { return err(Unit.new()); }
+        }
+    }
+
+    type func new_with_try(f) {
+        try {
+            return ok(f());
+        } catch e {
+            return err(e);
+        }
+    }
+
+    func or_throw() {
+        match this {
+            case Ok(v) => { return v; }
+            case Err(e) => { throw e; }
+        }
+    }
+
+    func prettyprint() {
+        match this {
+            case Ok(v)  => { return "Ok({0})".format(v); },
+            case Err(e) => { return "Err({0})".format(e); }
+        }
+    }
+}
+
+extension Maybe {
+    type func new_with_result(r: Result) {
+        match r {
+            case Ok(v) => { return Maybe::Some(v); }
+            case Err(_) => { return Maybe::None; }
+        }
+    }
+}
