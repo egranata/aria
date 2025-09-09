@@ -212,6 +212,42 @@ This module provides a `Path` struct for interacting with the file system.
 
 ---
 
+### `aria.core.result`
+
+This module defines a dynamic success/error carrier and bridges with `Maybe` and exceptions.
+
+#### **Enums**
+
+*   **`Result`**
+    Represents the outcome of an operation, which can be either a success with a value or an error with a message.
+
+    **Cases:**
+    *   `Ok(Any)`: Contains a successful result of any type.
+    *   `Err(Any)`: Contains an error message.
+
+    **Methods:**
+    *   `is_Ok()`: Returns `true` if the `Result` is `Ok`, `false` otherwise.
+    *   `is_Err()`: Returns `true` if the `Result` is `Err`, `false` otherwise.
+    *   `unwrap_Ok()`: Returns the value contained within `Ok`.
+    *   `unwrap_Err()`: Returns the value contained within `Err`.
+    *   `or_throw()`: If `Ok(v)`, returns `v`. If `Err(e)`, throws `e`.
+    *   `type func new_with_maybe(m: Maybe)`: Returns `Ok(v)` if `m` is `Some(v)`, returns `Err(Unit.new())` if `m` is `None`.
+    *   `type func new_with_try(f)`: Executes `f()`. Returns `Ok(result)` if `f` completes. Returns `Err(e)` if `f` throws `e`.
+
+#### **Extensions**
+
+*   **`extension Maybe`**
+    Extends the built-in `Maybe` type.
+
+    **Methods:**
+    *   `new_with_result(r: Result):`: Returns `Maybe::Some(v)` if `r` is `Ok(v)`, returns `Maybe::None` if `r` is `Err`.
+
+#### **Functions**
+*   `ok(v)`: Shorthand constructor. Returns `Result::Ok(v)`.
+*   `err(e)`: Shorthand constructor. Returns `Result::Err(e)`.
+
+---
+
 ### `aria.core.string`
 
 This module provides extensions to the built-in `String` type.
