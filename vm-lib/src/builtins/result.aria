@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+enum Result {
+    case Ok(Any),
+    case Err(Any),
+}

@@ -97,6 +97,21 @@ impl VirtualMachine {
         }
     }
 
+    fn load_result_into_builtins(mut self) -> Self {
+        let result_rmod = self.load_core_file_into_builtins(
+            "builtins/result.aria",
+            include_str!("builtins/result.aria"),
+        );
+
+        let result_enum = match result_rmod.load_named_value("Result") {
+            Some(e) => e,
+            None => panic!("Result type not defined in result module"),
+        };
+
+        self.builtins.insert("Result", result_enum);
+        self
+    }
+
     fn load_maybe_into_builtins(mut self) -> Self {
         let maybe_rmod = self.load_core_file_into_builtins(
             "builtins/maybe.aria",
@@ -176,6 +191,7 @@ impl VirtualMachine {
         .load_unit_into_builtins()
         .load_unimplemented_into_builtins()
         .load_maybe_into_builtins()
+        .load_result_into_builtins()
         .load_runtime_error_into_builtins()
     }
 }
