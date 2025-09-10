@@ -11,6 +11,7 @@ Welcome to the official documentation for the Aria project.
 *   [Contributing](CONTRIBUTING.md)
 *   [Roadmap](ROADMAP.md)
 *   [Style Guide](style_guide.md)
+*   [Release Policy](release_policy.md)
 
 ## What is Aria?
 
