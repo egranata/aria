@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-import ok, err, Result from aria.core.result;
+import ok, err from aria.core.result;
 
 struct FilteringIterator {
     type func new(i, f) {

@@ -136,6 +136,7 @@ impl VmBuiltins {
             BUILTIN_TYPE_STRING => Some(self.get_builtin_type_by_name("String")),
             BUILTIN_TYPE_BOOL => Some(self.get_builtin_type_by_name("Bool")),
             BUILTIN_TYPE_MAYBE => Some(self.get_builtin_type_by_name("Maybe")),
+            BUILTIN_TYPE_RESULT => Some(self.get_builtin_type_by_name("Result")),
             BUILTIN_TYPE_UNIMPLEMENTED => Some(self.get_builtin_type_by_name("Unimplemented")),
             BUILTIN_TYPE_RUNTIME_ERROR => Some(self.get_builtin_type_by_name("RuntimeError")),
             BUILTIN_TYPE_UNIT => Some(self.get_builtin_type_by_name("Unit")),
@@ -165,6 +166,27 @@ impl VmBuiltins {
         Ok(RuntimeValue::EnumValue(rv))
     }
 
+    pub fn create_result_ok(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
+        let rt_result = crate::some_or_err!(
+            self.get_builtin_type_by_id(BUILTIN_TYPE_RESULT),
+            VmErrorReason::UnexpectedVmState
+        );
+        let rt_result_enum =
+            crate::some_or_err!(rt_result.as_enum(), VmErrorReason::UnexpectedType);
+
+        let ok_idx = crate::some_or_err!(
+            rt_result_enum.get_idx_of_case("Ok"),
+            VmErrorReason::NoSuchCase("Ok".to_owned())
+        );
+
+        let rv = crate::some_or_err!(
+            rt_result_enum.make_value(ok_idx, Some(x)),
+            VmErrorReason::UnexpectedVmState
+        );
+
+        Ok(RuntimeValue::EnumValue(rv))
+    }
+
     pub fn create_maybe_none(&self) -> Result<RuntimeValue, VmErrorReason> {
         let rt_maybe = crate::some_or_err!(
             self.get_builtin_type_by_id(BUILTIN_TYPE_MAYBE),
@@ -179,6 +201,27 @@ impl VmBuiltins {
 
         let rv = crate::some_or_err!(
             rt_maybe_enum.make_value(none_idx, None),
+            VmErrorReason::UnexpectedVmState
+        );
+
+        Ok(RuntimeValue::EnumValue(rv))
+    }
+
+    pub fn create_result_err(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
+        let rt_result = crate::some_or_err!(
+            self.get_builtin_type_by_id(BUILTIN_TYPE_RESULT),
+            VmErrorReason::UnexpectedVmState
+        );
+        let rt_result_enum =
+            crate::some_or_err!(rt_result.as_enum(), VmErrorReason::UnexpectedType);
+
+        let err_idx = crate::some_or_err!(
+            rt_result_enum.get_idx_of_case("Err"),
+            VmErrorReason::NoSuchCase("Err".to_owned())
+        );
+
+        let rv = crate::some_or_err!(
+            rt_result_enum.make_value(err_idx, Some(x)),
             VmErrorReason::UnexpectedVmState
         );
 
