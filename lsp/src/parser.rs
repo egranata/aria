@@ -226,7 +226,7 @@ pub fn parse(text: &str) -> Parse {
         }
     }  
 
-    let tokens = lexer::lex(text);    
+    let tokens = lexer::lex_simple(text);    
     let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
     parser.file();
     parser.build_tree()

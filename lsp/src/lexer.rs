@@ -169,11 +169,14 @@ pub enum SyntaxKind {
     #[regex(r#"'([^'\\]|\\.)*'"#)]
     StringLiteral,
 
-    #[regex(r"[a-zA-Z_$][a-zA-Z0-9_$]*")]
+    #[regex(r#"[\p{XID_Start}_$][\p{XID_Continue}_$]*"#)]
     Identifier,
 
     #[token("u-")]
     UnaryMinus,
+
+    // Error token for unrecognized input
+    Error,
 
     // compound types
     File,
@@ -197,17 +200,47 @@ pub enum SyntaxKind {
     Eof
 }
 
-pub fn lex(s: &str) -> Vec<(SyntaxKind, &str)> {
+pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str), LexError>> {
     let mut lexer = SyntaxKind::lexer(s);
     let mut tokens = Vec::new();
     
     while let Some(token_result) = lexer.next() {
-        let token = token_result.unwrap_or(SyntaxKind::ErrorTree);
+        let slice = lexer.slice();
+        match token_result {
+            Ok(token) => tokens.push(Ok((token, slice))),
+            Err(_) => {
+                let span = lexer.span();
+                tokens.push(Err(LexError {
+                    message: format!("Unexpected character(s): '{}'", slice),
+                    span,
+                    text: slice.to_string(),
+                }));
+            }
+        }
+    }
+    
+    tokens
+}
+
+// Simple lexer function for backward compatibility - returns ErrorTree for unrecognized tokens
+pub fn lex_simple(s: &str) -> Vec<(SyntaxKind, &str)> {
+    let mut lexer = SyntaxKind::lexer(s);
+    let mut tokens = Vec::new();
+    
+    while let Some(token_result) = lexer.next() {
+        let token = token_result.unwrap_or(SyntaxKind::Error);
         let slice = lexer.slice();
         tokens.push((token, slice));
     }
     
     tokens
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LexError {
+    pub message: String,
+    pub span: std::ops::Range<usize>,
+    pub text: String,
 }
 
 
@@ -293,12 +326,11 @@ mod tests {
         assert_eq!(tokens[0], Ok(SyntaxKind::ValKwd));
     }
 
-    #[test]
-    fn test_example_files_lex_without_errors() {
+    fn test_files_in_directory(dir: &str) {
         use std::fs;
         use std::path::Path;
 
-        let examples_dir = Path::new("../examples");
+        let examples_dir = Path::new(dir);
         
         if !examples_dir.exists() {
             println!("Examples directory not found, skipping test");
@@ -318,15 +350,77 @@ mod tests {
                 let content = fs::read_to_string(&path)
                     .expect(&format!("Failed to read file: {}", filename));
                 
-                let lexer = SyntaxKind::lexer(&content);
-                let tokens: Vec<_> = lexer.collect();
+                let tokens = lex(&content);
                 
                 let errors: Vec<_> = tokens.iter()
-                    .filter(|token| token.is_err())
+                    .filter_map(|token| token.as_ref().err())
                     .collect();
-
+                
+                if !errors.is_empty() {
+                    println!("\n{} has lexer errors:", filename);
+                    for error in &errors {
+                        println!("  {} at position {}..{}", error.message, error.span.start, error.span.end);
+                    }
+                }
+                
                 assert!(errors.is_empty());
             }
         }
+    }
+
+    #[test]
+    fn test_example_files_lex_without_errors() {
+        test_files_in_directory("../examples");
+    }
+
+    #[test]
+    fn test_files_lex_without_errors() {
+        test_files_in_directory("../tests");
+    }
+
+    #[test]
+    fn test_unicode_identifiers() {
+        let tokens = lex("val 🇮🇹 = 1;");
+        
+        println!("Tokens:");
+        for (i, token) in tokens.iter().enumerate() {
+            match token {
+                Ok((kind, text)) => println!("  {}: {:?} = '{}'", i, kind, text),
+                Err(error) => println!("  {}: ERROR: {}", i, error.message),
+            }
+        }
+        
+        let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
+        let errors: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().err()).collect();
+        
+        if !errors.is_empty() {
+            println!("Errors found:");
+            for error in &errors {
+                println!("  {} at {}..{}: '{}'", error.message, error.span.start, error.span.end, error.text);
+            }
+        }
+        
+        // Should have at least: val, identifier/error, =, 1, ;
+        assert!(successful_tokens.len() >= 4);
+        assert_eq!(successful_tokens[0].0, SyntaxKind::ValKwd);
+    }
+
+    #[test]
+    fn test_error_reporting() {
+        let tokens = lex("func @ invalid # comment");
+        
+        let errors: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().err()).collect();
+        
+        if !errors.is_empty() {
+            println!("Lexer errors found:");
+            for error in &errors {
+                println!("  {} at position {}..{}", error.message, error.span.start, error.span.end);
+            }
+        }
+        
+        // Should have func keyword and potentially an error for @
+        let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
+        assert!(!successful_tokens.is_empty());
+        assert_eq!(successful_tokens[0].0, SyntaxKind::FuncKwd);
     }
 }
