@@ -2,6 +2,7 @@
 members = [
     "aria-bin",
     "compiler-lib",
+    "lsp",
     "native-libs/*",
     "opcodes-lib",
     "parser-lib",
