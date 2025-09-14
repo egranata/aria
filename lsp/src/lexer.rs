@@ -150,6 +150,11 @@ pub enum SyntaxKind {
     #[token(".")]
     Dot,
 
+    #[token("true")]
+    TrueKwd,
+    #[token("false")]
+    FalseKwd,
+
     #[regex(r"0x[0-9a-fA-F]+(_[0-9a-fA-F]+)*")]
     HexIntLiteral,
     
@@ -191,7 +196,8 @@ pub enum SyntaxKind {
     ExprName,
     ExprCall,
     ExprBinary,
-    TypeExpr,
+    ExprParen,
+    ExprLiteral,
     Mixin,
     Struct,
     Ext,
@@ -217,20 +223,6 @@ pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str), LexError>> {
                 }));
             }
         }
-    }
-    
-    tokens
-}
-
-// Simple lexer function for backward compatibility - returns ErrorTree for unrecognized tokens
-pub fn lex_simple(s: &str) -> Vec<(SyntaxKind, &str)> {
-    let mut lexer = SyntaxKind::lexer(s);
-    let mut tokens = Vec::new();
-    
-    while let Some(token_result) = lexer.next() {
-        let token = token_result.unwrap_or(SyntaxKind::Error);
-        let slice = lexer.slice();
-        tokens.push((token, slice));
     }
     
     tokens

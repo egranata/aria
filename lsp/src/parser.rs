@@ -74,9 +74,7 @@ pub fn parse(text: &str) -> Parse {
             if self.at(LeftParen) { 
                 self.param_list();
             }
-            if self.eat(Arrow) {
-                self.type_expr();
-            }
+            
             if self.at(LeftBrace) { 
                 self.block();
             }
@@ -108,7 +106,7 @@ pub fn parse(text: &str) -> Parse {
             self.expect(Identifier);
             self.expect(Colon);
 
-            self.type_expr();
+            self.expect(Identifier);
             
             if !self.at(RightParen) { 
               self.expect(Comma);
@@ -117,21 +115,17 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, Param);
         }
 
-        fn type_expr(&mut self) {
-            let m = self.open();
-            self.expect(Identifier);
-            self.close(m, TypeExpr);
-        }
-
         fn block(&mut self) {
             assert!(self.at(LeftBrace));
             let m = self.open();
           
             self.expect(LeftBrace);
             while !self.at(RightBrace) && !self.eof() {
-                //   match self.nth(0) {
-                //     _ => stmt_expr(p),
-                //   }
+                  match self.nth(0) {
+                    ValKwd => self.stmt_val(),
+                    ReturnKwd => self.stmt_return(),
+                    _ => self.stmt_expr(),
+                  }
                 break
             }
             self.expect(RightBrace);
@@ -139,6 +133,73 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, Block);
         }
 
+        fn stmt_val(&mut self) {
+            assert!(self.at(ValKwd));
+            let m = self.open();
+            
+            self.expect(ValKwd);
+            self.expect(Identifier);
+            self.expect(Equal);
+            self.expr();
+            self.expect(Semicolon);
+            
+            self.close(m, StmtVal);
+        }
+        
+        fn stmt_return(&mut self) {
+            assert!(self.at(ReturnKwd));
+            let m = self.open();
+            
+            self.expect(ReturnKwd);
+            self.expr();
+            self.expect(Semicolon);
+            
+            self.close(m, StmtReturn);
+        }
+          
+        fn stmt_expr(&mut self) {
+            let m = self.open();
+            
+            self.expr();
+            self.expect(Semicolon);
+            
+            self.close(m, StmtExpr);
+        }
+
+        fn expr(&mut self) {
+            self.expr_delimited()
+        }
+        
+        fn expr_delimited(&mut self) {
+            let m = self.open();
+            match self.nth(0) {
+                HexIntLiteral | OctIntLiteral | BinIntLiteral | DecIntLiteral | 
+                FloatLiteral | StringLiteral | TrueKwd | FalseKwd => {
+                    self.advance();
+                    self.close(m, ExprLiteral)
+                }
+            
+                Identifier => {
+                    self.advance();
+                    self.close(m, ExprName)
+                }
+            
+                LeftParen => {
+                    self.expect(LeftParen);
+                    self.expr();
+                    self.expect(RightParen);
+                    self.close(m, ExprParen)
+                }
+            
+                _ => {
+                    if !self.eof() {
+                    self.advance();
+                    }
+                    self.close(m, ErrorTree)
+                }
+            }
+        }
+        
         fn open(&mut self) -> MarkOpened { 
             let mark = MarkOpened { index: self.events.len() };
             self.events.push(Event::Open { kind: ErrorTree });
@@ -226,7 +287,8 @@ pub fn parse(text: &str) -> Parse {
         }
     }  
 
-    let tokens = lexer::lex_simple(text);    
+    let lex = lexer::lex(text);
+    let tokens = lex.into_iter().map(|res| res.unwrap()).collect();
     let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
     parser.file();
     parser.build_tree()
@@ -279,30 +341,23 @@ mod tests {
         }
     }
 
-    fn expected_tree(lines: &[&str]) -> String {
-        lines.join("\n")
+    fn expect_tree(input: &str, lines: &[&str]) {
+        let node = parse(input).syntax();
+        let tree_str = tree_to_string(node);
+        let expected = lines.join("\n");
+        assert_eq!(expected, tree_str);
     }
 
     #[test]
     fn test_empty() {
-        let input = "";
-        let node = parse(input).syntax();
-        
-        let tree_str = tree_to_string(node);
-        let expected = expected_tree(&[
+        expect_tree("", &[
             "File@0..0"
-        ]);
-        
-        assert_eq!(tree_str, expected);
+        ])
     }
 
     #[test]
     fn test_empty_function() {
-        let input = "func empty_func() {}";
-        let node = parse(input).syntax();
-        
-        let tree_str = tree_to_string(node);
-        let expected = expected_tree(&[
+        expect_tree("func empty_func() {}", &[
             "File@0..18",
             "  Func@0..18",
             "    FuncKwd@0..4 \"func\"",
@@ -313,8 +368,27 @@ mod tests {
             "    Block@16..18",
             "      LeftBrace@16..17 \"{\"",
             "      RightBrace@17..18 \"}\""
-        ]);
-        
-        assert_eq!(tree_str, expected);
+        ])
+    }
+
+    #[test]
+    fn test_params() {
+        expect_tree("func empty_func(x, y) {}", &[
+            "File@0..21",
+            "  Func@0..21",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..14 \"empty_func\"",
+            "    ParamList@14..19",
+            "      LeftParen@14..15 \"(\"",
+            "      Param@15..17",
+            "        Identifier@15..16 \"x\"",
+            "        Comma@16..17 \",\"",
+            "      Param@17..18",
+            "        Identifier@17..18 \"y\"",
+            "      RightParen@18..19 \")\"",
+            "    Block@19..21",
+            "      LeftBrace@19..20 \"{\"",
+            "      RightBrace@20..21 \"}\""
+        ])
     }
 }
