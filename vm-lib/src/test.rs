@@ -202,3 +202,17 @@ func main() {
         .is_ok()
     );
 }
+
+#[test]
+fn test_force_unwrap_asserts() {
+    let input = r##"
+func main() {
+    val x = Result::Err("fail");
+    assert x!! == 3;
+}
+"##;
+
+    assert!(exec_code(input).is_err_and(
+        |err| err.reason == VmErrorReason::AssertFailed("force unwrap failed".to_owned())
+    ));
+}

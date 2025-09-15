@@ -325,12 +325,25 @@ pub struct PostfixTermObjectWrite {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TryProtocolMode {
+    Return,
+    Assert,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PostfixTermTryProtocol {
+    pub loc: SourcePointer,
+    pub mode: TryProtocolMode,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PostfixTerm {
     PostfixTermAttribute(PostfixTermAttribute),
     PostfixTermIndex(PostfixTermIndex),
     PostfixTermCall(PostfixTermCall),
     PostfixTermObjectWrite(PostfixTermObjectWrite),
     PostfixTermEnumCase(PostfixTermEnumCase),
+    PostfixTermTryProtocol(PostfixTermTryProtocol),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

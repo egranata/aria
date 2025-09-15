@@ -9,7 +9,8 @@ use std::{
 use aria_compiler::{bc_reader::BytecodeReader, compile_from_source, module::CompiledModule};
 use aria_parser::ast::{SourceBuffer, prettyprint::printout_accumulator::PrintoutAccumulator};
 use haxby_opcodes::{
-    Opcode, enum_case_attribs::CASE_HAS_PAYLOAD, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE,
+    Opcode, builtin_type_ids::BUILTIN_TYPE_RESULT, enum_case_attribs::CASE_HAS_PAYLOAD,
+    runtime_value_ids::RUNTIME_VALUE_THIS_MODULE,
 };
 use std::sync::OnceLock;
 
@@ -1505,6 +1506,87 @@ impl VirtualMachine {
                         }
                         Some(p) => {
                             frame.stack.push(p.clone());
+                        }
+                    }
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                }
+            }
+            Opcode::TryUnwrapProtocol(mode) => {
+                let val = pop_or_err!(next, frame, op_idx);
+                if let Some(ev) = val.as_enum_value() {
+                    if let Some(result_rv) =
+                        self.builtins.get_builtin_type_by_id(BUILTIN_TYPE_RESULT)
+                        && let Some(result_enum) = result_rv.as_enum()
+                    {
+                        if ev.get_container_enum() != result_enum {
+                            return build_vm_error!(
+                                VmErrorReason::UnexpectedType,
+                                next,
+                                frame,
+                                op_idx
+                            );
+                        }
+                    } else {
+                        return build_vm_error!(
+                            VmErrorReason::UnexpectedVmState,
+                            next,
+                            frame,
+                            op_idx
+                        );
+                    }
+
+                    let case_index = ev.get_case_index();
+                    match case_index {
+                        0 => {
+                            // Ok
+                            if let Some(case_value) = ev.get_payload() {
+                                frame.stack.push(case_value.clone());
+                            } else {
+                                return build_vm_error!(
+                                    VmErrorReason::EnumWithoutPayload,
+                                    next,
+                                    frame,
+                                    op_idx
+                                );
+                            }
+                        }
+                        1 => {
+                            // Err
+                            match mode {
+                                haxby_opcodes::try_unwrap_protocol_mode::PROPAGATE_ERROR => {
+                                    frame.stack.push(val.clone());
+                                    return Ok(OpcodeRunExit::Return); // implement a Return
+                                }
+                                haxby_opcodes::try_unwrap_protocol_mode::ASSERT_ERROR => {
+                                    return build_vm_error!(
+                                        VmErrorReason::AssertFailed(
+                                            "force unwrap failed".to_string()
+                                        ),
+                                        next,
+                                        frame,
+                                        op_idx
+                                    );
+                                }
+                                _ => {
+                                    // should never happen
+                                    return build_vm_error!(
+                                        VmErrorReason::IncompleteInstruction,
+                                        next,
+                                        frame,
+                                        op_idx
+                                    );
+                                }
+                            }
+                        }
+                        _ => {
+                            // should never happen
+                            return build_vm_error!(
+                                VmErrorReason::UnexpectedType,
+                                next,
+                                frame,
+                                op_idx
+                            );
                         }
                     }
                 } else {

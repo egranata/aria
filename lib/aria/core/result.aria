@@ -64,3 +64,41 @@ extension Maybe {
         }
     }
 }
+
+extension Result {
+    # what this does:
+    # if the object is a participant in the "try protocol", it will call _op_try_view()
+    # if the result is "some" Ok(x), it will return Result::Ok(x);
+    # if the result is "some" Err(e), it will return Result::Err(e);
+    # if the result is something else, or the object does not implement the protocol, it will return Result::Ok(x)
+    # the TRY_UNWRAP_PROTOCOL bytecode will then inspect this value and:
+    # if it's a Result::Ok(x), it will push "x" onto the stack;
+    # if it's a Result::Err(e), it will RETURN Err(e) from the current function
+    # for anything else, it will raise a type error
+    type func try_unwrap_protocol(x) {
+        if hasattr(x, "_op_try_view") {
+            val rv = x._op_try_view();
+            match rv {
+                case Ok(x) => { return Result::Ok(x); },
+                case Err(e) => { return rv; }
+            }
+        }
+
+        return Result::Ok(x);
+    }
+}
+
+extension Result {
+    func _op_try_view() {
+        return this;
+    }
+}
+
+extension Maybe {
+    func _op_try_view() {
+        match this {
+            case Some(v) => { return Result::Ok(v); }
+            case None => { return Result::Err(Unit.new()); }
+        }
+    }
+}
