@@ -39,6 +39,10 @@ pub fn parse(text: &str) -> Parse {
     struct MarkOpened {
         index: usize,
     }
+
+    struct MarkClosed {
+        index: usize,
+    }
     
     struct Parser<'a> {
         tokens: Vec<(SyntaxKind, &'a str)>,
@@ -139,7 +143,7 @@ pub fn parse(text: &str) -> Parse {
             
             self.expect(ValKwd);
             self.expect(Identifier);
-            self.expect(Equal);
+            self.expect(Assign);
             self.expr();
             self.expect(Semicolon);
             
@@ -167,10 +171,42 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn expr(&mut self) {
-            self.expr_delimited()
+            let mut lhs = self.expr_delimited();
+
+            // call "identifier()"
+            while self.at(LeftParen) { 
+                let m = self.open_before(lhs);
+                self.arg_list();
+                lhs = self.close(m, ExprCall);
+            }
         }
+
+        fn arg_list(&mut self) {
+            assert!(self.at(LeftParen));
+            let m = self.open();
+            
+            self.expect(LeftParen);
+            while !self.at(RightParen) && !self.eof() { 
+                self.arg();
+            }
+            self.expect(RightParen);
+            
+            self.close(m, ArgList);
+        }
+            
+        fn arg(&mut self) {
+            let m = self.open();
+            
+            self.expr();
+            if !self.at(RightParen) { 
+                self.expect(Comma);
+            }
+            
+            self.close(m, Arg);
+        }
+
         
-        fn expr_delimited(&mut self) {
+        fn expr_delimited(&mut self) -> MarkClosed {
             let m = self.open();
             match self.nth(0) {
                 HexIntLiteral | OctIntLiteral | BinIntLiteral | DecIntLiteral | 
@@ -193,7 +229,7 @@ pub fn parse(text: &str) -> Parse {
             
                 _ => {
                     if !self.eof() {
-                    self.advance();
+                        self.advance();
                     }
                     self.close(m, ErrorTree)
                 }
@@ -206,9 +242,20 @@ pub fn parse(text: &str) -> Parse {
             mark
         }
     
-        fn close(&mut self, m: MarkOpened, kind: SyntaxKind) {
+        fn close(&mut self, m: MarkOpened, kind: SyntaxKind) -> MarkClosed {
             self.events[m.index] = Event::Open { kind };
             self.events.push(Event::Close);
+            MarkClosed { index: m.index }
+        }
+
+        fn open_before(&mut self, m: MarkClosed) -> MarkOpened { 
+            let mark = MarkOpened { index: m.index };
+            // TODO: do something to avoid element shifting
+            self.events.insert(
+                m.index,
+                Event::Open { kind: ErrorTree },
+            );
+            mark
         }
     
         fn advance(&mut self) { 
@@ -372,8 +419,29 @@ mod tests {
     }
 
     #[test]
-    fn test_params() {
+    fn test_param_list() {
         expect_tree("func empty_func(x, y) {}", &[
+            "File@0..21",
+            "  Func@0..21",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..14 \"empty_func\"",
+            "    ParamList@14..19",
+            "      LeftParen@14..15 \"(\"",
+            "      Param@15..17",
+            "        Identifier@15..16 \"x\"",
+            "        Comma@16..17 \",\"",
+            "      Param@17..18",
+            "        Identifier@17..18 \"y\"",
+            "      RightParen@18..19 \")\"",
+            "    Block@19..21",
+            "      LeftBrace@19..20 \"{\"",
+            "      RightBrace@20..21 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_val() {
+        expect_tree("func test() { val x = 5; }", &[
             "File@0..21",
             "  Func@0..21",
             "    FuncKwd@0..4 \"func\"",

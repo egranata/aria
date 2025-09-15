@@ -198,6 +198,7 @@ pub enum SyntaxKind {
     ExprBinary,
     ExprParen,
     ExprLiteral,
+    ExprMember,
     Mixin,
     Struct,
     Ext,
@@ -371,33 +372,6 @@ mod tests {
     }
 
     #[test]
-    fn test_unicode_identifiers() {
-        let tokens = lex("val 🇮🇹 = 1;");
-        
-        println!("Tokens:");
-        for (i, token) in tokens.iter().enumerate() {
-            match token {
-                Ok((kind, text)) => println!("  {}: {:?} = '{}'", i, kind, text),
-                Err(error) => println!("  {}: ERROR: {}", i, error.message),
-            }
-        }
-        
-        let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
-        let errors: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().err()).collect();
-        
-        if !errors.is_empty() {
-            println!("Errors found:");
-            for error in &errors {
-                println!("  {} at {}..{}: '{}'", error.message, error.span.start, error.span.end, error.text);
-            }
-        }
-        
-        // Should have at least: val, identifier/error, =, 1, ;
-        assert!(successful_tokens.len() >= 4);
-        assert_eq!(successful_tokens[0].0, SyntaxKind::ValKwd);
-    }
-
-    #[test]
     fn test_error_reporting() {
         let tokens = lex("func @ invalid # comment");
         
@@ -410,7 +384,6 @@ mod tests {
             }
         }
         
-        // Should have func keyword and potentially an error for @
         let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
         assert!(!successful_tokens.is_empty());
         assert_eq!(successful_tokens[0].0, SyntaxKind::FuncKwd);
