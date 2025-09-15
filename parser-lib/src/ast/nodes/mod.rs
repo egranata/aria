@@ -70,6 +70,7 @@ mod postfix_term_field_write;
 mod postfix_term_index;
 mod postfix_term_index_write;
 mod postfix_term_object_write;
+mod postfix_term_sigil;
 mod postfix_term_write;
 mod postfix_term_write_list;
 mod primary;

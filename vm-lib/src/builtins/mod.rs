@@ -30,6 +30,7 @@ mod print;
 mod println;
 mod readattr;
 mod readln;
+mod register_sigil;
 mod sleep;
 mod string;
 mod system;
@@ -93,6 +94,7 @@ impl Default for VmBuiltins {
         readln::insert_builtins(&mut this);
         string::insert_string_builtins(&mut this);
         readattr::insert_builtins(&mut this);
+        register_sigil::insert_builtins(&mut this);
         sleep::insert_builtins(&mut this);
         system::insert_builtins(&mut this);
         timezone::insert_builtins(&mut this);
