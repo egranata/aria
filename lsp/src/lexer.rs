@@ -56,7 +56,7 @@ pub enum SyntaxKind {
     #[token("reverse")]
     ReverseKwd,
     #[token("struct")]
-    StructKwdKwd,
+    StructKwd,
     #[token("throw")]
     ThrowKwd,
     #[token("try")]

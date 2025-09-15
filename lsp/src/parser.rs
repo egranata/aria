@@ -97,17 +97,41 @@ pub fn parse(text: &str) -> Parse {
 
             while !self.eof() {
                 println!("current token: {:?}", self.tokens[self.pos]);
-                if self.at(FuncKwd) {
-                    self.func()
-                } else {
-                    self.advance_with_error("expected a function"); 
+
+                match self.nth(0) {
+                    ImportKwd => self.stmt_import(),
+                    ValKwd => self.decl_val(),
+                    Identifier => self.stmt_assign_val(),
+                    StructKwd => self.decl_struct(),
+                    MixinKwd => self.decl_mixin(),
+                    EnumKwd => self.decl_enum(),
+                    ExtensionKwd => self.decl_extension(),
+                    FuncKwd => self.decl_func(),
+                    AssertKwd => self.stmt_assert(),
+                    _ => self.advance_with_error("expected a function") 
                 }
             }
             
             self.close(m, File); 
         }
 
-        fn func(&mut self) {
+        fn decl_struct(&mut self) {
+            todo!()
+        }
+
+        fn decl_enum(&mut self) {
+            todo!()
+        }
+
+        fn decl_mixin(&mut self) {
+            todo!()
+        }
+
+        fn decl_extension(&mut self) {
+            todo!()
+        }
+
+        fn decl_func(&mut self) {
             assert!(self.at(FuncKwd)); 
             let m = self.open(); 
           
@@ -165,8 +189,21 @@ pub fn parse(text: &str) -> Parse {
             self.expect(LeftBrace);
             while !self.at(RightBrace) && !self.eof() {
                   match self.nth(0) {
-                    ValKwd => self.stmt_val(),
-                    ReturnKwd => self.stmt_return(),
+                    AssertKwd => self.stmt_assert(),
+                    BreakKwd => self.stmt_single_token(BreakKwd),
+                    ContinueKwd => self.stmt_single_token(ContinueKwd),
+                    // TODO: handle assignment
+                    ValKwd => self.decl_val(),
+                    IfKwd => self.stmt_if(),
+                    MatchKwd => self.stmt_while(),
+                    WhileKwd => self.stmt_while(),
+                    ForKwd => self.stmt_for(),
+                    ReturnKwd => self.stmt_single_token(ReturnKwd),
+                    LeftBrace => self.block(),
+                    GuardKwd => self.guard(),
+                    TryKwd => self.try_catch(),
+                    StructKwd => self.decl_struct(),
+                    EnumKwd => self.decl_enum(),
                     _ => self.stmt_expr(),
                   }
                 break
@@ -176,7 +213,35 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, Block);
         }
 
-        fn stmt_val(&mut self) {
+        fn guard(&mut self) {
+            todo!()
+        }
+
+        fn stmt_if(&mut self) {
+            todo!()
+        }
+
+        fn stmt_for(&mut self) {
+            todo!()
+        }
+
+        fn stmt_match(&mut self) {
+            todo!()
+        }
+
+        fn stmt_while(&mut self) {
+            todo!()
+        }
+
+        fn try_catch(&mut self) {
+            todo!()
+        }
+
+        fn stmt_import(&mut self) {
+            todo!()
+        }
+
+        fn decl_val(&mut self) {
             assert!(self.at(ValKwd));
             let m = self.open();
             
@@ -188,16 +253,32 @@ pub fn parse(text: &str) -> Parse {
             
             self.close(m, StmtVal);
         }
-        
-        fn stmt_return(&mut self) {
+
+        fn stmt_assign_val(&mut self) {
+            assert!(self.at(Identifier));
+            let m = self.open();
+            
+            self.expect(Identifier);
+            self.expect(Assign);
+            let _ = self.expr();
+            self.expect(Semicolon);
+            
+            self.close(m, StmtVal);
+        }
+
+        fn stmt_single_token(&mut self, kind: SyntaxKind) {
             assert!(self.at(ReturnKwd));
             let m = self.open();
             
-            self.expect(ReturnKwd);
+            self.expect(kind);
             let _ = self.expr();
             self.expect(Semicolon);
             
             self.close(m, StmtReturn);
+        }
+
+        fn stmt_assert(&mut self) {
+            todo!()
         }
           
         fn stmt_expr(&mut self) {
@@ -376,8 +457,6 @@ pub fn parse(text: &str) -> Parse {
             
             self.close(m, Arg);
         }
-
-        
         
         fn open(&mut self) -> MarkOpened { 
             let mark = MarkOpened { index: self.events.len() };
