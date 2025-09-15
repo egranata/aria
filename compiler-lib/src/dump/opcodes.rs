@@ -35,6 +35,14 @@ fn const_best_repr(module: &CompiledModule, idx: u16) -> String {
     }
 }
 
+fn try_protocol_mode_to_str(id: u8) -> &'static str {
+    match id {
+        haxby_opcodes::try_unwrap_protocol_mode::PROPAGATE_ERROR => "RETURN",
+        haxby_opcodes::try_unwrap_protocol_mode::ASSERT_ERROR => "ASSERT",
+        _ => "Unknown",
+    }
+}
+
 pub fn opcode_prettyprint(
     opcode: &Opcode,
     module: &CompiledModule,
@@ -104,6 +112,9 @@ pub fn opcode_prettyprint(
         }
         Opcode::Assert(idx) => {
             buffer << "ASSERT(@" << *idx << ") [" << const_best_repr(module, *idx) << "]"
+        }
+        Opcode::TryUnwrapProtocol(mode) => {
+            buffer << "TRY_UNWRAP_PROTOCOL " << try_protocol_mode_to_str(*mode)
         }
         Opcode::Nop
         | Opcode::Push0

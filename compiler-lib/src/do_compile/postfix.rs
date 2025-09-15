@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use aria_parser::ast::{Expression, ExpressionList, Identifier, SourcePointer};
+use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_RESULT;
 
 use crate::{constant_value::ConstantValue, func_builder::BasicBlockOpcode};
 
@@ -43,6 +44,10 @@ pub(super) enum PostfixValue {
     Case(Box<PostfixValue>, Box<Identifier>, Option<Expression>),
     Index(Box<PostfixValue>, Box<aria_parser::ast::Expression>),
     ObjWrite(Box<PostfixValue>, Vec<ObjWrite>),
+    TryProtocol(
+        Box<PostfixValue>,
+        Box<aria_parser::ast::PostfixTermTryProtocol>,
+    ),
 }
 
 impl<'a> PostfixValue {
@@ -163,6 +168,44 @@ impl<'a> PostfixValue {
                 }
                 Ok(())
             }
+            PostfixValue::TryProtocol(base, tp) => {
+                let mode = match tp.mode {
+                    aria_parser::ast::TryProtocolMode::Return => {
+                        haxby_opcodes::try_unwrap_protocol_mode::PROPAGATE_ERROR
+                    }
+                    aria_parser::ast::TryProtocolMode::Assert => {
+                        haxby_opcodes::try_unwrap_protocol_mode::ASSERT_ERROR
+                    }
+                };
+
+                base.emit_read(params)?;
+
+                let try_unwrap_protocol_idx = params
+                    .module
+                    .constants
+                    .insert(ConstantValue::String("try_unwrap_protocol".to_string()))
+                    .map_err(|_| CompilationError {
+                        loc: tp.loc.clone(),
+                        reason: CompilationErrorReason::TooManyConstants,
+                    })?;
+                params
+                    .writer
+                    .get_current_block()
+                    .write_opcode_and_source_info(
+                        BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_RESULT),
+                        tp.loc.clone(),
+                    )
+                    .write_opcode_and_source_info(
+                        BasicBlockOpcode::ReadAttribute(try_unwrap_protocol_idx),
+                        tp.loc.clone(),
+                    )
+                    .write_opcode_and_source_info(BasicBlockOpcode::Call(1), tp.loc.clone())
+                    .write_opcode_and_source_info(
+                        BasicBlockOpcode::TryUnwrapProtocol(mode),
+                        tp.loc.clone(),
+                    );
+                Ok(())
+            }
         }
     }
 
@@ -241,6 +284,10 @@ impl<'a> PostfixValue {
                     reason: CompilationErrorReason::WriteOnlyValue,
                 })
             }
+            PostfixValue::TryProtocol(_, tp) => Err(CompilationError {
+                loc: tp.loc.clone(),
+                reason: CompilationErrorReason::ReadOnlyValue,
+            }),
         }
     }
 }
@@ -298,6 +345,9 @@ impl From<&aria_parser::ast::PostfixExpression> for PostfixValue {
                         }
                     }
                     current = PostfixValue::ObjWrite(Box::new(current), terms)
+                }
+                aria_parser::ast::PostfixTerm::PostfixTermTryProtocol(tp) => {
+                    current = PostfixValue::TryProtocol(Box::new(current), Box::new(tp.clone()))
                 }
             }
         }

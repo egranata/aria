@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val a = Maybe::Some(5);
+    val b = Maybe::None;
+
+    assert a?? == 5;
+    assert b??.is_Err();
+}
