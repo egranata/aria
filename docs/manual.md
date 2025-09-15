@@ -552,6 +552,46 @@ While `Maybe` is intended to convey the (non-)existence of a value, `Result` is 
 
 To convert an exception into a `Result`, use `Result.new_with_try`, which takes a closure that may throw, and returns a `Result`. To convert a `Result` into an exception, use `Result.or_throw`, which returns the value of the `Ok` case, or throws the value of the `Err` case.
 
+Shorthand syntax is provided to extract - or propagate - values from Results, the `??` and `!!` operators. `x??` is equivalent to `val` if the object is `Result::Ok(val)`, or to a return `Result::Err(err)` if the object is `Result::Err(err)`. `x!!` is equivalent to `val` if the object is `Result::Ok(val)`, or to a failed assertion if the object is `Result::Err(err)`.
+
+For a `Maybe`, `??` unwraps the `Some` case, or returns the `Result::Err(Unit)` if the value is `None`. Custom types can participate in the "try unwrap protocol", by defining a `_op_try_view` method, which must return a `Result`. If the method is not defined, the default behavior is to return `Result::Ok(this)`.
+
+```
+func might_fail(x) {
+    if x > 0 {
+        return Result::Ok(x * 2);
+    } else {
+        return Result::Err("x must be positive");
+    }
+}
+
+func main() {
+    val r1 = might_fail(3);
+    val r2 = might_fail(-1);
+
+    println(r1!!); # prints 6
+    println(r2!!); # fails with assertion error ("force unwrap failed")
+}
+```
+
+```
+func might_be_missing(x) {
+    if x > 0 {
+        return Maybe::Some(x * 2);
+    } else {
+        return Maybe::None;
+    }
+}
+
+func main() {
+    val m1 = might_be_missing(3);
+    val m2 = might_be_missing(-1);
+
+    println(m1??); # prints 6
+    println(m2??); # returns Result::Err(Unit)
+}
+```
+
 ## 🗺️ Maps
 
 Maps are provided by the Aria standard library. To import the Map data type, use `import Map from aria.structures.map;`. This gives access to the `Map` data type.
