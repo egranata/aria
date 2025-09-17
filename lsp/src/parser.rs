@@ -71,6 +71,9 @@ pub fn parse(text: &str) -> Parse {
     fn infix_binding_power(op: SyntaxKind) -> Option<(u8, u8)> {
         use SyntaxKind::*;
         match op {
+            // Assignment operators (right-associative, lowest precedence)
+            Assign | PlusAssign | MinusAssign | StarAssign | SlashAssign | PercentAssign => Some((2, 1)),
+            
             LogicalOr => Some((3, 4)),
             LogicalAnd => Some((5, 6)),
             BitwiseXor => Some((7, 8)),
@@ -96,12 +99,10 @@ pub fn parse(text: &str) -> Parse {
             let m: MarkOpened = self.open(); 
 
             while !self.eof() {
-                println!("current token: {:?}", self.tokens[self.pos]);
-
                 match self.nth(0) {
                     ImportKwd => self.stmt_import(),
                     ValKwd => self.decl_val(),
-                    Identifier => self.stmt_assign_val(),
+                    Identifier => {self.expr();},
                     StructKwd => self.decl_struct(),
                     MixinKwd => self.decl_mixin(),
                     EnumKwd => self.decl_enum(),
@@ -116,22 +117,178 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn decl_struct(&mut self) {
-            todo!()
+            println!("decl_struct");
+            assert!(self.at(StructKwd));
+            let m = self.open();
+            
+            self.expect(StructKwd);
+            self.expect(Identifier);
+            self.expect(LeftBrace);
+            
+            // Parse struct entries (method_decl | operator_decl | "type" ~ val_decl_stmt | mixin_include_decl | struct_decl | enum_decl)
+            while !self.at(RightBrace) && !self.eof() {
+                match self.nth(0) {
+                    FuncKwd => self.decl_func(),
+                    StructKwd => self.decl_struct(),
+                    EnumKwd => self.decl_enum(),
+                    IncludeKwd => self.mixin_include(),
+                    TypeKwd => {
+                        self.expect(TypeKwd);
+                        self.decl_val();
+                    }
+                    _ => self.advance_with_error("expected struct entry")
+                }
+            }
+            
+            self.expect(RightBrace);
+            self.close(m, Struct);
+        }
+
+        fn mixin_include(&mut self) {
+            assert!(self.at(IncludeKwd));
+            let m = self.open();
+            
+            self.expect(IncludeKwd);
+            let _ = self.expr();
+            
+            self.close(m, MixinInclude);
         }
 
         fn decl_enum(&mut self) {
-            todo!()
+            println!("decl_struct");
+            assert!(self.at(EnumKwd));
+            let m = self.open();
+            
+            self.expect(EnumKwd);
+            self.expect(Identifier);
+            self.expect(LeftBrace);
+            
+            // Parse enum entries (enum_case_decl | struct_entry)
+            while !self.at(RightBrace) && !self.eof() {
+                match self.nth(0) {
+                    CaseKwd => self.enum_case(),
+                    FuncKwd => self.decl_func(),
+                    StructKwd => self.decl_struct(),
+                    EnumKwd => self.decl_enum(),
+                    IncludeKwd => self.mixin_include(),
+                    TypeKwd => {
+                        self.expect(TypeKwd);
+                        self.decl_val();
+                    }
+                    _ => self.advance_with_error("expected enum entry")
+                }
+                
+                // Optional comma
+                if self.at(Comma) {
+                    self.expect(Comma);
+                }
+            }
+            
+            self.expect(RightBrace);
+            self.close(m, Enum);
+        }
+
+        fn enum_case(&mut self) {
+            assert!(self.at(CaseKwd));
+            let m = self.open();
+            
+            self.expect(CaseKwd);
+            self.expect(Identifier);
+            
+            // Optional parameter: ("(" ~ expression ~ ")")?
+            if self.at(LeftParen) {
+                self.expect(LeftParen);
+                let _ = self.expr();
+                self.expect(RightParen);
+            }
+            
+            self.close(m, EnumCase);
         }
 
         fn decl_mixin(&mut self) {
-            todo!()
+            assert!(self.at(MixinKwd));
+            let m = self.open();
+            
+            self.expect(MixinKwd);
+            self.expect(Identifier);
+            self.expect(LeftBrace);
+            
+            // Parse mixin entries (method_decl | operator_decl | mixin_include_decl)
+            while !self.at(RightBrace) && !self.eof() {
+                match self.nth(0) {
+                    FuncKwd => self.decl_func(),
+                    OperatorKwd => self.decl_operator(),
+                    IncludeKwd => self.mixin_include(),
+                    _ => self.advance_with_error("expected mixin entry")
+                }
+            }
+            
+            self.expect(RightBrace);
+            self.close(m, Mixin);
+        }
+
+        fn decl_operator(&mut self) {
+            let m = self.open();
+            
+            // Optional reverse direction
+            if self.at(ReverseKwd) {
+                self.expect(ReverseKwd);
+            }
+            
+            self.expect(OperatorKwd);
+            
+            // Operator symbol - need to handle various operator tokens
+            match self.nth(0) {
+                Plus | Minus | Star | Slash | Percent | LeftShift | RightShift |
+                Equal | LessEqual | GreaterEqual | Less | Greater |
+                BitwiseAnd | BitwiseOr | BitwiseXor |
+                LeftParen | LeftBracket => {
+                    self.advance();
+                }
+                _ => self.advance_with_error("expected operator symbol")
+            }
+            
+            if self.at(LeftParen) {
+                self.param_list();
+            }
+            
+            if self.at(LeftBrace) {
+                self.block();
+            }
+            
+            self.close(m, Operator);
         }
 
         fn decl_extension(&mut self) {
-            todo!()
+            assert!(self.at(ExtensionKwd));
+            let m = self.open();
+            
+            self.expect(ExtensionKwd);
+            let _ = self.expr(); // extension target expression
+            self.expect(LeftBrace);
+            
+            // Parse struct entries (same as struct_decl)
+            while !self.at(RightBrace) && !self.eof() {
+                match self.nth(0) {
+                    FuncKwd => self.decl_func(),
+                    OperatorKwd => self.decl_operator(),
+                    StructKwd => self.decl_struct(),
+                    EnumKwd => self.decl_enum(),
+                    IncludeKwd => self.mixin_include(),
+                    TypeKwd => {
+                        self.expect(TypeKwd);
+                        self.decl_val();
+                    }
+                    _ => self.advance_with_error("expected extension entry")
+                }
+            }
+            
+            self.expect(RightBrace);
+            self.close(m, Extension);
         }
 
         fn decl_func(&mut self) {
+            println!("decl_func");
             assert!(self.at(FuncKwd)); 
             let m = self.open(); 
           
@@ -183,6 +340,7 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn block(&mut self) {
+            println!("block");
             assert!(self.at(LeftBrace));
             let m = self.open();
           
@@ -192,13 +350,12 @@ pub fn parse(text: &str) -> Parse {
                     AssertKwd => self.stmt_assert(),
                     BreakKwd => self.stmt_single_token(BreakKwd),
                     ContinueKwd => self.stmt_single_token(ContinueKwd),
-                    // TODO: handle assignment
                     ValKwd => self.decl_val(),
                     IfKwd => self.stmt_if(),
-                    MatchKwd => self.stmt_while(),
+                    MatchKwd => self.stmt_match(),
                     WhileKwd => self.stmt_while(),
                     ForKwd => self.stmt_for(),
-                    ReturnKwd => self.stmt_single_token(ReturnKwd),
+                    ReturnKwd => self.stmt_return(),
                     LeftBrace => self.block(),
                     GuardKwd => self.guard(),
                     TryKwd => self.try_catch(),
@@ -206,7 +363,6 @@ pub fn parse(text: &str) -> Parse {
                     EnumKwd => self.decl_enum(),
                     _ => self.stmt_expr(),
                   }
-                break
             }
             self.expect(RightBrace);
           
@@ -214,60 +370,233 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn guard(&mut self) {
-            todo!()
+            assert!(self.at(GuardKwd));
+            let m = self.open();
+            
+            self.expect(GuardKwd);
+            self.expect(Identifier);
+            self.expect(Assign);
+            let _ = self.expr();
+            self.block();
+            
+            self.close(m, Guard);
         }
 
         fn stmt_if(&mut self) {
-            todo!()
+            assert!(self.at(IfKwd));
+            let m = self.open();
+            
+            // if piece
+            self.expect(IfKwd);
+            let _ = self.expr();
+            self.block();
+            
+            // elsif pieces
+            while self.at(ElsifKwd) {
+                self.expect(ElsifKwd);
+                let _ = self.expr();
+                self.block();
+            }
+            
+            // optional else piece
+            if self.at(ElseKwd) {
+                self.expect(ElseKwd);
+                self.block();
+            }
+            
+            self.close(m, StmtIf);
         }
 
         fn stmt_for(&mut self) {
-            todo!()
+            assert!(self.at(ForKwd));
+            let m = self.open();
+            
+            self.expect(ForKwd);
+            self.expect(Identifier);
+            self.expect(InKwd);
+            let _ = self.expr();
+            self.block();
+            
+            // optional else piece
+            if self.at(ElseKwd) {
+                self.expect(ElseKwd);
+                self.block();
+            }
+            
+            self.close(m, StmtFor);
         }
 
         fn stmt_match(&mut self) {
-            todo!()
+            assert!(self.at(MatchKwd));
+            let m = self.open();
+            
+            self.expect(MatchKwd);
+            let _ = self.expr();
+            self.expect(LeftBrace);
+            
+            // Parse match rules
+            if !self.at(RightBrace) {
+                self.match_rule();
+                
+                while (self.at(Comma) || !self.at(RightBrace)) && !self.eof() {
+                    if self.at(Comma) {
+                        self.expect(Comma);
+                    }
+                    if !self.at(RightBrace) {
+                        self.match_rule();
+                    }
+                }
+                
+                if self.at(Comma) {
+                    self.expect(Comma);
+                }
+            }
+            
+            self.expect(RightBrace);
+            
+            // optional else piece
+            if self.at(ElseKwd) {
+                self.expect(ElseKwd);
+                self.block();
+            }
+            
+            self.close(m, StmtMatch);
+        }
+
+        fn match_rule(&mut self) {
+            let m = self.open();
+            
+            self.match_pattern();
+            
+            // Handle "and" patterns
+            while self.at(AndKwd) {
+                self.expect(AndKwd);
+                self.match_pattern();
+            }
+            
+            self.expect(Arrow); // "=>"
+            self.block();
+            
+            self.close(m, MatchRule);
+        }
+
+        fn match_pattern(&mut self) {
+            let m = self.open();
+            
+            match self.nth(0) {
+                CaseKwd => {
+                    self.expect(CaseKwd);
+                    self.expect(Identifier);
+                    if self.at(LeftParen) {
+                        self.expect(LeftParen);
+                        self.expect(Identifier);
+                        if self.at(Colon) {
+                            self.expect(Colon);
+                            let _ = self.expr();
+                        }
+                        self.expect(RightParen);
+                    }
+                }
+                Equal | NotEqual | IsaKwd => {
+                    self.advance(); // comparison operator
+                    let _ = self.expr();
+                }
+                Less | LessEqual | Greater | GreaterEqual => {
+                    self.advance(); // relational operator
+                    let _ = self.expr();
+                }
+                _ => self.advance_with_error("expected match pattern")
+            }
+            
+            self.close(m, MatchPattern);
         }
 
         fn stmt_while(&mut self) {
-            todo!()
+            assert!(self.at(WhileKwd));
+            let m = self.open();
+            
+            self.expect(WhileKwd);
+            let _ = self.expr();
+            self.block();
+            
+            // optional else piece
+            if self.at(ElseKwd) {
+                self.expect(ElseKwd);
+                self.block();
+            }
+            
+            self.close(m, StmtWhile);
         }
 
         fn try_catch(&mut self) {
-            todo!()
+            assert!(self.at(TryKwd));
+            let m = self.open();
+            
+            self.expect(TryKwd);
+            self.block();
+            self.expect(CatchKwd);
+            self.expect(Identifier);
+            self.block();
+            
+            self.close(m, TryBlock);
         }
 
         fn stmt_import(&mut self) {
-            todo!()
+            println!("stmt_import");
+            assert!(self.at(ImportKwd));
+            let m = self.open();
+            
+            self.expect(ImportKwd);
+            
+            let mut is_from_import = false;
+            let mut temp_pos = self.pos;
+            
+            while temp_pos < self.tokens.len() && 
+                  self.tokens[temp_pos].0 != FromKwd && 
+                  self.tokens[temp_pos].0 != Semicolon {
+                temp_pos += 1;
+            }
+            
+            if temp_pos < self.tokens.len() && self.tokens[temp_pos].0 == FromKwd {
+                is_from_import = true;
+            }
+            
+            if is_from_import {
+                if self.at(Star) {
+                    self.expect(Star);
+                } else {
+                    self.ident_list();
+                }
+                
+                self.expect(FromKwd);
+            }
+            
+            self.import_path();
+            self.expect(Semicolon);
+            
+            self.close(m, StmtImport);
         }
 
         fn decl_val(&mut self) {
+            println!("decl_val");
             assert!(self.at(ValKwd));
             let m = self.open();
             
             self.expect(ValKwd);
+            println!("decl_val 1 {}", self.nth_str(0));
             self.expect(Identifier);
+            println!("decl_val 2");
             self.expect(Assign);
             let _ = self.expr();
+            println!("decl_val 3");
             self.expect(Semicolon);
-            
-            self.close(m, StmtVal);
-        }
+            println!("decl_val 4");
 
-        fn stmt_assign_val(&mut self) {
-            assert!(self.at(Identifier));
-            let m = self.open();
-            
-            self.expect(Identifier);
-            self.expect(Assign);
-            let _ = self.expr();
-            self.expect(Semicolon);
-            
             self.close(m, StmtVal);
         }
 
         fn stmt_single_token(&mut self, kind: SyntaxKind) {
-            assert!(self.at(ReturnKwd));
+            assert!(self.at(kind));
             let m = self.open();
             
             self.expect(kind);
@@ -277,11 +606,64 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, StmtReturn);
         }
 
+        fn stmt_return(&mut self) {
+            assert!(self.at(ReturnKwd));
+            let m = self.open();
+            
+            self.expect(ReturnKwd);
+
+            if !self.at(Semicolon) {
+                let _ = self.expr();
+            }
+
+            self.expect(Semicolon);
+            self.close(m, StmtReturn);
+        }
+
+        fn ident_list(&mut self) {
+            let m = self.open();
+            
+            self.expect(Identifier);
+            while self.at(Comma) {
+                self.expect(Comma);
+                if self.at(Identifier) {
+                    self.expect(Identifier);
+                }
+            }
+            
+            self.close(m, IdentList);
+        }
+
+        fn import_path(&mut self) {
+            println!("import_path");
+            let m = self.open();
+            
+            self.expect(Identifier);
+            while self.at(Dot) {
+                self.expect(Dot);
+                self.expect(Identifier);
+            }
+            
+            self.close(m, ImportPath);
+        }
+
         fn stmt_assert(&mut self) {
-            todo!()
+            println!("stmt_assert");
+            assert!(self.at(AssertKwd));
+            let m = self.open();
+            
+            self.expect(AssertKwd);
+            let _ = self.expr();
+            self.expect(Semicolon);
+
+
+            println!("stmt_assert {}", self.nth_str(0));
+
+            self.close(m, StmtAssert);
         }
           
         fn stmt_expr(&mut self) {
+            println!("stmt_expr");
             let m = self.open();
             
             let _ = self.expr();
@@ -363,7 +745,14 @@ pub fn parse(text: &str) -> Parse {
                     let m = self.open_before(lhs);
                     self.advance(); // consume operator
                     let _ = self.expr_bp(r_bp);
-                    lhs = self.close(m, ExprBinary);
+                    
+                    // Use ExprAssign for assignment operators, ExprBinary for others
+                    let node_kind = match op {
+                        Assign | PlusAssign | MinusAssign | StarAssign | SlashAssign | PercentAssign => ExprAssign,
+                        _ => ExprBinary,
+                    };
+                    
+                    lhs = self.close(m, node_kind);
                     continue;
                 }
 
@@ -421,8 +810,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn expr_list(&mut self) {
-            let m = self.open();
-            
             let _ = self.expr_bp(0);
             while self.at(Comma) {
                 self.expect(Comma);
@@ -430,8 +817,6 @@ pub fn parse(text: &str) -> Parse {
                     let _ = self.expr_bp(0);
                 }
             }
-            
-            self.close(m, ArgList); 
         }
 
         fn arg_list(&mut self) {
@@ -499,6 +884,11 @@ pub fn parse(text: &str) -> Parse {
             self.tokens.get(self.pos + lookahead)
                 .map_or(Eof, |it| it.0)
         }
+
+        fn nth_str(&self, lookahead: usize) -> &str {
+            self.tokens.get(self.pos + lookahead)
+                .map_or("EOF", |it| it.1)
+        }
     
         fn at(&self, kind: SyntaxKind) -> bool { 
             self.nth(0) == kind
@@ -517,16 +907,23 @@ pub fn parse(text: &str) -> Parse {
             if self.eat(kind) {
                 return;
             }
-            // TODO: Error reporting.
-            eprintln!("expected {kind:?}");
+
+            let curr = self.nth(0);
+            self.report_error(&format!("expected {kind:?} instead of {curr:?}"));
         }
     
         fn advance_with_error(&mut self, error: &str) {
             let m = self.open();
-            // TODO: Error reporting.
-            eprintln!("{error}");
+            self.report_error(error);
             self.advance();
             self.close(m, ErrorTree);
+        }
+
+        fn report_error(&mut self, error: &str) {
+            let curr = self.nth_str(0);
+            let msg = format!("{error} at {curr}");
+            eprintln!("{msg}");
+            self.errors.push(msg);
         }
 
         fn build_tree(self) -> Parse {
@@ -716,6 +1113,100 @@ mod tests {
     }
 
     #[test]
+    fn test_list_literal_empty() {
+        expect_tree("func test() { val x = []; }", &[
+            "File@0..20",
+            "  Func@0..20",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..20",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtVal@11..19",
+            "        ValKwd@11..14 \"val\"",
+            "        Identifier@14..15 \"x\"",
+            "        Assign@15..16 \"=\"",
+            "        ExprList@16..18",
+            "          LeftBracket@16..17 \"[\"",
+            "          RightBracket@17..18 \"]\"",
+            "        Semicolon@18..19 \";\"",
+            "      RightBrace@19..20 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_list_literal_with_elements() {
+        expect_tree("func test() { val x = [1, 2, 3]; }", &[
+            "File@0..25",
+            "  Func@0..25",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..25",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtVal@11..24",
+            "        ValKwd@11..14 \"val\"",
+            "        Identifier@14..15 \"x\"",
+            "        Assign@15..16 \"=\"",
+            "        ExprList@16..23",
+            "          LeftBracket@16..17 \"[\"",
+            "          ExprLiteral@17..18",
+            "            DecIntLiteral@17..18 \"1\"",
+            "          Comma@18..19 \",\"",
+            "          ExprLiteral@19..20",
+            "            DecIntLiteral@19..20 \"2\"",
+            "          Comma@20..21 \",\"",
+            "          ExprLiteral@21..22",
+            "            DecIntLiteral@21..22 \"3\"",
+            "          RightBracket@22..23 \"]\"",
+            "        Semicolon@23..24 \";\"",
+            "      RightBrace@24..25 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_list_literal_nested() {
+        expect_tree("func test() { val x = [[1, 2], [3]]; }", &[
+            "File@0..29",
+            "  Func@0..29",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..29",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtVal@11..28",
+            "        ValKwd@11..14 \"val\"",
+            "        Identifier@14..15 \"x\"",
+            "        Assign@15..16 \"=\"",
+            "        ExprList@16..27",
+            "          LeftBracket@16..17 \"[\"",
+            "          ExprList@17..22",
+            "            LeftBracket@17..18 \"[\"",
+            "            ExprLiteral@18..19",
+            "              DecIntLiteral@18..19 \"1\"",
+            "            Comma@19..20 \",\"",
+            "            ExprLiteral@20..21",
+            "              DecIntLiteral@20..21 \"2\"",
+            "            RightBracket@21..22 \"]\"",
+            "          Comma@22..23 \",\"",
+            "          ExprList@23..26",
+            "            LeftBracket@23..24 \"[\"",
+            "            ExprLiteral@24..25",
+            "              DecIntLiteral@24..25 \"3\"",
+            "            RightBracket@25..26 \"]\"",
+            "          RightBracket@26..27 \"]\"",
+            "        Semicolon@27..28 \";\"",
+            "      RightBrace@28..29 \"}\""
+        ])
+    }
+
+    #[test]
     fn test_unary_expr() {
         expect_tree("func test() { val x = -5; }", &[
             "File@0..20",
@@ -863,4 +1354,215 @@ mod tests {
             "      RightBrace@38..39 \"}\""
         ])
     }
+
+    fn test_files_in_directory_parse(dir: &str) {
+        use std::fs;
+        use std::path::Path;
+
+        let test_dir = Path::new(dir);
+        
+        if !test_dir.exists() {
+            println!("Directory not found, skipping test: {}", dir);
+            return;
+        }
+
+        let entries = fs::read_dir(test_dir)
+            .expect(&format!("Failed to read directory: {}", dir));
+
+        for entry in entries {
+            let entry = entry.expect("Failed to read directory entry");
+            let path = entry.path();
+            
+            if path.extension().and_then(|s| s.to_str()) == Some("aria") {
+                let filename = path.file_name().unwrap().to_str().unwrap();
+
+                println!("Parsing {}", filename);
+                            
+                let content = fs::read_to_string(&path)
+                    .expect(&format!("Failed to read file: {}", filename));
+                
+                let parse_result = std::panic::catch_unwind(|| {
+                    parse(&content)
+                });
+                
+                match parse_result {
+                    Ok(parse) => {
+                        // Check if there are any parse errors in the result
+                        if !parse.errors.is_empty() {
+                            println!("\n{} has parse errors:", filename);
+                            for error in &parse.errors {
+                                println!("  {}", error);
+                            }
+                            panic!("Parse errors found in {}", filename);
+                        }
+                    }
+                    Err(_) => {
+                        panic!("Parser panicked on file: {}", filename);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_assignment_basic() {
+        expect_tree("func test() { x = 5; }", &[
+            "File@0..16",
+            "  Func@0..16",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..16",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtExpr@11..15",
+            "        ExprAssign@11..14",
+            "          ExprName@11..12",
+            "            Identifier@11..12 \"x\"",
+            "          Assign@12..13 \"=\"",
+            "          ExprLiteral@13..14",
+            "            DecIntLiteral@13..14 \"5\"",
+            "        Semicolon@14..15 \";\"",
+            "      RightBrace@15..16 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_assignment_compound() {
+        expect_tree("func test() { x += 5; }", &[
+            "File@0..17",
+            "  Func@0..17",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..17",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtExpr@11..16",
+            "        ExprAssign@11..15",
+            "          ExprName@11..12",
+            "            Identifier@11..12 \"x\"",
+            "          PlusAssign@12..14 \"+=\"",
+            "          ExprLiteral@14..15",
+            "            DecIntLiteral@14..15 \"5\"",
+            "        Semicolon@15..16 \";\"",
+            "      RightBrace@16..17 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_assignment_all_compound_operators() {
+        expect_tree("func test() { x -= 1; y *= 2; z /= 3; w %= 4; }", &[
+            "File@0..32",
+            "  Func@0..32",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..32",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtExpr@11..16",
+            "        ExprAssign@11..15",
+            "          ExprName@11..12",
+            "            Identifier@11..12 \"x\"",
+            "          MinusAssign@12..14 \"-=\"",
+            "          ExprLiteral@14..15",
+            "            DecIntLiteral@14..15 \"1\"",
+            "        Semicolon@15..16 \";\"",
+            "      StmtExpr@16..21",
+            "        ExprAssign@16..20",
+            "          ExprName@16..17",
+            "            Identifier@16..17 \"y\"",
+            "          StarAssign@17..19 \"*=\"",
+            "          ExprLiteral@19..20",
+            "            DecIntLiteral@19..20 \"2\"",
+            "        Semicolon@20..21 \";\"",
+            "      StmtExpr@21..26",
+            "        ExprAssign@21..25",
+            "          ExprName@21..22",
+            "            Identifier@21..22 \"z\"",
+            "          SlashAssign@22..24 \"/=\"",
+            "          ExprLiteral@24..25",
+            "            DecIntLiteral@24..25 \"3\"",
+            "        Semicolon@25..26 \";\"",
+            "      StmtExpr@26..31",
+            "        ExprAssign@26..30",
+            "          ExprName@26..27",
+            "            Identifier@26..27 \"w\"",
+            "          PercentAssign@27..29 \"%=\"",
+            "          ExprLiteral@29..30",
+            "            DecIntLiteral@29..30 \"4\"",
+            "        Semicolon@30..31 \";\"",
+            "      RightBrace@31..32 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_assignment_precedence() {
+        expect_tree("func test() { x = y + z; }", &[
+            "File@0..18",
+            "  Func@0..18",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..18",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtExpr@11..17",
+            "        ExprAssign@11..16",
+            "          ExprName@11..12",
+            "            Identifier@11..12 \"x\"",
+            "          Assign@12..13 \"=\"",
+            "          ExprBinary@13..16",
+            "            ExprName@13..14",
+            "              Identifier@13..14 \"y\"",
+            "            Plus@14..15 \"+\"",
+            "            ExprName@15..16",
+            "              Identifier@15..16 \"z\"",
+            "        Semicolon@16..17 \";\"",
+            "      RightBrace@17..18 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_assignment_right_associative() {
+        expect_tree("func test() { x = y = z; }", &[
+            "File@0..18",
+            "  Func@0..18",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..18",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtExpr@11..17",
+            "        ExprAssign@11..16",
+            "          ExprName@11..12",
+            "            Identifier@11..12 \"x\"",
+            "          Assign@12..13 \"=\"",
+            "          ExprAssign@13..16",
+            "            ExprName@13..14",
+            "              Identifier@13..14 \"y\"",
+            "            Assign@14..15 \"=\"",
+            "            ExprName@15..16",
+            "              Identifier@15..16 \"z\"",
+            "        Semicolon@16..17 \";\"",
+            "      RightBrace@17..18 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_example_files_parse_without_errors() {
+        test_files_in_directory_parse("../examples");
+    }
+
+    // #[test]
+    // fn test_files_parse_without_errors() {
+    //     test_files_in_directory_parse("../tests");
+    // }
 }
