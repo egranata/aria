@@ -1,7 +1,7 @@
 use std::cell::Cell;
-
+use line_index::LineIndex;
 use crate::{SyntaxKind, lexer};
-use rowan::{GreenNode, GreenNodeBuilder};
+use rowan::{GreenNode, GreenNodeBuilder, TextSize};
 use SyntaxKind::*;
 
 impl From<SyntaxKind> for rowan::SyntaxKind {
@@ -45,11 +45,12 @@ pub fn parse(text: &str) -> Parse {
     }
     
     struct Parser<'a> {
-        tokens: Vec<(SyntaxKind, &'a str)>,
+        tokens: Vec<(SyntaxKind, &'a str, logos::Span)>,
         pos: usize,
         fuel: Cell<u32>, 
         events: Vec<Event>,
-        errors: Vec<String>
+        errors: Vec<String>,
+        line_index: LineIndex
     }
 
     fn prefix_binding_power(op: SyntaxKind) -> Option<((), u8)> {
@@ -117,7 +118,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn decl_struct(&mut self) {
-            println!("decl_struct");
             assert!(self.at(StructKwd));
             let m = self.open();
             
@@ -134,7 +134,11 @@ pub fn parse(text: &str) -> Parse {
                     IncludeKwd => self.mixin_include(),
                     TypeKwd => {
                         self.expect(TypeKwd);
-                        self.decl_val();
+                        if self.at(ValKwd) {
+                            self.decl_val();
+                        } else {
+                            self.decl_func();
+                        }
                     }
                     _ => self.advance_with_error("expected struct entry")
                 }
@@ -155,7 +159,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn decl_enum(&mut self) {
-            println!("decl_struct");
             assert!(self.at(EnumKwd));
             let m = self.open();
             
@@ -288,7 +291,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn decl_func(&mut self) {
-            println!("decl_func");
             assert!(self.at(FuncKwd)); 
             let m = self.open(); 
           
@@ -328,9 +330,11 @@ pub fn parse(text: &str) -> Parse {
             let m = self.open();
           
             self.expect(Identifier);
-            self.expect(Colon);
 
-            self.expect(Identifier);
+            if self.at(Colon) {
+                self.expect(Colon);
+                self.expect(Identifier);
+            }
             
             if !self.at(RightParen) { 
               self.expect(Comma);
@@ -340,7 +344,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn block(&mut self) {
-            println!("block");
             assert!(self.at(LeftBrace));
             let m = self.open();
           
@@ -542,7 +545,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn stmt_import(&mut self) {
-            println!("stmt_import");
             assert!(self.at(ImportKwd));
             let m = self.open();
             
@@ -578,19 +580,14 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn decl_val(&mut self) {
-            println!("decl_val");
             assert!(self.at(ValKwd));
             let m = self.open();
             
             self.expect(ValKwd);
-            println!("decl_val 1 {}", self.nth_str(0));
             self.expect(Identifier);
-            println!("decl_val 2");
             self.expect(Assign);
             let _ = self.expr();
-            println!("decl_val 3");
             self.expect(Semicolon);
-            println!("decl_val 4");
 
             self.close(m, StmtVal);
         }
@@ -600,7 +597,6 @@ pub fn parse(text: &str) -> Parse {
             let m = self.open();
             
             self.expect(kind);
-            let _ = self.expr();
             self.expect(Semicolon);
             
             self.close(m, StmtReturn);
@@ -635,7 +631,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn import_path(&mut self) {
-            println!("import_path");
             let m = self.open();
             
             self.expect(Identifier);
@@ -648,7 +643,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn stmt_assert(&mut self) {
-            println!("stmt_assert");
             assert!(self.at(AssertKwd));
             let m = self.open();
             
@@ -656,14 +650,10 @@ pub fn parse(text: &str) -> Parse {
             let _ = self.expr();
             self.expect(Semicolon);
 
-
-            println!("stmt_assert {}", self.nth_str(0));
-
             self.close(m, StmtAssert);
         }
           
         fn stmt_expr(&mut self) {
-            println!("stmt_expr");
             let m = self.open();
             
             let _ = self.expr();
@@ -885,9 +875,8 @@ pub fn parse(text: &str) -> Parse {
                 .map_or(Eof, |it| it.0)
         }
 
-        fn nth_str(&self, lookahead: usize) -> &str {
+        fn nth_token(&self, lookahead: usize) -> Option<&(SyntaxKind, &str, logos::Span)> {
             self.tokens.get(self.pos + lookahead)
-                .map_or("EOF", |it| it.1)
         }
     
         fn at(&self, kind: SyntaxKind) -> bool { 
@@ -919,15 +908,23 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, ErrorTree);
         }
 
-        fn report_error(&mut self, error: &str) {
-            let curr = self.nth_str(0);
-            let msg = format!("{error} at {curr}");
-            eprintln!("{msg}");
+        fn report_error(&mut self, error: &str) {            
+            let msg = if let Some(tok) = self.nth_token(0) {                
+                let pos = &tok.2;
+                let line_col = self.line_index.line_col(TextSize::new(pos.start.try_into().unwrap()));
+
+                format!("{error} at line {}, column {}", line_col.line + 1, line_col.col + 1)
+            } else {
+                format!("{error}")
+            };
+            
             self.errors.push(msg);
         }
 
         fn build_tree(self) -> Parse {
             let mut tokens = self.tokens.into_iter();
+
+            // TODO: add a shared node cache
             let mut builder = GreenNodeBuilder::new();
                 
             for event in self.events {
@@ -941,7 +938,7 @@ pub fn parse(text: &str) -> Parse {
                 }
         
                 Event::Advance => {
-                    let (token, slice) = tokens.next().unwrap();
+                    let (token, slice, _) = tokens.next().unwrap();
                     builder.token(token.into(), slice);
                 }
               }
@@ -953,9 +950,11 @@ pub fn parse(text: &str) -> Parse {
         }
     }  
 
+
+    let line_index = LineIndex::new(text);
     let lex = lexer::lex(text);
     let tokens = lex.into_iter().map(|res| res.unwrap()).collect();
-    let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
+    let mut parser = Parser { tokens, pos: 0, line_index, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
     parser.file();
     parser.build_tree()
 }
@@ -1381,24 +1380,14 @@ mod tests {
                 let content = fs::read_to_string(&path)
                     .expect(&format!("Failed to read file: {}", filename));
                 
-                let parse_result = std::panic::catch_unwind(|| {
-                    parse(&content)
-                });
+                let parse_result = parse(&content);
                 
-                match parse_result {
-                    Ok(parse) => {
-                        // Check if there are any parse errors in the result
-                        if !parse.errors.is_empty() {
-                            println!("\n{} has parse errors:", filename);
-                            for error in &parse.errors {
-                                println!("  {}", error);
-                            }
-                            panic!("Parse errors found in {}", filename);
-                        }
+                if !parse_result.errors.is_empty() {
+                    println!("\n{} has parse errors:", filename);
+                    for error in &parse_result.errors {
+                        println!("  {}", error);
                     }
-                    Err(_) => {
-                        panic!("Parser panicked on file: {}", filename);
-                    }
+                    panic!("Parse errors found in {}", filename);
                 }
             }
         }

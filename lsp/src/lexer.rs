@@ -228,14 +228,14 @@ pub enum SyntaxKind {
     Eof
 }
 
-pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str), LexError>> {
+pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str, logos::Span), LexError>> {
     let mut lexer = SyntaxKind::lexer(s);
     let mut tokens = Vec::new();
     
     while let Some(token_result) = lexer.next() {
         let slice = lexer.slice();
         match token_result {
-            Ok(token) => tokens.push(Ok((token, slice))),
+            Ok(token) => tokens.push(Ok((token, slice, lexer.span()))),
             Err(_) => {
                 let span = lexer.span();
                 tokens.push(Err(LexError {
