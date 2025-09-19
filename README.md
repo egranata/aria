@@ -70,7 +70,7 @@ func main() {
 import JsonValue from aria.json.parser;
 
 func main() {
-    val json_data = JsonValue.parse('{"name": "Aria", "version": "0.9"}').flatten();
+    val json_data = JsonValue.parse('{"name": "Aria", "version": "0.9"}')!!.flatten();
     println("Language: {0}, Version: {1}".format(json_data["name"], json_data["version"]));
 }
 ```
