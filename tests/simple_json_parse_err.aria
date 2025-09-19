@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+import JsonValue from aria.json.parser;
+
+func main() {
+    assert JsonValue.parse('nul').is_Err();
+    assert JsonValue.parse('{"a":1, b:"2"}').is_Err();
+    assert JsonValue.parse('[1,2,3,]').is_Err();
+}
