@@ -147,7 +147,7 @@ func parse_number(stream) {
         }
     }
 
-    return Float.parse(text).unwrap_Some();
+    return Float.parse(text).or_throw();
 }
 
 func parse_true(stream) {

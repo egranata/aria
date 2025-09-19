@@ -37,11 +37,11 @@ func main() {
     }
     
     val value = Float.parse(args[0]);
-    if value.is_None() {
+    if value.is_Err() {
         println("Please provide a valid numeric value to convert.");
         return Unit::unit;
     }
-    value = value.unwrap_Some();
+    value = value!!;
 
     val source_currency = args[1].uppercase();
     val target_currency = args[2].uppercase();

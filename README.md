@@ -12,19 +12,14 @@ Aria has modern, safer error handling: Aria replaces unreliable `None` pointer c
 `null`, the [billion dollar mistake](https://softwareengineering.stackexchange.com/questions/413149/if-null-is-a-billion-dollar-mistake-what-is-the-solution-to-represent-a-non-ini) just does not exist in Aria, making code safer, easier to maintain and error handling more robust.
 
 ```aria
-
-# will return Maybe::Some(n) if parsing is successful, Maybe::None otherwise
-func parse_to_int(s: String) {
-    return Int.parse(s);
-}
-
 func main() {
-    match parse_to_int("abc123") {
-        case None => {
-            println("could not parse this string correctly");
+    val x = Int.parse("abc123");
+    match x {
+        case Ok(val) => {
+            println("Parsed value: {0}".format(val));
         },
-        case Some(v) => {
-            println("int value = {0}".format(v));
+        case Err(err) => {
+            println("Failed to parse integer: {0}".format(err));
         }
     }
 }
