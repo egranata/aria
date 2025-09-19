@@ -4,6 +4,7 @@ import Map from aria.structures.map;
 import aria.string.classes;
 import JsonValue from aria.json.value;
 import JsonNull from aria.json.value;
+import ok, err from aria.core.result;
 
 struct JsonStream {
     type func new(s) {
@@ -43,11 +44,7 @@ struct JsonStream {
 
 extension JsonValue {
     type func parse(s) {
-        val stream = JsonStream.new(s);
-        stream.skip_whitespace();
-        val result = parse_value(stream);
-        stream.skip_whitespace();
-        return result;
+        return ok(parse_value(JsonStream.new(s))??);
     }
 }
 
@@ -63,35 +60,36 @@ struct JsonParseError {
     }
 }
 
+func json_err(msg) {
+    return err(JsonParseError.new(msg));
+}
+
 func parse_value(stream) {
     stream.skip_whitespace();
     val c = stream.peek();
 
     if c == '"' {
-        return JsonValue::String(parse_string(stream));
+        return JsonValue::String(parse_string(stream)??);
     } elsif c == '{' {
-        return JsonValue::Object(parse_object(stream));
+        return JsonValue::Object(parse_object(stream)??);
     } elsif c == '[' {
-        return JsonValue::Array(parse_array(stream));
+        return JsonValue::Array(parse_array(stream)??);
     } elsif c == 't' {
-        parse_true(stream);
-        return JsonValue::Boolean(true);
+        return parse_true(stream)??;
     } elsif c == 'f' {
-        parse_false(stream);
-        return JsonValue::Boolean(false);
+        return parse_false(stream)??;
     } elsif c == 'n' {
-        parse_null(stream);
-        return JsonValue::Null(alloc(JsonNull));
+        return parse_null(stream)??;
     } elsif c.is_digit() || c == '-' {
-        return JsonValue::Number(parse_number(stream));
+        return JsonValue::Number(parse_number(stream))??;
     } else {
-        throw JsonParseError.new("Not a valid JSON value: " + c);
+        return json_err("Not a valid JSON value: " + c);
     }
 }
 
 func parse_string(stream) {
     if !stream.eat('"') {
-        throw alloc(JsonParseError);
+        return json_err("missing quotes in JSON string");
     }
 
     val result = "";
@@ -110,14 +108,14 @@ func parse_string(stream) {
             } elsif esc == '\\' {
                 result += '\\';
             } else {
-                throw JsonParseError.new("Not a valid JSON string escape sequence");
+                return json_err("invalid escape sequence in JSON string");
             }
         } else {
             result += c;
         }
     }
 
-    return result;
+    return ok(result);
 }
 
 func parse_number(stream) {
@@ -147,24 +145,30 @@ func parse_number(stream) {
         }
     }
 
-    return Float.parse(text).or_throw();
+    return Float.parse(text)??;
 }
 
 func parse_true(stream) {
     if stream.next() != 't' || stream.next() != 'r' || stream.next() != 'u' || stream.next() != 'e' {
-        throw JsonParseError.new("Trying to parse true and failed");
+        return json_err("invalid boolean true value in JSON");
+    } else {
+        return ok(JsonValue::Boolean(true));
     }
 }
 
 func parse_false(stream) {
     if stream.next() != 'f' || stream.next() != 'a' || stream.next() != 'l' || stream.next() != 's' || stream.next() != 'e' {
-        throw JsonParseError.new("Trying to parse false and failed");
+        return json_err("invalid boolean false value in JSON");
+    } else {
+        return ok(JsonValue::Boolean(false));
     }
 }
 
 func parse_null(stream) {
     if stream.next() != 'n' || stream.next() != 'u' || stream.next() != 'l' || stream.next() != 'l' {
-        throw JsonParseError.new("Trying to parse null and failed");
+        return json_err("invalid null value in JSON");
+    } else {
+        return ok(JsonValue::Null(alloc(JsonNull)));
     }
 }
 
@@ -180,13 +184,13 @@ func parse_object(stream) {
 
     while true {
         stream.skip_whitespace();
-        val key = parse_string(stream);
+        val key = parse_string(stream)??;
         stream.skip_whitespace();
         if !stream.eat(':') {
-            throw JsonParseError.new("Invalid JSON object key-value pair");
+            return json_err("Invalid JSON object key-value pair");
         }
 
-        val value = parse_value(stream);
+        val value = parse_value(stream)??;
         map.set(key, value);
         stream.skip_whitespace();
 
@@ -195,11 +199,11 @@ func parse_object(stream) {
         } elsif stream.eat(',') {
             continue;
         } else {
-            throw JsonParseError.new("Unexpected character in JSON object");
+            return json_err("Unexpected character in JSON object");
         }
     }
 
-    return map;
+    return ok(map);
 }
 
 func parse_array(stream) {
@@ -213,7 +217,7 @@ func parse_array(stream) {
     }
 
     while true {
-        val value = parse_value(stream);
+        val value = parse_value(stream)??;
         list.append(value);
         stream.skip_whitespace();
 
@@ -222,9 +226,9 @@ func parse_array(stream) {
         } elsif stream.eat(',') {
             continue;
         } else {
-            throw JsonParseError.new("Unexpected character in JSON array");
+            return json_err("Unexpected character in JSON array");
         }
     }
 
-    return list;
+    return ok(list);
 }

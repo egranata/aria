@@ -13,7 +13,7 @@ func main() {
 
     val result = retry(|| => request.get(), |result| => result.status_code == 200);
     assert result.is_Pass();
-    val json_result = JsonValue.parse(result.unwrap_Pass().content);
+    val json_result = JsonValue.parse(result.unwrap_Pass().content)!!;
 
     val json_map = json_result.unwrap_Object();
     val json_headers = json_map["headers"].unwrap_Object();
