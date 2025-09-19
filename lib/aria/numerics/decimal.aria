@@ -26,11 +26,7 @@ struct Decimal {
                 return v.apply(|value| => This.new_with_parts(value, 0));
             },
             == 2 => {
-                val integer_part = Int.parse(parts[0]);
-                match integer_part {
-                    case None => { return Maybe::None; },
-                    case Some(i) => { integer_part = i; }
-                }
+                val integer_part = Int.parse(parts[0])??;
                 val decimal_part = parts[1];
                 val scale = decimal_part.len();
                 val combined_str = parts[0] + decimal_part;
@@ -38,7 +34,7 @@ struct Decimal {
                 return value.apply(|v| => This.new_with_parts(v, scale));
             }
         } else {
-            return Maybe::None;
+            return Result::Err("invalid decimal string");
         }
     }
 
@@ -212,8 +208,8 @@ struct Decimal {
 
         val n_maybe = Int.parse(parts[1]);
         match n_maybe {
-            case None => { return this.default_prettyprint(); },
-            case Some(N) => {
+            case Err => { return this.default_prettyprint(); },
+            case Ok(N) => {
                 if N <= 0 {
                     return this.default_prettyprint();
                 }

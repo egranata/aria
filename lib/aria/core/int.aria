@@ -46,26 +46,26 @@ extension Int {
         }
 
         if s == "" {
-            return Maybe::None;
+            return Result::Err("empty integer string");
         }
 
         match Int.parse_radix(s, base) {
-            case Some(value) => {
-                return Maybe::Some(sign * value);
+            case Ok(value) => {
+                return Result::Ok(sign * value);
             },
-            case None => {
-                return Maybe::None;
+            case Err(e) => {
+                return Result::Err(e);
             },
         }
     }
 
     type func parse_radix(s: String, base: Int) {
         if base < 2 || base > 36 {
-            return Maybe::None;
+            return Result::Err("invalid radix");
         }
 
         if s.len() == 0 {
-            return Maybe::None;
+            return Result::Err("empty integer string");
         }
 
         val s: List = s.chars();
@@ -80,32 +80,32 @@ extension Int {
                 >= 48 and <= 57 => {
                     # decimal digits
                     if (digit - 48) >= base {
-                        return Maybe::None;
+                        return Result::Err("invalid integer digit: " + chr);
                     }
                     digit = digit - 48;
                 },
                 >= 65 and <= 90 => {
                     # uppercase letters
                     if (digit - 65 + 10) >= base {
-                        return Maybe::None;
+                        return Result::Err("invalid integer digit: " + chr);
                     }
                     digit = digit - 65 + 10;
                 },
                 >= 97 and <= 122 => {
                     # lowercase letters
                     if (digit - 97 + 10) >= base {
-                        return Maybe::None;
+                        return Result::Err("invalid integer digit: " + chr);
                     }
                     digit = digit - 97 + 10;
                 },
             } else {
-                return Maybe::None;
+                return Result::Err("invalid integer digit: " + chr);
             }
             ret = ret * base + digit;
             i += 1;
         }
 
-        return Maybe::Some(ret);
+        return Result::Ok(ret);
     }
 }
 

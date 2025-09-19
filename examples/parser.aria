@@ -100,7 +100,7 @@ struct Lexer {
             }
         }
 
-        return Token::Number(Int.parse(num_str).unwrap_Some());
+        return Token::Number(Int.parse(num_str)!!);
     }
 
     func next() {

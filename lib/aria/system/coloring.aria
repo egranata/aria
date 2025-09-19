@@ -46,26 +46,18 @@ enum Color {
             }
 
             if s.len() != 6 {
-                return Maybe::None;
+                return Result::Ok("Invalid RGB hex string length");
             }
 
             val red = s.substring(0,1);
             val green = s.substring(2,3);
             val blue = s.substring(4,5);
 
-            val red = Int.parse_radix(red, 16);
-            val green = Int.parse_radix(green, 16);
-            val blue = Int.parse_radix(blue, 16);
+            val red = Int.parse_radix(red, 16)??;
+            val green = Int.parse_radix(green, 16)??;
+            val blue = Int.parse_radix(blue, 16)??;
 
-            if red.is_None() || green.is_None() || blue.is_None() {
-                return Maybe::None;
-            }
-
-            return Maybe::Some(This.new(
-                red.unwrap_Some(),
-                green.unwrap_Some(),
-                blue.unwrap_Some()
-            ));
+            return Result::Ok(This.new(red, green, blue));
         }
 
         func prettyprint() {
