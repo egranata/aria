@@ -17,6 +17,7 @@ mod alloc;
 mod arity;
 mod boolean;
 mod cmdline_args;
+mod exit;
 mod float;
 mod getenv;
 mod hasattr;
@@ -79,6 +80,7 @@ impl Default for VmBuiltins {
         arity::insert_builtins(&mut this);
         boolean::insert_boolean_builtins(&mut this);
         cmdline_args::insert_builtins(&mut this);
+        exit::insert_builtins(&mut this);
         integer::insert_integer_builtins(&mut this);
         float::insert_float_builtins(&mut this);
         getenv::insert_builtins(&mut this);
