@@ -12,6 +12,15 @@ cargo build --workspace --profile "$ARIA_BUILD_CONFIG"
 ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo test --profile "$ARIA_BUILD_CONFIG" --package vm-lib
 ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo test --profile "$ARIA_BUILD_CONFIG" --package aria-bin
 
+set +e
+ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo run --profile "$ARIA_BUILD_CONFIG" --package aria-bin -- vm-lib/src/builtins/test_exit.aria
+EXIT_CODE=$?
+set -e
+if [ $EXIT_CODE -ne 42 ]; then
+    echo "❌ test_exit.aria exited with code $EXIT_CODE, expected 12"
+    exit 1
+fi
+
 ARIA_TEST_DIR="$ARIA_TEST_DIR" \
 ARIA_LIB_DIR="$ARIA_LIB_DIR" \
 RUST_MIN_STACK="$RUST_MIN_STACK" \
