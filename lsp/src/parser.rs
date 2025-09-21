@@ -57,6 +57,7 @@ fn tree_to_string_impl(node: &SyntaxNode, depth: usize, result: &mut Vec<String>
     }
 }
 pub fn parse(text: &str) -> Parse {
+    #[derive(Debug)]
     enum Event {
         Open { kind: SyntaxKind }, 
         Close,
@@ -106,7 +107,7 @@ pub fn parse(text: &str) -> Parse {
             LogicalAnd => Some((5, 6)),
             BitwiseXor => Some((7, 8)),
             BitwiseAnd => Some((9, 10)),
-            BitwiseOr => Some((11, 12)),
+            Pipe => Some((11, 12)),
             
             Equal | NotEqual | IsaKwd => Some((13, 14)),
             
@@ -271,7 +272,7 @@ pub fn parse(text: &str) -> Parse {
             match self.nth(0) {
                 Plus | Minus | Star | Slash | Percent | LeftShift | RightShift |
                 Equal | LessEqual | GreaterEqual | Less | Greater |
-                BitwiseAnd | BitwiseOr | BitwiseXor |
+                BitwiseAnd | Pipe | BitwiseXor |
                 LeftParen | LeftBracket => {
                     self.advance();
                 }
@@ -279,7 +280,7 @@ pub fn parse(text: &str) -> Parse {
             }
             
             if self.at(LeftParen) {
-                self.param_list();
+                self.param_list(LeftParen, RightParen);
             }
             
             if self.at(LeftBrace) {
@@ -325,7 +326,7 @@ pub fn parse(text: &str) -> Parse {
             self.expect(Identifier);
 
             if self.at(LeftParen) { 
-                self.param_list();
+                self.param_list(LeftParen, RightParen);
             }
             
             if self.at(LeftBrace) { 
@@ -335,24 +336,26 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, Func);
         }
 
-        fn param_list(&mut self) {
-            assert!(self.at(LeftParen));
+        fn param_list(&mut self, left_delim: SyntaxKind, right_delim: SyntaxKind) {
+            self.assert_tok(left_delim);
             let m = self.open();
+
+            // TODO: add vararg (ellipsis)
           
-            self.expect(LeftParen); 
-            while !self.at(RightParen) && !self.eof() { 
+            self.expect(left_delim); 
+            while !self.at(right_delim) && !self.eof() { 
               if self.at(Identifier) { 
-                self.param();
+                self.param(right_delim);
               } else {
                 break; 
               }
             }
-            self.expect(RightParen); 
+            self.expect(right_delim); 
           
             self.close(m, ParamList);
         }
 
-        fn param(&mut self) {
+        fn param(&mut self, right_delim: SyntaxKind) {
             assert!(self.at(Identifier));
             let m = self.open();
           
@@ -363,7 +366,7 @@ pub fn parse(text: &str) -> Parse {
                 self.expect(Identifier);
             }
             
-            if !self.at(RightParen) { 
+            if !self.at(right_delim) { 
               self.expect(Comma);
             }
           
@@ -722,7 +725,26 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn expr(&mut self) -> MarkClosed {
-            self.expr_bp(0)
+            if self.at(Pipe) {
+                self.decl_lambda()
+            } else {
+                self.expr_bp(0)
+            }
+        }
+
+        fn decl_lambda(&mut self) -> MarkClosed {
+            let m = self.open();
+            
+            self.param_list(Pipe, Pipe);
+            self.expect(Arrow);
+
+            if self.at(LeftBrace) {
+                self.block();
+            } else {
+                let _ = self.expr();
+            }
+
+            self.close(m, Lambda)
         }
 
         fn expr_bp(&mut self, min_bp: u8) -> MarkClosed {
@@ -992,7 +1014,7 @@ pub fn parse(text: &str) -> Parse {
 
         fn assert_tok(&mut self, kind: SyntaxKind) {
             let msg = self.get_context_msg();
-            assert!(self.at(kind), "expected token {:?} instead of {}", kind, msg);
+            assert!(self.at(kind), "expected token {:?} instead of {}\n{:?}", kind, msg, self.events);
         }
 
         fn build_tree(self) -> Parse {

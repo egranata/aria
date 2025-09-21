@@ -103,7 +103,7 @@ pub enum SyntaxKind {
     #[token("&")]
     BitwiseAnd,
     #[token("|")]
-    BitwiseOr,
+    Pipe,
     #[token("^")]
     BitwiseXor,
     #[token("!")]
@@ -185,6 +185,7 @@ pub enum SyntaxKind {
     File,
     ErrorTree,
     Func,
+    Lambda,
     Block,
     ParamList,
     Param,
