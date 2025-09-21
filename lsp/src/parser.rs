@@ -1,5 +1,5 @@
 use std::cell::Cell;
-use line_index::LineIndex;
+use line_index::{LineCol, LineIndex};
 use crate::{SyntaxKind, lexer};
 use rowan::{GreenNode, GreenNodeBuilder, TextSize};
 use SyntaxKind::*;
@@ -618,10 +618,6 @@ pub fn parse(text: &str) -> Parse {
             self.expect(Assign);
             let _ = self.expr();
 
-            if self.at(LeftBrace) {
-                self.init_block();
-            }
-
             self.expect(Semicolon);
 
             self.close(m, StmtVal);
@@ -647,10 +643,6 @@ pub fn parse(text: &str) -> Parse {
                 let _ = self.expr();
             }
 
-            if self.at(LeftBrace) {
-                self.init_block();
-            }
-
             self.expect(Semicolon);
             self.close(m, StmtReturn);
         }
@@ -663,6 +655,21 @@ pub fn parse(text: &str) -> Parse {
                 self.expect(Dot);
                 self.expect(Identifier);
                 self.expect(Assign);
+                let _ = self.expr();
+
+                if !self.at(RightBrace) {
+                    self.expect(Comma);
+                }
+            }
+
+            while self.at(LeftBracket) {
+                
+                self.expect(LeftBracket);
+                let _ = self.expr();
+                self.expect(RightBracket);
+
+                self.expect(Assign);
+
                 let _ = self.expr();
 
                 if !self.at(RightBrace) {
@@ -714,11 +721,7 @@ pub fn parse(text: &str) -> Parse {
             let m = self.open();
             
             let _ = self.expr();
-
-            if self.at(LeftBrace) {
-                self.init_block();
-            }
-
+            
             self.expect(Semicolon);
             
             self.close(m, StmtExpr);
@@ -747,6 +750,11 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, Lambda)
         }
 
+        fn line_col(&mut self) -> LineCol {
+            let pos = self.pos;
+            self.line_index.line_col(TextSize::new(pos.try_into().unwrap()))
+        }
+
         fn expr_bp(&mut self, min_bp: u8) -> MarkClosed {
             let mut lhs = self.expr_primary();
 
@@ -762,6 +770,16 @@ pub fn parse(text: &str) -> Parse {
                         LeftParen => {
                             let m = self.open_before(lhs);
                             self.arg_list();
+                            if self.at(LeftBrace) {
+                                let line_col = self.line_col();
+
+                                println!("initializer list at {:?}", line_col);
+                                let ahead = self.nth(1);
+                                if ahead == Dot || ahead == LeftBracket {
+                                    self.init_block();
+                                }
+                            }
+
                             self.close(m, ExprCall)
                         }
                         LeftBracket => {
@@ -1006,7 +1024,7 @@ pub fn parse(text: &str) -> Parse {
                 let pos = &tok.2;
                 let line_col = self.line_index.line_col(TextSize::new(pos.start.try_into().unwrap()));
 
-                format!("token: {:?}, line: {}, col: {}", tok.0, line_col.line + 1, line_col.col + 1)
+                format!("{:?}, line: {}, col: {}", tok.0, line_col.line + 1, line_col.col + 1)
             } else {
                 format!("no token available")
             }
@@ -1014,7 +1032,7 @@ pub fn parse(text: &str) -> Parse {
 
         fn assert_tok(&mut self, kind: SyntaxKind) {
             let msg = self.get_context_msg();
-            assert!(self.at(kind), "expected token {:?} instead of {}\n{:?}", kind, msg, self.events);
+            assert!(self.at(kind), "expected {:?} instead of {}\n{:?}", kind, msg, self.events);
         }
 
         fn build_tree(self) -> Parse {
