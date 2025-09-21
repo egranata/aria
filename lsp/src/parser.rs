@@ -29,6 +29,33 @@ pub struct Parse {
     errors: Vec<String>,
 }
 
+fn tree_to_string(node: SyntaxNode) -> String {
+    let mut result = Vec::new();
+    tree_to_string_impl(&node, 0, &mut result);
+    result.join("\n")
+}
+
+fn tree_to_string_impl(node: &SyntaxNode, depth: usize, result: &mut Vec<String>) {
+    let indent = "  ".repeat(depth);
+    result.push(format!("{}{:?}@{:?}", indent, node.kind(), node.text_range()));
+    
+    for child in node.children_with_tokens() {
+        match child {
+            rowan::NodeOrToken::Node(child_node) => {
+                tree_to_string_impl(&child_node, depth + 1, result);
+            }
+            rowan::NodeOrToken::Token(token) => {
+                let token_indent = "  ".repeat(depth + 1);
+                result.push(format!("{}{:?}@{:?} {:?}", 
+                    token_indent, 
+                    token.kind(), 
+                    token.text_range(),
+                    token.text()
+                ));
+            }
+        }
+    }
+}
 pub fn parse(text: &str) -> Parse {
     enum Event {
         Open { kind: SyntaxKind }, 
@@ -56,7 +83,7 @@ pub fn parse(text: &str) -> Parse {
     fn prefix_binding_power(op: SyntaxKind) -> Option<((), u8)> {
         use SyntaxKind::*;
         match op {
-            Not | Minus | UnaryMinus => Some(((), 23)), 
+            Not | Minus => Some(((), 23)), 
             _ => None,
         }
     }
@@ -928,8 +955,6 @@ pub fn parse(text: &str) -> Parse {
             if self.eat(kind) {
                 return;
             }
-
-            let curr = self.nth(0);
             // TODO: replace this with error message instead of assert
             self.assert_tok(kind);
         }
@@ -967,7 +992,7 @@ pub fn parse(text: &str) -> Parse {
 
         fn assert_tok(&mut self, kind: SyntaxKind) {
             let msg = self.get_context_msg();
-            assert!(self.at(kind), "expected token {:?} instead of {msg}", kind);
+            assert!(self.at(kind), "expected token {:?} instead of {}", kind, msg);
         }
 
         fn build_tree(self) -> Parse {
@@ -1026,34 +1051,6 @@ impl Parse {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
-
-    fn tree_to_string(node: SyntaxNode) -> String {
-        let mut result = Vec::new();
-        tree_to_string_impl(&node, 0, &mut result);
-        result.join("\n")
-    }
-
-    fn tree_to_string_impl(node: &SyntaxNode, depth: usize, result: &mut Vec<String>) {
-        let indent = "  ".repeat(depth);
-        result.push(format!("{}{:?}@{:?}", indent, node.kind(), node.text_range()));
-        
-        for child in node.children_with_tokens() {
-            match child {
-                rowan::NodeOrToken::Node(child_node) => {
-                    tree_to_string_impl(&child_node, depth + 1, result);
-                }
-                rowan::NodeOrToken::Token(token) => {
-                    let token_indent = "  ".repeat(depth + 1);
-                    result.push(format!("{}{:?}@{:?} {:?}", 
-                        token_indent, 
-                        token.kind(), 
-                        token.text_range(),
-                        token.text()
-                    ));
-                }
-            }
-        }
-    }
 
     fn expect_tree(input: &str, lines: &[&str]) {
         let node = parse(input).syntax();
@@ -1270,8 +1267,10 @@ mod tests {
             "        ValKwd@11..14 \"val\"",
             "        Identifier@14..15 \"x\"",
             "        Assign@15..16 \"=\"",
-            "        ExprLiteral@16..18",
-            "          DecIntLiteral@16..18 \"-5\"",
+            "        ExprUnary@16..18",
+            "          Minus@16..17 \"-\"",
+            "          ExprLiteral@17..18",
+            "            DecIntLiteral@17..18 \"5\"",
             "        Semicolon@18..19 \";\"",
             "      RightBrace@19..20 \"}\""
         ])
@@ -1591,6 +1590,33 @@ mod tests {
             "              Identifier@15..16 \"z\"",
             "        Semicolon@16..17 \";\"",
             "      RightBrace@17..18 \"}\""
+        ])
+    }
+
+    #[test]
+    fn test_simple_binary_expr() {
+        expect_tree("func test() { val x = y-1; }", &[
+            "File@0..21",
+            "  Func@0..21",
+            "    FuncKwd@0..4 \"func\"",
+            "    Identifier@4..8 \"test\"",
+            "    ParamList@8..10",
+            "      LeftParen@8..9 \"(\"",
+            "      RightParen@9..10 \")\"",
+            "    Block@10..21",
+            "      LeftBrace@10..11 \"{\"",
+            "      StmtVal@11..20",
+            "        ValKwd@11..14 \"val\"",
+            "        Identifier@14..15 \"x\"",
+            "        Assign@15..16 \"=\"",
+            "        ExprBinary@16..19",
+            "          ExprName@16..17",
+            "            Identifier@16..17 \"y\"",
+            "          Minus@17..18 \"-\"",
+            "          ExprLiteral@18..19",
+            "            DecIntLiteral@18..19 \"1\"",
+            "        Semicolon@19..20 \";\"",
+            "      RightBrace@20..21 \"}\""
         ])
     }
 

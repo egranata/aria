@@ -164,10 +164,10 @@ pub enum SyntaxKind {
     #[regex(r"0b[01]+(_[01]+)*")]
     BinIntLiteral,
     
-    #[regex(r"-?[0-9]+(_[0-9]+)*")]
+    #[regex(r"[0-9]+(_[0-9]+)*")]
     DecIntLiteral,
     
-    #[regex(r"-?[0-9]+\.[0-9]+([eE][+-]?[0-9]+)?f?")]
+    #[regex(r"[0-9]+\.[0-9]+([eE][+-]?[0-9]+)?f?")]
     FloatLiteral,
     
     #[regex(r#""([^"\\]|\\.)*""#)]
@@ -177,8 +177,6 @@ pub enum SyntaxKind {
     #[regex(r#"[\p{XID_Start}_$][\p{XID_Continue}_$]*|\p{Emoji}[\p{Emoji_Modifier}\p{Emoji_Component}]*"#, priority = 1)]
     Identifier,
 
-    #[token("u-")]
-    UnaryMinus,
 
     // Error token for unrecognized input
     Error,
