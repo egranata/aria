@@ -344,7 +344,7 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn block(&mut self) {
-            assert!(self.at(LeftBrace));
+            self.assert_tok(LeftBrace);
             let m = self.open();
           
             self.expect(LeftBrace);
@@ -587,6 +587,11 @@ pub fn parse(text: &str) -> Parse {
             self.expect(Identifier);
             self.expect(Assign);
             let _ = self.expr();
+
+            if self.at(LeftBrace) {
+                self.init_block();
+            }
+
             self.expect(Semicolon);
 
             self.close(m, StmtVal);
@@ -612,8 +617,30 @@ pub fn parse(text: &str) -> Parse {
                 let _ = self.expr();
             }
 
+            if self.at(LeftBrace) {
+                self.init_block();
+            }
+
             self.expect(Semicolon);
             self.close(m, StmtReturn);
+        }
+
+        fn init_block(&mut self) {
+            self.assert_tok(LeftBrace);
+            self.expect(LeftBrace);
+
+            while self.at(Dot) {
+                self.expect(Dot);
+                self.expect(Identifier);
+                self.expect(Assign);
+                let _ = self.expr();
+
+                if !self.at(RightBrace) {
+                    self.expect(Comma);
+                }
+            }
+
+            self.expect(RightBrace);
         }
 
         fn ident_list(&mut self) {
@@ -657,6 +684,11 @@ pub fn parse(text: &str) -> Parse {
             let m = self.open();
             
             let _ = self.expr();
+
+            if self.at(LeftBrace) {
+                self.init_block();
+            }
+
             self.expect(Semicolon);
             
             self.close(m, StmtExpr);
@@ -898,7 +930,8 @@ pub fn parse(text: &str) -> Parse {
             }
 
             let curr = self.nth(0);
-            self.report_error(&format!("expected {kind:?} instead of {curr:?}"));
+            // TODO: replace this with error message instead of assert
+            self.assert_tok(kind);
         }
     
         fn advance_with_error(&mut self, error: &str) {
@@ -919,6 +952,22 @@ pub fn parse(text: &str) -> Parse {
             };
             
             self.errors.push(msg);
+        }
+
+        fn get_context_msg(&mut self) -> String {
+            if let Some(tok) = self.nth_token(0) {                
+                let pos = &tok.2;
+                let line_col = self.line_index.line_col(TextSize::new(pos.start.try_into().unwrap()));
+
+                format!("token: {:?}, line: {}, col: {}", tok.0, line_col.line + 1, line_col.col + 1)
+            } else {
+                format!("no token available")
+            }
+        }
+
+        fn assert_tok(&mut self, kind: SyntaxKind) {
+            let msg = self.get_context_msg();
+            assert!(self.at(kind), "expected token {:?} instead of {msg}", kind);
         }
 
         fn build_tree(self) -> Parse {
