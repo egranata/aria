@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+func bar() {
+    return foo();
+}
+
+func foo() {
+    throw 1;
+}
+
+func main() {
+    try {
+        bar();
+    } catch e {
+        assert hasattr(e, "backtrace");
+        println(e.backtrace);
+        assert e.backtrace.len() >= 2;
+        assert e.backtrace[0][0].contains("exception_backtrace.aria");
+        assert e.backtrace[0][1] == 6;
+        assert e.backtrace[1][0].contains("exception_backtrace.aria");
+        assert e.backtrace[1][1] == 2;
+    }
+}

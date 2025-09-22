@@ -9,7 +9,7 @@ use crate::{
         backtrace::Backtrace,
         vm_error::{VmError, VmErrorReason},
     },
-    runtime_value::{RuntimeValue, object::Object},
+    runtime_value::{RuntimeValue, list::List, object::Object},
     vm::VirtualMachine,
 };
 
@@ -50,6 +50,24 @@ impl VmException {
 
     pub fn is_builtin_unimplemented(&self, vm: &mut VirtualMachine) -> bool {
         self.value.is_builtin_unimplemented(vm)
+    }
+}
+
+impl VmException {
+    pub(crate) fn fill_in_backtrace(&self) {
+        let bt_list = List::from(&[]);
+        for bt_entry in self.backtrace.entries_iter() {
+            let buf_name = bt_entry.buffer.name.clone();
+            let buf_line = bt_entry
+                .buffer
+                .line_index_for_position(bt_entry.location.start);
+            let buf_name = RuntimeValue::String(buf_name.into());
+            let buf_line = RuntimeValue::Integer((buf_line as i64).into());
+            bt_list.append(RuntimeValue::List(List::from(&[buf_name, buf_line])));
+        }
+        let _ = self
+            .value
+            .write_attribute("backtrace", RuntimeValue::List(bt_list));
     }
 }
 

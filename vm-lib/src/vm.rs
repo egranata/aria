@@ -1897,6 +1897,7 @@ impl VirtualMachine {
             }
 
             if let Some(except) = need_handle_exception {
+                except.fill_in_backtrace();
                 match frame.drop_to_first_try(self) {
                     Some(o) => {
                         reader.jump_to_index(o as usize);
