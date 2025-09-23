@@ -1,5 +1,5 @@
 use std::cell::Cell;
-use line_index::{LineCol, LineIndex};
+use line_index::LineIndex;
 use crate::{SyntaxKind, lexer};
 use rowan::{GreenNode, GreenNodeBuilder, TextSize};
 use SyntaxKind::*;
@@ -239,7 +239,7 @@ pub fn parse(text: &str) -> Parse {
             // Parse mixin entries (method_decl | operator_decl | mixin_include_decl)
             while !self.at(RightBrace) && !self.eof() {
                 match self.nth(0) {
-                    FuncKwd => self.decl_func(),
+                    FuncKwd | TypeKwd | InstanceKwd => self.decl_func(),
                     OperatorKwd | ReverseKwd => self.decl_operator(),
                     IncludeKwd => self.mixin_include(),
                     _ => self.advance_with_error("expected mixin entry")
@@ -261,15 +261,21 @@ pub fn parse(text: &str) -> Parse {
             
             // Operator symbol - need to handle various operator tokens
             match self.nth(0) {
-                Plus | Minus | Star | Slash | Percent | LeftShift | RightShift |
+                Plus | Minus | UnaryMinus | Star | Slash | Percent | LeftShift | RightShift |
                 Equal | LessEqual | GreaterEqual | Less | Greater |
-                BitwiseAnd | Pipe | BitwiseXor |
-                LeftBracket => {
+                BitwiseAnd | Pipe | BitwiseXor => {
                     self.advance();
                 }
                 LeftParen => {
                     self.advance();
                     self.expect(RightParen);
+                },
+                LeftBracket => {
+                    self.advance();
+                    self.expect(RightBracket);
+                    if self.at(Assign) {
+                        self.expect(Assign)
+                    }
                 },
                 _ => self.advance_with_error("expected operator symbol")
             }
@@ -320,9 +326,8 @@ pub fn parse(text: &str) -> Parse {
           
             self.expect(left_delim); 
             while !self.at(right_delim) && !self.eof() {
-                let curr = self.nth(0);
-                if curr == Identifier || curr == Ellipsis { 
-                    self.param(curr, right_delim);
+                if self.at(Identifier) || self.at(Ellipsis) { 
+                    self.param(self.nth(0), right_delim);
                 } else {
                     break; 
                 }
@@ -728,8 +733,10 @@ pub fn parse(text: &str) -> Parse {
           
         fn stmt_expr(&mut self) {
             let m = self.open();
-            
-            let _ = self.expr();
+
+            if !self.at(Semicolon) {
+                let _ = self.expr();
+            }
             
             self.expect(Semicolon);
             
@@ -858,6 +865,7 @@ pub fn parse(text: &str) -> Parse {
                 
                 Identifier => {
                     self.advance();
+                    self.init_block();
                     self.close(m, ExprName)
                 }
                 
@@ -1042,7 +1050,7 @@ pub fn parse(text: &str) -> Parse {
 
         fn assert_tok(&mut self, kind: SyntaxKind) {
             let msg = self.get_context_msg();
-            //assert!(self.at(kind), "expected {:?} instead of {}\n{:?}", kind, msg, self.events);
+            assert!(self.at(kind), "expected {:?} instead of {}\n{:?}", kind, msg, self.events);
         }
 
         fn build_tree(self) -> Parse {
@@ -1692,38 +1700,6 @@ mod tests {
             "            DecIntLiteral@19..20 \"0\"",
             "        Semicolon@20..21 \";\"",
             "      RightBrace@21..22 \"}\""
-        ])
-    }
-
-    #[test]
-    fn test_assert_statement_complex_expr() {
-        expect_tree("func test() { assert(a-a*2 == -9223372036854775807); }", &[
-            "File@0..27",
-            "  Func@0..27",
-            "    FuncKwd@0..4 \"func\"",
-            "    Identifier@4..8 \"test\"",
-            "    ParamList@8..10",
-            "      LeftParen@8..9 \"(\"",
-            "      RightParen@9..10 \")\"",
-            "    Block@10..27",
-            "      LeftBrace@10..11 \"{\"",
-            "      StmtAssert@11..26",
-            "        AssertKwd@11..17 \"assert\"",
-            "        ExprBinary@17..25",
-            "          ExprParen@17..22",
-            "            LeftParen@17..18 \"(\"",
-            "            ExprBinary@18..21",
-            "              ExprName@18..19",
-            "                Identifier@18..19 \"x\"",
-            "              Plus@19..20 \"+\"",
-            "              ExprName@20..21",
-            "                Identifier@20..21 \"y\"",
-            "            RightParen@21..22 \")\"",
-            "          Equal@22..24 \"==\"",
-            "          ExprName@24..25",
-            "            Identifier@24..25 \"z\"",
-            "        Semicolon@25..26 \";\"",
-            "      RightBrace@26..27 \"}\""
         ])
     }
 

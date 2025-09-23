@@ -74,6 +74,8 @@ pub enum SyntaxKind {
     Plus,
     #[token("-")]
     Minus,
+    #[token("u-")]
+    UnaryMinus,
     #[token("*")]
     Star,
     #[token("/")]
@@ -174,7 +176,7 @@ pub enum SyntaxKind {
     #[regex(r#"'([^'\\]|\\.)*'"#)]
     StringLiteral,
 
-    #[regex(r#"[\p{XID_Start}_$][\p{XID_Continue}_$]*|\p{Emoji}[\p{Emoji_Modifier}\p{Emoji_Component}]*"#, priority = 1)]
+    #[regex(r#"[\p{XID_Start}\p{Emoji_Presentation}_$][\p{XID_Continue}\p{Emoji_Presentation}_$]*"#, priority = 1)]
     Identifier,
 
 
@@ -408,5 +410,56 @@ mod tests {
         let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
         assert!(!successful_tokens.is_empty());
         assert_eq!(successful_tokens[0].0, SyntaxKind::FuncKwd);
+    }
+
+    #[test]
+    fn test_star_number_separation() {
+        let tokens = lex("*2");
+        let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
+        
+        println!("Tokens for '*2': {:?}", successful_tokens);
+        
+        // Should be two tokens: Star and DecIntLiteral
+        assert_eq!(successful_tokens.len(), 2);
+        assert_eq!(successful_tokens[0].0, SyntaxKind::Star);
+        assert_eq!(successful_tokens[1].0, SyntaxKind::DecIntLiteral);
+        assert_eq!(successful_tokens[0].1, "*");
+        assert_eq!(successful_tokens[1].1, "2");
+    }
+
+    #[test]
+    fn test_operator_number_separation() {
+        // Test various operator-number combinations
+        let test_cases = vec![
+            ("*2", vec![(SyntaxKind::Star, "*"), (SyntaxKind::DecIntLiteral, "2")]),
+            ("+3", vec![(SyntaxKind::Plus, "+"), (SyntaxKind::DecIntLiteral, "3")]),
+            ("-4", vec![(SyntaxKind::Minus, "-"), (SyntaxKind::DecIntLiteral, "4")]),
+            ("/5", vec![(SyntaxKind::Slash, "/"), (SyntaxKind::DecIntLiteral, "5")]),
+            ("%6", vec![(SyntaxKind::Percent, "%"), (SyntaxKind::DecIntLiteral, "6")]),
+        ];
+
+        for (input, expected) in test_cases {
+            let tokens = lex(input);
+            let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
+            
+            assert_eq!(successful_tokens.len(), expected.len(), "Failed for input: {}", input);
+            for (i, (expected_kind, expected_text)) in expected.iter().enumerate() {
+                assert_eq!(successful_tokens[i].0, *expected_kind, "Failed kind for input: {} at position {}", input, i);
+                assert_eq!(successful_tokens[i].1, *expected_text, "Failed text for input: {} at position {}", input, i);
+            }
+        }
+    }
+
+    #[test]
+    fn test_emoji_identifiers() {
+        // Test emoji identifiers still work
+        let tokens = lex("😎 💯");
+        let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
+        
+        assert_eq!(successful_tokens.len(), 2);
+        assert_eq!(successful_tokens[0].0, SyntaxKind::Identifier);
+        assert_eq!(successful_tokens[1].0, SyntaxKind::Identifier);
+        assert_eq!(successful_tokens[0].1, "😎");
+        assert_eq!(successful_tokens[1].1, "💯");
     }
 }
