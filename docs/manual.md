@@ -524,6 +524,24 @@ func main() {
 }
 ```
 
+For simple pattern matches, i.e. one enum, and matching to a case, with our without payload extraction, `if case` is also available:
+
+```
+func main() {
+    val may = Maybe::Some(3);
+
+    if case Some(value) = may {
+        println(value); # prints 3
+    } elsif case None = may {
+        println("None"); # does not print anything
+    } else {
+        println("not a Maybe"); # does not print anything
+    }
+}
+```
+
+If the right-hand side of `if case` is not an enum, a runtime error occurs.
+
 ## ⁉️ Maybe and Result
 
 `Maybe` is an enum that represents a potentially missing value. It is defined as
