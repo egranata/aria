@@ -186,7 +186,7 @@ pub fn parse(text: &str) -> Parse {
                         self.decl_val();
                     }
                 }
-                _ => self.advance_with_error("expected entry")
+                other => self.advance_with_error(&format!("expected entry instead of {:?}", other))
             }
         }
 
@@ -266,9 +266,13 @@ pub fn parse(text: &str) -> Parse {
                 Plus | Minus | Star | Slash | Percent | LeftShift | RightShift |
                 Equal | LessEqual | GreaterEqual | Less | Greater |
                 BitwiseAnd | Pipe | BitwiseXor |
-                LeftParen | LeftBracket => {
+                LeftBracket => {
                     self.advance();
                 }
+                LeftParen => {
+                    self.advance();
+                    self.expect(RightParen);
+                },
                 _ => self.advance_with_error("expected operator symbol")
             }
             
