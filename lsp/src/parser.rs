@@ -138,7 +138,7 @@ pub fn parse(text: &str) -> Parse {
                     ExtensionKwd => self.decl_struct_or_ext(Extension, ExtensionKwd),
                     FuncKwd => self.decl_func(),
                     AssertKwd => self.stmt_kwd_with_expr(AssertKwd),
-                    _ => self.advance_with_error("expected a function") 
+                    _ => {let _ = self.expr();}
                 }
             }
             
@@ -174,13 +174,12 @@ pub fn parse(text: &str) -> Parse {
         fn struct_entry(&mut self) {
             match self.nth(0) {
                 FuncKwd => self.decl_func(),
-                OperatorKwd => self.decl_operator(),
+                OperatorKwd | ReverseKwd => self.decl_operator(),
                 StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                 EnumKwd => self.decl_enum(),
                 IncludeKwd => self.mixin_include(),
                 TypeKwd | InstanceKwd => {
-                    self.advance();
-                    if self.at(FuncKwd) {
+                    if self.nth(1) == FuncKwd {
                         self.decl_func();
                     } else {
                         self.decl_val();
@@ -241,7 +240,7 @@ pub fn parse(text: &str) -> Parse {
             while !self.at(RightBrace) && !self.eof() {
                 match self.nth(0) {
                     FuncKwd => self.decl_func(),
-                    OperatorKwd => self.decl_operator(),
+                    OperatorKwd | ReverseKwd => self.decl_operator(),
                     IncludeKwd => self.mixin_include(),
                     _ => self.advance_with_error("expected mixin entry")
                 }
@@ -254,7 +253,6 @@ pub fn parse(text: &str) -> Parse {
         fn decl_operator(&mut self) {
             let m = self.open();
             
-            // Optional reverse direction
             if self.at(ReverseKwd) {
                 self.expect(ReverseKwd);
             }
@@ -288,8 +286,9 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn decl_func(&mut self) {
-            assert!(self.at(FuncKwd)); 
-            let m = self.open(); 
+            let m = self.open();
+          
+            self.parse_access_modifier();
           
             self.expect(FuncKwd);
             self.expect(Identifier);
@@ -303,6 +302,16 @@ pub fn parse(text: &str) -> Parse {
             }
           
             self.close(m, Func);
+        }
+
+        fn parse_access_modifier(&mut self) {
+            if self.at(TypeKwd) {
+                self.expect(TypeKwd);
+            }
+
+            if self.at(InstanceKwd) {
+                self.expect(InstanceKwd);
+            }
         }
 
         fn param_list(&mut self, left_delim: SyntaxKind, right_delim: SyntaxKind) {
@@ -591,8 +600,9 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn decl_val(&mut self) {
-            assert!(self.at(ValKwd));
             let m = self.open();
+
+            self.parse_access_modifier();
             
             self.expect(ValKwd);
             self.expect(Identifier);
