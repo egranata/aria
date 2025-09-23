@@ -132,48 +132,17 @@ pub fn parse(text: &str) -> Parse {
                     ImportKwd => self.stmt_import(),
                     ValKwd => self.decl_val(),
                     Identifier => {self.expr();},
-                    StructKwd => self.decl_struct(),
+                    StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                     MixinKwd => self.decl_mixin(),
                     EnumKwd => self.decl_enum(),
-                    ExtensionKwd => self.decl_extension(),
+                    ExtensionKwd => self.decl_struct_or_ext(Extension, ExtensionKwd),
                     FuncKwd => self.decl_func(),
-                    AssertKwd => self.stmt_assert(),
+                    AssertKwd => self.stmt_kwd_with_expr(AssertKwd),
                     _ => self.advance_with_error("expected a function") 
                 }
             }
             
             self.close(m, File); 
-        }
-
-        fn decl_struct(&mut self) {
-            assert!(self.at(StructKwd));
-            let m = self.open();
-            
-            self.expect(StructKwd);
-            self.expect(Identifier);
-            self.expect(LeftBrace);
-            
-            // Parse struct entries (method_decl | operator_decl | "type" ~ val_decl_stmt | mixin_include_decl | struct_decl | enum_decl)
-            while !self.at(RightBrace) && !self.eof() {
-                match self.nth(0) {
-                    FuncKwd => self.decl_func(),
-                    StructKwd => self.decl_struct(),
-                    EnumKwd => self.decl_enum(),
-                    IncludeKwd => self.mixin_include(),
-                    TypeKwd => {
-                        self.expect(TypeKwd);
-                        if self.at(ValKwd) {
-                            self.decl_val();
-                        } else {
-                            self.decl_func();
-                        }
-                    }
-                    _ => self.advance_with_error("expected struct entry")
-                }
-            }
-            
-            self.expect(RightBrace);
-            self.close(m, Struct);
         }
 
         fn mixin_include(&mut self) {
@@ -199,7 +168,7 @@ pub fn parse(text: &str) -> Parse {
                 match self.nth(0) {
                     CaseKwd => self.enum_case(),
                     FuncKwd => self.decl_func(),
-                    StructKwd => self.decl_struct(),
+                    StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                     EnumKwd => self.decl_enum(),
                     IncludeKwd => self.mixin_include(),
                     TypeKwd => {
@@ -290,11 +259,11 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, Operator);
         }
 
-        fn decl_extension(&mut self) {
-            assert!(self.at(ExtensionKwd));
+        fn decl_struct_or_ext(&mut self, kind: SyntaxKind, kwd: SyntaxKind) {
+            assert!(self.at(kwd));
             let m = self.open();
             
-            self.expect(ExtensionKwd);
+            self.expect(kwd);
             let _ = self.expr(); // extension target expression
             self.expect(LeftBrace);
             
@@ -303,19 +272,23 @@ pub fn parse(text: &str) -> Parse {
                 match self.nth(0) {
                     FuncKwd => self.decl_func(),
                     OperatorKwd => self.decl_operator(),
-                    StructKwd => self.decl_struct(),
+                    StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                     EnumKwd => self.decl_enum(),
                     IncludeKwd => self.mixin_include(),
                     TypeKwd => {
                         self.expect(TypeKwd);
-                        self.decl_val();
+                        if self.at(FuncKwd) {
+                            self.decl_func();
+                        } else {
+                            self.decl_val();
+                        }
                     }
                     _ => self.advance_with_error("expected extension entry")
                 }
             }
             
             self.expect(RightBrace);
-            self.close(m, Extension);
+            self.close(m, kind);
         }
 
         fn decl_func(&mut self) {
@@ -363,7 +336,13 @@ pub fn parse(text: &str) -> Parse {
 
             if self.at(Colon) {
                 self.expect(Colon);
-                self.expect(Identifier);
+
+                while self.at(Identifier) {
+                    self.expect(Identifier);
+                    if self.at(Dot) {
+                        self.expect(Dot);
+                    }
+                }
             }
             
             if !self.at(right_delim) { 
@@ -380,7 +359,7 @@ pub fn parse(text: &str) -> Parse {
             self.expect(LeftBrace);
             while !self.at(RightBrace) && !self.eof() {
                   match self.nth(0) {
-                    AssertKwd => self.stmt_assert(),
+                    AssertKwd => self.stmt_kwd_with_expr(AssertKwd),
                     BreakKwd => self.stmt_single_token(BreakKwd),
                     ContinueKwd => self.stmt_single_token(ContinueKwd),
                     ValKwd => self.decl_val(),
@@ -388,11 +367,12 @@ pub fn parse(text: &str) -> Parse {
                     MatchKwd => self.stmt_match(),
                     WhileKwd => self.stmt_while(),
                     ForKwd => self.stmt_for(),
+                    ThrowKwd => self.stmt_kwd_with_expr(ThrowKwd),
                     ReturnKwd => self.stmt_return(),
                     LeftBrace => self.block(),
                     GuardKwd => self.guard(),
                     TryKwd => self.try_catch(),
-                    StructKwd => self.decl_struct(),
+                    StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                     EnumKwd => self.decl_enum(),
                     _ => self.stmt_expr(),
                   }
@@ -647,6 +627,17 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, StmtReturn);
         }
 
+        fn stmt_kwd_with_expr(&mut self, kind: SyntaxKind) {
+            assert!(self.at(kind));
+            let m = self.open();
+            
+            self.expect(kind);
+            let _ = self.expr();
+            self.expect(Semicolon);
+
+            self.close(m, StmtAssert);
+        }
+
         fn init_block(&mut self) {
             self.assert_tok(LeftBrace);
             self.expect(LeftBrace);
@@ -705,17 +696,6 @@ pub fn parse(text: &str) -> Parse {
             
             self.close(m, ImportPath);
         }
-
-        fn stmt_assert(&mut self) {
-            assert!(self.at(AssertKwd));
-            let m = self.open();
-            
-            self.expect(AssertKwd);
-            let _ = self.expr();
-            self.expect(Semicolon);
-
-            self.close(m, StmtAssert);
-        }
           
         fn stmt_expr(&mut self) {
             let m = self.open();
@@ -771,9 +751,6 @@ pub fn parse(text: &str) -> Parse {
                             let m = self.open_before(lhs);
                             self.arg_list();
                             if self.at(LeftBrace) {
-                                let line_col = self.line_col();
-
-                                println!("initializer list at {:?}", line_col);
                                 let ahead = self.nth(1);
                                 if ahead == Dot || ahead == LeftBracket {
                                     self.init_block();
@@ -979,7 +956,7 @@ pub fn parse(text: &str) -> Parse {
         }
     
         fn at(&self, kind: SyntaxKind) -> bool { 
-            self.nth(0) == kind
+            self.nth(0) == kind || (kind == Identifier && self.is_keyword(self.nth(0)))
         }
     
         fn eat(&mut self, kind: SyntaxKind) -> bool { 
@@ -989,6 +966,18 @@ pub fn parse(text: &str) -> Parse {
             } else {
                 false
             }
+        }
+
+        fn is_keyword(&self, kind: SyntaxKind) -> bool {
+            matches!(kind, 
+                AssertKwd | BreakKwd | CaseKwd | CatchKwd | ContinueKwd | 
+                ElseKwd | ElsifKwd | EnumKwd | ExtensionKwd | FlagKwd | 
+                ForKwd | FromKwd | FuncKwd | GuardKwd | IfKwd | ImportKwd | 
+                InKwd | IncludeKwd | InstanceKwd | IsaKwd | MatchKwd | 
+                MixinKwd | OperatorKwd | ReturnKwd | ReverseKwd | StructKwd | 
+                ThrowKwd | TryKwd | TypeKwd | ValKwd | WhileKwd | AndKwd |
+                TrueKwd | FalseKwd
+            )
         }
     
         fn expect(&mut self, kind: SyntaxKind) {
