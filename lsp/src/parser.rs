@@ -1496,6 +1496,10 @@ mod tests {
                     panic!("Parse errors found in {}", filename);
                 }
             }
+
+            if path.is_dir() {
+                test_files_in_directory_parse(path.to_path_buf().to_str().unwrap());
+            }
         }
     }
 
@@ -1711,5 +1715,15 @@ mod tests {
     #[test]
     fn test_files_parse_without_errors() {
         test_files_in_directory_parse("../tests");
+    }
+
+    #[test]
+    fn test_std_lib_files_parse_without_errors() {
+        test_files_in_directory_parse("../lib");
+    }
+
+    #[test]
+    fn test_std_lib_test_files_parse_without_errors() {
+        test_files_in_directory_parse("../lib-test");
     }
 }

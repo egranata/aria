@@ -346,14 +346,16 @@ mod tests {
         use std::fs;
         use std::path::Path;
 
-        let examples_dir = Path::new(dir);
+        println!("reading inside {dir}");
+
+        let dir = Path::new(dir);
         
-        if !examples_dir.exists() {
+        if !dir.exists() {
             println!("Examples directory not found, skipping test");
             return;
         }
 
-        let entries = fs::read_dir(examples_dir)
+        let entries = fs::read_dir(dir)
             .expect("Failed to read examples directory");
 
         for entry in entries {
@@ -381,6 +383,10 @@ mod tests {
                 
                 assert!(errors.is_empty());
             }
+
+            if path.is_dir() {
+                test_files_in_directory(path.to_path_buf().to_str().unwrap());
+            }
         }
     }
 
@@ -392,6 +398,16 @@ mod tests {
     #[test]
     fn test_files_lex_without_errors() {
         test_files_in_directory("../tests");
+    }
+
+    #[test]
+    fn test_std_lib_lex_without_errors() {
+        test_files_in_directory("../lib");
+    }
+
+    #[test]
+    fn test_std_lib_test_lex_without_errors() {
+        test_files_in_directory("../lib-test");
     }
 
     #[test]
