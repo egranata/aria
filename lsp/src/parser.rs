@@ -358,8 +358,11 @@ pub fn parse(text: &str) -> Parse {
                 if self.at(Dot) {
                     self.expect(Dot);
                 }
+                if self.at(Pipe) {
+                    self.expect(Pipe);
+                }
             }
-            self.close(m, TypeAnnotation);
+            self.close(m, ExprType);
         }
 
         fn block(&mut self) {
@@ -754,11 +757,6 @@ pub fn parse(text: &str) -> Parse {
             }
 
             self.close(m, Lambda)
-        }
-
-        fn line_col(&mut self) -> LineCol {
-            let pos = self.pos;
-            self.line_index.line_col(TextSize::new(pos.try_into().unwrap()))
         }
 
         fn expr_bp(&mut self, min_bp: u8) -> MarkClosed {

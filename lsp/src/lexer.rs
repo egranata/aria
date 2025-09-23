@@ -209,6 +209,7 @@ pub enum SyntaxKind {
     ExprTernary,
     ExprAssign,
     ExprList,
+    ExprType,
     Mixin,
     MixinInclude,
     Struct,
@@ -224,8 +225,7 @@ pub enum SyntaxKind {
     ImportPath,
     ArgList,
     Arg,
-    Eof,
-    TypeAnnotation
+    Eof
 }
 
 pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str, logos::Span), LexError>> {
