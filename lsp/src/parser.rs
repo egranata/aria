@@ -304,37 +304,29 @@ pub fn parse(text: &str) -> Parse {
         fn param_list(&mut self, left_delim: SyntaxKind, right_delim: SyntaxKind) {
             self.assert_tok(left_delim);
             let m = self.open();
-
-            // TODO: add vararg (ellipsis)
           
             self.expect(left_delim); 
-            while !self.at(right_delim) && !self.eof() { 
-              if self.at(Identifier) { 
-                self.param(right_delim);
-              } else {
-                break; 
-              }
+            while !self.at(right_delim) && !self.eof() {
+                let curr = self.nth(0);
+                if curr == Identifier || curr == Ellipsis { 
+                    self.param(curr, right_delim);
+                } else {
+                    break; 
+                }
             }
             self.expect(right_delim); 
           
             self.close(m, ParamList);
         }
 
-        fn param(&mut self, right_delim: SyntaxKind) {
-            assert!(self.at(Identifier));
+        fn param(&mut self, kind: SyntaxKind, right_delim: SyntaxKind) {
+            assert!(self.at(kind));
             let m = self.open();
           
-            self.expect(Identifier);
+            self.expect(kind);
 
             if self.at(Colon) {
-                self.expect(Colon);
-
-                while self.at(Identifier) {
-                    self.expect(Identifier);
-                    if self.at(Dot) {
-                        self.expect(Dot);
-                    }
-                }
+                self.type_annotation();
             }
             
             if !self.at(right_delim) { 
@@ -342,6 +334,19 @@ pub fn parse(text: &str) -> Parse {
             }
           
             self.close(m, Param);
+        }
+
+        fn type_annotation(&mut self) {
+            self.assert_tok(Colon);
+            self.expect(Colon);
+            let m = self.open();
+            while self.at(Identifier) {
+                self.expect(Identifier);
+                if self.at(Dot) {
+                    self.expect(Dot);
+                }
+            }
+            self.close(m, TypeAnnotation);
         }
 
         fn block(&mut self) {
@@ -587,6 +592,11 @@ pub fn parse(text: &str) -> Parse {
             
             self.expect(ValKwd);
             self.expect(Identifier);
+            
+            if self.at(Colon) {
+                self.type_annotation();
+            }
+
             self.expect(Assign);
             let _ = self.expr();
 

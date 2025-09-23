@@ -224,7 +224,8 @@ pub enum SyntaxKind {
     ImportPath,
     ArgList,
     Arg,
-    Eof
+    Eof,
+    TypeAnnotation
 }
 
 pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str, logos::Span), LexError>> {
