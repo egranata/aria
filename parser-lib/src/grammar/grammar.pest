@@ -120,10 +120,10 @@ expr_stmt     = { expression? ~ ";" }
 throw_stmt = { "throw" ~ expression ~ ";" }
 
 statement = {
-    assert_stmt
-  | break_stmt
+    break_stmt
   | continue_stmt
   | expr_stmt
+  | assert_stmt
   | val_write_stmt
   | val_decl_stmt
   | val_add_eq_write

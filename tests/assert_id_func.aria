@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+val called = false;
+
+func assert_test(x,y) {
+    called = true;
+    assert x == y;
+}
+
+func main() {
+    assert !called;
+    assert_test(3,3);
+    assert called;
+}
