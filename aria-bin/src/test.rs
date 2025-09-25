@@ -163,3 +163,13 @@ struct Pair {
     );
     run_passing_repl_line(&mut repl, "Maybe::None;", &["None"]);
 }
+
+#[test]
+fn repl_adds_semicolon() {
+    let cmdline_options = Args::default();
+    let mut repl = build_test_repl(&cmdline_options);
+
+    run_passing_repl_line(&mut repl, "val x = 1", &[]);
+    run_passing_repl_line(&mut repl, "val y = 2", &[]);
+    run_passing_repl_line(&mut repl, "2 * y + x", &["5"]);
+}
