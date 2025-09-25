@@ -34,7 +34,6 @@ mod readln;
 mod sleep;
 mod string;
 mod system;
-mod timezone;
 mod typeof_builtin;
 mod writeattr;
 
@@ -97,7 +96,6 @@ impl Default for VmBuiltins {
         readattr::insert_builtins(&mut this);
         sleep::insert_builtins(&mut this);
         system::insert_builtins(&mut this);
-        timezone::insert_builtins(&mut this);
         typeof_builtin::insert_builtins(&mut this);
         writeattr::insert_builtins(&mut this);
 

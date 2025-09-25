@@ -10,7 +10,11 @@ use aria_compiler::{constant_value::ConstantValue, module::CompiledModule};
 use crate::{
     builtins::VmBuiltins,
     error::vm_error::VmErrorReason,
-    runtime_value::{RuntimeValue, kind::RuntimeValueType},
+    runtime_value::{
+        RuntimeValue,
+        function::{BuiltinFunctionImpl, Function},
+        kind::RuntimeValueType,
+    },
 };
 
 #[derive(Clone)]
@@ -167,6 +171,15 @@ impl RuntimeModule {
 
     pub fn identity(&self) -> usize {
         Rc::as_ptr(&self.imp) as usize
+    }
+
+    pub fn insert_builtin<T>(&self)
+    where
+        T: 'static + Default + BuiltinFunctionImpl,
+    {
+        let t = T::default();
+        let name = t.name().to_owned();
+        self.store_named_value(&name, RuntimeValue::Function(Function::builtin_from(t)));
     }
 }
 
