@@ -355,6 +355,15 @@ This module provides a struct for representing a specific moment in time, simila
     *   `instance func prettyprint()`: Returns a formatted string representation of the `Instant`.
 
 ---
+
+### `aria.date.timezone`
+
+This module provides a function to collect timezone information.
+
+#### **Functions**
+*   `timezone_info()`: Returns a `List` containing the timezone offset in minutes (Int) and the timezone name (String).
+
+---
 # `aria.iterator` Module Reference
 
 This document provides a reference for the `aria.iterator` module, which contains core interfaces and utilities for working with iterators and iterable collections.
@@ -1240,10 +1249,6 @@ Executes a shell command.
 *   **Arguments:**
     *   `command` (String): The command to execute.
 *   **Returns:** An `Int` object representing the exit code, with `stdout` and `stderr` attributes containing the command's output.
-
-### `timezone_info()`
-Returns information about the local timezone.
-*   **Returns:** A `List` containing the timezone offset in minutes (Int) and the timezone name (String).
 
 ### `typeof(object)`
 Returns the type of an object.

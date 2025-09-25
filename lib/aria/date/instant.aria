@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import Range from aria.range.range;
+import tz_info from aria.date.timezone;
 
 func is_leap_year(year: Int) {
     return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
@@ -173,7 +174,7 @@ struct Instant {
     }
 
     type func new_with_local_timestamp(timestamp_ms) {
-        val tz_offset = timezone_info()[0];
+        val tz_offset = tz_info()[0];
         val offset_ms = tz_offset * SECONDS_PER_MINUTE * 1000;
 
         val this = Instant.new_with_utc_timestamp(timestamp_ms - offset_ms);
@@ -181,7 +182,7 @@ struct Instant {
     }
 
     type func now() {
-        val tz_offset = timezone_info()[0];
+        val tz_offset = tz_info()[0];
 
         return Instant.new_with_timestamp_and_offset(now(), tz_offset);
     }
