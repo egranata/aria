@@ -1,10 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import Iterator,Iterable from aria.iterator.mixin;
 
-func empty_list(n) {
-    return [];
-}
-
 struct Map {
     struct Entry {
         type func new(key, value) = alloc(This) {.key, .value};
@@ -19,7 +15,7 @@ struct Map {
     }
 
     type func new_with_capacity(capacity: Int) = alloc(This) {
-            .buckets = List.from_function(empty_list, capacity),
+            .buckets = List.from_function(|_| => [], capacity),
             .count = 0,
             .capacity,
             .key_list = [],
@@ -41,6 +37,7 @@ struct Map {
             }
         }
 
+        assert remaining == 0;
         return ret;
     }
 

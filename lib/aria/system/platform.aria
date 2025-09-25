@@ -46,9 +46,6 @@ enum Platform {
             case macOS(platform) => {
                 return platform.prettyprint();
             }
-            case Windows(platform) => {
-                return platform.prettyprint();
-            }
             case Unknown => {
                 return "Unknown platform";
             }
@@ -61,9 +58,6 @@ enum Platform {
                 return platform.name();
             }
             case macOS(platform) => {
-                return platform.name();
-            }
-            case Windows(platform) => {
                 return platform.name();
             }
             case Unknown => {
