@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func get_payload_value(p) {
+    if case Some(n) = p {
+        return n;
+    } elsif case None = p {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+func main() {
+    assert get_payload_value(Maybe::Some(5)) == 5;
+    assert get_payload_value(Maybe::None) == -1;
+    assert get_payload_value(Result::Err("not a Maybe")) == 0;
+}

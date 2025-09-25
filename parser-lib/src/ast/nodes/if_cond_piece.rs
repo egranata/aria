@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        CodeBlock, Expression, IfCondPiece, SourceBuffer,
+        CodeBlock, IfCondExpr, IfCondPiece, SourceBuffer,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -15,11 +15,11 @@ impl Derive for IfCondPiece {
         let mut inner = p.into_inner();
         let expr = inner.next().expect("need expression");
         let body = inner.next().expect("need body");
-        let expression = Expression::from_parse_tree(expr, source);
+        let expression = IfCondExpr::from_parse_tree(expr, source);
         let then = CodeBlock::from_parse_tree(body, source);
         Self {
             loc: source.pointer(loc),
-            expression: Box::new(expression),
+            expression,
             then,
         }
     }

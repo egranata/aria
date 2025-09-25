@@ -3,13 +3,10 @@ flag: no_std;
 
 extension Maybe {
     func prettyprint() {
-        match this {
-            case None => {
-                return "None";
-            },
-            case Some(value) => {
-                return "Some({0})".format(value);
-            }
+        if case Some(value) = this {
+            return "Some({0})".format(value);
+        } else {
+            return "None";
         }
     }
 }
