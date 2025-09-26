@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{collections::HashMap, rc::Rc};
 
 use aria_compiler::line_table::LineTable;
 use aria_parser::ast::SourcePointer;
 use haxby_opcodes::function_attribs::{FUNC_ACCEPTS_VARARG, FUNC_IS_METHOD, METHOD_ATTRIBUTE_TYPE};
+use rustc_data_structures::fx::FxHashSet;
 
 use crate::{
     arity::Arity,
@@ -238,7 +236,7 @@ impl FunctionImpl {
         .read(name)
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
+    fn list_attributes(&self) -> FxHashSet<String> {
         match self {
             FunctionImpl::BytecodeFunction(b) => b.boxx.list_attributes(),
             FunctionImpl::BuiltinFunction(b) => b.boxx.list_attributes(),
@@ -364,7 +362,7 @@ impl Function {
         self.imp.read(name)
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 }

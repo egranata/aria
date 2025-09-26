@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use aria_compiler::{constant_value::ConstantValue, module::CompiledModule};
+use rustc_data_structures::fx::FxHashMap;
 
 use crate::{
     builtins::VmBuiltins,
@@ -25,7 +22,7 @@ pub struct NamedValue {
 
 struct RuntimeModuleImpl {
     compiled_module: CompiledModule,
-    values: RefCell<HashMap<String, NamedValue>>,
+    values: RefCell<FxHashMap<String, NamedValue>>,
 }
 
 impl RuntimeModuleImpl {

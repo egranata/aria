@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{cell::RefCell, collections::HashSet, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use enum_as_inner::EnumAsInner;
+use rustc_data_structures::fx::FxHashSet;
 
 use super::{
     RuntimeValue,
@@ -41,7 +42,7 @@ impl BuiltinTypeImpl {
         self.mixins.borrow_mut().include(mixin.clone());
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
+    fn list_attributes(&self) -> FxHashSet<String> {
         let mut attrs = self.boxx.list_attributes();
         attrs.extend(self.mixins.borrow().list_attributes());
         attrs
@@ -98,7 +99,7 @@ impl BuiltinType {
         Rc::as_ptr(&self.imp) as usize
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 }

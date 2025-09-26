@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{cell::RefCell, collections::HashSet, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
+
+use rustc_data_structures::fx::FxHashSet;
 
 use crate::{
     error::vm_error::{VmError, VmErrorReason},
@@ -57,7 +59,7 @@ impl ListImpl {
         self.boxx.read(name)
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
+    fn list_attributes(&self) -> FxHashSet<String> {
         self.boxx.list_attributes()
     }
 }
@@ -155,7 +157,7 @@ impl List {
         Rc::as_ptr(&self.imp) as usize
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 }
