@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::rc::Rc;
 
 use haxby_opcodes::builtin_type_ids::*;
 
@@ -10,6 +10,7 @@ use crate::{
         RuntimeValue,
         function::{BuiltinFunctionImpl, Function},
         kind::RuntimeValueType,
+        object::ObjectBox,
     },
 };
 
@@ -38,7 +39,7 @@ mod typeof_builtin;
 mod writeattr;
 
 pub struct VmBuiltins {
-    values: Rc<RefCell<HashMap<String, RuntimeValue>>>,
+    values: Rc<ObjectBox>,
 }
 
 impl VmBuiltins {
@@ -108,15 +109,15 @@ impl Default for VmBuiltins {
 
 impl VmBuiltins {
     pub fn load_named_value(&self, name: &str) -> Option<RuntimeValue> {
-        self.values.borrow().get(name).cloned()
+        self.values.read(name)
     }
 
     pub fn insert(&self, name: &str, val: RuntimeValue) {
-        if self.values.borrow().contains_key(name) {
+        if self.values.contains(name) {
             panic!("duplicate builtin {name}");
         }
 
-        self.values.borrow_mut().insert(name.to_owned(), val);
+        self.values.write(name, val);
     }
 
     pub fn get_builtin_type_by_name(&self, name: &str) -> RuntimeValueType {

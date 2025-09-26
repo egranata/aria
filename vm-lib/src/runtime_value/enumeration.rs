@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 
-use crate::runtime_value::function::{BuiltinFunctionImpl, Function};
+use rustc_data_structures::fx::FxHashSet;
+
+use crate::runtime_value::{
+    function::{BuiltinFunctionImpl, Function},
+    object::ObjectBox,
+};
 
 use super::{
     RuntimeValue,
@@ -25,7 +26,7 @@ pub struct EnumCase {
 pub struct EnumImpl {
     name: String,
     cases: RefCell<Vec<EnumCase>>,
-    entries: RefCell<HashMap<String, RuntimeValue>>,
+    entries: ObjectBox,
     mixins: RefCell<crate::mixin_includer::MixinIncluder>,
 }
 
@@ -34,7 +35,7 @@ impl EnumImpl {
         Self {
             name: name.to_owned(),
             cases: Default::default(),
-            entries: RefCell::new(HashMap::new()),
+            entries: ObjectBox::default(),
             mixins: RefCell::new(crate::mixin_includer::MixinIncluder::default()),
         }
     }
@@ -61,7 +62,7 @@ impl EnumImpl {
     }
 
     fn load_named_value(&self, name: &str) -> Option<RuntimeValue> {
-        if let Some(nv) = self.entries.borrow().get(name) {
+        if let Some(nv) = self.entries.read(name) {
             Some(nv.clone())
         } else {
             self.mixins.borrow().load_named_value(name)
@@ -69,7 +70,7 @@ impl EnumImpl {
     }
 
     fn store_named_value(&self, name: &str, val: RuntimeValue) {
-        self.entries.borrow_mut().insert(name.to_owned(), val);
+        self.entries.write(name, val);
     }
 
     fn include_mixin(&self, mixin: &Mixin) {
@@ -80,8 +81,8 @@ impl EnumImpl {
         self.mixins.borrow().contains(mixin)
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
-        let mut attrs: HashSet<String> = self.entries.borrow().keys().cloned().collect();
+    fn list_attributes(&self) -> FxHashSet<String> {
+        let mut attrs = self.entries.keys();
         attrs.extend(self.mixins.borrow().list_attributes());
         attrs
     }
@@ -150,7 +151,7 @@ impl Enum {
         }
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 

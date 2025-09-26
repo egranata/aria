@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-
 use enum_as_inner::EnumAsInner;
+use rustc_data_structures::fx::FxHashSet;
 
 use crate::{arity::Arity, builtins::VmBuiltins};
 
@@ -206,7 +205,7 @@ impl RuntimeValueType {
         }
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         if let Some(struk) = self.as_struct() {
             struk.list_attributes()
         } else if let Some(enumm) = self.as_enum() {
@@ -214,7 +213,7 @@ impl RuntimeValueType {
         } else if let Some(bt) = self.as_builtin() {
             bt.list_attributes()
         } else {
-            HashSet::new()
+            Default::default()
         }
     }
 }
