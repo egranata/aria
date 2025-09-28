@@ -37,7 +37,6 @@ use crate::{
         runtime_code_object::CodeObject,
         structure::Struct,
     },
-    sigil_registry::SigilRegistry,
     stack::Stack,
 };
 

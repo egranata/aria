@@ -11,7 +11,6 @@ pub mod mixin_includer;
 pub mod opcodes;
 pub mod runtime_module;
 pub mod runtime_value;
-pub mod sigil_registry;
 pub mod stack;
 pub mod vm;
 

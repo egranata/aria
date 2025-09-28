@@ -376,6 +376,7 @@ impl From<&aria_parser::ast::PostfixExpression> for PostfixValue {
                         sigil.sigil.clone(),
                         sigil.loc.clone(),
                     )
+                }
                 aria_parser::ast::PostfixTerm::PostfixTermTryProtocol(tp) => {
                     current = PostfixValue::TryProtocol(Box::new(current), Box::new(tp.clone()))
                 }
