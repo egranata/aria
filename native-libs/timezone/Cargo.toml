@@ -1,0 +1,14 @@
+[package]
+name = "timezone-lib"
+version = "0.9.20250918"
+edition = "2024"
+
+[lib]
+name = "aria_timezone"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+vm-lib = { path = "../../vm-lib" }
+opcodes-lib = { path = "../../opcodes-lib" }
+libc = "0.2.175"

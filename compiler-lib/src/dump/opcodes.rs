@@ -16,6 +16,7 @@ fn builtin_type_id_to_str(id: u8) -> &'static str {
         BUILTIN_TYPE_UNIMPLEMENTED => "Unimplemented",
         BUILTIN_TYPE_RUNTIME_ERROR => "RuntimeError",
         BUILTIN_TYPE_UNIT => "Unit",
+        BUILTIN_TYPE_RESULT => "Result",
         _ => "Unknown",
     }
 }
@@ -31,6 +32,14 @@ fn const_best_repr(module: &CompiledModule, idx: u16) -> String {
     match module.load_indexed_const(idx) {
         Some(s) => s.to_string(),
         None => format!("invalid const @{idx}"),
+    }
+}
+
+fn try_protocol_mode_to_str(id: u8) -> &'static str {
+    match id {
+        haxby_opcodes::try_unwrap_protocol_mode::PROPAGATE_ERROR => "RETURN",
+        haxby_opcodes::try_unwrap_protocol_mode::ASSERT_ERROR => "ASSERT",
+        _ => "Unknown",
     }
 }
 
@@ -103,6 +112,9 @@ pub fn opcode_prettyprint(
         }
         Opcode::Assert(idx) => {
             buffer << "ASSERT(@" << *idx << ") [" << const_best_repr(module, *idx) << "]"
+        }
+        Opcode::TryUnwrapProtocol(mode) => {
+            buffer << "TRY_UNWRAP_PROTOCOL " << try_protocol_mode_to_str(*mode)
         }
         Opcode::Nop
         | Opcode::Push0

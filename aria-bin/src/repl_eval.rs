@@ -209,15 +209,32 @@ impl<'a> Repl<'a> {
         })
     }
 
+    fn try_parse_source(
+        &mut self,
+        buffer: &SourceBuffer,
+    ) -> Result<aria_parser::ast::ParsedModule, aria_parser::ast::ParserError> {
+        source_to_ast(buffer)
+    }
+
     #[allow(clippy::unit_arg)]
     pub fn process_buffer(&mut self, buffer: &str) -> Result<RuntimeModule, ()> {
-        let module_name = format!("__repl_chunk_{}", self.counter);
+        let module_name: String = format!("__repl_chunk_{}", self.counter);
         self.counter += 1;
 
         let module_source_code = format!("import * from repl;\n{}\n", buffer);
         let sb = SourceBuffer::stdin_with_name(&module_source_code, &module_name);
 
-        let mut ast = match source_to_ast(&sb) {
+        let mut parsed_source = self.try_parse_source(&sb);
+        if parsed_source.is_err() && !(buffer.ends_with('}') || buffer.ends_with(';')) {
+            let buffer_with_semicolon = format!("{};", module_source_code);
+            let sb2 = SourceBuffer::stdin_with_name(&buffer_with_semicolon, &module_name);
+            let parsed_source2 = self.try_parse_source(&sb2);
+            if parsed_source2.is_ok() {
+                parsed_source = parsed_source2;
+            }
+        }
+
+        let mut ast = match parsed_source {
             Ok(ast) => ast,
             Err(err) => {
                 return Err(self.print_error_report(build_report_from_parser_error(&err)));

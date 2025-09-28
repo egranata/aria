@@ -11,6 +11,7 @@ Welcome to the official documentation for the Aria project.
 *   [Contributing](CONTRIBUTING.md)
 *   [Roadmap](ROADMAP.md)
 *   [Style Guide](style_guide.md)
+*   [Release Policy](release_policy.md)
 
 ## What is Aria?
 
@@ -29,28 +30,7 @@ Aria is currently supported on Linux and macOS. Contributions for other operatin
 
 Aria is easy to learn. Here's a [quick example](https://github.com/egranata/aria/examples/github_user.aria) that fetches data from a web API and prints the result. In this example, Aria fetches user data from GitHub’s API and prints the number of public repositories for a given user. This shows how simple it is to interact with external APIs and handle dynamic data in Aria.
 
-```aria
-# github_user.aria
-import Request from aria.network.request;
-import JsonValue from aria.json.parser;
-
-val whoami = "egranata";
-
-func main() {
-    val request = Request.new("https://api.github.com/users/{0}".format(whoami));
-    request.headers["User-Agent"] = "AriaLang/1.0";
-    val response = request.get();
-
-    if response.status_code == 200 {
-        val user_data = JsonValue.parse(response.content).flatten();
-        println("User {1} has {0} public repositories.".format(user_data["public_repos"], whoami));
-    } else {
-        println("Failed to fetch user data. Status: {0}".format(response.status_code));
-    }
-}
-```
-
-Running this is as simple as:
+Running this sample is as simple as:
 ```shell
 $ aria github_user.aria
 User egranata has 5 public repositories.

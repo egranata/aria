@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-use crate::{
-    builtins::VmBuiltins,
-    frame::Frame,
+use haxby_vm::{
+    error::dylib_load::LoadResult,
+    runtime_module::RuntimeModule,
     runtime_value::{RuntimeValue, function::BuiltinFunctionImpl, list::List},
     vm::RunloopExit,
 };
@@ -11,9 +11,9 @@ struct TimezoneInfo {}
 impl BuiltinFunctionImpl for TimezoneInfo {
     fn eval(
         &self,
-        cur_frame: &mut Frame,
-        _: &mut crate::vm::VirtualMachine,
-    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        cur_frame: &mut haxby_vm::frame::Frame,
+        _: &mut haxby_vm::vm::VirtualMachine,
+    ) -> haxby_vm::vm::ExecutionResult<RunloopExit> {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("before the epoch")
@@ -36,13 +36,13 @@ impl BuiltinFunctionImpl for TimezoneInfo {
             libc::localtime_r(&now, &mut tm);
         }
 
-        let tm_zone_name = if !tm.tm_zone.is_null() {
+        let tm_zone_name = if tm.tm_zone.is_null() {
             "unknown"
         } else {
             unsafe {
                 std::ffi::CStr::from_ptr(tm.tm_zone)
                     .to_str()
-                    .unwrap_or("unknown")
+                    .unwrap_or("invalid")
             }
         };
 
@@ -54,15 +54,23 @@ impl BuiltinFunctionImpl for TimezoneInfo {
         Ok(RunloopExit::Ok(()))
     }
 
-    fn arity(&self) -> crate::arity::Arity {
-        crate::arity::Arity::zero()
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::zero()
     }
 
     fn name(&self) -> &str {
-        "timezone_info"
+        "tz_info"
     }
 }
 
-pub(super) fn insert_builtins(builtins: &mut VmBuiltins) {
-    builtins.insert_builtin::<TimezoneInfo>();
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult {
+    match unsafe { module.as_ref() } {
+        Some(module) => {
+            module.insert_builtin::<TimezoneInfo>();
+            LoadResult::success()
+        }
+        None => LoadResult::error("invalid platform module"),
+    }
 }

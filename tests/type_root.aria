@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func new() = alloc(This);
+};
+
+func main() {
+    val one = 1;
+    val s = Maybe::Some(3);
+    val f = Foo.new();
+
+    val t_one = typeof(one);
+    val t_s = typeof(s);
+    val t_f = typeof(f);
+
+    assert t_one != t_s;
+    assert t_one != t_f;
+    assert t_s != t_f;
+
+    val t_t_one = typeof(t_one);
+    val t_t_s = typeof(t_s);
+    val t_t_f = typeof(t_f);
+
+    assert t_t_one == t_t_s;
+    assert t_t_one == t_t_f;
+    assert t_t_s == t_t_f;
+
+    val t_t_t_one = typeof(t_t_one);
+    val t_t_t_s = typeof(t_t_s);
+    val t_t_t_f = typeof(t_t_f);
+
+    assert t_t_t_one == t_t_t_s;
+    assert t_t_t_one == t_t_t_f;
+    assert t_t_t_s == t_t_t_f;
+
+    assert t_t_t_one == t_t_one;
+    assert t_t_t_s == t_t_s;
+    assert t_t_t_f == t_t_f;
+}

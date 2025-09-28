@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+func ok(v)  { return Result::Ok(v); }
+func err(e) { return Result::Err(e); }
+
+extension Result {
+    type func new_with_maybe(m: Maybe) {
+        match m {
+            case Some(v) => { return ok(v); }
+            case None => { return err(Unit.new()); }
+        }
+    }
+
+    type func new_with_try(f) {
+        try {
+            return ok(f());
+        } catch e {
+            return err(e);
+        }
+    }
+
+    func or_throw() {
+        match this {
+            case Ok(v) => { return v; }
+            case Err(e) => { throw e; }
+        }
+    }
+
+    func prettyprint() {
+        match this {
+            case Ok(v)  => { return "Ok({0})".format(v); },
+            case Err(e) => { return "Err({0})".format(e); }
+        }
+    }
+
+    func apply(f) {
+        match this {
+            case Ok(v)  => { return Result::Ok(f(v)); },
+            case Err(e) => { return Result::Err(e); }
+        }
+    }
+
+    func unwrap_or(x) {
+        match this {
+            case Ok(v)  => { return v; },
+            case Err(_) => { return x; }
+        }
+    }
+
+    func hash() {
+        match this {
+            case Ok(v)  => { return v.hash(); },
+            case Err(e) => { return e.hash(); }
+        }
+    }
+}
+
+extension Maybe {
+    type func new_with_result(r: Result) {
+        match r {
+            case Ok(v) => { return Maybe::Some(v); }
+            case Err(_) => { return Maybe::None; }
+        }
+    }
+}
+
+extension Result {
+    # what this does:
+    # if the object is a participant in the "try protocol", it will call _op_try_view()
+    # if the result is "some" Ok(x), it will return Result::Ok(x);
+    # if the result is "some" Err(e), it will return Result::Err(e);
+    # if the result is something else, or the object does not implement the protocol, it will return Result::Ok(x)
+    # the TRY_UNWRAP_PROTOCOL bytecode will then inspect this value and:
+    # if it's a Result::Ok(x), it will push "x" onto the stack;
+    # if it's a Result::Err(e), it will RETURN Err(e) from the current function
+    # for anything else, it will raise a type error
+    type func try_unwrap_protocol(x) {
+        if hasattr(x, "_op_try_view") {
+            val rv = x._op_try_view();
+            match rv {
+                case Ok(x) => { return Result::Ok(x); },
+                case Err(e) => { return rv; }
+            }
+        }
+
+        return Result::Ok(x);
+    }
+}
+
+extension Result {
+    func _op_try_view() {
+        return this;
+    }
+}
+
+extension Maybe {
+    func _op_try_view() {
+        match this {
+            case Some(v) => { return Result::Ok(v); }
+            case None => { return Result::Err(Unit.new()); }
+        }
+    }
+}

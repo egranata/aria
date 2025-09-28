@@ -12,19 +12,14 @@ Aria has modern, safer error handling: Aria replaces unreliable `None` pointer c
 `null`, the [billion dollar mistake](https://softwareengineering.stackexchange.com/questions/413149/if-null-is-a-billion-dollar-mistake-what-is-the-solution-to-represent-a-non-ini) just does not exist in Aria, making code safer, easier to maintain and error handling more robust.
 
 ```aria
-
-# will return Maybe::Some(n) if parsing is successful, Maybe::None otherwise
-func parse_to_int(s: String) {
-    return Int.parse(s);
-}
-
 func main() {
-    match parse_to_int("abc123") {
-        case None => {
-            println("could not parse this string correctly");
+    val x = Int.parse("abc123");
+    match x {
+        case Ok(val) => {
+            println("Parsed value: {0}".format(val));
         },
-        case Some(v) => {
-            println("int value = {0}".format(v));
+        case Err(err) => {
+            println("Failed to parse integer: {0}".format(err));
         }
     }
 }
@@ -75,7 +70,7 @@ func main() {
 import JsonValue from aria.json.parser;
 
 func main() {
-    val json_data = JsonValue.parse('{"name": "Aria", "version": "0.9"}').flatten();
+    val json_data = JsonValue.parse('{"name": "Aria", "version": "0.9"}')!!.flatten();
     println("Language: {0}, Version: {1}".format(json_data["name"], json_data["version"]));
 }
 ```
@@ -101,7 +96,7 @@ func main() {
     val response = request.get();
 
     if response.status_code == 200 {
-        val user_data = JsonValue.parse(response.content).flatten();
+        val user_data = JsonValue.parse(response.content)!!.flatten();
         println("User {1} has {0} public repositories.".format(user_data["public_repos"], whoami));
     } else {
         println("Failed to fetch user data. Status: {0}".format(response.status_code));

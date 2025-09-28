@@ -40,19 +40,21 @@ postfix_term_write = {
 
 postfix_term_write_list = { postfix_term_write ~ ("," ~ postfix_term_write)* ~ ","? }
 
-postfix_term_attrib       =  { "." ~ identifier }
-postfix_term_index        =  { "[" ~ expression ~ "]" }
-postfix_term_call         =  { "(" ~ expr_list? ~ ")" }
-postfix_term_object_write =  { "{" ~ postfix_term_write_list ~ "}" }
-postfix_term_enum_case    =  { "::" ~ identifier ~ ("(" ~ expression ~ ")")? }
+postfix_term_attrib       = { "." ~ identifier }
+postfix_term_index        = { "[" ~ expression ~ "]" }
+postfix_term_call         = { "(" ~ expr_list? ~ ")" }
+postfix_term_object_write = { "{" ~ postfix_term_write_list ~ "}" }
+postfix_term_enum_case    = { "::" ~ identifier ~ ("(" ~ expression ~ ")")? }
 postfix_term_sigil        = @{ "@" ~ ASCII_ALPHA+ }
-postfix_term              =  {
+postfix_term_try_protocol = { "??" | "!!" }
+postfix_term              = {
     postfix_term_object_write
   | postfix_term_enum_case
   | postfix_term_attrib
   | postfix_term_index
   | postfix_term_call
   | postfix_term_sigil
+  | postfix_term_try_protocol
 }
 
 postfix_lv = { primary ~ postfix_term* }
@@ -120,10 +122,10 @@ expr_stmt     = { expression? ~ ";" }
 throw_stmt = { "throw" ~ expression ~ ";" }
 
 statement = {
-    assert_stmt
-  | break_stmt
+    break_stmt
   | continue_stmt
   | expr_stmt
+  | assert_stmt
   | val_write_stmt
   | val_decl_stmt
   | val_add_eq_write

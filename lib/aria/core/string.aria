@@ -118,7 +118,7 @@ extension String {
                 }
 
                 match Int.parse(num_str) {
-                    case Some(i) => {
+                    case Ok(i) => {
                         if i >= varargs.len() {
                             if has_style {
                                 ret += "{" + num_str + ":" + style_str + "}";

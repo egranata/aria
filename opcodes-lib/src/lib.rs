@@ -70,6 +70,7 @@ pub const OPCODE_INCLUDE_MIXIN: u8 = 88;
 pub const OPCODE_NEW_ENUM_VAL: u8 = 89;
 pub const OPCODE_ENUM_CHECK_IS_CASE: u8 = 90;
 pub const OPCODE_ENUM_EXTRACT_PAYLOAD: u8 = 91;
+pub const OPCODE_TRY_UNWRAP_PROTOCOL: u8 = 92;
 // ...
 pub const OPCODE_IMPORT: u8 = 250;
 pub const OPCODE_LIFT_MODULE: u8 = 251;
@@ -107,6 +108,7 @@ pub mod builtin_type_ids {
     pub const BUILTIN_TYPE_UNIMPLEMENTED:  u8 = 8;
     pub const BUILTIN_TYPE_RUNTIME_ERROR:  u8 = 9;
     pub const BUILTIN_TYPE_UNIT:           u8 = 10;
+    pub const BUILTIN_TYPE_RESULT:         u8 = 11;
 }
 
 #[allow(unused_imports)]
@@ -119,6 +121,15 @@ pub mod enum_case_attribs {
 
 #[allow(unused_imports)]
 use enum_case_attribs::*;
+
+#[rustfmt::skip]
+pub mod try_unwrap_protocol_mode {
+    pub const PROPAGATE_ERROR:  u8 = 1;
+    pub const ASSERT_ERROR:     u8 = 2;
+}
+
+#[allow(unused_imports)]
+use try_unwrap_protocol_mode::*;
 
 #[derive(Clone)]
 pub enum Opcode {
@@ -187,6 +198,7 @@ pub enum Opcode {
     NewEnumVal(u16),
     EnumCheckIsCase(u16),
     EnumExtractPayload,
+    TryUnwrapProtocol(u8),
     Isa,
     Import(u16),
     LiftModule,
@@ -263,6 +275,7 @@ impl std::fmt::Display for Opcode {
             Self::NewEnumVal(arg0) => write!(f, "NEW_ENUM_VAL @{arg0}"),
             Self::EnumCheckIsCase(arg0) => write!(f, "ENUM_CHECK_IS_CASE @{arg0}"),
             Self::EnumExtractPayload => write!(f, "ENUM_EXTRACT_PAYLOAD"),
+            Self::TryUnwrapProtocol(mode) => write!(f, "TRY_UNWRAP_PROTOCOL {mode}"),
             Self::Isa => write!(f, "ISA"),
             Self::Import(arg0) => write!(f, "IMPORT @{arg0}"),
             Self::LiftModule => write!(f, "LIFT_MODULE"),
@@ -341,6 +354,7 @@ impl Opcode {
             Self::NewEnumVal(_) => 3,
             Self::EnumCheckIsCase(_) => 3,
             Self::EnumExtractPayload => 1,
+            Self::TryUnwrapProtocol(_) => 2,
             Self::Isa => 1,
             Self::Import(_) => 3,
             Self::LiftModule => 1,

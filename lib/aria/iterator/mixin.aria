@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+import ok, err from aria.core.result;
+
 struct FilteringIterator {
     type func new(i, f) {
         return alloc(This){
@@ -71,6 +73,20 @@ mixin Iterator {
 
     func to_list() {
         return this.reduce(append_to_list, []);
+    }
+
+    func flatten_results() {
+        val out = [];
+        for v in this {
+            match v {
+                isa Result and case Ok(x) => { out.append(x); },
+                isa Result and case Err(e) => { return err(e); },
+            } else {
+                out.append(v);
+            }
+        }
+    
+        return ok(out);
     }
 
     func all(f) {

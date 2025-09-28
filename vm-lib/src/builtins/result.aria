@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+# DO NOT REORDER THESE CASES - the VM relies on the order
+enum Result {
+    case Ok(Any),
+    case Err(Any),
+}
+
+extension Result {
+    func apply(f) {
+        match this {
+            case Ok(x) => { return Result::Ok(f(x)); },
+            case Err(e) => { return Result::Err(e); }
+        }
+    }
+}

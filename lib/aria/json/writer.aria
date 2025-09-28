@@ -3,6 +3,7 @@
 import Map from aria.structures.map;
 import JsonValue from aria.json.value;
 import JsonNull from aria.json.value;
+import ok, err from aria.core.result;
 
 # this is a type-check only prototype
 func _to_json_thing(this) {}
@@ -19,27 +20,31 @@ struct JsonConvertError {
     }
 }
 
+func json_err(msg) {
+    return err(JsonConvertError.new(msg));
+}
+
 extension JsonValue {
     type func new_with_value(x) {
         match x {
             isa String => {
-                return JsonValue::String(x);
+                return ok(JsonValue::String(x));
             },
             isa Int => {
-                return JsonValue::Number(x + 0.0f);
+                return ok(JsonValue::Number(x + 0.0f));
             },
             isa Float => {
-                return JsonValue::Number(x);
+                return ok(JsonValue::Number(x));
             },
             isa Bool => {
-                return JsonValue::Boolean(x);
+                return ok(JsonValue::Boolean(x));
             },
             isa List => {
                 val ret = [];
                 for item in x {
-                    ret.append(JsonValue.new_with_value(item));
+                    ret.append(JsonValue.new_with_value(item)??);
                 }
-                return JsonValue::Array(ret);
+                return ok(JsonValue::Array(ret));
             }
             isa Map => {
                 val ret = Map.new();
@@ -48,21 +53,24 @@ extension JsonValue {
                     if !(key isa String) {
                         key = format("{0}", key);
                     }
-                    val value = JsonValue.new_with_value(item.value);
+                    val value = JsonValue.new_with_value(item.value)??;
                     ret.set(key, value);
                 }
-                return JsonValue::Object(ret);
+                return ok(JsonValue::Object(ret));
             }
             isa JsonNull => {
-                return JsonValue::Null(alloc(JsonNull));
+                return ok(JsonValue::Null(alloc(JsonNull)));
             }
         } else {
-            if hasattr(x, "to_json_value") && x.to_json_value isa typeof(_to_json_thing) {
-                return x.to_json_value();
-            } else {
-                throw JsonConvertError.new("type of value {0} cannot be converted as JSON".format(x));
+            if hasattr(x, "to_json_value") {
+                val to_json_value = x.to_json_value;
+                if arity(to_json_value).can_call_with_argc(0) {
+                    return to_json_value()??;
+                }
             }
         }
+
+        return json_err("type of value {0} cannot be converted as JSON".format(x));
     }
 }
 

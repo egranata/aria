@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+
+### TAGS: XFAIL
+
+import * from exported_var.source;
+
+func main() {
+    foo = 456;
+    assert foo == 456;
+    assert fetch_foo() == 456; # expected to fail here
+    assert exported_var.source.foo == 456;
+    assert exported_var.source.fetch_foo() == 456;
+}

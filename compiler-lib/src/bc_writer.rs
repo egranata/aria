@@ -133,6 +133,9 @@ impl BytecodeWriter {
                 .write_u8(haxby_opcodes::OPCODE_ENUM_CHECK_IS_CASE)
                 .write_u16(*n),
             Opcode::EnumExtractPayload => self.write_u8(haxby_opcodes::OPCODE_ENUM_EXTRACT_PAYLOAD),
+            Opcode::TryUnwrapProtocol(n) => self
+                .write_u8(haxby_opcodes::OPCODE_TRY_UNWRAP_PROTOCOL)
+                .write_u8(*n),
             Opcode::Isa => self.write_u8(haxby_opcodes::OPCODE_ISA),
             Opcode::Import(n) => self.write_u8(haxby_opcodes::OPCODE_IMPORT).write_u16(*n),
             Opcode::LiftModule => self.write_u8(haxby_opcodes::OPCODE_LIFT_MODULE),

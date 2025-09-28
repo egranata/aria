@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+import ok, err from aria.core.result;
+
+func generates_a_result(x) {
+    if x % 2 == 0 {
+        return ok(x/2);
+    } else {
+        return err("not divisible by two");
+    }
+}
+
+func try_double(x) {
+    val x = generates_a_result(x)??;
+    return ok(x * 4);
+}
+
+func main() {
+    val a = try_double(10);
+    val b = try_double(11);
+
+    assert a.is_Ok();
+    assert a?? == 20;
+
+    assert b.is_Err();
+    assert b.unwrap_Err() == "not divisible by two";
+}

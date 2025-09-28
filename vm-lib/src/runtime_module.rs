@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use aria_compiler::{constant_value::ConstantValue, module::CompiledModule};
+use rustc_data_structures::fx::FxHashMap;
 
 use crate::{
     builtins::VmBuiltins,
     error::vm_error::VmErrorReason,
-    runtime_value::{RuntimeValue, kind::RuntimeValueType},
+    runtime_value::{
+        RuntimeValue,
+        function::{BuiltinFunctionImpl, Function},
+        kind::RuntimeValueType,
+    },
 };
 
 #[derive(Clone)]
@@ -21,7 +22,7 @@ pub struct NamedValue {
 
 struct RuntimeModuleImpl {
     compiled_module: CompiledModule,
-    values: RefCell<HashMap<String, NamedValue>>,
+    values: RefCell<FxHashMap<String, NamedValue>>,
 }
 
 impl RuntimeModuleImpl {
@@ -167,6 +168,15 @@ impl RuntimeModule {
 
     pub fn identity(&self) -> usize {
         Rc::as_ptr(&self.imp) as usize
+    }
+
+    pub fn insert_builtin<T>(&self)
+    where
+        T: 'static + Default + BuiltinFunctionImpl,
+    {
+        let t = T::default();
+        let name = t.name().to_owned();
+        self.store_named_value(&name, RuntimeValue::Function(Function::builtin_from(t)));
     }
 }
 

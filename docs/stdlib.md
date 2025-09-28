@@ -212,6 +212,44 @@ This module provides a `Path` struct for interacting with the file system.
 
 ---
 
+### `aria.core.result`
+
+This module defines a dynamic success/error carrier and bridges with `Maybe` and exceptions.
+
+#### **Enums**
+
+*   **`Result`**
+    Represents the outcome of an operation, which can be either a success with a value or an error with a message.
+
+    **Cases:**
+    *   `Ok(Any)`: Contains a successful result of any type.
+    *   `Err(Any)`: Contains an error message.
+
+    **Methods:**
+    *   `is_Ok()`: Returns `true` if the `Result` is `Ok`, `false` otherwise.
+    *   `is_Err()`: Returns `true` if the `Result` is `Err`, `false` otherwise.
+    *   `unwrap_Ok()`: Returns the value contained within `Ok`.
+    *   `unwrap_Err()`: Returns the value contained within `Err`.
+    *   `or_throw()`: If `Ok(v)`, returns `v`. If `Err(e)`, throws `e`.
+    *   `unwrap_or(default_value)`: Returns the value contained within `Ok`, or `default_value` if it is `Err`.
+    *   `apply(f)`: Result `f(v)` if the `Result` is `Ok(v)`. If `Result` is `Err`, returns the `Err` unchanged.
+    *   `type func new_with_maybe(m: Maybe)`: Returns `Ok(v)` if `m` is `Some(v)`, returns `Err(Unit.new())` if `m` is `None`.
+    *   `type func new_with_try(f)`: Executes `f()`. Returns `Ok(result)` if `f` completes. Returns `Err(e)` if `f` throws `e`.
+
+#### **Extensions**
+
+*   **`extension Maybe`**
+    Extends the built-in `Maybe` type.
+
+    **Methods:**
+    *   `new_with_result(r: Result):`: Returns `Maybe::Some(v)` if `r` is `Ok(v)`, returns `Maybe::None` if `r` is `Err`.
+
+#### **Functions**
+*   `ok(v)`: Shorthand constructor. Returns `Result::Ok(v)`.
+*   `err(e)`: Shorthand constructor. Returns `Result::Err(e)`.
+
+---
+
 ### `aria.core.string`
 
 This module provides extensions to the built-in `String` type.
@@ -317,6 +355,15 @@ This module provides a struct for representing a specific moment in time, simila
     *   `instance func prettyprint()`: Returns a formatted string representation of the `Instant`.
 
 ---
+
+### `aria.date.timezone`
+
+This module provides a function to collect timezone information.
+
+#### **Functions**
+*   `timezone_info()`: Returns a `List` containing the timezone offset in minutes (Int) and the timezone name (String).
+
+---
 # `aria.iterator` Module Reference
 
 This document provides a reference for the `aria.iterator` module, which contains core interfaces and utilities for working with iterators and iterable collections.
@@ -342,6 +389,7 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `where(f)`: Returns a new iterator that yields only the items for which the predicate function `f` returns `true`.
     *   `reduce(f, initial)`: Applies a function `f` against an accumulator and each item in the iterator (from left to right) to reduce it to a single value. `initial` is the starting value of the accumulator.
     *   `to_list()`: Consumes the iterator and returns a `List` containing all its items.
+    *   `flatten_results()`: Consumes the iterator. If any items are `Result::Err(x)` returns `err(x)`. Otherwise, it returns `ok(List)` of all the unwrapped `Result::Ok(value)` items. Non-`Result` values are appended to the result list verbatim.
     *   `all(f)`: Returns `true` if the predicate function `f` returns `true` for all items in the iterator, `false` otherwise. This method short-circuits, i.e. it stops consuming the iterator as soon as the outcome is determined.
     *   `any(f)`: Returns `true` if the predicate function `f` returns `true` for at least one item in the iterator, `false` otherwise. This method short-circuits, i.e. it stops consuming the iterator as soon as the outcome is determined.
     *   `find(f)`: Returns `Maybe::Some(value)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
@@ -1201,10 +1249,6 @@ Executes a shell command.
 *   **Arguments:**
     *   `command` (String): The command to execute.
 *   **Returns:** An `Int` object representing the exit code, with `stdout` and `stderr` attributes containing the command's output.
-
-### `timezone_info()`
-Returns information about the local timezone.
-*   **Returns:** A `List` containing the timezone offset in minutes (Int) and the timezone name (String).
 
 ### `typeof(object)`
 Returns the type of an object.

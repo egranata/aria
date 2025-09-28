@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::rc::Rc;
 
 use haxby_opcodes::builtin_type_ids::*;
 
@@ -10,6 +10,7 @@ use crate::{
         RuntimeValue,
         function::{BuiltinFunctionImpl, Function},
         kind::RuntimeValueType,
+        object::ObjectBox,
     },
 };
 
@@ -17,6 +18,7 @@ mod alloc;
 mod arity;
 mod boolean;
 mod cmdline_args;
+mod exit;
 mod float;
 mod getenv;
 mod hasattr;
@@ -34,12 +36,11 @@ mod register_sigil;
 mod sleep;
 mod string;
 mod system;
-mod timezone;
 mod typeof_builtin;
 mod writeattr;
 
 pub struct VmBuiltins {
-    values: Rc<RefCell<HashMap<String, RuntimeValue>>>,
+    values: Rc<ObjectBox>,
 }
 
 impl VmBuiltins {
@@ -80,6 +81,7 @@ impl Default for VmBuiltins {
         arity::insert_builtins(&mut this);
         boolean::insert_boolean_builtins(&mut this);
         cmdline_args::insert_builtins(&mut this);
+        exit::insert_builtins(&mut this);
         integer::insert_integer_builtins(&mut this);
         float::insert_float_builtins(&mut this);
         getenv::insert_builtins(&mut this);
@@ -97,7 +99,6 @@ impl Default for VmBuiltins {
         register_sigil::insert_builtins(&mut this);
         sleep::insert_builtins(&mut this);
         system::insert_builtins(&mut this);
-        timezone::insert_builtins(&mut this);
         typeof_builtin::insert_builtins(&mut this);
         writeattr::insert_builtins(&mut this);
 
@@ -110,15 +111,15 @@ impl Default for VmBuiltins {
 
 impl VmBuiltins {
     pub fn load_named_value(&self, name: &str) -> Option<RuntimeValue> {
-        self.values.borrow().get(name).cloned()
+        self.values.read(name)
     }
 
     pub fn insert(&self, name: &str, val: RuntimeValue) {
-        if self.values.borrow().contains_key(name) {
+        if self.values.contains(name) {
             panic!("duplicate builtin {name}");
         }
 
-        self.values.borrow_mut().insert(name.to_owned(), val);
+        self.values.write(name, val);
     }
 
     pub fn get_builtin_type_by_name(&self, name: &str) -> RuntimeValueType {
@@ -138,6 +139,7 @@ impl VmBuiltins {
             BUILTIN_TYPE_STRING => Some(self.get_builtin_type_by_name("String")),
             BUILTIN_TYPE_BOOL => Some(self.get_builtin_type_by_name("Bool")),
             BUILTIN_TYPE_MAYBE => Some(self.get_builtin_type_by_name("Maybe")),
+            BUILTIN_TYPE_RESULT => Some(self.get_builtin_type_by_name("Result")),
             BUILTIN_TYPE_UNIMPLEMENTED => Some(self.get_builtin_type_by_name("Unimplemented")),
             BUILTIN_TYPE_RUNTIME_ERROR => Some(self.get_builtin_type_by_name("RuntimeError")),
             BUILTIN_TYPE_UNIT => Some(self.get_builtin_type_by_name("Unit")),
@@ -167,6 +169,27 @@ impl VmBuiltins {
         Ok(RuntimeValue::EnumValue(rv))
     }
 
+    pub fn create_result_ok(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
+        let rt_result = crate::some_or_err!(
+            self.get_builtin_type_by_id(BUILTIN_TYPE_RESULT),
+            VmErrorReason::UnexpectedVmState
+        );
+        let rt_result_enum =
+            crate::some_or_err!(rt_result.as_enum(), VmErrorReason::UnexpectedType);
+
+        let ok_idx = crate::some_or_err!(
+            rt_result_enum.get_idx_of_case("Ok"),
+            VmErrorReason::NoSuchCase("Ok".to_owned())
+        );
+
+        let rv = crate::some_or_err!(
+            rt_result_enum.make_value(ok_idx, Some(x)),
+            VmErrorReason::UnexpectedVmState
+        );
+
+        Ok(RuntimeValue::EnumValue(rv))
+    }
+
     pub fn create_maybe_none(&self) -> Result<RuntimeValue, VmErrorReason> {
         let rt_maybe = crate::some_or_err!(
             self.get_builtin_type_by_id(BUILTIN_TYPE_MAYBE),
@@ -181,6 +204,27 @@ impl VmBuiltins {
 
         let rv = crate::some_or_err!(
             rt_maybe_enum.make_value(none_idx, None),
+            VmErrorReason::UnexpectedVmState
+        );
+
+        Ok(RuntimeValue::EnumValue(rv))
+    }
+
+    pub fn create_result_err(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
+        let rt_result = crate::some_or_err!(
+            self.get_builtin_type_by_id(BUILTIN_TYPE_RESULT),
+            VmErrorReason::UnexpectedVmState
+        );
+        let rt_result_enum =
+            crate::some_or_err!(rt_result.as_enum(), VmErrorReason::UnexpectedType);
+
+        let err_idx = crate::some_or_err!(
+            rt_result_enum.get_idx_of_case("Err"),
+            VmErrorReason::NoSuchCase("Err".to_owned())
+        );
+
+        let rv = crate::some_or_err!(
+            rt_result_enum.make_value(err_idx, Some(x)),
             VmErrorReason::UnexpectedVmState
         );
 

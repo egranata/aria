@@ -5,6 +5,23 @@ enum RetryResult {
     case Exception(Any), # last exception from f/check
 }
 
+extension RetryResult {
+    func _op_try_view() {
+        match this {
+            case Pass(v) => {
+                return Result::Ok(v);
+            },
+            case Fail(v) => {
+                return Result::Err(v);
+            },
+            case Exception(e) => {
+                # swallow the difference between a failure and an exception
+                return Result::Err(e);
+            }
+        }
+    }
+}
+
 func retry(f, check, attempts_count = 3, delay_ms = 500) {
     if attempts_count <= 0 {
         return RetryResult::Fail(Maybe::None);
