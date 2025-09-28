@@ -12,7 +12,7 @@ impl Derive for PostfixTermSigil {
     fn from_parse_tree(p: pest::iterators::Pair<'_, Rule>, source: &SourceBuffer) -> Self {
         assert!(p.as_rule() == Rule::postfix_term_sigil);
         let loc = From::from(&p.as_span());
-        let sigil = p.as_str().strip_prefix("_").unwrap().to_string();
+        let sigil = p.as_str().strip_prefix("@").unwrap().to_string();
         Self {
             loc: source.pointer(loc),
             sigil,

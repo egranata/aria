@@ -7,5 +7,5 @@ struct Foo {
 
 func main() {
     register_sigil("o", Foo.addfive);
-    assert 5_o == 10;
+    assert 5@o == 10;
 }

@@ -1036,7 +1036,7 @@ A mixin can be included in multiple types, and a type can include multiple mixin
 
 Sigils are user-defined postfix operators that allow for more expressive and readable code. They provide a way to create custom unary operators that operate on the value immediately to their left.
 
-A sigil is written as an underscore followed by an identifier: `_identifier`. When used in an expression, the sigil appears after the value it operates on.
+A sigil is written as an at followed by a sequence of letters: `@letters`. When used in an expression, the sigil appears after the value it operates on.
 ```
 value_sigil
 ```
@@ -1050,16 +1050,18 @@ register_sigil("sigil_name", function_to_call);
 
 Complete example:
 ```
-func celsius_to_fahrenheit(celsius) {
-    return celsius * 9.0 / 5.0 + 32.0;
+struct Temperature {
+    func from_fahrenheit(f: Float) -> Temperature { /* ... */ }
+    func from_celsius(c: Float) -> Temperature { /* ... */ }
+    func to_fahrenheit() -> Float { /* ... */ }
+    func to_celsius() -> Float { /* ... */ }
 }
 
-func main() {
-    register_sigil("F", celsius_to_fahrenheit);
+let temp1 = Temperature.from_fahrenheit(77.0);  // 77°F
+let temp2 = Temperature.from_celsius(25.0);     // 25°C
 
-    val temp = 25_F;  # converts 25°C to 77°F
-    println(temp);    # prints 77
-}
+let fahrenheit_value = temp2@to_f;    // Convert 25°C to Fahrenheit
+let celsius_value = temp1@to_c;       // Convert 77°F to Celsius
 ```
 
 ## 🎡 Iterators
