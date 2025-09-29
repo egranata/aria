@@ -28,7 +28,7 @@ case "$RUNOS" in
 esac
 
 cargo build --workspace --profile "$PROFILE"
-ARIA_BUILD_CONFIG=${PROFILE} ./t
+ARIA_BUILD_CONFIG=${PROFILE} ./ci_tests.sh
 
 STAGING_ROOT="$(mktemp -d)"
 trap 'rm -rf "$STAGING_ROOT"' EXIT
