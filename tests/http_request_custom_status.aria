@@ -8,6 +8,9 @@ import * from aria.network.retry;
 func main() {
     val request = Request.new("https://httpbin.org/status/418");
 
-    val result = retry(|| => request.get(), |result| => result.status_code == 418);
+    val result = retry(|| => request.get(), |result| => {
+        println(result);
+        return result.is_Ok() && result.unwrap_Ok().status_code == 418;
+    });
     assert result.is_Pass();
 }

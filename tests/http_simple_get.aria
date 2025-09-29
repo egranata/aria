@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+
+### TAGS: FLAKEY
+
+import Request from aria.network.request;
+import * from aria.network.retry;
+
+func main() {
+    val request = Request.new("https://www.rust-lang.org/");
+    val response = retry(|| => request.get(), |result| => {
+        println(result);
+        return result.is_Ok() && result.unwrap_Ok().status_code == 200;
+    });
+    assert response.is_Pass();
+    val response = response.unwrap_Pass()!!;
+    assert response.headers["content-type"].contains("html");
+    assert response.content.contains("<html");
+}
