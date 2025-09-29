@@ -11,9 +11,12 @@ func main() {
     request.headers["User-Agent"] = "Aria";
     request.headers["Custom-Header"] = "Answer_Is_42";
 
-    val result = retry(|| => request.get(), |result| => result.status_code == 200);
+    val result = retry(|| => request.get(), |result| => {
+        println(result);
+        return result.is_Ok() && result.unwrap_Ok().status_code == 200;
+    });
     assert result.is_Pass();
-    val json_result = JsonValue.parse(result.unwrap_Pass().content)!!;
+    val json_result = JsonValue.parse(result.unwrap_Pass()!!.content)!!;
 
     val json_map = json_result.unwrap_Object();
     val json_headers = json_map["headers"].unwrap_Object();

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use haxby_opcodes::function_attribs::FUNC_IS_METHOD;
 use haxby_vm::{
-    error::{dylib_load::LoadResult, exception::VmException},
+    error::{dylib_load::LoadResult, vm_error::VmErrorReason},
+    ok_or_err,
     runtime_module::RuntimeModule,
     runtime_value::{RuntimeValue, list::List, object::Object},
     vm::ExecutionResult,
@@ -13,7 +14,7 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
     fn eval(
         &self,
         frame: &mut haxby_vm::frame::Frame,
-        _: &mut haxby_vm::vm::VirtualMachine,
+        vm: &mut haxby_vm::vm::VirtualMachine,
     ) -> haxby_vm::vm::ExecutionResult<haxby_vm::vm::RunloopExit> {
         let this = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_object().cloned())?;
         let headers = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
@@ -70,23 +71,34 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
                             "msg",
                             RuntimeValue::String("content is not a valid String".into()),
                         );
-                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                            VmException::from_value(RuntimeValue::Object(error_obj)),
-                        ));
+                        let result_err = ok_or_err!(
+                            vm.builtins
+                                .create_result_err(RuntimeValue::Object(error_obj)),
+                            VmErrorReason::UnexpectedVmState.into()
+                        );
+                        frame.stack.push(result_err);
+                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()));
                     }
                 }
 
-                frame
-                    .stack
-                    .push(haxby_vm::runtime_value::RuntimeValue::Object(response_obj));
+                let result_ok = ok_or_err!(
+                    vm.builtins
+                        .create_result_ok(RuntimeValue::Object(response_obj.clone())),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(result_ok);
                 Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
             Err(e) => {
                 let error_obj = Object::new(&this_error);
                 error_obj.write("msg", RuntimeValue::String(e.to_string().into()));
-                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                    VmException::from_value(RuntimeValue::Object(error_obj)),
-                ))
+                let result_err = ok_or_err!(
+                    vm.builtins
+                        .create_result_err(RuntimeValue::Object(error_obj)),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(result_err);
+                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
         }
     }
@@ -110,7 +122,7 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
     fn eval(
         &self,
         frame: &mut haxby_vm::frame::Frame,
-        _: &mut haxby_vm::vm::VirtualMachine,
+        vm: &mut haxby_vm::vm::VirtualMachine,
     ) -> haxby_vm::vm::ExecutionResult<haxby_vm::vm::RunloopExit> {
         let this = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_object().cloned())?;
         let headers = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
@@ -171,23 +183,34 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
                             "msg",
                             RuntimeValue::String("content is not a valid String".into()),
                         );
-                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                            VmException::from_value(RuntimeValue::Object(error_obj)),
-                        ));
+                        let result_err = ok_or_err!(
+                            vm.builtins
+                                .create_result_err(RuntimeValue::Object(error_obj)),
+                            VmErrorReason::UnexpectedVmState.into()
+                        );
+                        frame.stack.push(result_err);
+                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()));
                     }
                 }
 
-                frame
-                    .stack
-                    .push(haxby_vm::runtime_value::RuntimeValue::Object(response_obj));
+                let result_ok = ok_or_err!(
+                    vm.builtins
+                        .create_result_ok(RuntimeValue::Object(response_obj.clone())),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(result_ok);
                 Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
             Err(e) => {
                 let error_obj = Object::new(&this_error);
                 error_obj.write("msg", RuntimeValue::String(e.to_string().into()));
-                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                    VmException::from_value(RuntimeValue::Object(error_obj)),
-                ))
+                let result_err = ok_or_err!(
+                    vm.builtins
+                        .create_result_err(RuntimeValue::Object(error_obj)),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(result_err);
+                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
         }
     }

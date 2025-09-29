@@ -8,7 +8,7 @@ import aria.json.writer;
 struct Request {
     struct Response {
         func prettyprint() {
-            println("aria.network.Request.Response");
+            return "aria.network.Request.Response(code={0})".format(this.status_code);
         }
     }
 
@@ -41,7 +41,7 @@ struct Request {
             headers.append([h.key, h.value]);
         }
 
-        val response = this._get(headers);
+        val response = this._get(headers)??;
 
         val headers = Map.new();
         for header in response.headers {
@@ -49,7 +49,7 @@ struct Request {
         }
         response.headers = headers;
 
-        return response;
+        return Result::Ok(response);
     }
 
     func post(data: String) {
@@ -61,7 +61,7 @@ struct Request {
             headers.append([h.key, h.value]);
         }
 
-        val response = this._post(headers, data);
+        val response = this._post(headers, data)??;
 
         val headers = Map.new();
         for header in response.headers {
@@ -69,7 +69,7 @@ struct Request {
         }
         response.headers = headers;
 
-        return response;
+        return Result::Ok(response);
     }
 
     func post_as_json(data) {
