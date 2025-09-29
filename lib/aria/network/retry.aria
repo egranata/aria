@@ -70,8 +70,8 @@ func retry(f, check, attempts_count = 3, delay_ms = 500) {
         }
     }
 
-    if last_exception.is_Some() {
-        return RetryResult::Exception(last_exception.unwrap_Some());
+    if case Some(le) = last_exception {
+        return RetryResult::Exception(le);
     } else {
         return RetryResult::Fail(last_result);
     }
