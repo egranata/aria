@@ -283,6 +283,12 @@ pub struct PostfixTermEnumCase {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PostfixTermSigil {
+    pub loc: SourcePointer,
+    pub sigil: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostfixTermFieldWrite {
     pub loc: SourcePointer,
     pub id: Identifier,
@@ -343,6 +349,7 @@ pub enum PostfixTerm {
     PostfixTermCall(PostfixTermCall),
     PostfixTermObjectWrite(PostfixTermObjectWrite),
     PostfixTermEnumCase(PostfixTermEnumCase),
+    PostfixTermSigil(PostfixTermSigil),
     PostfixTermTryProtocol(PostfixTermTryProtocol),
 }
 

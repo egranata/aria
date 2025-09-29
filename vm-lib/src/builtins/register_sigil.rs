@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: Apache-2.0
+use crate::{
+    builtins::VmBuiltins, error::vm_error::VmErrorReason, frame::Frame, ok_or_err,
+    runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
+};
+
+#[derive(Default)]
+struct RegisterSigil {}
+impl BuiltinFunctionImpl for RegisterSigil {
+    fn eval(
+        &self,
+        cur_frame: &mut Frame,
+        vm: &mut crate::vm::VirtualMachine,
+    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        let sigil_name_val = cur_frame.stack.pop();
+        let function = cur_frame.stack.pop();
+        let sigil_name = sigil_name_val.prettyprint(cur_frame, vm);
+
+        let internal_name = format!("__sigil_{sigil_name}");
+        if function.as_function().is_some()
+            || function.as_bound_function().is_some()
+            || function
+                .read_attribute("_op_impl_call", &vm.builtins)
+                .is_ok()
+        {
+            if vm.sigil_registry.read(&internal_name).is_some() {
+                return Err(VmErrorReason::OperationFailed(format!(
+                    "Cannot redefine sigil {}",
+                    sigil_name
+                ))
+                .into());
+            }
+            vm.sigil_registry.write(&internal_name, function);
+        } else {
+            return Err(VmErrorReason::UnexpectedType.into());
+        }
+
+        cur_frame.stack.push(ok_or_err!(
+            vm.builtins.create_unit_object(),
+            VmErrorReason::UnexpectedVmState.into()
+        ));
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
+    }
+
+    fn name(&self) -> &str {
+        "register_sigil"
+    }
+}
+
+pub(super) fn insert_builtins(builtins: &mut VmBuiltins) {
+    builtins.insert_builtin::<RegisterSigil>();
+}

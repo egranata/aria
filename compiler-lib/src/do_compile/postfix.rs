@@ -44,6 +44,7 @@ pub(super) enum PostfixValue {
     Case(Box<PostfixValue>, Box<Identifier>, Option<Expression>),
     Index(Box<PostfixValue>, Box<aria_parser::ast::Expression>),
     ObjWrite(Box<PostfixValue>, Vec<ObjWrite>),
+    Sigil(Box<PostfixValue>, String, SourcePointer),
     TryProtocol(
         Box<PostfixValue>,
         Box<aria_parser::ast::PostfixTermTryProtocol>,
@@ -126,6 +127,25 @@ impl<'a> PostfixValue {
                     );
                 Ok(())
             }
+            PostfixValue::Sigil(base, sigil, loc) => {
+                base.emit_read(params)?;
+
+                let internal_name = format!("__sigil_{sigil}");
+                params.scope.emit_read(
+                    &internal_name,
+                    &mut params.module.constants,
+                    params.writer.get_current_block().clone(),
+                    loc.clone(),
+                )?;
+
+                params
+                    .writer
+                    .get_current_block()
+                    .write_opcode_and_source_info(BasicBlockOpcode::Call(1), loc.clone());
+
+                Ok(())
+            }
+
             PostfixValue::ObjWrite(base, terms) => {
                 base.emit_read(params)?;
                 for term in terms {
@@ -252,6 +272,10 @@ impl<'a> PostfixValue {
                     );
                 Ok(())
             }
+            PostfixValue::Sigil(_, _, loc) => Err(CompilationError {
+                loc: loc.clone(),
+                reason: CompilationErrorReason::ReadOnlyValue,
+            }),
             PostfixValue::Attribute(base, identifier) => {
                 let identifier_idx = match params
                     .module
@@ -345,6 +369,13 @@ impl From<&aria_parser::ast::PostfixExpression> for PostfixValue {
                         }
                     }
                     current = PostfixValue::ObjWrite(Box::new(current), terms)
+                }
+                aria_parser::ast::PostfixTerm::PostfixTermSigil(sigil) => {
+                    current = PostfixValue::Sigil(
+                        Box::new(current),
+                        sigil.sigil.clone(),
+                        sigil.loc.clone(),
+                    )
                 }
                 aria_parser::ast::PostfixTerm::PostfixTermTryProtocol(tp) => {
                     current = PostfixValue::TryProtocol(Box::new(current), Box::new(tp.clone()))

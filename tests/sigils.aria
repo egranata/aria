@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func addfive(n) {
+        return n+5;
+    }
+}
+
+func main() {
+    register_sigil("o", Foo.addfive);
+    assert 5@o == 10;
+}

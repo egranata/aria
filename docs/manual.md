@@ -1087,6 +1087,38 @@ Mixins may have requirements of their types, for example `Double` expects to be 
 
 A mixin can be included in multiple types, and a type can include multiple mixins. Mixins can be included in the type definition or an extension of it.
 
+## 💌 Sigils
+
+Sigils are user-defined postfix operators that allow for more expressive and readable code. They provide a way to create custom unary operators that operate on the value immediately to their left.
+
+A sigil is written as an at followed by a sequence of letters: `@letters`. When used in an expression, the sigil appears after the value it operates on.
+```
+value_sigil
+```
+This is equivalent to calling a function named `sigil` with `value` as the argument.
+Before using a sigil, you must register using the `register_sigil` built-in function, which takes two arguments:
+1. The sigil name (as a string)
+2. The function to call when the sigil is used
+```
+register_sigil("sigil_name", function_to_call);
+```
+
+Complete example:
+```
+struct Temperature {
+    func from_fahrenheit(f: Float) -> Temperature { /* ... */ }
+    func from_celsius(c: Float) -> Temperature { /* ... */ }
+    func to_fahrenheit() -> Float { /* ... */ }
+    func to_celsius() -> Float { /* ... */ }
+}
+
+let temp1 = Temperature.from_fahrenheit(77.0);  // 77°F
+let temp2 = Temperature.from_celsius(25.0);     // 25°C
+
+let fahrenheit_value = temp2@to_f;    // Convert 25°C to Fahrenheit
+let celsius_value = temp1@to_c;       // Convert 77°F to Celsius
+```
+
 ## 🎡 Iterators
 
 `for` loops work by leveraging iterators. An iterator is an object that has a `next` method with no arguments. This method is expected to return an object with a specific layout:
