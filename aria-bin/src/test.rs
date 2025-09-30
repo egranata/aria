@@ -13,13 +13,28 @@ fn build_test_repl<'a>(cmdline_options: &'a Args) -> Repl<'a> {
     Repl::new(vm_options, &cmdline_options).unwrap()
 }
 
-fn run_passing_repl_line(repl: &mut Repl, line: &str, must_include_stdout: &[&str]) {
+fn run_check_repl_line(
+    repl: &mut Repl,
+    line: &str,
+    ok: bool,
+    must_include_stdout: &[&str],
+    must_include_stderr: &[&str],
+) {
     let diff = repl.eval_line(line);
 
-    assert!(diff.ok);
+    assert!(diff.ok == ok);
+
     for expected in must_include_stdout {
         assert!(diff.stdout.contains(expected));
     }
+
+    for expected in must_include_stderr {
+        assert!(diff.stderr.contains(expected));
+    }
+}
+
+fn run_passing_repl_line(repl: &mut Repl, line: &str, must_include_stdout: &[&str]) {
+    run_check_repl_line(repl, line, true, must_include_stdout, &[])
 }
 
 #[test]
@@ -172,4 +187,29 @@ fn repl_adds_semicolon() {
     run_passing_repl_line(&mut repl, "val x = 1", &[]);
     run_passing_repl_line(&mut repl, "val y = 2", &[]);
     run_passing_repl_line(&mut repl, "2 * y + x", &["5"]);
+}
+
+#[test]
+fn repl_preamble_works() {
+    let cmdline_options = Args::default();
+    let mut repl = build_test_repl(&cmdline_options);
+
+    run_passing_repl_line(&mut repl, "3.pow(2)", &["9"]);
+    run_passing_repl_line(&mut repl, "val m = Map.new(); m[1] = 'one'; m[1]", &["one"]);
+    run_passing_repl_line(&mut repl, "m.get(4)", &["None"]);
+}
+
+#[test]
+fn repl_skips_preamble() {
+    let mut cmdline_options = Args::default();
+    cmdline_options.no_repl_preamble = true;
+    let mut repl = build_test_repl(&cmdline_options);
+
+    run_check_repl_line(
+        &mut repl,
+        "3.pow(2)",
+        false,
+        &["identifier 'pow' not found"],
+        &[],
+    );
 }

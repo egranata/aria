@@ -166,7 +166,11 @@ impl<'a> Repl<'a> {
     #[allow(clippy::unit_arg)]
     pub fn new(vm_options: VmOptions, args: &'a Args) -> Result<Self, ()> {
         let mut vm = VirtualMachine::with_options(vm_options);
-        let repl_module_preamble = "";
+        let repl_module_preamble = if args.no_repl_preamble {
+            ""
+        } else {
+            include_str!("repl_preamble.aria")
+        };
 
         let sb = SourceBuffer::stdin_with_name(repl_module_preamble, "repl");
         let ast = match source_to_ast(&sb) {

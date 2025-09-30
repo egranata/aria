@@ -33,6 +33,9 @@ struct Args {
     extra_args: Vec<String>,
     #[arg(long("print-lib-path"))]
     print_lib_path: bool,
+    /// Turn off REPL preamble
+    #[arg(long("no-repl-preamble"))]
+    no_repl_preamble: bool,
 }
 
 impl From<&Args> for VmOptions {
