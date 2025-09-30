@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+val x = 123;
+val y = 100;
+
+func main() {
+    # TODO: this is how the interpreter code works, but is it really the right thing?
+    # should there be such a meaningful semantic difference between defining a nested
+    # function and defining a closure?
+    val x = 321;
+
+    func foo(n) {
+        return n + x + y; 
+    }
+
+    val bar = |n| => n + x + y;
+
+    assert foo(3) == 424;
+    assert bar(3) == 424;
+}

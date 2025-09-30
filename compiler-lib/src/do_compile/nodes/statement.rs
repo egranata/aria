@@ -22,6 +22,17 @@ impl<'a> CompileNode<'a> for aria_parser::ast::Statement {
             Self::ContinueStatement(c) => c.do_compile(params),
             Self::StructDecl(s) => s.do_compile(params),
             Self::EnumDecl(e) => e.do_compile(params),
+            Self::FunctionDecl(f) => {
+                let f_scope = params.scope.closure(params.writer.get_current_block());
+                let mut f_params = CompileParams {
+                    module: params.module,
+                    scope: &f_scope,
+                    writer: params.writer,
+                    cflow: params.cflow,
+                    options: params.options,
+                };
+                f.do_compile(&mut f_params)
+            }
         }
     }
 }

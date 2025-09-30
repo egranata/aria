@@ -138,6 +138,7 @@ statement = {
   | try_block
   | struct_decl
   | enum_decl
+  | function_decl
 }
 
 code_block  = { "{" ~ (statement)* ~ "}" }
