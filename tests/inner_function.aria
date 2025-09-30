@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    func foo(x,y) {
+        return x + y - 1;
+    }
+
+    assert foo(3,4) == 6;
+}

@@ -982,6 +982,7 @@ pub enum Statement {
     ContinueStatement(ContinueStatement),
     StructDecl(StructDecl),
     EnumDecl(EnumDecl),
+    FunctionDecl(FunctionDecl),
 }
 
 impl Statement {
@@ -1005,6 +1006,7 @@ impl Statement {
             Self::ContinueStatement(a) => &a.loc,
             Self::StructDecl(s) => &s.loc,
             Self::EnumDecl(e) => &e.loc,
+            Self::FunctionDecl(f) => &f.loc,
         }
     }
 }
