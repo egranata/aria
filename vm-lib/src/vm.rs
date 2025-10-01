@@ -1003,7 +1003,7 @@ impl VirtualMachine {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
-            Opcode::ReadIndex => {
+            Opcode::ReadIndex(_) => {
                 let idx = pop_or_err!(next, frame, op_idx);
                 let cnt = pop_or_err!(next, frame, op_idx);
                 match cnt.read_index(&idx, frame, self) {
@@ -1017,7 +1017,7 @@ impl VirtualMachine {
                     }
                 }
             }
-            Opcode::WriteIndex => {
+            Opcode::WriteIndex(_) => {
                 let val = pop_or_err!(next, frame, op_idx);
                 let idx = pop_or_err!(next, frame, op_idx);
                 let cnt = pop_or_err!(next, frame, op_idx);

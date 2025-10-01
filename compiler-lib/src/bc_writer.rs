@@ -69,8 +69,10 @@ impl BytecodeWriter {
             Opcode::TypedefNamed(n) => self
                 .write_u8(haxby_opcodes::OPCODE_TYPEDEF_NAMED)
                 .write_u16(*n),
-            Opcode::ReadIndex => self.write_u8(haxby_opcodes::OPCODE_READ_INDEX),
-            Opcode::WriteIndex => self.write_u8(haxby_opcodes::OPCODE_WRITE_INDEX),
+            Opcode::ReadIndex(n) => self.write_u8(haxby_opcodes::OPCODE_READ_INDEX).write_u8(*n),
+            Opcode::WriteIndex(n) => self
+                .write_u8(haxby_opcodes::OPCODE_WRITE_INDEX)
+                .write_u8(*n),
             Opcode::ReadAttribute(n) => self
                 .write_u8(haxby_opcodes::OPCODE_READ_ATTRIBUTE)
                 .write_u16(*n),
