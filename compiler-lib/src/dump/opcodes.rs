@@ -138,8 +138,8 @@ pub fn opcode_prettyprint(
         | Opcode::ReadLocal(_)
         | Opcode::WriteLocal(_)
         | Opcode::TypedefLocal(_)
-        | Opcode::ReadIndex
-        | Opcode::WriteIndex
+        | Opcode::ReadIndex(_)
+        | Opcode::WriteIndex(_)
         | Opcode::ReadUplevel(_)
         | Opcode::LogicalAnd
         | Opcode::LogicalOr

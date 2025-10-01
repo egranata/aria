@@ -99,7 +99,10 @@ impl<'a> PostfixValue {
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode_and_source_info(BasicBlockOpcode::ReadIndex, index.loc().clone());
+                    .write_opcode_and_source_info(
+                        BasicBlockOpcode::ReadIndex(1_u8),
+                        index.loc().clone(),
+                    );
                 Ok(())
             }
             PostfixValue::Attribute(base, identifier) => {
@@ -160,7 +163,7 @@ impl<'a> PostfixValue {
                                 .writer
                                 .get_current_block()
                                 .write_opcode_and_source_info(
-                                    BasicBlockOpcode::WriteIndex,
+                                    BasicBlockOpcode::WriteIndex(1_u8),
                                     term.loc().clone(),
                                 );
                         }
@@ -247,7 +250,7 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::WriteIndex,
+                        BasicBlockOpcode::WriteIndex(1_u8),
                         index.loc().clone(),
                     );
                 Ok(())
