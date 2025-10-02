@@ -786,25 +786,33 @@ impl RuntimeValue {
 
     pub fn read_index(
         &self,
-        idx: &RuntimeValue,
+        indices: &[RuntimeValue],
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> ExecutionResult {
         if self.is_object() {
             match self.read_attribute("_op_impl_read_index", &vm.builtins) {
                 Ok(read_index) => {
-                    cur_frame.stack.push(idx.clone());
-                    read_index.eval(1_u8, cur_frame, vm, false)?;
+                    for idx in indices.iter().rev() {
+                        cur_frame.stack.push(idx.clone());
+                    }
+                    read_index.eval(indices.len() as u8, cur_frame, vm, false)?;
                     Ok(())
                 }
                 _ => Err(VmErrorReason::UnexpectedType.into()),
             }
         } else if let Some(lst) = self.as_list() {
-            let val = lst.read_index(idx, cur_frame, vm)?;
+            if indices.len() != 1 {
+                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
+            }
+            let val = lst.read_index(&indices[0], cur_frame, vm)?;
             cur_frame.stack.push(val);
             Ok(())
         } else if let Some(str) = self.as_string() {
-            let val = str.read_index(idx, cur_frame, vm)?;
+            if indices.len() != 1 {
+                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
+            }
+            let val = str.read_index(&indices[0], cur_frame, vm)?;
             cur_frame.stack.push(val);
             Ok(())
         } else {
@@ -814,7 +822,7 @@ impl RuntimeValue {
 
     pub fn write_index(
         &self,
-        idx: &RuntimeValue,
+        indices: &[RuntimeValue],
         val: &RuntimeValue,
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
@@ -823,14 +831,19 @@ impl RuntimeValue {
             match self.read_attribute("_op_impl_write_index", &vm.builtins) {
                 Ok(write_index) => {
                     cur_frame.stack.push(val.clone());
-                    cur_frame.stack.push(idx.clone());
-                    write_index.eval(2_u8, cur_frame, vm, true)?;
+                    for idx in indices.iter().rev() {
+                        cur_frame.stack.push(idx.clone());
+                    }
+                    write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)?;
                     Ok(())
                 }
                 _ => Err(VmErrorReason::UnexpectedType.into()),
             }
         } else if let Some(lst) = self.as_list() {
-            lst.write_index(idx, val, cur_frame, vm)
+            if indices.len() != 1 {
+                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
+            }
+            lst.write_index(&indices[0], val, cur_frame, vm)
         } else {
             Err(VmErrorReason::UnexpectedType.into())
         }

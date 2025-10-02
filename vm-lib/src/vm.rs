@@ -1003,10 +1003,14 @@ impl VirtualMachine {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
-            Opcode::ReadIndex(_) => {
-                let idx = pop_or_err!(next, frame, op_idx);
+            Opcode::ReadIndex(n) => {
+                let mut indices = Vec::<_>::with_capacity(n as usize);
+                for _ in 0..n {
+                    let idx = pop_or_err!(next, frame, op_idx);
+                    indices.insert(0, idx);
+                }
                 let cnt = pop_or_err!(next, frame, op_idx);
-                match cnt.read_index(&idx, frame, self) {
+                match cnt.read_index(&indices, frame, self) {
                     Ok(_) => {}
                     Err(e) => {
                         return if e.loc.is_none() {
@@ -1017,11 +1021,15 @@ impl VirtualMachine {
                     }
                 }
             }
-            Opcode::WriteIndex(_) => {
+            Opcode::WriteIndex(n) => {
                 let val = pop_or_err!(next, frame, op_idx);
-                let idx = pop_or_err!(next, frame, op_idx);
+                let mut indices = Vec::<_>::with_capacity(n as usize);
+                for _ in 0..n {
+                    let idx = pop_or_err!(next, frame, op_idx);
+                    indices.insert(0, idx);
+                }
                 let cnt = pop_or_err!(next, frame, op_idx);
-                match cnt.write_index(&idx, &val, frame, self) {
+                match cnt.write_index(&indices, &val, frame, self) {
                     Ok(_) => {}
                     Err(e) => {
                         return if e.loc.is_none() {
