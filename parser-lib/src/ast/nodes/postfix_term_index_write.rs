@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        Expression, PostfixTermIndexWrite,
+        Expression, ExpressionList, PostfixTermIndexWrite,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -9,7 +9,7 @@ use crate::{
 };
 
 impl Derive for PostfixTermIndexWrite {
-    gen_from_components!(postfix_term_index_write; idx: Expression, val: Expression);
+    gen_from_components!(postfix_term_index_write; idx: ExpressionList, val: Expression);
 }
 
 impl PrettyPrintable for PostfixTermIndexWrite {

@@ -16,7 +16,7 @@ pub(super) struct FieldWrite {
 
 #[derive(Debug)]
 pub(super) struct IndexWrite {
-    pub(super) index: Expression,
+    pub(super) index: ExpressionList,
     pub(super) value: Expression,
 }
 
@@ -31,7 +31,7 @@ impl ObjWrite {
     fn loc(&self) -> &SourcePointer {
         match self {
             ObjWrite::Field(f) => &f.field.loc,
-            ObjWrite::Index(i) => i.index.loc(),
+            ObjWrite::Index(i) => &i.index.loc,
         }
     }
 }
@@ -42,7 +42,7 @@ pub(super) enum PostfixValue {
     Attribute(Box<PostfixValue>, Box<Identifier>),
     Call(Box<PostfixValue>, Box<ExpressionList>, SourcePointer),
     Case(Box<PostfixValue>, Box<Identifier>, Option<Expression>),
-    Index(Box<PostfixValue>, Box<aria_parser::ast::Expression>),
+    Index(Box<PostfixValue>, Box<aria_parser::ast::ExpressionList>),
     ObjWrite(Box<PostfixValue>, Vec<ObjWrite>),
     TryProtocol(
         Box<PostfixValue>,
@@ -100,8 +100,8 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::ReadIndex(1_u8),
-                        index.loc().clone(),
+                        BasicBlockOpcode::ReadIndex(index.expressions.len() as u8),
+                        index.loc.clone(),
                     );
                 Ok(())
             }
@@ -250,8 +250,8 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::WriteIndex(1_u8),
-                        index.loc().clone(),
+                        BasicBlockOpcode::WriteIndex(index.expressions.len() as u8),
+                        index.loc.clone(),
                     );
                 Ok(())
             }
