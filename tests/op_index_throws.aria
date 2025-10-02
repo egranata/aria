@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0
+func expect_catch(f) {
+    try {
+        f();
+    } catch e {
+        return Result::Ok(e);
+    }
+    return Result::Err("no exception thrown");
+}
+
+struct Foo {
+    type func new() = alloc(This);
+
+    struct Error {
+        type func new() = alloc(This);
+        func prettyprint() = "Foo.Error";
+    }
+
+    func get(x) {
+        throw Foo.Error.new();
+    }
+
+    operator [](x) {
+        return this.get(x);
+    }
+}
+
+func main() {
+    val f = Foo.new();
+
+    val err = expect_catch(|| => f[1])!!;
+    assert err isa Foo.Error;
+
+    val err = expect_catch(|| => f.get(1))!!;
+    assert err isa Foo.Error;
+}

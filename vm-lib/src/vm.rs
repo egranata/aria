@@ -1011,7 +1011,11 @@ impl VirtualMachine {
                 }
                 let cnt = pop_or_err!(next, frame, op_idx);
                 match cnt.read_index(&indices, frame, self) {
-                    Ok(_) => {}
+                    Ok(crate::runtime_value::CallResult::OkNoValue)
+                    | Ok(crate::runtime_value::CallResult::Ok(_)) => {}
+                    Ok(crate::runtime_value::CallResult::Exception(e)) => {
+                        return Ok(OpcodeRunExit::Exception(e));
+                    }
                     Err(e) => {
                         return if e.loc.is_none() {
                             build_vm_error!(e.reason, next, frame, op_idx)
@@ -1030,7 +1034,11 @@ impl VirtualMachine {
                 }
                 let cnt = pop_or_err!(next, frame, op_idx);
                 match cnt.write_index(&indices, &val, frame, self) {
-                    Ok(_) => {}
+                    Ok(crate::runtime_value::CallResult::OkNoValue)
+                    | Ok(crate::runtime_value::CallResult::Ok(_)) => {}
+                    Ok(crate::runtime_value::CallResult::Exception(e)) => {
+                        return Ok(OpcodeRunExit::Exception(e));
+                    }
                     Err(e) => {
                         return if e.loc.is_none() {
                             build_vm_error!(e.reason, next, frame, op_idx)

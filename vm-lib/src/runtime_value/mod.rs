@@ -789,15 +789,14 @@ impl RuntimeValue {
         indices: &[RuntimeValue],
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
-    ) -> ExecutionResult {
+    ) -> ExecutionResult<CallResult> {
         if self.is_object() {
             match self.read_attribute("_op_impl_read_index", &vm.builtins) {
                 Ok(read_index) => {
                     for idx in indices.iter().rev() {
                         cur_frame.stack.push(idx.clone());
                     }
-                    read_index.eval(indices.len() as u8, cur_frame, vm, false)?;
-                    Ok(())
+                    read_index.eval(indices.len() as u8, cur_frame, vm, false)
                 }
                 _ => Err(VmErrorReason::UnexpectedType.into()),
             }
@@ -807,14 +806,14 @@ impl RuntimeValue {
             }
             let val = lst.read_index(&indices[0], cur_frame, vm)?;
             cur_frame.stack.push(val);
-            Ok(())
+            Ok(CallResult::OkNoValue)
         } else if let Some(str) = self.as_string() {
             if indices.len() != 1 {
                 return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
             }
             let val = str.read_index(&indices[0], cur_frame, vm)?;
             cur_frame.stack.push(val);
-            Ok(())
+            Ok(CallResult::OkNoValue)
         } else {
             Err(VmErrorReason::UnexpectedType.into())
         }
@@ -826,7 +825,7 @@ impl RuntimeValue {
         val: &RuntimeValue,
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
-    ) -> ExecutionResult {
+    ) -> ExecutionResult<CallResult> {
         if self.is_object() {
             match self.read_attribute("_op_impl_write_index", &vm.builtins) {
                 Ok(write_index) => {
@@ -834,8 +833,7 @@ impl RuntimeValue {
                     for idx in indices.iter().rev() {
                         cur_frame.stack.push(idx.clone());
                     }
-                    write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)?;
-                    Ok(())
+                    write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)
                 }
                 _ => Err(VmErrorReason::UnexpectedType.into()),
             }
@@ -843,7 +841,8 @@ impl RuntimeValue {
             if indices.len() != 1 {
                 return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
             }
-            lst.write_index(&indices[0], val, cur_frame, vm)
+            lst.write_index(&indices[0], val, cur_frame, vm)?;
+            Ok(CallResult::OkNoValue)
         } else {
             Err(VmErrorReason::UnexpectedType.into())
         }
