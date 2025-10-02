@@ -498,7 +498,7 @@ lazy_static::lazy_static! {
 
         map.insert("[]",
             OperatorInfo {
-                arity: Some(1),
+                arity: None, // index operator can take any number of arguments
                 direct_name: "read_index",
                 reverse_name: "",
             },
@@ -506,7 +506,7 @@ lazy_static::lazy_static! {
 
         map.insert("[]=",
             OperatorInfo {
-                arity: Some(2),
+                arity: None, // index operator can take any number of arguments
                 direct_name: "write_index",
                 reverse_name: "",
             },
