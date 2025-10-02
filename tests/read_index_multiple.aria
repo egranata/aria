@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Foo {
+    type func new(x) = alloc(This) { .x };
+
+    operator [](a,b) {
+        return this.x * a + b;
+    }
+}
+
+func main() {
+    val f = Foo.new(5);
+
+    assert f[3,4] == 19;
+    assert f[2,0] == 10;
+    assert f[3,3] == 18;
+}
