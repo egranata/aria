@@ -266,7 +266,7 @@ pub struct PostfixTermAttribute {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostfixTermIndex {
     pub loc: SourcePointer,
-    pub index: Expression,
+    pub index: ExpressionList,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -292,7 +292,7 @@ pub struct PostfixTermFieldWrite {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostfixTermIndexWrite {
     pub loc: SourcePointer,
-    pub idx: Expression,
+    pub idx: ExpressionList,
     pub val: Expression,
 }
 
@@ -336,6 +336,7 @@ pub struct PostfixTermTryProtocol {
     pub mode: TryProtocolMode,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PostfixTerm {
     PostfixTermAttribute(PostfixTermAttribute),

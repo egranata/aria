@@ -31,7 +31,7 @@ paren_expr = { "(" ~ expression ~ ")" }
 primary    = { identifier | fp_literal | str_literal | int_literal | list_literal | paren_expr }
 
 postfix_term_field_write = { "." ~ identifier ~ ("=" ~ expression)? }
-postfix_term_index_write = { "[" ~ expression ~ "]" ~ "=" ~ expression }
+postfix_term_index_write = { "[" ~ expr_list ~ "]" ~ "=" ~ expression }
 
 postfix_term_write = {
     postfix_term_field_write
@@ -41,7 +41,7 @@ postfix_term_write = {
 postfix_term_write_list = { postfix_term_write ~ ("," ~ postfix_term_write)* ~ ","? }
 
 postfix_term_attrib       = { "." ~ identifier }
-postfix_term_index        = { "[" ~ expression ~ "]" }
+postfix_term_index        = { "[" ~ expr_list ~ "]" }
 postfix_term_call         = { "(" ~ expr_list? ~ ")" }
 postfix_term_object_write = { "{" ~ postfix_term_write_list ~ "}" }
 postfix_term_enum_case    = { "::" ~ identifier ~ ("(" ~ expression ~ ")")? }
