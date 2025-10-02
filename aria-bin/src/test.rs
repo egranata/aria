@@ -25,11 +25,21 @@ fn run_check_repl_line(
     assert!(diff.ok == ok);
 
     for expected in must_include_stdout {
-        assert!(diff.stdout.contains(expected));
+        assert!(
+            diff.stdout.contains(expected),
+            "stdout ( {} ) did not contain expected ( {} )",
+            diff.stdout,
+            expected
+        );
     }
 
     for expected in must_include_stderr {
-        assert!(diff.stderr.contains(expected));
+        assert!(
+            diff.stderr.contains(expected),
+            "stderr ( {} ) did not contain expected ( {} )",
+            diff.stderr,
+            expected
+        );
     }
 }
 
@@ -210,6 +220,29 @@ fn repl_skips_preamble() {
         "3.pow(2)",
         false,
         &["identifier 'pow' not found"],
+        &[],
+    );
+}
+
+#[test]
+fn repl_op_count_error() {
+    let mut cmdline_options = Args::default();
+    cmdline_options.no_repl_preamble = true;
+    let mut repl = build_test_repl(&cmdline_options);
+
+    run_check_repl_line(
+        &mut repl,
+        "struct Foo { operator[]=() { return 1; } }",
+        false,
+        &["operator []= accepts at least 1 arguments, but 0 were declared"],
+        &[],
+    );
+
+    run_check_repl_line(
+        &mut repl,
+        "struct Foo { operator + (a,b,c) { return 1; } }",
+        false,
+        &["operator + accepts exactly 1 arguments, but 3 were declared"],
         &[],
     );
 }

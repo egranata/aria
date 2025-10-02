@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{collections::HashSet, rc::Rc};
+use std::{collections::HashSet, fmt::Display, rc::Rc};
 
 use aria_parser::ast::{
     ArgumentDecl, ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl,
@@ -39,7 +39,7 @@ pub enum CompilationErrorReason {
     #[error("{0} cannot be reversed")]
     IrreversibleOperator(String),
     #[error("operator {0} accepts {1} arguments, but {2} were declared")]
-    OperatorArityMismatch(String, usize, usize),
+    OperatorArityMismatch(String, OperatorArity, usize),
     #[error("attempt to read a write-only value")]
     WriteOnlyValue,
     #[error("parser error: {0}")]
@@ -343,8 +343,40 @@ fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> Comp
     Ok(())
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OperatorArity {
+    Exactly(usize),
+    AtLeast(usize),
+}
+
+impl OperatorArity {
+    fn unary() -> Self {
+        OperatorArity::Exactly(1)
+    }
+
+    fn any() -> Self {
+        OperatorArity::AtLeast(0)
+    }
+
+    fn is_acceptable(&self, arg_count: usize) -> bool {
+        match self {
+            OperatorArity::Exactly(n) => *n == arg_count,
+            OperatorArity::AtLeast(n) => arg_count >= *n,
+        }
+    }
+}
+
+impl Display for OperatorArity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OperatorArity::Exactly(n) => write!(f, "exactly {n}"),
+            OperatorArity::AtLeast(n) => write!(f, "at least {n}"),
+        }
+    }
+}
+
 struct OperatorInfo {
-    arity: Option<usize>, // number of arguments (minus the receiver this)
+    arity: OperatorArity, // number of arguments (minus the receiver this)
     direct_name: &'static str,
     reverse_name: &'static str,
 }
@@ -356,7 +388,7 @@ lazy_static::lazy_static! {
         map.insert(
             "+",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "add",
                 reverse_name: "radd",
             },
@@ -365,7 +397,7 @@ lazy_static::lazy_static! {
         map.insert(
             "-",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "sub",
                 reverse_name: "rsub",
             },
@@ -374,7 +406,7 @@ lazy_static::lazy_static! {
         map.insert(
             "*",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "mul",
                 reverse_name: "rmul",
             },
@@ -383,7 +415,7 @@ lazy_static::lazy_static! {
         map.insert(
             "/",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "div",
                 reverse_name: "rdiv",
             },
@@ -392,7 +424,7 @@ lazy_static::lazy_static! {
         map.insert(
             "%",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "rem",
                 reverse_name: "rrem",
             },
@@ -401,7 +433,7 @@ lazy_static::lazy_static! {
         map.insert(
             "<<",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "lshift",
                 reverse_name: "rlshift",
             },
@@ -410,7 +442,7 @@ lazy_static::lazy_static! {
         map.insert(
             ">>",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "rshift",
                 reverse_name: "rrshift",
             },
@@ -418,7 +450,7 @@ lazy_static::lazy_static! {
 
         map.insert("==",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "equals",
                 reverse_name: "",
             },
@@ -426,7 +458,7 @@ lazy_static::lazy_static! {
 
         map.insert("<",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "lt",
                 reverse_name: "gt",
             },
@@ -434,7 +466,7 @@ lazy_static::lazy_static! {
 
         map.insert(">",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "gt",
                 reverse_name: "lt",
             },
@@ -442,7 +474,7 @@ lazy_static::lazy_static! {
 
         map.insert("<=",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "lteq",
                 reverse_name: "gteq",
             },
@@ -450,7 +482,7 @@ lazy_static::lazy_static! {
 
         map.insert(">=",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "gteq",
                 reverse_name: "lteq",
             },
@@ -458,7 +490,7 @@ lazy_static::lazy_static! {
 
         map.insert("&",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "bwand",
                 reverse_name: "rbwand",
             },
@@ -466,7 +498,7 @@ lazy_static::lazy_static! {
 
         map.insert("|",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "bwor",
                 reverse_name: "rbwor",
             },
@@ -474,7 +506,7 @@ lazy_static::lazy_static! {
 
         map.insert("^",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "xor",
                 reverse_name: "rxor",
             },
@@ -482,7 +514,7 @@ lazy_static::lazy_static! {
 
         map.insert("u-",
             OperatorInfo {
-                arity: Some(0),
+                arity: OperatorArity::Exactly(0),
                 direct_name: "neg",
                 reverse_name: "",
             },
@@ -490,7 +522,7 @@ lazy_static::lazy_static! {
 
         map.insert("()",
             OperatorInfo {
-                arity: None, // call operator has no arity, it can take any number of arguments
+                arity: OperatorArity::any(),
                 direct_name: "call",
                 reverse_name: "",
             },
@@ -498,7 +530,7 @@ lazy_static::lazy_static! {
 
         map.insert("[]",
             OperatorInfo {
-                arity: None, // index operator can take any number of arguments
+                arity: OperatorArity::any(),
                 direct_name: "read_index",
                 reverse_name: "",
             },
@@ -506,7 +538,7 @@ lazy_static::lazy_static! {
 
         map.insert("[]=",
             OperatorInfo {
-                arity: None, // index operator can take any number of arguments
+                arity: OperatorArity::AtLeast(1),
                 direct_name: "write_index",
                 reverse_name: "",
             },
@@ -535,12 +567,14 @@ fn emit_operator_decl_compile(op: &OperatorDecl, params: &mut CompileParams) -> 
         }
     };
 
-    if let Some(arity) = op_info.arity
-        && op.args.len() != arity
-    {
+    if !op_info.arity.is_acceptable(op.args.len()) {
         return Err(CompilationError {
             loc: op.loc.clone(),
-            reason: CompilationErrorReason::OperatorArityMismatch(op_symbol, arity, op.args.len()),
+            reason: CompilationErrorReason::OperatorArityMismatch(
+                op_symbol,
+                op_info.arity,
+                op.args.len(),
+            ),
         });
     }
 
