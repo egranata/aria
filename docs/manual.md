@@ -937,7 +937,7 @@ func main() {
 
 If an operator does not support a combination of operands, it can throw `Unimplemented`. For a binary operator, if the type of the second operand is different, Aria will attempt to invoke the reverse operator. For operators other than equality, the syntax to define a reverse operator is `reverse operator`. For equality, one simply defines `operator ==` on the other type.
 
-Square bracket access is defined by means of `operator [](index)` and `operator []=(index, value)`. The value of the index does not have to be an integer (e.g. `Map`), however only one index can be supported in this version of Aria.
+Square bracket access is defined by means of `operator [](index)` and `operator []=(index, value)`. The value of the index does not have to be an integer (e.g. `Map`), and any arbitrary number of indices can be supported (including variable arguments).
 
 Defining `operator ()` allows objects to be called as if they are functions, e.g.
 
