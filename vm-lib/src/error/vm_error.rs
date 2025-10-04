@@ -58,6 +58,9 @@ pub enum VmErrorReason {
     #[error("VM execution is not a valid state")]
     UnexpectedVmState,
 
+    #[error("The main function must have 0, 1 or variable arguments")]
+    InvalidMainSignature,
+
     #[error("uplevel {0} not available")]
     UplevelOutOfBounds(usize),
 

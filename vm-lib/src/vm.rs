@@ -559,7 +559,38 @@ impl VirtualMachine {
             _ => return Ok(RunloopExit::Ok(())),
         };
 
-        match main_f.eval(0, &mut Default::default(), self, true)? {
+        let mut main_frame = Frame::default();
+
+        let main_arity = main_f.arity();
+        let req = main_arity.required;
+        let opt = main_arity.optional;
+        let va = main_f.varargs();
+        let main_argc = if req == 0 && opt == 0 && !va {
+            0
+        } else if req == 1 && opt == 0 && !va {
+            let cmdline_args = RuntimeValue::List(List::from(
+                &self
+                    .options
+                    .vm_args
+                    .iter()
+                    .map(|arg| RuntimeValue::String(arg.as_str().into()))
+                    .collect::<Vec<_>>(),
+            ));
+            main_frame.stack.push(cmdline_args);
+            1
+        } else if req == 0 && opt == 0 && va {
+            self.options
+                .vm_args
+                .iter()
+                .rev()
+                .map(|arg| RuntimeValue::String(arg.as_str().into()))
+                .for_each(|arg| main_frame.stack.push(arg));
+            self.options.vm_args.len() as u8
+        } else {
+            return Err(VmErrorReason::InvalidMainSignature.into());
+        };
+
+        match main_f.eval(main_argc, &mut main_frame, self, true)? {
             crate::runtime_value::CallResult::OkNoValue
             | crate::runtime_value::CallResult::Ok(_) => Ok(RunloopExit::Ok(())),
             crate::runtime_value::CallResult::Exception(e) => Ok(RunloopExit::Exception(e)),
