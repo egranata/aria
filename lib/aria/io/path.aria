@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: uses_dylib("aria_path");
+import aria.date.instant;
 
 struct Path {
     type func new_with_current_directory() {
@@ -34,12 +35,16 @@ struct Path {
         return Path.new(this.prettyprint()).pop();
     }
 
-    func creation_ms_since_epoch() {
-        return this._when_created();
+    func created() {
+        return aria.date.instant.Instant.new_with_local_timestamp(this._when_created());
     }
 
-    func modification_ms_since_epoch() {
-        return this._when_accessed();
+    func accessed() {
+        return aria.date.instant.Instant.new_with_local_timestamp(this._when_accessed());
+    }
+
+    func modified() {
+        return aria.date.instant.Instant.new_with_local_timestamp(this._when_modified());
     }
 
     # we could use the builtin _copy, except for type validation
