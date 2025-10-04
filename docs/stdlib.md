@@ -193,8 +193,9 @@ This module provides a `Path` struct for interacting with the file system.
     *   `parent()`: Returns a new `Path` object representing the parent directory of this path.
     *   `read()`: Reads the entire content of the file at this path as a `String`. Throws `File.IOError` on failure.
     *   `write(text)`: Writes a `String` `text` to the file at this path, overwriting existing content. Throws `File.IOError` on failure.
-    *   `creation_ms_since_epoch()`: Returns the creation time of the file/directory at this path as milliseconds since the Unix epoch. Returns `Maybe::None` if not available.
-    *   `modification_ms_since_epoch()`: Returns the last modification time of the file/directory at this path as milliseconds since the Unix epoch. Returns `Maybe::None` if not available.
+    *   `accessed()`: Returns the last access time of the file/directory at this path as an `Instant`. Returns `Maybe::None` if not available.
+    *   `created()`: Returns the creation time of the file/directory at this path as an `Instant`. Returns `Maybe::None` if not available.
+    *   `modified()`: Returns the last modification time of the file/directory at this path as an `Instant`. Returns `Maybe::None` if not available.
     *   `copy_to(other: Path)`: Copies the file at this path to `other`. Returns `true` on success, `false` on failure.
     *   `is_absolute()`: Returns `true` if the path is absolute, `false` otherwise.
     *   `exists()`: Returns `true` if the path exists on the file system, `false` otherwise.
@@ -209,6 +210,7 @@ This module provides a `Path` struct for interacting with the file system.
     *   `mkdir()`: Creates a new directory at this path. Returns `true` on success, `false` on failure.
     *   `rmdir()`: Removes an empty directory at this path. Returns `true` on success, `false` on failure.
     *   `erase()`: Removes the file at this path. Returns `true` on success, `false` on failure.
+    *   `common_ancestor(p: Path)`: Returns the common ancestor path between this path and `p`, as a `Maybe`.
 
 ---
 

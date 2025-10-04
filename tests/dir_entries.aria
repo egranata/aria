@@ -20,11 +20,17 @@ func main() {
     assert entries[0].exists();
     assert entries[0].get_extension() == "aria";
 
-    println("Created {0} ms since epoch".format(entries[0].creation_ms_since_epoch()));
-
-    val creation = Instant.new_with_utc_timestamp(entries[0].creation_ms_since_epoch());
+    val creation = entries[0].created();
+    val modified = entries[0].modified();
+    val accessed = entries[0].accessed();
 
     assert creation.year >= 2025;
+    assert modified.year >= 2025;
+    assert accessed.year >= 2025;
+
+    assert accessed.unix_ts >= modified.unix_ts;
+    assert modified.unix_ts >= creation.unix_ts;
+
     if creation.year == 2025 {
         assert creation.month >= 7;
 

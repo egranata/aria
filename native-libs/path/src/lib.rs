@@ -21,6 +21,21 @@ struct MutablePath {
     content: RefCell<std::path::PathBuf>,
 }
 
+fn new_from_path<P: AsRef<std::path::Path>>(
+    the_struct: &haxby_vm::runtime_value::structure::Struct,
+    the_path: P,
+) -> RuntimeValue {
+    let pb = PathBuf::from(the_path.as_ref());
+    let pb = MutablePath {
+        content: RefCell::new(pb),
+    };
+
+    let path_obj = OpaqueValue::new(pb);
+    let aria_obj = Object::new(the_struct);
+    aria_obj.write("__path", RuntimeValue::Opaque(path_obj));
+    RuntimeValue::Object(aria_obj)
+}
+
 #[derive(Default)]
 struct New {}
 impl BuiltinFunctionImpl for New {
@@ -33,15 +48,7 @@ impl BuiltinFunctionImpl for New {
         let the_path =
             VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
 
-        let pb = PathBuf::from(the_path);
-        let pb = MutablePath {
-            content: RefCell::new(pb),
-        };
-
-        let path_obj = OpaqueValue::new(pb);
-        let aria_obj = Object::new(&the_struct);
-        aria_obj.write("__path", RuntimeValue::Opaque(path_obj));
-        frame.stack.push(RuntimeValue::Object(aria_obj));
+        frame.stack.push(new_from_path(&the_struct, the_path));
         Ok(RunloopExit::Ok(()))
     }
 
@@ -72,14 +79,8 @@ impl BuiltinFunctionImpl for Cwd {
             std::env::current_dir(),
             VmErrorReason::UnexpectedVmState.into()
         );
-        let cwd = MutablePath {
-            content: RefCell::new(cwd),
-        };
 
-        let path_obj = OpaqueValue::new(cwd);
-        let aria_obj = Object::new(&the_struct);
-        aria_obj.write("__path", RuntimeValue::Opaque(path_obj));
-        frame.stack.push(RuntimeValue::Object(aria_obj));
+        frame.stack.push(new_from_path(&the_struct, &cwd));
         Ok(RunloopExit::Ok(()))
     }
 
@@ -448,15 +449,7 @@ impl BuiltinFunctionImpl for Canonical {
             }
         };
 
-        let canonical_object = Object::new(aria_object.get_struct());
-        let canonical_rfo = MutablePath {
-            content: RefCell::new(canonical_rfo),
-        };
-
-        let canonical_path_obj = OpaqueValue::new(canonical_rfo);
-        canonical_object.write("__path", RuntimeValue::Opaque(canonical_path_obj));
-
-        let canonical_object = RuntimeValue::Object(canonical_object);
+        let canonical_object = new_from_path(aria_object.get_struct(), &canonical_rfo);
         let some = ok_or_err!(
             vm.builtins.create_maybe_some(canonical_object),
             VmErrorReason::UnexpectedVmState.into()
@@ -611,27 +604,22 @@ impl BuiltinFunctionImpl for AccessedTime {
 
         let rfo = rust_obj.content.borrow_mut();
         match rfo.metadata() {
-            Ok(md) => {
-                match md.accessed() {
-                    Err(_) => {
-                        let val = ok_or_err!(
-                            vm.builtins.create_maybe_none(),
-                            VmErrorReason::UnexpectedVmState.into()
-                        );
-                        frame.stack.push(val);
-                    }
-                    Ok(val) => {
-                        let val = val
-                            .duration_since(SystemTime::UNIX_EPOCH)
-                            .unwrap()
-                            .as_millis();
-                        frame.stack.push(RuntimeValue::Integer((val as i64).into()));
-                    }
+            Ok(md) => match md.accessed() {
+                Err(_) => {
+                    let val = ok_or_err!(
+                        vm.builtins.create_maybe_none(),
+                        VmErrorReason::UnexpectedVmState.into()
+                    );
+                    frame.stack.push(val);
                 }
-                frame
-                    .stack
-                    .push(RuntimeValue::Integer((md.len() as i64).into()));
-            }
+                Ok(val) => {
+                    let val = val
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis();
+                    frame.stack.push(RuntimeValue::Integer((val as i64).into()));
+                }
+            },
             Err(_) => {
                 let val = ok_or_err!(
                     vm.builtins.create_maybe_none(),
@@ -653,6 +641,67 @@ impl BuiltinFunctionImpl for AccessedTime {
 
     fn name(&self) -> &str {
         "_when_accessed"
+    }
+}
+
+#[derive(Default)]
+struct ModifiedTime {}
+impl BuiltinFunctionImpl for ModifiedTime {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        vm: &mut vm::VirtualMachine,
+    ) -> vm::ExecutionResult<RunloopExit> {
+        let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+
+        let rust_obj = some_or_err!(
+            aria_object.read("__path"),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+        let rust_obj = some_or_err!(
+            rust_obj.as_opaque_concrete::<MutablePath>(),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+
+        let rfo = rust_obj.content.borrow_mut();
+        match rfo.metadata() {
+            Ok(md) => match md.modified() {
+                Err(_) => {
+                    let val = ok_or_err!(
+                        vm.builtins.create_maybe_none(),
+                        VmErrorReason::UnexpectedVmState.into()
+                    );
+                    frame.stack.push(val);
+                }
+                Ok(val) => {
+                    let val = val
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis();
+                    frame.stack.push(RuntimeValue::Integer((val as i64).into()));
+                }
+            },
+            Err(_) => {
+                let val = ok_or_err!(
+                    vm.builtins.create_maybe_none(),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(val);
+            }
+        }
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
+    }
+
+    fn name(&self) -> &str {
+        "_when_modified"
     }
 }
 
@@ -847,6 +896,45 @@ impl BuiltinFunctionImpl for MakeDirectory {
 }
 
 #[derive(Default)]
+struct MakeDirectories {}
+impl BuiltinFunctionImpl for MakeDirectories {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        _: &mut vm::VirtualMachine,
+    ) -> vm::ExecutionResult<RunloopExit> {
+        let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+
+        let rust_obj = some_or_err!(
+            aria_object.read("__path"),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+        let rust_obj = some_or_err!(
+            rust_obj.as_opaque_concrete::<MutablePath>(),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+
+        let rfo = rust_obj.content.borrow_mut();
+        frame.stack.push(RuntimeValue::Boolean(
+            std::fs::create_dir_all(rfo.as_path()).is_ok().into(),
+        ));
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(1)
+    }
+
+    fn name(&self) -> &str {
+        "mkdirs"
+    }
+}
+
+#[derive(Default)]
 struct RemoveDirectory {}
 impl BuiltinFunctionImpl for RemoveDirectory {
     fn eval(
@@ -977,6 +1065,121 @@ impl BuiltinFunctionImpl for Copy {
     }
 }
 
+#[derive(Default)]
+struct CommonAncestor {}
+impl BuiltinFunctionImpl for CommonAncestor {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        vm: &mut vm::VirtualMachine,
+    ) -> vm::ExecutionResult<RunloopExit> {
+        let this_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+        let this_struct = this_path.get_struct();
+        let other_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+
+        let this_path = some_or_err!(
+            this_path.read("__path"),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+        let other_path = some_or_err!(
+            other_path.read("__path"),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+
+        let this_path = some_or_err!(
+            this_path.as_opaque_concrete::<MutablePath>(),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+        let other_path = some_or_err!(
+            other_path.as_opaque_concrete::<MutablePath>(),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+
+        let this_path = this_path.content.borrow_mut();
+        let other_path = other_path.content.borrow_mut();
+
+        match this_path.ancestors().find(|p| other_path.starts_with(p)) {
+            Some(p) => {
+                frame.stack.push(ok_or_err!(
+                    vm.builtins.create_maybe_some(new_from_path(this_struct, p)),
+                    VmErrorReason::UnexpectedVmState.into()
+                ));
+            }
+            None => {
+                frame.stack.push(ok_or_err!(
+                    vm.builtins.create_maybe_none(),
+                    VmErrorReason::UnexpectedVmState.into()
+                ));
+            }
+        }
+
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
+    }
+
+    fn name(&self) -> &str {
+        "common_ancestor"
+    }
+}
+
+#[derive(Default)]
+struct Equals {}
+impl BuiltinFunctionImpl for Equals {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        _: &mut vm::VirtualMachine,
+    ) -> vm::ExecutionResult<RunloopExit> {
+        let this_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+        let other_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+
+        let this_path = some_or_err!(
+            this_path.read("__path"),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+        let other_path = some_or_err!(
+            other_path.read("__path"),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+
+        let this_path = some_or_err!(
+            this_path.as_opaque_concrete::<MutablePath>(),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+        let other_path = some_or_err!(
+            other_path.as_opaque_concrete::<MutablePath>(),
+            VmErrorReason::UnexpectedVmState.into()
+        );
+
+        let this_path = this_path.content.borrow_mut().clone();
+        let other_path = other_path.content.borrow_mut().clone();
+
+        frame
+            .stack
+            .push(RuntimeValue::Boolean((this_path == other_path).into()));
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
+    }
+
+    fn name(&self) -> &str {
+        "_op_impl_equals"
+    }
+}
+
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult {
@@ -1013,10 +1216,14 @@ pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult
             path_struct.insert_builtin::<Extension>();
             path_struct.insert_builtin::<CreatedTime>();
             path_struct.insert_builtin::<AccessedTime>();
+            path_struct.insert_builtin::<ModifiedTime>();
+            path_struct.insert_builtin::<MakeDirectories>();
             path_struct.insert_builtin::<MakeDirectory>();
             path_struct.insert_builtin::<RemoveDirectory>();
             path_struct.insert_builtin::<RemoveFile>();
             path_struct.insert_builtin::<Copy>();
+            path_struct.insert_builtin::<CommonAncestor>();
+            path_struct.insert_builtin::<Equals>();
 
             LoadResult::success()
         }
