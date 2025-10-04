@@ -9,10 +9,22 @@ func main() {
     val request = Request.new("https://www.rust-lang.org/");
     val response = retry(|| => request.get(), |result| => {
         println(result);
-        return result.is_Ok() && result.unwrap_Ok().status_code == 200;
+        match result {
+            case Ok(response) => {
+                val code = response.status_code;
+                return code == 200 || code == 503;
+            }
+        } else {
+            return false;
+        }
     });
-    assert response.is_Pass();
-    val response = response.unwrap_Pass()!!;
+
+    response = response.unwrap_Pass()!!;
+    if response.status_code == 503 {
+        println("Service Unavailable, try again later");
+        return true;
+    }
+
     assert response.headers["content-type"].contains("html");
     assert response.content.contains("<html");
 }

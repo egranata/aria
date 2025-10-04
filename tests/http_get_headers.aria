@@ -13,10 +13,22 @@ func main() {
 
     val result = retry(|| => request.get(), |result| => {
         println(result);
-        return result.is_Ok() && result.unwrap_Ok().status_code == 200;
+        match result {
+            case Ok(response) => {
+                val code = response.status_code;
+                return code == 200 || code == 503;
+            }
+        } else {
+            return false;
+        }
     });
-    assert result.is_Pass();
-    val json_result = JsonValue.parse(result.unwrap_Pass()!!.content)!!;
+
+    result = result.unwrap_Pass()!!;
+    if result.status_code == 503 {
+        println("Service Unavailable, try again later");
+        return true;
+    }
+    val json_result = JsonValue.parse(result.content)!!;
 
     val json_map = json_result.unwrap_Object();
     val json_headers = json_map["headers"].unwrap_Object();
