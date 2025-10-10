@@ -151,7 +151,7 @@ This module provides extensions to the built-in `List` type.
     *   `repeat(n: Int)`: Returns a new list containing `this` list repeated `n` times.
     *   `op_mul(rhs: Int)` (Operator `*`): Returns a new list containing `this` list repeated `rhs` times.
     *   `op_rmul(lhs: Int)` (Operator `*`): Handles multiplication when the `List` is on the right-hand side of the `*` operator.
-    *   `join()`: Returns a string representation of the list elements joined by ", ".
+    *   `join(sep=", ")`: Returns a string representation of the list elements joined by `sep` (or ", " if sep is omitted).
     *   `contains(x)`: Returns `true` if the list contains element `x`, `false` otherwise.
     *   `type func from_function(f, n: Int)`: Creates a new list of length `n`, where each element is the result of calling function `f` with its index.
     *   `op_equals(rhs: List)` (Operator `==`): Compares this list for equality with `rhs`.
@@ -270,6 +270,7 @@ This module provides extensions to the built-in `String` type.
     *   `format(...)`: Formats the string using positional arguments. Placeholders like `{0}` are replaced by corresponding arguments. Supports `{{` and `}}` for literal braces.
     *   `substring(from: Int, to: Int)`: Returns a new string that is a substring of `this` string, starting at `from` (inclusive) and ending at `to` (inclusive).
     *   `hash()`: Returns an integer hash value for the string.
+    *   `join(iter)`: Joins elements from an iterable `iter` into a single string, with `this` string as the separator.
     *   `len()`: Returns the length of the string in characters.
     *   `has_prefix(prefix: String)`: Returns `true` if the string starts with `prefix`, `false` otherwise.
     *   `has_suffix(suffix: String)`: Returns `true` if the string ends with `suffix`, `false` otherwise.

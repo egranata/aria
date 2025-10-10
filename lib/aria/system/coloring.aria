@@ -123,22 +123,6 @@ extension Color {
     }
 }
 
-func join_list_with_sep(l: List, sep: String) {
-    val s = "";
-    val first = true;
-    for item in l {
-        val item = prettyprint(item);
-        if first {
-            s = item;
-            first = false;
-        } else {
-            s = s + sep + item;
-        }
-    }
-
-    return s;
-}
-
 struct ColorScheme {
     type func new() = alloc(This).reset();
 
@@ -193,7 +177,7 @@ struct ColorScheme {
         if flags_on.len() == 0 {
             return result;
         } else {
-            return "\x1b[{0}m{1}\x1b[{2}m".format(join_list_with_sep(flags_on,";"), result, join_list_with_sep(flags_off,";"));
+            return "\x1b[{0}m{1}\x1b[{2}m".format(";".join(flags_on), result, ";".join(flags_off));
         }
     }
 

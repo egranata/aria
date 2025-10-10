@@ -187,4 +187,18 @@ extension String {
 
         return ret;
     }
+
+    func join(iter) {
+        val ret = "";
+        val first = true;
+        for item in iter {
+            val item = prettyprint(item);
+            if !first {
+                ret += this;
+            }
+            ret += item;
+            first = false;
+        }
+        return ret;
+    }
 }

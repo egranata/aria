@@ -27,22 +27,7 @@ extension List {
         return "[" + this.join() + "]";
     }
 
-    func join() {
-        val s = "";
-        val first = true;
-        for item in this {
-            val item = prettyprint(item);
-            if first {
-                s = item;
-                first = false;
-            } else {
-                s = s + ", " + item;
-            }
-        }
-
-        return s;
-    }
-
+    func join(sep=", ") = sep.join(this);
 
     func contains(x) {
         for item in this {
