@@ -158,7 +158,7 @@ operator_direction = @{ "reverse" }
 operator_symbol    = @{ "+" | "u-" | "-" | "*" | "/" | "%" | "<<" | ">>" | "==" | "<=" | ">=" | "<" | ">" | "&" | "|" | "^" | "()" | "[]=" | "[]" }
 operator_decl      =  { operator_direction? ~ "operator" ~ operator_symbol ~ "(" ~ arg_list? ~ ")" ~ function_body }
 
-mixin_entry = { method_decl | operator_decl | mixin_include_decl }
+mixin_entry = { method_decl | operator_decl | "type" ~ val_decl_stmt | mixin_include_decl }
 mixin_decl  = { "mixin" ~ identifier ~ "{" ~ mixin_entry* ~ "}" }
 
 mixin_include_decl = { "include" ~ expression }
