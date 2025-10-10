@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Foo {
+    struct Pair {
+        type func new(x,y) = alloc(This) {.x, .y} ;
+    }
+
+    enum Either {
+        case Left(Foo.Pair),
+        case Right(Any),
+    }
+}
+
+struct S1 {
+    include Foo
+}
+
+func main() {
+    val either_left = S1.Either::Left(S1.Pair.new(2,3));
+    val either_right = S1.Either::Right("hello");
+
+    assert either_left.is_Left();
+    assert either_right.is_Right();
+
+    assert either_left.unwrap_Left().x == 2;
+    assert either_left.unwrap_Left().y == 3;
+
+    assert either_right.unwrap_Right() == "hello";
+}

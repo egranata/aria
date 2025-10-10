@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-use aria_parser::ast::StructEntry;
 
 use crate::{
     do_compile::{CompilationResult, CompileNode, CompileParams, emit_type_members_compile},
@@ -20,10 +19,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MixinDecl {
             self.loc.clone(),
         )?;
 
-        emit_type_members_compile(
-            &self.body.iter().map(StructEntry::from).collect::<Vec<_>>(),
-            params,
-            true,
-        )
+        emit_type_members_compile(&self.body, params, true)
     }
 }
