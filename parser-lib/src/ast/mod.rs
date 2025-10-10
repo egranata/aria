@@ -1171,40 +1171,10 @@ pub struct StructDecl {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum MixinEntry {
-    Method(Box<MethodDecl>),
-    Operator(Box<OperatorDecl>),
-    Variable(Box<ValDeclStatement>),
-    Include(Box<MixinIncludeDecl>),
-}
-
-impl MixinEntry {
-    pub fn loc(&self) -> &SourcePointer {
-        match self {
-            Self::Method(m) => &m.loc,
-            Self::Operator(o) => &o.loc,
-            Self::Variable(v) => &v.loc,
-            Self::Include(i) => &i.loc,
-        }
-    }
-}
-
-impl From<&MixinEntry> for StructEntry {
-    fn from(value: &MixinEntry) -> Self {
-        match value {
-            MixinEntry::Method(m) => StructEntry::Method(m.clone()),
-            MixinEntry::Operator(o) => StructEntry::Operator(o.clone()),
-            MixinEntry::Variable(v) => StructEntry::Variable(v.clone()),
-            MixinEntry::Include(i) => StructEntry::MixinInclude(i.clone()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MixinDecl {
     pub loc: SourcePointer,
     pub name: Identifier,
-    pub body: Vec<MixinEntry>,
+    pub body: Vec<StructEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

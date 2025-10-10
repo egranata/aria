@@ -50,7 +50,6 @@ mod match_statement;
 mod method_access;
 mod method_decl;
 mod mixin_decl;
-mod mixin_entry;
 mod mixin_include_decl;
 mod module_flag;
 mod module_flags;

@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Foo {
+    struct Bar {
+        type func new(x) = alloc(This) {.x} ;
+
+        func add(y) = this.x + y;
+    }
+}
+
+struct S1 {
+    include Foo
+}
+
+struct S2 {
+    include Foo
+}
+
+func main() {
+    val s1_bar = S1.Bar.new(2);
+    val s2_bar = S2.Bar.new(3);
+
+    assert s1_bar isa S2.Bar;
+    assert s2_bar isa S1.Bar;
+
+    assert s1_bar.add(3) == 5;
+    assert s2_bar.add(3) == 6;
+}
