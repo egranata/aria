@@ -606,6 +606,9 @@ impl RuntimeValue {
             Ok(())
         } else if let Some(t) = self.as_type() {
             t.write_attribute(attr_name, val)
+        } else if let Some(m) = self.as_mixin() {
+            m.store_named_value(attr_name, val);
+            Ok(())
         } else if let Some(m) = self.as_module() {
             m.store_named_value(attr_name, val);
             Ok(())

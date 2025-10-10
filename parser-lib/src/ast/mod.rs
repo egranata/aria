@@ -1174,6 +1174,7 @@ pub struct StructDecl {
 pub enum MixinEntry {
     Method(Box<MethodDecl>),
     Operator(Box<OperatorDecl>),
+    Variable(Box<ValDeclStatement>),
     Include(Box<MixinIncludeDecl>),
 }
 
@@ -1182,6 +1183,7 @@ impl MixinEntry {
         match self {
             Self::Method(m) => &m.loc,
             Self::Operator(o) => &o.loc,
+            Self::Variable(v) => &v.loc,
             Self::Include(i) => &i.loc,
         }
     }
@@ -1192,6 +1194,7 @@ impl From<&MixinEntry> for StructEntry {
         match value {
             MixinEntry::Method(m) => StructEntry::Method(m.clone()),
             MixinEntry::Operator(o) => StructEntry::Operator(o.clone()),
+            MixinEntry::Variable(v) => StructEntry::Variable(v.clone()),
             MixinEntry::Include(i) => StructEntry::MixinInclude(i.clone()),
         }
     }
