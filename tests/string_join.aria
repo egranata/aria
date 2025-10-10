@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+
+struct SampleIterator {
+    type func new() = alloc(This) {.num = 0};
+
+    instance func iterator() = this;
+
+    instance func next() {
+        if this.num == 5 {
+            return Box() {.done = true};
+        } else {
+            this.num += 1;
+            return Box{.done = false, .value = this.num};
+        }
+    }
+}
+
+func main() {
+    val l = [1,2,3,4];
+    assert "".join(l) == "1234";
+    assert ", ".join(l) == "1, 2, 3, 4";
+    assert "-".join(l) == "1-2-3-4";
+    assert l.join() == "1, 2, 3, 4";
+
+    assert ",".join([]) == "";
+    assert ",".join([1]) == "1";
+
+    assert "".join([]) == "";
+
+    assert "::".join(SampleIterator.new()) == "1::2::3::4::5";
+}
