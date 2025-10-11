@@ -141,6 +141,7 @@ impl VmBuiltins {
             BUILTIN_TYPE_UNIMPLEMENTED => Some(self.get_builtin_type_by_name("Unimplemented")),
             BUILTIN_TYPE_RUNTIME_ERROR => Some(self.get_builtin_type_by_name("RuntimeError")),
             BUILTIN_TYPE_UNIT => Some(self.get_builtin_type_by_name("Unit")),
+            BUILTIN_TYPE_TYPE => Some(self.get_builtin_type_by_name("Type")),
             _ => None,
         }
     }
