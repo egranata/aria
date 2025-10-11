@@ -22,6 +22,8 @@ extension Float {
     type val pi = 3.14159265358979323846f;
     type val e =  2.71828182845904523536f;
     type val π = Float.pi;
+    type val phi = 1.618033988749895f;
+    type val φ = Float.phi;
 
     func abs() {
         return this >= 0 ? this : -this;

@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+assert Float.phi >= 1.6;
+assert Float.phi <= 1.7;
+assert Float.φ == Float.phi;
