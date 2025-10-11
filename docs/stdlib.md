@@ -408,6 +408,8 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `first()`: Returns `Maybe::Some(value)` with the first item of the iterator, or `Maybe::None` if the iterator is empty.
     *   `last()`: Consumes the iterator and returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterator was empty.
     *   `nth(n: Int)`: Consumes the iterator up to the nth item and returns `Maybe::Some(value)`. Returns `Maybe::None` if `n` is negative or the iterator has fewer than `n+1` items.
+    *   `skip(n: Int)`: Skips the first `n` items of the iterator.
+    *   `truncate(n: Int)`: Returns a new iterator that yields only the first `n` items from this iterator.
     *   `iterator()`: Returns the iterator itself, allowing an `Iterator` to be used where an iterable value is expected.
 
 *   **`Iterable`**
@@ -433,6 +435,8 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `first()`: Returns `Maybe::Some(value)` with the first item, or `Maybe::None` if the iterable is empty.
     *   `last()`: Returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterable is empty.
     *   `nth(n: Int)`: Returns `Maybe::Some(value)` for the nth item. Returns `Maybe::None` if `n` is out of bounds.
+    *   `skip(n: Int)`: Skips the first `n` items of the iterator.
+    *   `truncate(n: Int)`: Returns a new iterator that yields only the first `n` items from this iterator.
 
 ---
 
