@@ -1,3 +1,8 @@
+---
+title: "Aria Roadmap"
+description: "Overall vision doc highlighting the goals for Aria."
+---
+
 # Aria Roadmap
 
 This document outlines the future direction of the Aria programming language. As an open-source project, we welcome community feedback and contributions to help shape the future of Aria. Ideas outside this roadmap are very welcome, and can be filed as GitHub issues to begin discussion.
