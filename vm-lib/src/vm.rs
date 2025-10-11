@@ -74,6 +74,12 @@ impl VirtualMachine {
         &self.options.console
     }
 
+    fn load_type_into_builtins(self) -> Self {
+        self.builtins
+            .insert("Type", RuntimeValue::Type(RuntimeValueType::Type));
+        self
+    }
+
     fn load_core_file_into_builtins(&mut self, name: &str, source: &str) -> RuntimeModule {
         let sb = SourceBuffer::stdin_with_name(source, name);
         let cmod = match aria_compiler::compile_from_source(&sb, &Default::default()) {
@@ -189,6 +195,7 @@ impl VirtualMachine {
             imported_modules: Default::default(),
             loaded_dylibs: Default::default(),
         }
+        .load_type_into_builtins()
         .load_unit_into_builtins()
         .load_unimplemented_into_builtins()
         .load_maybe_into_builtins()

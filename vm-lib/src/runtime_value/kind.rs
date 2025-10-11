@@ -86,7 +86,7 @@ impl RuntimeValueType {
                 arity: bf.func().arity(),
                 varargs: bf.func().varargs(),
             }),
-            RuntimeValue::Type(_) => Self::Type,
+            RuntimeValue::Type(_) => builtins.get_builtin_type_by_name("Type"),
             RuntimeValue::Boolean(_) => builtins.get_builtin_type_by_name("Bool"),
             RuntimeValue::Integer(_) => builtins.get_builtin_type_by_name("Int"),
             RuntimeValue::Float(_) => builtins.get_builtin_type_by_name("Float"),
