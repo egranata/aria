@@ -99,6 +99,8 @@ This module provides extensions to the built-in `Float` type.
     **Fields:**
     *   `pi` (Float): The mathematical constant Pi (π).
     *   `e` (Float): The mathematical constant e (Euler's number).
+    *   `phi` (Float): The mathematical constant Phi (φ), the golden ratio.
+    *   `φ` (Float): Alias for `phi`.
     *   `π` (Float): Alias for `pi`.
     *   `inf` (Float): Represents positive infinity.
     *   `nan` (Float): Represents Not-a-Number.
