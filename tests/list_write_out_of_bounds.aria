@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    try {
+        [][10] = 42;
+    } catch e {
+        assert e isa RuntimeError;
+        assert e.unwrap_IndexOutOfBounds() == 10;
+    }
+}
