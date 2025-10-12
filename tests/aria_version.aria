@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+assert ARIA_VERSION != "";
+assert ARIA_VERSION.has_prefix("0."); # this will break for 1.0, let it, we'll fix the test then

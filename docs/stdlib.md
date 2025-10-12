@@ -1160,9 +1160,12 @@ This module provides the core components for defining test cases and organizing 
     *   `run()`: Executes all test cases added to the suite. Prints the result of each test and a summary of passed/failed tests. Returns the number of failed tests.
 
 ---
-# Built-in Functions
+# Built-in Values
 
-This section provides a reference for the built-in functions of the Aria language.
+This section provides a reference for the built-in values of the Aria language.
+
+### ARIA_VERSION
+A string representing the current version of the Aria language. It is usually in the format major.minor.date (e.g. 0.9.20251225 for a build of version 0.9 released on December 25, 2025). It is **not** a semantic version. It is **discouraged** to use the version number for program logic.
 
 ### `alloc(type)`
 Allocates a new object of the given type with a default value.

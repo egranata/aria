@@ -80,6 +80,14 @@ impl VirtualMachine {
         self
     }
 
+    fn load_version_into_builtins(self) -> Self {
+        let aria_version = env!("CARGO_PKG_VERSION");
+        assert!(!aria_version.is_empty());
+        self.builtins
+            .insert("ARIA_VERSION", RuntimeValue::String(aria_version.into()));
+        self
+    }
+
     fn load_core_file_into_builtins(&mut self, name: &str, source: &str) -> RuntimeModule {
         let sb = SourceBuffer::stdin_with_name(source, name);
         let cmod = match aria_compiler::compile_from_source(&sb, &Default::default()) {
@@ -195,6 +203,7 @@ impl VirtualMachine {
             imported_modules: Default::default(),
             loaded_dylibs: Default::default(),
         }
+        .load_version_into_builtins()
         .load_type_into_builtins()
         .load_unit_into_builtins()
         .load_unimplemented_into_builtins()
