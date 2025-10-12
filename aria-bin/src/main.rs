@@ -10,7 +10,7 @@ use clap::Parser;
 use haxby_vm::vm::{VirtualMachine, VmOptions};
 
 #[derive(Default, Parser, Debug)]
-#[command(author, version, about, trailing_var_arg = true)]
+#[command(author, name = "aria", version = env!("CARGO_PKG_VERSION"), about, trailing_var_arg = true)]
 struct Args {
     /// The name of the program file to run
     path: Option<String>,
