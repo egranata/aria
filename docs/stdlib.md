@@ -1157,7 +1157,7 @@ This module provides the core components for defining test cases and organizing 
     **Methods:**
     *   `type func new(name)`: Creates a new `TestSuite` with the given `name`.
     *   `add_test(test)`: Adds a `TestCase` instance to the suite. Returns the `TestSuite` instance for chaining.
-    *   `run()`: Executes all test cases added to the suite. Prints the result of each test and a summary of passed/failed tests. Returns the number of failed tests.
+    *   `run(silent=false)`: Executes all test cases added to the suite. Prints the result of each test and a summary of passed/failed tests. Returns the number of failed tests. If `silent` is `true`, it suppresses the test runner's output during execution.
 
 ---
 # Built-in Values

@@ -12,7 +12,6 @@ func main() {
         bar();
     } catch e {
         assert hasattr(e, "backtrace");
-        println(e.backtrace);
         assert e.backtrace.len() >= 2;
         assert e.backtrace[0][0].contains("exception_backtrace.aria");
         assert e.backtrace[0][1] == 6;

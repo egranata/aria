@@ -28,5 +28,5 @@ struct SampleFailingTest {
 
 func main() {
     val suite = TestSuite.new("Sample Test Suite");
-    assert suite.add_test(SamplePassingTest.new()).add_test(SampleFailingTest.new()).run() == 1;
+    assert suite.add_test(SamplePassingTest.new()).add_test(SampleFailingTest.new()).run(true) == 1;
 }

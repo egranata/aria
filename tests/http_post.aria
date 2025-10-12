@@ -10,7 +10,6 @@ func main() {
     val request = Request.new("https://httpbin.org/post");
 
     val result = retry(|| => request.post("hello world"), |result| => {
-        println(result);
         match result {
             case Ok(response) => {
                 val code = response.status_code;
