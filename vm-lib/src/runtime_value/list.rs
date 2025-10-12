@@ -39,15 +39,17 @@ impl ListImpl {
         self.values.borrow_mut().pop();
     }
 
-    fn set_at(&self, idx: usize, val: RuntimeValue) {
+    fn set_at(&self, idx: usize, val: RuntimeValue) -> Result<(), VmErrorReason> {
         match idx.cmp(&self.len()) {
             std::cmp::Ordering::Less => {
                 self.values.borrow_mut()[idx] = val;
+                Ok(())
             }
             std::cmp::Ordering::Equal => {
                 self.append(val);
+                Ok(())
             }
-            std::cmp::Ordering::Greater => todo!(),
+            std::cmp::Ordering::Greater => Err(VmErrorReason::IndexOutOfBounds(idx)),
         }
     }
 
@@ -110,7 +112,7 @@ impl List {
         self.imp.pop()
     }
 
-    pub fn set_at(&self, idx: usize, val: RuntimeValue) {
+    pub fn set_at(&self, idx: usize, val: RuntimeValue) -> Result<(), VmErrorReason> {
         self.imp.set_at(idx, val)
     }
 
@@ -138,7 +140,7 @@ impl List {
         _: &mut VirtualMachine,
     ) -> ExecutionResult {
         if let Some(i) = idx.as_integer() {
-            self.set_at(i.raw_value() as usize, val.clone());
+            self.set_at(i.raw_value() as usize, val.clone())?;
             Ok(())
         } else {
             Err(VmErrorReason::UnexpectedType.into())
