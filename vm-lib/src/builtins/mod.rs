@@ -22,7 +22,6 @@ mod exit;
 mod float;
 mod getenv;
 mod hasattr;
-mod identity;
 mod integer;
 mod list;
 mod listattrs;
@@ -85,7 +84,6 @@ impl Default for VmBuiltins {
         float::insert_float_builtins(&mut this);
         getenv::insert_builtins(&mut this);
         hasattr::insert_builtins(&mut this);
-        identity::insert_builtins(&mut this);
         list::insert_list_builtins(&mut this);
         listattrs::insert_builtins(&mut this);
         now::insert_builtins(&mut this);

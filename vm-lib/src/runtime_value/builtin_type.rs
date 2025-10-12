@@ -95,10 +95,6 @@ impl BuiltinType {
             .write(&name, RuntimeValue::Function(Function::builtin_from(t)));
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
-
     pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }

@@ -33,10 +33,6 @@ impl EnumValue {
     pub fn read(&self, name: &str) -> Option<RuntimeValue> {
         self.imp.enumm.load_named_value(name)
     }
-
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
 }
 
 impl EnumValueImpl {

@@ -95,25 +95,6 @@ impl RuntimeValue {
             _ => false,
         }
     }
-
-    pub fn identity(&self) -> usize {
-        match self {
-            RuntimeValue::Integer(a) => a.identity(),
-            RuntimeValue::String(a) => a.identity(),
-            RuntimeValue::Float(a) => a.identity(),
-            RuntimeValue::Boolean(a) => a.identity(),
-            RuntimeValue::Object(a) => a.identity(),
-            RuntimeValue::EnumValue(a) => a.identity(),
-            RuntimeValue::CodeObject(a) => a.identity(),
-            RuntimeValue::Function(a) => a.identity(),
-            RuntimeValue::BoundFunction(a) => a.identity(),
-            RuntimeValue::List(a) => a.identity(),
-            RuntimeValue::Mixin(a) => a.identity(),
-            RuntimeValue::Type(_) => todo!(),
-            RuntimeValue::Module(a) => a.identity(),
-            RuntimeValue::Opaque(a) => a.identity(),
-        }
-    }
 }
 
 pub(crate) enum OperatorEvalAttemptOutcome<SuccessType> {

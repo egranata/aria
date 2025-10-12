@@ -155,10 +155,6 @@ impl List {
         self.imp.read(name)
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
-
     pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }

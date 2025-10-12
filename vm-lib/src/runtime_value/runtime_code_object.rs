@@ -40,10 +40,3 @@ impl std::fmt::Debug for CodeObject {
         write!(f, "<code-object {} at {}>", self.name, self.loc)
     }
 }
-
-impl CodeObject {
-    pub fn identity(&self) -> usize {
-        let ptr = Rc::as_ptr(&self.body);
-        ptr as *const () as usize
-    }
-}
