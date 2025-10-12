@@ -62,6 +62,10 @@ extension String {
     }
 
     func format(...) {
+        return this._format_impl(varargs);
+    }
+
+    func _format_impl(varargs) {
         val ret = "";
         val chars = this.chars();
         val len = this.len();
@@ -200,5 +204,13 @@ extension String {
             first = false;
         }
         return ret;
+    }
+}
+
+extension String {
+    func printf(...) {
+        println(varargs);
+        val s = this._format_impl(varargs);
+        print(s);
     }
 }

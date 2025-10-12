@@ -246,3 +246,16 @@ fn repl_op_count_error() {
         &[],
     );
 }
+
+#[test]
+fn repl_test_printf() {
+    let cmdline_options = Args::default();
+    let mut repl = build_test_repl(&cmdline_options);
+
+    run_passing_repl_line(&mut repl, "'hello = {0}'.printf(42);", &["hello = 42"]);
+    run_passing_repl_line(
+        &mut repl,
+        "'hello = {0} hi = {1}\n'.printf(42, 43);",
+        &["hello = 42 hi = 43\n"],
+    );
+}
