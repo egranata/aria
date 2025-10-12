@@ -5,8 +5,6 @@ func main() {
     val ts = 1735446958423;
     val instant = Instant.new_with_utc_timestamp(ts);
 
-    println(instant);
-
     assert instant.year == 2024;
     assert instant.month == 12;
     assert instant.day == 29;

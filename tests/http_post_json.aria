@@ -13,7 +13,6 @@ func main() {
     val result = retry(|| => request.post_as_json(Map.new() {
         ["message"] = "hello world",
     }), |result| => {
-        println(result);
         match result {
             case Ok(response) => {
                 val code = response.status_code;

@@ -8,7 +8,6 @@ import * from aria.network.retry;
 func main() {
     val request = Request.new("https://www.rust-lang.org/");
     val response = retry(|| => request.get(), |result| => {
-        println(result);
         match result {
             case Ok(response) => {
                 val code = response.status_code;
