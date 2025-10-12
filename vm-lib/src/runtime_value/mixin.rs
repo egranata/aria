@@ -63,10 +63,6 @@ impl Mixin {
         self.imp.named_values()
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
-
     pub fn include_mixin(&self, mixin: &Mixin) {
         self.imp.include_mixin(mixin);
     }

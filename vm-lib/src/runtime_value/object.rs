@@ -100,10 +100,6 @@ impl Object {
         &self.imp.kind
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
-
     pub fn with_value(self, name: &str, val: RuntimeValue) -> Self {
         self.write(name, val);
         self

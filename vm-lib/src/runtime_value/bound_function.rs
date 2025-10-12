@@ -105,10 +105,6 @@ impl BoundFunction {
             RunloopExit::Exception(e) => Ok(CallResult::Exception(e)),
         }
     }
-
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
 }
 
 impl PartialEq for BoundFunction {

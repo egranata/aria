@@ -1199,12 +1199,6 @@ Checks if an object has a specific attribute.
     *   `name` (String): The name of the attribute.
 *   **Returns:** `true` if the attribute exists, `false` otherwise.
 
-### `identity(object)`
-Returns a unique integer identifier for the given object.
-*   **Arguments:**
-    *   `object`: The object to identify.
-*   **Returns:** An `Int` representing the object's identity.
-
 ### `listattrs(object)`
 Returns a list of an object's attributes.
 *   **Arguments:**

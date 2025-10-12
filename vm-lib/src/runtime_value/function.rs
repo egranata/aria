@@ -146,10 +146,6 @@ impl Function {
     pub fn loc(&self) -> Option<&SourcePointer> {
         self.imp.loc()
     }
-
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
 }
 
 pub struct FunctionAttribute {

@@ -166,10 +166,6 @@ impl RuntimeModule {
         Ok(())
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
-
     pub fn insert_builtin<T>(&self)
     where
         T: 'static + Default + BuiltinFunctionImpl,
