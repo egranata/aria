@@ -11,7 +11,7 @@ Up until version 1.0, we reserve the right to make breaking changes to the langu
 
 After version 1.0 is released, we will only consider breaking changes on a *must* basis, i.e. we will only break existing code if there is no other realistic path to achieve a significant language goal.
 
-We plan to ship Aria 1.0 with the existing parser, but may consider a migration to hand-rolled parser in a future version, in order to improve the quality of error messages. Rewriting the Aria compiler or VM in Aria is a non-goal.
+Rewriting the Aria compiler or VM in Aria is a non-goal.
 
 *   **Improve the Standard Library's Structure:** Reorganize the standard library, including:
     - move `Path` and `Regex` outside the core language;

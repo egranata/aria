@@ -285,6 +285,7 @@ This module provides extensions to the built-in `String` type.
     *   `uppercase()`: Returns a new string with all characters converted to uppercase.
     *   `lowercase()`: Returns a new string with all characters converted to lowercase.
     *   `contains(substring: String)`: Returns `true` if the string contains the `substring`, `false` otherwise.
+    *   `printf(...)`: Formats and prints the string using positional arguments, without a newline. It uses the same syntax as `format`.
 
 ---
 
