@@ -2,6 +2,7 @@ set -euo pipefail
 
 PROFILE=${PROFILE:-dist}
 
+# The authoritative copy of these variables is in .github/workflows/release.yml
 BIN_TARGETS="${BIN_TARGETS:-aria}"
 DYLIB_CRATES="${DYLIB_CRATES:-aria_file aria_http aria_path aria_platform aria_regex aria_timezone}"
 EXTRA_FILES="${EXTRA_FILES:-}"
