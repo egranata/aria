@@ -31,6 +31,7 @@ mod print;
 mod println;
 mod readattr;
 mod readln;
+mod setenv;
 mod sleep;
 mod string;
 mod system;
@@ -91,6 +92,7 @@ impl Default for VmBuiltins {
         print::insert_builtins(&mut this);
         println::insert_builtins(&mut this);
         readln::insert_builtins(&mut this);
+        setenv::insert_builtins(&mut this);
         string::insert_string_builtins(&mut this);
         readattr::insert_builtins(&mut this);
         sleep::insert_builtins(&mut this);
