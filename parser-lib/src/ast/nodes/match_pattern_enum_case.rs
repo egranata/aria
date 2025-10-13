@@ -27,7 +27,7 @@ impl Derive for MatchPatternEnumCase {
 
 impl PrettyPrintable for MatchPatternEnumCase {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        let buffer = buffer << " case " << &self.case;
+        let buffer = buffer << "case " << &self.case;
         if let Some(p) = &self.payload {
             buffer << "(" << p << ")"
         } else {

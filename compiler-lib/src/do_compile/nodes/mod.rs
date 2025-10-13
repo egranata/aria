@@ -18,6 +18,8 @@ mod function_body;
 mod function_decl;
 mod guard_block;
 mod identifier;
+mod if_cond_case;
+mod if_cond_expr;
 mod if_statement;
 mod import_from_statement;
 mod import_statement;

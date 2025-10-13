@@ -6,9 +6,10 @@ func err(e) { return Result::Err(e); }
 
 extension Result {
     type func new_with_maybe(m: Maybe) {
-        match m {
-            case Some(v) => { return ok(v); }
-            case None => { return err(Unit.new()); }
+        if case Some(v) = m {
+            return ok(v);
+        } else {
+            return err(Unit.new());
         }
     }
 

@@ -28,6 +28,8 @@ mod function_decl;
 mod guard_block;
 mod identifier;
 mod identifier_list;
+mod if_cond_case;
+mod if_cond_expr;
 mod if_cond_piece;
 mod if_piece;
 mod if_statement;

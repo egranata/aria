@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use aria_parser::ast::{
     AssignStatement, BreakStatement, CodeBlock, DeclarationId, ElsePiece, Expression, Identifier,
-    IfCondPiece, IfPiece, IfStatement, ParenExpression, PostfixExpression, PostfixRvalue, Primary,
-    Statement, UnaryOperation, ValDeclStatement, WhileStatement,
+    IfCondExpr, IfCondPiece, IfPiece, IfStatement, ParenExpression, PostfixExpression,
+    PostfixRvalue, Primary, Statement, UnaryOperation, ValDeclStatement, WhileStatement,
 };
 
 use crate::do_compile::{CompilationResult, CompileNode, CompileParams};
@@ -115,7 +115,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
         // if !__for__any_hit { <do the else block if any> }
         let if_not_any_hit = IfCondPiece {
             loc: self.loc.clone(),
-            expression: Box::new(check_any_hit_expr),
+            expression: IfCondExpr::Expression(check_any_hit_expr),
             then: CodeBlock {
                 loc: self.loc.clone(),
                 entries: if let Some(els) = &self.els {
@@ -183,7 +183,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
             iff: IfPiece {
                 content: IfCondPiece {
                     loc: self.loc.clone(),
-                    expression: Box::new(check_done_expr),
+                    expression: IfCondExpr::Expression(check_done_expr),
                     then: if_done_blk,
                 },
             },

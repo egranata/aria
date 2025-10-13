@@ -5,6 +5,8 @@ use crate::{
     func_builder::BasicBlockOpcode,
 };
 
+// in theory you may use __match_control_expr, which is defined by the match statement
+// but if you do, this breaks if case matches, so prefer to dup/pop as necessary instead
 impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
     fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
         let case_name_idx = self.insert_const_or_fail(
@@ -12,6 +14,13 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
             ConstantValue::String(self.case.value.clone()),
             &self.loc,
         )?;
+        let has_decl = self.payload.is_some();
+        if has_decl {
+            params
+                .writer
+                .get_current_block()
+                .write_opcode_and_source_info(BasicBlockOpcode::Dup, self.loc.clone());
+        }
         params
             .writer
             .get_current_block()
@@ -48,6 +57,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
             params
                 .writer
                 .get_current_block()
+                .write_opcode_and_source_info(BasicBlockOpcode::Pop, self.loc.clone())
                 .write_opcode_and_source_info(BasicBlockOpcode::PushFalse, self.loc.clone());
             params
                 .writer
@@ -57,12 +67,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
                     self.loc.clone(),
                 );
             params.writer.set_current_block(if_true);
-            params.scope.emit_read(
-                "__match_control_expr",
-                &mut params.module.constants,
-                params.writer.get_current_block(),
-                p.loc.clone(),
-            )?;
             params
                 .writer
                 .get_current_block()

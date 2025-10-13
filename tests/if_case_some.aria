@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = Maybe::Some(3);
+    val hit = false;
+
+    if case Some(v) = x {
+        assert v == 3;
+        hit = true;
+    } else {
+        assert false;
+    }
+
+    assert hit;
+}

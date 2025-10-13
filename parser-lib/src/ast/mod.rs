@@ -809,9 +809,32 @@ pub struct WriteOpEqStatement {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IfCondCase {
+    pub loc: SourcePointer,
+    pub pattern: MatchPatternEnumCase,
+    pub target: Expression,
+}
+
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum IfCondExpr {
+    IfCondCase(IfCondCase),
+    Expression(Expression),
+}
+
+impl IfCondExpr {
+    pub fn loc(&self) -> &SourcePointer {
+        match self {
+            Self::IfCondCase(c) => &c.loc,
+            Self::Expression(e) => e.loc(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IfCondPiece {
     pub loc: SourcePointer,
-    pub expression: Box<Expression>,
+    pub expression: IfCondExpr,
     pub then: CodeBlock,
 }
 
