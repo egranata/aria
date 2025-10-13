@@ -7,7 +7,7 @@ func main() {
     assert binls.is_file();
     assert binls.is_absolute();
     assert binls.exists();
-    assert binls.size() > 0;
+    assert binls.size().unwrap_Some() > 0;
     
     val usrbin = Path.new("/usr/bin");
     assert usrbin.is_directory();

@@ -494,9 +494,11 @@ impl BuiltinFunctionImpl for Size {
         let rfo = rust_obj.content.borrow_mut();
         match rfo.metadata() {
             Ok(md) => {
-                frame
-                    .stack
-                    .push(RuntimeValue::Integer((md.len() as i64).into()));
+                let val = ok_or_err!(
+                    vm.builtins.create_maybe_some(RuntimeValue::Integer((md.len() as i64).into())),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(val);
             }
             Err(_) => {
                 let val = ok_or_err!(
