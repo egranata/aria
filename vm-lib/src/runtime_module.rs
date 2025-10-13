@@ -166,6 +166,13 @@ impl RuntimeModule {
         Ok(())
     }
 
+    pub fn extract_value<T, U>(&self, name: &str, f: T) -> Option<U>
+    where
+        T: FnOnce(RuntimeValue) -> Option<U>,
+    {
+        f(self.load_named_value(name)?)
+    }
+
     pub fn insert_builtin<T>(&self)
     where
         T: 'static + Default + BuiltinFunctionImpl,

@@ -69,6 +69,14 @@ pub struct VirtualMachine {
     pub loaded_dylibs: HashMap<String, libloading::Library>,
 }
 
+const BUILTIN_VALUES_TO_INJECT: [(&str, &str); 5] = [
+    ("Unit", include_str!("builtins/unit.aria")),
+    ("Unimplemented", include_str!("builtins/unimplemented.aria")),
+    ("Maybe", include_str!("builtins/maybe.aria")),
+    ("Result", include_str!("builtins/result.aria")),
+    ("RuntimeError", include_str!("builtins/runtime_error.aria")),
+];
+
 impl VirtualMachine {
     pub fn console(&self) -> &ConsoleHandle {
         &self.options.console
@@ -105,83 +113,18 @@ impl VirtualMachine {
             Ok(rle) => match rle {
                 RunloopExit::Ok(m) => m.module,
                 RunloopExit::Exception(e) => {
-                    panic!("{name} module failed to load {}", e.value);
+                    panic!("{name} module raised an exception during load {}", e.value);
                 }
             },
             Err(err) => panic!("{name} module failed to load {}", err.prettyprint(None)),
         }
     }
 
-    fn load_result_into_builtins(mut self) -> Self {
-        let result_rmod = self.load_core_file_into_builtins(
-            "builtins/result.aria",
-            include_str!("builtins/result.aria"),
-        );
-
-        let result_enum = match result_rmod.load_named_value("Result") {
-            Some(e) => e,
-            None => panic!("Result type not defined in result module"),
-        };
-
-        self.builtins.insert("Result", result_enum);
-        self
-    }
-
-    fn load_maybe_into_builtins(mut self) -> Self {
-        let maybe_rmod = self.load_core_file_into_builtins(
-            "builtins/maybe.aria",
-            include_str!("builtins/maybe.aria"),
-        );
-
-        let maybe_enum = match maybe_rmod.load_named_value("Maybe") {
-            Some(e) => e,
-            None => panic!("Maybe type not defined in maybe module"),
-        };
-
-        self.builtins.insert("Maybe", maybe_enum);
-        self
-    }
-
-    fn load_unit_into_builtins(mut self) -> Self {
-        let unit_rmod = self
-            .load_core_file_into_builtins("builtins/unit.aria", include_str!("builtins/unit.aria"));
-
-        let unit_enum = match unit_rmod.load_named_value("Unit") {
-            Some(e) => e,
-            None => panic!("Unit type not defined in unit module"),
-        };
-
-        self.builtins.insert("Unit", unit_enum);
-        self
-    }
-
-    fn load_runtime_error_into_builtins(mut self) -> Self {
-        let maybe_rmod = self.load_core_file_into_builtins(
-            "builtins/runtime_error.aria",
-            include_str!("builtins/runtime_error.aria"),
-        );
-
-        let runtime_error_enum = match maybe_rmod.load_named_value("RuntimeError") {
-            Some(e) => e,
-            None => panic!("RuntimeError type not defined in runtime_error module"),
-        };
-
-        self.builtins.insert("RuntimeError", runtime_error_enum);
-        self
-    }
-
-    fn load_unimplemented_into_builtins(mut self) -> Self {
-        let unimpl_rmod = self.load_core_file_into_builtins(
-            "builtins/unimplemented.aria",
-            include_str!("builtins/unimplemented.aria"),
-        );
-
-        let unimpl_type = match unimpl_rmod.load_named_value("Unimplemented") {
-            Some(e) => e,
-            None => panic!("Unimplemented type not defined in unimplemented module"),
-        };
-
-        self.builtins.insert("Unimplemented", unimpl_type);
+    fn load_named_value_into_builtins(self, name: &str, rmod: &RuntimeModule) -> Self {
+        let named_value = rmod
+            .load_named_value(name)
+            .unwrap_or_else(|| panic!("failed to find {name}"));
+        self.builtins.insert(name, named_value);
         self
     }
 }
@@ -195,7 +138,7 @@ impl Default for VirtualMachine {
 
 impl VirtualMachine {
     pub fn with_options(options: VmOptions) -> Self {
-        Self {
+        let mut this = Self {
             modules: Default::default(),
             options,
             builtins: Default::default(),
@@ -204,12 +147,13 @@ impl VirtualMachine {
             loaded_dylibs: Default::default(),
         }
         .load_version_into_builtins()
-        .load_type_into_builtins()
-        .load_unit_into_builtins()
-        .load_unimplemented_into_builtins()
-        .load_maybe_into_builtins()
-        .load_result_into_builtins()
-        .load_runtime_error_into_builtins()
+        .load_type_into_builtins();
+        for (builtin_name, source) in BUILTIN_VALUES_TO_INJECT {
+            let rmod = this.load_core_file_into_builtins(builtin_name, source);
+            this = this.load_named_value_into_builtins(builtin_name, &rmod);
+        }
+
+        this
     }
 }
 

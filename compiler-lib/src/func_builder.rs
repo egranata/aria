@@ -710,17 +710,13 @@ impl Default for FunctionBuilder {
 
 impl FunctionBuilder {
     pub fn try_get_block(&self, name: &str) -> Option<Rc<BasicBlock>> {
-        if !self.names.contains(name) {
-            return None;
-        } else {
-            for blk in &self.blocks {
-                if blk.name == name {
-                    return Some(blk.clone());
-                }
+        for blk in &self.blocks {
+            if blk.name == name {
+                return Some(blk.clone());
             }
         }
 
-        panic!("get_block_by_name could not find")
+        None
     }
 
     pub fn get_block(&self, name: &str) -> Rc<BasicBlock> {
