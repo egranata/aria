@@ -16,5 +16,5 @@ opcodes-lib = { path = "../opcodes-lib" }
 enum-as-inner = "0.6.1"
 thiserror = "2.0.17"
 libloading = "0.8.9"
-libc = "0.2.176"
+libc = "0.2.177"
 rustc_data_structures = "0.1.2"
