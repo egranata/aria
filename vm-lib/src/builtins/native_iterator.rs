@@ -9,6 +9,7 @@ use crate::{
     builtins::VmBuiltins,
     error::vm_error::VmErrorReason,
     frame::Frame,
+    ok_or_err,
     runtime_value::{
         RuntimeValue,
         function::{BuiltinFunctionImpl, Function},
@@ -62,12 +63,9 @@ impl BuiltinFunctionImpl for Next {
     fn eval(
         &self,
         frame: &mut Frame,
-        _: &mut crate::vm::VirtualMachine,
+        vm: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let aria_this = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
-
-        let aria_this_struct = aria_this.get_struct();
-        let aria_iterator_entry = aria_this_struct.extract_field("Entry", |x| x.as_struct())?;
 
         let iterator_impl = some_or_err!(
             aria_this.read("__impl"),
@@ -78,16 +76,18 @@ impl BuiltinFunctionImpl for Next {
             VmErrorReason::UnexpectedVmState.into()
         );
 
-        let next_object = RuntimeValue::Object(Object::new(&aria_iterator_entry));
-
         if let Some(next) = rust_native_iter.borrow_mut().next() {
-            let _ = next_object.write_attribute("done", RuntimeValue::Boolean(false.into()));
-            let _ = next_object.write_attribute("value", next);
+            frame.stack.push(ok_or_err!(
+                vm.builtins.create_maybe_some(next),
+                VmErrorReason::UnexpectedVmState.into()
+            ));
         } else {
-            let _ = next_object.write_attribute("done", RuntimeValue::Boolean(true.into()));
+            frame.stack.push(ok_or_err!(
+                vm.builtins.create_maybe_none(),
+                VmErrorReason::UnexpectedVmState.into()
+            ));
         }
 
-        frame.stack.push(next_object);
         Ok(RunloopExit::Ok(()))
     }
 

@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+struct MyIterator {
+    func next() {
+        return 12; # not a Maybe :(
+    }
+
+    func iterator() = this;
+
+    type func new() = alloc(This);
+}
+
+func main() {
+    val caught = false;
+
+    val it = MyIterator.new();
+    try {
+        for number in it {
+            assert false; # should never get here
+        }
+    } catch e {
+        assert e isa RuntimeError;
+        assert e.is_UnexpectedType();
+        caught = true;
+    }
+
+    assert caught;
+}

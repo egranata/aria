@@ -313,9 +313,9 @@ The standard library follows a consistent pattern for iteration that should be a
 - An **iterable** object (like a `List` or `Map`) must have an `iterator()` method.
 - The `iterator()` method returns an **iterator** object.
 - The **iterator** object must have a `next()` method.
-- The `next()` method returns a `Box` containing `.done=true` when the iteration is finished, or `.done=false` and a `.value` field otherwise.
-- The **iterator** object may have an `iterator` method that returns itself.
-- To simplify implementation, include the `Iterable` mixin in your iterable types and the `Iterator` mixin in your iterator types. In the common case of an iterator that returns itself from `iterator()`, you should only include the `Iterator` mixin.
+- The `next()` method returns a `Maybe`, `Some` if there is a next item, or `None` if the iteration is complete.
+- The **iterator** object may have an `iterator` method that returns itself, but this is pre-defined in the `Iterator` mixin.
+- To simplify implementation, include the `Iterable` mixin in your iterable types and the `Iterator` mixin in your iterator types.
 
 ```aria
 import Iterator, Iterable from aria.iterator.mixin;
@@ -332,15 +332,14 @@ struct MyCollectionIterator {
     # ...
     func next() {
         if finished {
-            return Box() { .done = true };
+            return Maybe::None;
         }
-        return Box() { .done = false, .value = next_item };
+        return Maybe::Some(next_item);
     }
+
     include Iterator
 }
 ```
-
-```aria
 
 ### 6.6. Error Handling
 

@@ -33,20 +33,17 @@ struct RangeIterator {
     func next() {
         if this.step > 0 {
             if this.current >= this.limit {
-                return Box() { .done = true };
+                return Maybe::None;
             }
         } else {
             if this.current <= this.limit {
-                return Box() { .done = true };
+                return Maybe::None;
             }
         }
 
         val result = this.current;
         this.current += this.step;
-        return Box() {
-            .done = false,
-            .value = result,
-        };
+        return Maybe::Some(result);
     }
 
     include Iterator

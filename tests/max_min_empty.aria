@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.iterator.mixin;
+
+assert [].max().is_None();
+assert [].min().is_None();
