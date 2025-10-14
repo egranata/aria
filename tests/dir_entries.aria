@@ -12,7 +12,7 @@ func main() {
     val path = Path.new(path).new_canonical().unwrap_Some();
 
     val entries = path.entries();
-    entries = entries.iterator().where(is_this_test).to_list();
+    entries = entries.where(is_this_test).to_list();
 
     assert entries.len() == 1;
     assert entries[0] isa Path;

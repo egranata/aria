@@ -208,7 +208,7 @@ This module provides a `Path` struct for interacting with the file system.
     *   `size()`: Returns the size of the file at this path in bytes as an `Int`. Returns `Maybe::None` if not a file or path does not exist.
     *   `get_filename()`: Returns the final component of the path (the file or directory name) as a `String`. Returns `Maybe::None` if the path has no filename component.
     *   `get_extension()`: Returns the extension of the file at this path as a `String`. Returns `Maybe::None` if the path has no extension.
-    *   `entries()`: Returns a `List` of `Path` objects representing the entries (files and subdirectories) within the directory pointed to by this path.
+    *   `entries()`: Returns an `Iterator` of `Path` objects representing the entries (files and subdirectories) within the directory pointed to by this path.
     *   `mkdir()`: Creates a new directory at this path. Returns `true` on success, `false` on failure.
     *   `rmdir()`: Removes an empty directory at this path. Returns `true` on success, `false` on failure.
     *   `erase()`: Removes the file at this path. Returns `true` on success, `false` on failure.
