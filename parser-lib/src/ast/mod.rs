@@ -602,6 +602,26 @@ pub enum LambaBody {
     CodeBlock(CodeBlock),
 }
 
+impl From<&LambaBody> for FunctionBody {
+    fn from(value: &LambaBody) -> Self {
+        match value {
+            LambaBody::Expression(e) => {
+                let ret_stmt = ReturnStatement {
+                    loc: e.loc().clone(),
+                    val: Some(e.clone()),
+                };
+                Self {
+                    code: CodeBlock {
+                        loc: ret_stmt.loc.clone(),
+                        entries: vec![Statement::ReturnStatement(ret_stmt)],
+                    },
+                }
+            }
+            LambaBody::CodeBlock(b) => Self { code: b.clone() },
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LambdaFunction {
     pub loc: SourcePointer,
@@ -611,6 +631,12 @@ pub struct LambdaFunction {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunctionBody {
     pub code: CodeBlock,
+}
+
+impl FunctionBody {
+    pub fn loc(&self) -> &SourcePointer {
+        &self.code.loc
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
