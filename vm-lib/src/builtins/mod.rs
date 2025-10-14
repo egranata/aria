@@ -25,6 +25,7 @@ mod hasattr;
 mod integer;
 mod list;
 mod listattrs;
+pub mod native_iterator;
 mod now;
 mod prettyprint;
 mod print;
