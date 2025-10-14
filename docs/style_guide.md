@@ -315,7 +315,7 @@ The standard library follows a consistent pattern for iteration that should be a
 - The **iterator** object must have a `next()` method.
 - The `next()` method returns a `Box` containing `.done=true` when the iteration is finished, or `.done=false` and a `.value` field otherwise.
 - The **iterator** object may have an `iterator` method that returns itself.
-- To simplify implementation, include the `Iterable` mixin in your iterable types and the `Iterator` mixin in your iterator types.
+- To simplify implementation, include the `Iterable` mixin in your iterable types and the `Iterator` mixin in your iterator types. In the common case of an iterator that returns itself from `iterator()`, you should only include the `Iterator` mixin.
 
 ```aria
 import Iterator, Iterable from aria.iterator.mixin;
@@ -339,6 +339,8 @@ struct MyCollectionIterator {
     include Iterator
 }
 ```
+
+```aria
 
 ### 6.6. Error Handling
 
