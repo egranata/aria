@@ -24,17 +24,11 @@ struct Zip {
     func next() {
         val next_values = [];
         for iter in this.iterators {
-            val next_entry = iter.next();
-            if next_entry.done {
-                return Box(){
-                    .done = true
-                };
+            match iter.next() {
+                case None => { return Maybe::None; }
+                case Some(x) => { next_values.append(x); }
             }
-            next_values.append(next_entry.value);
         }
-        return Box(){
-            .done = next_values.len() == 0,
-            .value = next_values,
-        };
+        return Maybe::Some(next_values);
     }
 }

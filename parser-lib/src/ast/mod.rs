@@ -879,6 +879,16 @@ pub struct MatchPatternRel {
     pub expr: Expression,
 }
 
+impl MatchPatternComp {
+    pub fn isa(loc: SourcePointer, expr: Expression) -> Self {
+        Self {
+            loc,
+            op: CompSymbol::Isa,
+            expr,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MatchPatternEnumCase {
     pub loc: SourcePointer,
@@ -908,6 +918,41 @@ pub struct MatchRule {
     pub loc: SourcePointer,
     pub patterns: Vec<MatchPattern>,
     pub then: CodeBlock,
+}
+
+impl MatchRule {
+    pub fn enum_and_case(
+        loc: SourcePointer,
+        enumm: &str,
+        case: &str,
+        payload: Option<Identifier>,
+        then: CodeBlock,
+    ) -> Self {
+        let enumm = Identifier {
+            loc: loc.clone(),
+            value: enumm.to_owned(),
+        };
+        let case = Identifier {
+            loc: loc.clone(),
+            value: case.to_owned(),
+        };
+        let payload = payload.map(|p| DeclarationId::from(&p));
+        let case_pattern = MatchPattern::MatchPatternEnumCase(MatchPatternEnumCase {
+            loc: enumm.loc.clone(),
+            case,
+            payload,
+        });
+        let isa_pattern = MatchPattern::MatchPatternComp(MatchPatternComp {
+            loc: loc.clone(),
+            op: CompSymbol::Isa,
+            expr: From::from(&enumm),
+        });
+        Self {
+            loc,
+            patterns: vec![isa_pattern, case_pattern],
+            then,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

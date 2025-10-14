@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 use aria_parser::ast::{
     AssignStatement, BreakStatement, CodeBlock, DeclarationId, ElsePiece, Expression, Identifier,
-    IfCondPiece, IfPiece, IfStatement, ParenExpression, PostfixExpression, PostfixRvalue, Primary,
-    Statement, UnaryOperation, ValDeclStatement, WhileStatement,
+    IfCondPiece, IfPiece, IfStatement, MatchRule, MatchStatement, ParenExpression,
+    PostfixExpression, PostfixRvalue, PostfixTerm, PostfixTermEnumCase, Primary, Statement,
+    ThrowStatement, UnaryOperation, ValDeclStatement, WhileStatement,
 };
 
 use crate::do_compile::{CompilationResult, CompileNode, CompileParams};
@@ -30,15 +31,18 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
         //     val any_hit = false;
         //     while true {
         //         val next = iter.next();
-        //         if next.done {
-        //             if !any_hit {
-        //                 <else clause if any>
+        //         match next {
+        //             case Some(x) => {
+        //                 any_hit = true;
+        //                 val x = next.value;
+        //                 <body of the loop>
         //             }
-        //             break; # out of the while loop
-        //         } else {
-        //             any_hit = true;
-        //             val x = next.value;
-        //             <body of the loop>
+        //             case None => {
+        //                 if !any_hit {
+        //                     <else clause if any>
+        //                 }
+        //                 break; # out of the while loop
+        //             }
         //         }
         //     }
         // }
@@ -49,7 +53,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
             value: format!("__for__iter__{}", self.id.value),
         };
 
-        // this is the next value from the iterator (the Box(), not the actual object)
+        // this is the next value from the iterator (the Maybe, not the actual object)
         let val_next_ident = Identifier {
             loc: self.loc.clone(),
             value: format!("__for__next__{}", self.id.value),
@@ -96,12 +100,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
             ))
         );
 
-        // __for__next__.done
-        let check_done_expr = Expression::from(&PostfixExpression::attrib_read(
-            &Primary::Identifier(val_next_ident.clone()),
-            "done",
-        ));
-
         // !__for__any_hit
         let check_any_hit_expr = Expression::from(&UnaryOperation {
             loc: self.loc.clone(),
@@ -135,30 +133,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
             els: None,
         });
 
-        // if __for__next__.done { check for __any__hit; break; }
-        let if_done_blk = CodeBlock {
-            loc: self.loc.clone(),
-            entries: vec![
-                if_not_any_hit,
-                Statement::BreakStatement(BreakStatement {
-                    loc: self.loc.clone(),
-                }),
-            ],
-        };
-
-        // __for__next.value
-        let read_next_expr = Expression::from(&PostfixExpression::attrib_read(
-            &Primary::Identifier(val_next_ident.clone()),
-            "value",
-        ));
-
-        // val x = __for__next.value;
-        let assign_to_loop_val = Statement::ValDeclStatement(ValDeclStatement {
-            loc: self.id.loc.clone(),
-            id: DeclarationId::from(&self.id),
-            val: read_next_expr,
-        });
-
         // __for__any_hit = true;
         let assign_to_any_hit = Statement::AssignStatement(AssignStatement {
             loc: self.loc.clone(),
@@ -166,38 +140,81 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
             val: true_cond.clone(),
         });
 
-        // __for__any_hit = true; val x = __for__next.value; <body of the loop>
-        // this is the body of the loop, which will be executed if the condition is true
-        let if_more_blk = CodeBlock {
-            loc: self.loc.clone(),
-            entries: vec![
-                assign_to_any_hit,
-                assign_to_loop_val,
-                Statement::CodeBlock(self.then.clone()),
-            ],
-        };
-
-        // if __for__next.done { ... } else { ... }
-        let check_stmt = Statement::IfStatement(IfStatement {
-            loc: self.loc.clone(),
-            iff: IfPiece {
-                content: IfCondPiece {
-                    loc: self.loc.clone(),
-                    expression: Box::new(check_done_expr),
-                    then: if_done_blk,
-                },
+        // case Some(x)
+        let case_some_blk = MatchRule::enum_and_case(
+            self.loc.clone(),
+            "Maybe",
+            "Some",
+            Some(self.id.clone()),
+            CodeBlock {
+                loc: self.loc.clone(),
+                entries: vec![assign_to_any_hit, Statement::CodeBlock(self.then.clone())],
             },
-            elsif: vec![],
+        );
+
+        // case None
+        let case_none_block = MatchRule::enum_and_case(
+            self.loc.clone(),
+            "Maybe",
+            "None",
+            None,
+            CodeBlock {
+                loc: self.loc.clone(),
+                entries: vec![
+                    if_not_any_hit,
+                    Statement::BreakStatement(BreakStatement {
+                        loc: self.loc.clone(),
+                    }),
+                ],
+            },
+        );
+
+        // RuntimeError::UnexpectedType
+        let unexpected_type = Expression::from(&PostfixExpression {
+            loc: self.loc.clone(),
+            base: Primary::Identifier(Identifier {
+                loc: self.loc.clone(),
+                value: "RuntimeError".to_owned(),
+            }),
+            terms: vec![PostfixTerm::PostfixTermEnumCase(PostfixTermEnumCase {
+                loc: self.loc.clone(),
+                id: Identifier {
+                    loc: self.loc.clone(),
+                    value: "UnexpectedType".to_owned(),
+                },
+                payload: None,
+            })],
+        });
+
+        // throw UT
+        let throw_ut = Statement::ThrowStatement(ThrowStatement {
+            loc: self.loc.clone(),
+            val: unexpected_type,
+        });
+
+        // read __for__next
+        let read_for_next = Expression::from(&PostfixExpression::from(&Primary::Identifier(
+            val_next_ident.clone(),
+        )));
+
+        // match __for__next { some(x), none, els => throw UT }
+        let match_for_next = Statement::MatchStatement(MatchStatement {
+            loc: self.loc.clone(),
+            expr: read_for_next,
+            rules: vec![case_some_blk, case_none_block],
             els: Some(ElsePiece {
                 loc: self.loc.clone(),
-                then: if_more_blk,
+                then: CodeBlock {
+                    loc: self.loc.clone(),
+                    entries: vec![throw_ut],
+                },
             }),
         });
 
-        // fetch then check
+        // while (true) { fetch_next; match_next; }
         let while_body = CodeBlock {
             loc: self.loc.clone(),
-            entries: vec![fetch_next_val, check_stmt],
+            entries: vec![fetch_next_val, match_for_next],
         };
 
         // this is while true { do the body }

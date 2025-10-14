@@ -388,7 +388,9 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     A mixin that defines the contract for an object that can be iterated over. It provides common functional methods for transforming the iteration stream.
 
     **Requirements:**
-    *   The struct including this mixin **must** implement an instance method `next()` that returns a `Box` object with two fields: `.done` (a `Bool` indicating if the iteration is complete) and `.value` (the current item, present only if `.done` is `false`).
+    *   The struct including this mixin **must** implement an instance method `next()` that returns a `Maybe` instance:
+        *   `Maybe::Some(value)`: Indicates the next item in the iteration.
+        *   `Maybe::None`: Indicates that the iteration is complete.
 
     **Methods Offered:**
     *   `map(f)`: Returns a new iterator that applies the function `f` to each item yielded by this iterator.

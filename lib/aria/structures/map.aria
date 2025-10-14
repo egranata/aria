@@ -154,18 +154,13 @@ struct Map {
         }
 
         func next() {
-            val next_key = this.keys.next();
-            if next_key.done {
-                return next_key;
+            val key = this.keys.next();
+            if key.is_None() {
+                return Maybe::None;
             } else {
-                val value = this.map[next_key.value];
-                return Box(){
-                    .done = false,
-                    .value = Box(){
-                        .key = next_key.value,
-                        .value = value,
-                    }
-                };
+                val key = key!!;
+                val value = this.map[key];
+                return Maybe::Some(Box(){ .key, .value });
             }
         }
 

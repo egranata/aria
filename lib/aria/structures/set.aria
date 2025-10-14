@@ -70,13 +70,13 @@ struct Set {
 
         func next() {
             val nv = this.impl.next();
-            if nv.done {
-                return nv;
-            } else {
-                return Box(){
-                    .done = false,
-                    .value = nv.value.key,
-                };
+            match nv {
+                case None => {
+                    return Maybe::None;
+                },
+                case Some(x) => {
+                    return Maybe::Some(x.key);
+                }
             }
         }
     }
