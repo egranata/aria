@@ -1,8 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: uses_dylib("aria_path");
 import aria.date.instant;
+import Iterator from aria.iterator.mixin;
 
 struct Path {
+    struct Iterator {
+        func iterator() { return this; }
+        struct Entry {}
+
+        include Iterator
+    }
+
     type func new_with_current_directory() {
         return This._cwd();
     }

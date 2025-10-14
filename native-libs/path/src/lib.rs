@@ -2,14 +2,16 @@
 
 use haxby_opcodes::function_attribs::{FUNC_IS_METHOD, METHOD_ATTRIBUTE_TYPE};
 use haxby_vm::{
-    builtins::VmBuiltins,
+    builtins::{
+        VmBuiltins,
+        native_iterator::{NativeIteratorImpl, create_iterator_struct},
+    },
     error::{dylib_load::LoadResult, vm_error::VmErrorReason},
     frame::Frame,
     ok_or_err,
     runtime_module::RuntimeModule,
     runtime_value::{
-        RuntimeValue, function::BuiltinFunctionImpl, list::List, object::Object,
-        opaque::OpaqueValue,
+        RuntimeValue, function::BuiltinFunctionImpl, object::Object, opaque::OpaqueValue,
     },
     some_or_err,
     vm::{self, RunloopExit},
@@ -822,24 +824,30 @@ impl BuiltinFunctionImpl for Entries {
             VmErrorReason::UnexpectedVmState.into()
         );
 
-        let aria_struct = aria_object.get_struct();
+        let aria_struct = aria_object.get_struct().clone();
+        let iterator_struct = some_or_err!(
+            some_or_err!(
+                aria_struct.load_named_value("Iterator"),
+                VmErrorReason::UnexpectedVmState.into()
+            )
+            .as_struct(),
+            VmErrorReason::UnexpectedVmState.into()
+        );
 
         let rfo = rust_obj.content.borrow_mut();
-        let list = List::from(&[]);
-        if let Ok(rd) = rfo.read_dir() {
-            for entry in rd.flatten() {
-                let entry_object = Object::new(aria_struct);
-                let entry_refcell = MutablePath {
-                    content: RefCell::new(entry.path()),
-                };
 
-                let entry_opaque = OpaqueValue::new(entry_refcell);
-                entry_object.write("__path", RuntimeValue::Opaque(entry_opaque));
-                list.append(RuntimeValue::Object(entry_object));
-            }
+        if let Ok(rd) = rfo.read_dir() {
+            let flatten = rd
+                .flatten()
+                .map(move |e| new_from_path(&aria_struct, e.path()));
+            let iterator =
+                create_iterator_struct(&iterator_struct, NativeIteratorImpl::new(flatten));
+            frame.stack.push(iterator);
+        } else {
+            let iterator = create_iterator_struct(&iterator_struct, NativeIteratorImpl::empty());
+            frame.stack.push(iterator);
         }
 
-        frame.stack.push(RuntimeValue::List(list));
         Ok(RunloopExit::Ok(()))
     }
 
