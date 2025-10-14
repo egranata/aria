@@ -95,11 +95,11 @@ extension List {
 
         func next() {
             if this.index == this.len {
-                return Box(){.done = true};
+                return Maybe::None;
             } else {
                 val v = this.list[this.index];
                 this.index = this.index + 1;
-                return Box(){.done = false, .value=v};
+                return Maybe::Some(v);
             }
         }
     }

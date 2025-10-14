@@ -1,17 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 struct IteratorValue {
-    type func end() {
-        return Box(){
-            .done = true,
-        };
-    }
+    type func end() = Maybe::None;
 
-    type func more(v) {
-        return Box() {
-            .done = false,
-            .value = v,
-        };
-    }
+    type func more(v) = Maybe::Some(v);
 }
 
 struct GenValues {

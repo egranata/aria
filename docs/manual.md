@@ -1093,10 +1093,9 @@ A mixin can be included in multiple types, and a type can include multiple mixin
 
 ## 🎡 Iterators
 
-`for` loops work by leveraging iterators. An iterator is an object that has a `next` method with no arguments. This method is expected to return an object with a specific layout:
-
-- if the iteration is complete, a field named `done` with value `true`;
-- otherwise, a field named `done` with value `false`, and a field named `value`, whose value is the next element in the iteration
+`for` loops work by leveraging iterators. An iterator is an object that has a `next` method with no arguments. This method is expected to return an instance of the `Maybe` type:
+- if the iteration is complete, it returns `Maybe::None`;
+- otherwise, it returns `Maybe::Some(next_item)`.
 
 This mechanism allows for finite or infinite sequences, for values to be pre-computed or dynamically generated.
 
@@ -1116,10 +1115,10 @@ struct SampleIterator {
 
     instance func next() {
         if this.num == 5 {
-            return Box() {.done = true};
+            return Maybe::None;
         } else {
             this.num += 1;
-            return Box{.done = false, .value = this.num};
+            return Maybe::Some(this.num);
         }
     }
 }
@@ -1158,10 +1157,10 @@ struct SampleIterator {
 
     instance func next() {
         if this.num == 5 {
-            return Box() {.done = true};
+            return Maybe::None;
         } else {
             this.num += 1;
-            return Box{.done = false, .value = this.num};
+            return Maybe::Some(this.num);
         }
     }
 

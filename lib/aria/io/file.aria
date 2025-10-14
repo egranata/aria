@@ -167,15 +167,7 @@ struct FileLineIterator {
     }
 
     func next() {
-        val maybe_line = this.file.try_readln();
-        match maybe_line {
-            case None => {
-                return Box(){.done = true};
-            },
-            case Some(line) => {
-                return Box(){.done = false, .value = line};
-            },
-        }
+        return this.file.try_readln();
     }
 }
 

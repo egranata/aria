@@ -16,18 +16,18 @@ struct Enumerate {
 
     func next() {
         val iter_next = this.iter.next();
-        if iter_next.done {
-            return iter_next;
-        } else {
-            val next = Box(){
-                .done = false,
-                .value = Box(){
+        match iter_next {
+            case None => {
+                return Maybe::None;
+            },
+            case Some(v) => {
+                val next = Maybe::Some(Box(){
                     .index = this.index,
-                    .value = iter_next.value,
-                }
-            };
-            this.index += 1;
-            return next;
+                    .value = v,
+                });
+                this.index += 1;
+                return next;
+            },
         }
     }
 }

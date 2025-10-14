@@ -12,11 +12,17 @@ struct FilteringIterator {
     func next() {
         while true {
             val nv = this.it.next();
-            if nv.done {
-                return nv;
-            }
-            if this.clause(nv.value) {
-                return nv;
+            match nv {
+                case Some(x) => {
+                    if this.clause(x) {
+                        return Maybe::Some(x);
+                    } else {
+                        continue;
+                    }
+                },
+                case None => {
+                    return Maybe::None;
+                }
             }
         }
     }
@@ -33,13 +39,14 @@ struct MappingIterator {
     func next() {
         while true {
             val nv = this.it.next();
-            if nv.done {
-                return nv;
+            match nv {
+                case None => {
+                    return Maybe::None;
+                },
+                case Some(x) => {
+                    return Maybe::Some(this.clause(x));
+                }
             }
-            return Box() {
-                .done = false,
-                .value = this.clause(nv.value)
-            };
         }
     }
 }
@@ -59,9 +66,7 @@ func mul(x,y) {
 
 mixin Iterator {
     # allow running a for loop directly on an iterator
-    func iterator() {
-        return this;
-    }
+    func iterator() = this;
 
     func where(f) {
         return FilteringIterator.new(this,f);
@@ -145,10 +150,8 @@ mixin Iterator {
 
     func max() {
         val first_item = this.next();
-        if first_item.done {
-            return Maybe::None;
-        }
-        val current_max = first_item.value;
+        if first_item.is_None() { return first_item; }
+        val current_max = first_item!!;
         for v in this {
             if v > current_max {
                 current_max = v;
@@ -159,10 +162,8 @@ mixin Iterator {
 
     func min() {
         val first_item = this.next();
-        if first_item.done {
-            return Maybe::None;
-        }
-        val current_min = first_item.value;
+        if first_item.is_None() { return first_item; }
+        val current_min = first_item!!;
         for v in this {
             if v < current_min {
                 current_min = v;
@@ -179,13 +180,7 @@ mixin Iterator {
         return acc;
     }
 
-    func first() {
-        val first_item = this.next();
-        if first_item.done {
-            return Maybe::None;
-        }
-        return Maybe::Some(first_item.value);
-    }
+    func first() = this.next();
 
     func last() {
         val last_value = Maybe::None;
