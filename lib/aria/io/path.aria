@@ -5,9 +5,7 @@ import Iterator from aria.iterator.mixin;
 
 struct Path {
     struct Error {
-        type func new(msg) {
-            return alloc(This) { .msg = msg };
-        }
+        type func new(msg) = alloc(This) {.msg};
 
         func prettyprint() {
             return "path error: {0}".format(this.msg);

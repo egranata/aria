@@ -17,7 +17,7 @@ use haxby_vm::{
     vm::{self, RunloopExit},
 };
 
-use std::{cell::RefCell, path::PathBuf, time::SystemTime};
+use std::{cell::RefCell, path::PathBuf, rc::Rc, time::SystemTime};
 
 struct MutablePath {
     content: RefCell<std::path::PathBuf>,
@@ -38,16 +38,32 @@ fn new_from_path<P: AsRef<std::path::Path>>(
     RuntimeValue::Object(aria_obj)
 }
 
-fn create_path_error(
+fn create_path_result_err(
     path_struct: &haxby_vm::runtime_value::structure::Struct,
     message: String,
+    vm: &mut vm::VirtualMachine,
 ) -> Result<RuntimeValue, VmErrorReason> {
     let path_error = path_struct.extract_field("Error", |field| field.as_struct())?;
 
     let path_error = Object::new(&path_error);
     path_error.write("msg", RuntimeValue::String(message.into()));
 
-    Ok(RuntimeValue::Object(path_error))
+    Ok(ok_or_err!(
+        vm.builtins
+            .create_result_err(RuntimeValue::Object(path_error)),
+        VmErrorReason::UnexpectedVmState.into()
+    ))
+}
+
+fn mut_path_from_aria(aria_object: &Object) -> Result<Rc<MutablePath>, VmErrorReason> {
+    let rust_obj = some_or_err!(
+        aria_object.read("__path"),
+        VmErrorReason::UnexpectedVmState.into()
+    );
+    Ok(some_or_err!(
+        rust_obj.as_opaque_concrete::<MutablePath>(),
+        VmErrorReason::UnexpectedVmState.into()
+    ))
 }
 
 #[derive(Default)]
@@ -121,14 +137,7 @@ impl BuiltinFunctionImpl for Prettyprint {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
 
@@ -166,14 +175,7 @@ impl BuiltinFunctionImpl for Append {
         let the_path =
             VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let mut rfo = rust_obj.content.borrow_mut();
         rfo.push(the_path);
@@ -208,14 +210,7 @@ impl BuiltinFunctionImpl for Pop {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let mut rfo = rust_obj.content.borrow_mut();
         rfo.pop();
@@ -246,14 +241,7 @@ impl BuiltinFunctionImpl for IsAbsolutePath {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame
@@ -285,14 +273,7 @@ impl BuiltinFunctionImpl for Exists {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame
@@ -324,14 +305,7 @@ impl BuiltinFunctionImpl for IsDirectory {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame
@@ -363,14 +337,7 @@ impl BuiltinFunctionImpl for IsFile {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame
@@ -402,14 +369,7 @@ impl BuiltinFunctionImpl for IsSymlink {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame
@@ -441,14 +401,7 @@ impl BuiltinFunctionImpl for Canonical {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         let val = match rfo.canonicalize() {
@@ -459,13 +412,7 @@ impl BuiltinFunctionImpl for Canonical {
                     VmErrorReason::UnexpectedVmState.into()
                 )
             }
-            Err(e) => {
-                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                ok_or_err!(
-                    vm.builtins.create_result_err(error_obj),
-                    VmErrorReason::UnexpectedVmState.into()
-                )
-            }
+            Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
         };
 
         frame.stack.push(val);
@@ -495,14 +442,7 @@ impl BuiltinFunctionImpl for Size {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         let val = match rfo.metadata() {
@@ -513,13 +453,7 @@ impl BuiltinFunctionImpl for Size {
                     VmErrorReason::UnexpectedVmState.into()
                 )
             }
-            Err(e) => {
-                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                ok_or_err!(
-                    vm.builtins.create_result_err(error_obj),
-                    VmErrorReason::UnexpectedVmState.into()
-                )
-            }
+            Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
         };
 
         frame.stack.push(val);
@@ -549,25 +483,12 @@ impl BuiltinFunctionImpl for CreatedTime {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         let val = match rfo.metadata() {
             Ok(md) => match md.created() {
-                Err(e) => {
-                    let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                    ok_or_err!(
-                        vm.builtins.create_result_err(error_obj),
-                        VmErrorReason::UnexpectedVmState.into()
-                    )
-                }
+                Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
                 Ok(val) => {
                     let val = val
                         .duration_since(SystemTime::UNIX_EPOCH)
@@ -580,13 +501,7 @@ impl BuiltinFunctionImpl for CreatedTime {
                     )
                 }
             },
-            Err(e) => {
-                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                ok_or_err!(
-                    vm.builtins.create_result_err(error_obj),
-                    VmErrorReason::UnexpectedVmState.into()
-                )
-            }
+            Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
         };
 
         frame.stack.push(val);
@@ -616,25 +531,12 @@ impl BuiltinFunctionImpl for AccessedTime {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         let val = match rfo.metadata() {
             Ok(md) => match md.accessed() {
-                Err(e) => {
-                    let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                    ok_or_err!(
-                        vm.builtins.create_result_err(error_obj),
-                        VmErrorReason::UnexpectedVmState.into()
-                    )
-                }
+                Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
                 Ok(val) => {
                     let val = val
                         .duration_since(SystemTime::UNIX_EPOCH)
@@ -647,13 +549,7 @@ impl BuiltinFunctionImpl for AccessedTime {
                     )
                 }
             },
-            Err(e) => {
-                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                ok_or_err!(
-                    vm.builtins.create_result_err(error_obj),
-                    VmErrorReason::UnexpectedVmState.into()
-                )
-            }
+            Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
         };
 
         frame.stack.push(val);
@@ -683,25 +579,12 @@ impl BuiltinFunctionImpl for ModifiedTime {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         let val = match rfo.metadata() {
             Ok(md) => match md.modified() {
-                Err(e) => {
-                    let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                    ok_or_err!(
-                        vm.builtins.create_result_err(error_obj),
-                        VmErrorReason::UnexpectedVmState.into()
-                    )
-                }
+                Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
                 Ok(val) => {
                     let val = val
                         .duration_since(SystemTime::UNIX_EPOCH)
@@ -714,13 +597,7 @@ impl BuiltinFunctionImpl for ModifiedTime {
                     )
                 }
             },
-            Err(e) => {
-                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
-                ok_or_err!(
-                    vm.builtins.create_result_err(error_obj),
-                    VmErrorReason::UnexpectedVmState.into()
-                )
-            }
+            Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
         };
 
         frame.stack.push(val);
@@ -750,14 +627,7 @@ impl BuiltinFunctionImpl for Filename {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         match rfo.file_name() {
@@ -804,14 +674,7 @@ impl BuiltinFunctionImpl for Extension {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         match rfo.extension() {
@@ -858,14 +721,7 @@ impl BuiltinFunctionImpl for Entries {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let aria_struct = aria_object.get_struct().clone();
         let iterator_struct = some_or_err!(
@@ -917,14 +773,7 @@ impl BuiltinFunctionImpl for MakeDirectory {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame.stack.push(RuntimeValue::Boolean(
@@ -956,14 +805,7 @@ impl BuiltinFunctionImpl for MakeDirectories {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame.stack.push(RuntimeValue::Boolean(
@@ -995,14 +837,7 @@ impl BuiltinFunctionImpl for RemoveDirectory {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame.stack.push(RuntimeValue::Boolean(
@@ -1034,14 +869,7 @@ impl BuiltinFunctionImpl for RemoveFile {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = some_or_err!(
-            aria_object.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_obj = some_or_err!(
-            rust_obj.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let rust_obj = mut_path_from_aria(&aria_object)?;
 
         let rfo = rust_obj.content.borrow_mut();
         frame.stack.push(RuntimeValue::Boolean(
@@ -1074,23 +902,8 @@ impl BuiltinFunctionImpl for Copy {
         let this_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
         let other_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let this_path = some_or_err!(
-            this_path.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let other_path = some_or_err!(
-            other_path.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-
-        let this_path = some_or_err!(
-            this_path.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let other_path = some_or_err!(
-            other_path.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let this_path = mut_path_from_aria(&this_path)?;
+        let other_path = mut_path_from_aria(&other_path)?;
 
         let this_path = this_path.content.borrow_mut();
         let other_path = other_path.content.borrow_mut();
@@ -1128,23 +941,8 @@ impl BuiltinFunctionImpl for CommonAncestor {
         let this_struct = this_path.get_struct();
         let other_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let this_path = some_or_err!(
-            this_path.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let other_path = some_or_err!(
-            other_path.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-
-        let this_path = some_or_err!(
-            this_path.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let other_path = some_or_err!(
-            other_path.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let this_path = mut_path_from_aria(&this_path)?;
+        let other_path = mut_path_from_aria(&other_path)?;
 
         let this_path = this_path.content.borrow_mut();
         let other_path = other_path.content.borrow_mut();
@@ -1191,30 +989,15 @@ impl BuiltinFunctionImpl for Equals {
         let this_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
         let other_path = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let this_path = some_or_err!(
-            this_path.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let other_path = some_or_err!(
-            other_path.read("__path"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let this_path = mut_path_from_aria(&this_path)?;
+        let other_path = mut_path_from_aria(&other_path)?;
 
-        let this_path = some_or_err!(
-            this_path.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let other_path = some_or_err!(
-            other_path.as_opaque_concrete::<MutablePath>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-
-        let this_path = this_path.content.borrow_mut().clone();
-        let other_path = other_path.content.borrow_mut().clone();
+        let this_path = this_path.content.borrow_mut();
+        let other_path = other_path.content.borrow_mut();
 
         frame
             .stack
-            .push(RuntimeValue::Boolean((this_path == other_path).into()));
+            .push(RuntimeValue::Boolean((*this_path == *other_path).into()));
         Ok(RunloopExit::Ok(()))
     }
 
