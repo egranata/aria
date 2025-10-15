@@ -4,7 +4,7 @@ import Instant from aria.date.instant;
 import Path from aria.io.path;
 
 func is_this_test(path) {
-    return path.get_filename() == "dir_entries.aria";
+    return path.get_filename()!! == "dir_entries.aria";
 }
 
 func main() {
