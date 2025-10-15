@@ -503,23 +503,24 @@ impl BuiltinFunctionImpl for Size {
         );
 
         let rfo = rust_obj.content.borrow_mut();
-        match rfo.metadata() {
+        let val = match rfo.metadata() {
             Ok(md) => {
-                let val = ok_or_err!(
+                ok_or_err!(
                     vm.builtins
-                        .create_maybe_some(RuntimeValue::Integer((md.len() as i64).into())),
+                        .create_result_ok(RuntimeValue::Integer((md.len() as i64).into())),
                     VmErrorReason::UnexpectedVmState.into()
-                );
-                frame.stack.push(val);
+                )
             }
-            Err(_) => {
-                let val = ok_or_err!(
-                    vm.builtins.create_maybe_none(),
+            Err(e) => {
+                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
+                ok_or_err!(
+                    vm.builtins.create_result_err(error_obj),
                     VmErrorReason::UnexpectedVmState.into()
-                );
-                frame.stack.push(val);
+                )
             }
-        }
+        };
+
+        frame.stack.push(val);
         Ok(RunloopExit::Ok(()))
     }
 
