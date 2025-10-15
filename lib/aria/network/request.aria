@@ -20,7 +20,7 @@ struct Request {
         }
 
         func prettyprint() {
-            return "network error: {0}".format(self.msg);
+            return "network error: {0}".format(this.msg);
         }
     }
 
