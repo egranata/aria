@@ -57,7 +57,14 @@ struct Path {
     }
 
     func accessed() {
-        return aria.date.instant.Instant.new_with_local_timestamp(this._when_accessed());
+        match this._when_accessed() {
+            case Ok(val) => {
+                return Result::Ok(aria.date.instant.Instant.new_with_local_timestamp(val));
+            }
+            case Err(err) => {
+                return Result::Err(err);
+            }
+        };
     }
 
     func modified() {

@@ -22,7 +22,7 @@ func main() {
 
     val creation = entries[0].created()!!;
     val modified = entries[0].modified();
-    val accessed = entries[0].accessed();
+    val accessed = entries[0].accessed()!!;
 
     assert creation.year >= 2025;
     assert modified.year >= 2025;
