@@ -597,20 +597,46 @@ impl From<&CompOperation> for LogOperation {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::large_enum_variant)]
-pub enum LambaBody {
+pub enum LambdaBody {
     Expression(Expression),
     CodeBlock(CodeBlock),
+}
+
+impl From<&LambdaBody> for FunctionBody {
+    fn from(value: &LambdaBody) -> Self {
+        match value {
+            LambdaBody::Expression(e) => {
+                let ret_stmt = ReturnStatement {
+                    loc: e.loc().clone(),
+                    val: Some(e.clone()),
+                };
+                Self {
+                    code: CodeBlock {
+                        loc: ret_stmt.loc.clone(),
+                        entries: vec![Statement::ReturnStatement(ret_stmt)],
+                    },
+                }
+            }
+            LambdaBody::CodeBlock(b) => Self { code: b.clone() },
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LambdaFunction {
     pub loc: SourcePointer,
     pub args: ArgumentList,
-    pub body: Box<LambaBody>,
+    pub body: Box<LambdaBody>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunctionBody {
     pub code: CodeBlock,
+}
+
+impl FunctionBody {
+    pub fn loc(&self) -> &SourcePointer {
+        &self.code.loc
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

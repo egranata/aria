@@ -25,6 +25,7 @@ mod hasattr;
 mod integer;
 mod list;
 mod listattrs;
+pub mod native_iterator;
 mod now;
 mod prettyprint;
 mod print;
@@ -122,9 +123,9 @@ impl VmBuiltins {
 
     pub fn get_builtin_type_by_name(&self, name: &str) -> RuntimeValueType {
         self.load_named_value(name)
-            .unwrap_or_else(|| panic!("missing {name} type"))
+            .unwrap_or_else(|| panic!("missing builtin value {name}"))
             .as_type()
-            .unwrap_or_else(|| panic!("invalid {name} type"))
+            .unwrap_or_else(|| panic!("{name} is not a type"))
             .clone()
     }
 

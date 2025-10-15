@@ -1,6 +1,6 @@
 [package]
 name = "file-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 edition = "2024"
 
 [lib]

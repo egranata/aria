@@ -93,7 +93,7 @@ dependencies = [
 
 [[package]]
 name = "aria-bin"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "ariadne",
  "clap",
@@ -272,7 +272,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "compiler-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "enum-as-inner",
  "lazy_static",
@@ -481,7 +481,7 @@ dependencies = [
 
 [[package]]
 name = "file-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "opcodes-lib",
  "vm-lib",
@@ -1121,7 +1121,7 @@ dependencies = [
 
 [[package]]
 name = "network-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "opcodes-lib",
  "reqwest",
@@ -1179,7 +1179,7 @@ checksum = "a4895175b425cb1f87721b59f0f286c2092bd4af812243672510e1ac53e2e0ad"
 
 [[package]]
 name = "opcodes-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 
 [[package]]
 name = "openssl"
@@ -1250,7 +1250,7 @@ dependencies = [
 
 [[package]]
 name = "parser-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "pest",
  "pest_derive",
@@ -1258,7 +1258,7 @@ dependencies = [
 
 [[package]]
 name = "path-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "opcodes-lib",
  "vm-lib",
@@ -1333,7 +1333,7 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
 name = "platform-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "opcodes-lib",
  "vm-lib",
@@ -1446,7 +1446,7 @@ dependencies = [
 
 [[package]]
 name = "regex-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "opcodes-lib",
  "regex",
@@ -1939,7 +1939,7 @@ dependencies = [
 
 [[package]]
 name = "test-bin"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "ariadne",
  "clap",
@@ -1974,7 +1974,7 @@ dependencies = [
 
 [[package]]
 name = "timezone-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "libc",
  "opcodes-lib",
@@ -2202,7 +2202,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vm-lib"
-version = "0.9.20250918"
+version = "0.9.20251013"
 dependencies = [
  "compiler-lib",
  "enum-as-inner",

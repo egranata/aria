@@ -16,13 +16,12 @@ func run_over_dir(path: Path) {
     val total_size = 0;
 
     for entry in path.entries() {
-        val mod_time = entry.creation_ms_since_epoch();
+        val mod_time = entry.created();
         match mod_time {
             isa Maybe and case None => {
-                mod_time = 0;
+                mod_time = Instant.new_with_local_timestamp(0);
             }
         }
-        val mod_time = Instant.new_with_local_timestamp(mod_time);
 
         val month = pad(mod_time.month);
         val month = pad(mod_time.month);
