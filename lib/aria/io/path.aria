@@ -3,6 +3,16 @@ flag: uses_dylib("aria_path");
 import aria.date.instant;
 
 struct Path {
+    struct Error {
+        type func new(msg) {
+            return alloc(This) { .msg = msg };
+        }
+
+        func prettyprint() {
+            return "path error: {0}".format(this.msg);
+        }
+    }
+    
     type func new_with_current_directory() {
         return This._cwd();
     }

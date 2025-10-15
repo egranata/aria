@@ -9,7 +9,7 @@ func is_this_test(path) {
 
 func main() {
     val path = getenv("ARIA_TEST_DIR").unwrap_Some();
-    val path = Path.new(path).new_canonical().unwrap_Some();
+    val path = Path.new(path).new_canonical().unwrap_Ok();
 
     val entries = path.entries();
     entries = entries.iterator().where(is_this_test).to_list();

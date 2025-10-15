@@ -36,6 +36,18 @@ fn new_from_path<P: AsRef<std::path::Path>>(
     RuntimeValue::Object(aria_obj)
 }
 
+fn create_path_error(
+    path_struct: &haxby_vm::runtime_value::structure::Struct,
+    message: String,
+) -> Result<RuntimeValue, VmErrorReason> {
+    let path_error = path_struct.extract_field("Error", |field| field.as_struct())?;
+
+    let path_error = Object::new(&path_error);
+    path_error.write("msg", RuntimeValue::String(message.into()));
+
+    Ok(RuntimeValue::Object(path_error))
+}
+
 #[derive(Default)]
 struct New {}
 impl BuiltinFunctionImpl for New {
@@ -437,25 +449,24 @@ impl BuiltinFunctionImpl for Canonical {
         );
 
         let rfo = rust_obj.content.borrow_mut();
-        let canonical_rfo = match rfo.canonicalize() {
-            Ok(path) => path,
-            Err(_) => {
-                let none = ok_or_err!(
-                    vm.builtins.create_maybe_none(),
+        let val = match rfo.canonicalize() {
+            Ok(path) => {
+                let canonical_object = new_from_path(aria_object.get_struct(), &path);
+                ok_or_err!(
+                    vm.builtins.create_result_ok(canonical_object),
                     VmErrorReason::UnexpectedVmState.into()
-                );
-                frame.stack.push(none);
-                return Ok(RunloopExit::Ok(()));
+                )
+            }
+            Err(e) => {
+                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
+                ok_or_err!(
+                    vm.builtins.create_result_err(error_obj),
+                    VmErrorReason::UnexpectedVmState.into()
+                )
             }
         };
 
-        let canonical_object = new_from_path(aria_object.get_struct(), &canonical_rfo);
-        let some = ok_or_err!(
-            vm.builtins.create_maybe_some(canonical_object),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-
-        frame.stack.push(some);
+        frame.stack.push(val);
         Ok(RunloopExit::Ok(()))
     }
 
@@ -495,7 +506,8 @@ impl BuiltinFunctionImpl for Size {
         match rfo.metadata() {
             Ok(md) => {
                 let val = ok_or_err!(
-                    vm.builtins.create_maybe_some(RuntimeValue::Integer((md.len() as i64).into())),
+                    vm.builtins
+                        .create_maybe_some(RuntimeValue::Integer((md.len() as i64).into())),
                     VmErrorReason::UnexpectedVmState.into()
                 );
                 frame.stack.push(val);
