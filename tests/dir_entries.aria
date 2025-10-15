@@ -21,7 +21,7 @@ func main() {
     assert entries[0].get_extension() == "aria";
 
     val creation = entries[0].created()!!;
-    val modified = entries[0].modified();
+    val modified = entries[0].modified()!!;
     val accessed = entries[0].accessed()!!;
 
     assert creation.year >= 2025;

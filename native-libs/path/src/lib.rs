@@ -691,31 +691,37 @@ impl BuiltinFunctionImpl for ModifiedTime {
         );
 
         let rfo = rust_obj.content.borrow_mut();
-        match rfo.metadata() {
+        let val = match rfo.metadata() {
             Ok(md) => match md.modified() {
-                Err(_) => {
-                    let val = ok_or_err!(
-                        vm.builtins.create_maybe_none(),
+                Err(e) => {
+                    let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
+                    ok_or_err!(
+                        vm.builtins.create_result_err(error_obj),
                         VmErrorReason::UnexpectedVmState.into()
-                    );
-                    frame.stack.push(val);
+                    )
                 }
                 Ok(val) => {
                     let val = val
                         .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap()
                         .as_millis();
-                    frame.stack.push(RuntimeValue::Integer((val as i64).into()));
+                    ok_or_err!(
+                        vm.builtins
+                            .create_result_ok(RuntimeValue::Integer((val as i64).into())),
+                        VmErrorReason::UnexpectedVmState.into()
+                    )
                 }
             },
-            Err(_) => {
-                let val = ok_or_err!(
-                    vm.builtins.create_maybe_none(),
+            Err(e) => {
+                let error_obj = create_path_error(aria_object.get_struct(), e.to_string())?;
+                ok_or_err!(
+                    vm.builtins.create_result_err(error_obj),
                     VmErrorReason::UnexpectedVmState.into()
-                );
-                frame.stack.push(val);
+                )
             }
-        }
+        };
+
+        frame.stack.push(val);
         Ok(RunloopExit::Ok(()))
     }
 
