@@ -13,6 +13,7 @@ func main() {
     assert binls.accessed().is_Ok();
     assert binls.modified().is_Ok();
     assert binls.get_filename().is_Some();
+    assert binls.get_extension().is_None();
     
     val usrbin = Path.new("/usr/bin");
     assert usrbin.is_directory();
@@ -22,6 +23,7 @@ func main() {
     assert usrbin.accessed().is_Ok();
     assert usrbin.modified().is_Ok();
     assert usrbin.get_filename().is_Some();
+    assert usrbin.get_extension().is_None();
 
     val nodir = Path.new("thisfiledoesnotexist/..");
     assert nodir.exists() == false;
@@ -31,4 +33,8 @@ func main() {
     assert nodir.accessed().is_Err();
     assert nodir.modified().is_Err();
     assert nodir.get_filename().is_None();
+    assert nodir.get_extension().is_None();
+    
+    val dnsfile = Path.new("/etc/resolv.conf");
+    assert dnsfile.get_extension().is_Some();
 }

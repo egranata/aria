@@ -18,7 +18,7 @@ func main() {
     assert entries[0] isa Path;
     assert entries[0].is_file();
     assert entries[0].exists();
-    assert entries[0].get_extension() == "aria";
+    assert entries[0].get_extension()!! == "aria";
 
     val creation = entries[0].created()!!;
     val modified = entries[0].modified()!!;

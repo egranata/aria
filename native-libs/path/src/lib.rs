@@ -815,7 +815,12 @@ impl BuiltinFunctionImpl for Extension {
         match rfo.extension() {
             Some(name) => {
                 let name = some_or_err!(name.to_str(), VmErrorReason::UnexpectedVmState.into());
-                frame.stack.push(RuntimeValue::String(name.into()));
+                let val = ok_or_err!(
+                    vm.builtins
+                        .create_maybe_some(RuntimeValue::String(name.into())),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                frame.stack.push(val);
             }
             None => {
                 let val = ok_or_err!(
