@@ -10,7 +10,7 @@ func main() {
         local_platform.is_macOS() ? "/usr/bin/../bin/../lib/../../bin/ls" :
         "<no_such_file_really_what_would_one_even_do_now>"
     );
-    val q = p.new_canonical().unwrap_Some();
+    val q = p.new_canonical().unwrap_Ok();
 
     # on Linux, it's /usr/bin/ls; on mac it's /bin/ls
     # checking for a suffix and whether the file exists should
@@ -19,5 +19,5 @@ func main() {
     assert q.exists();
 
     val p = Path.new("/no/such/path/would/ever/exist/right/c:\makeit/really/confusing/too.txt");
-    assert p.new_canonical().is_None();
+    assert p.new_canonical().is_Err();
 }

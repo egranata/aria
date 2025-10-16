@@ -4,6 +4,14 @@ import aria.date.instant;
 import Iterator from aria.iterator.mixin;
 
 struct Path {
+    struct Error {
+        type func new(msg) = alloc(This) {.msg};
+
+        func prettyprint() {
+            return "path error: {0}".format(this.msg);
+        }
+    }
+    
     struct Iterator {
         func iterator() { return this; }
         struct Entry {}
@@ -44,15 +52,36 @@ struct Path {
     }
 
     func created() {
-        return aria.date.instant.Instant.new_with_local_timestamp(this._when_created());
+        match this._when_created() {
+            case Ok(val) => {
+                return Result::Ok(aria.date.instant.Instant.new_with_local_timestamp(val));
+            }
+            case Err(err) => {
+                return Result::Err(err);
+            }
+        };
     }
 
     func accessed() {
-        return aria.date.instant.Instant.new_with_local_timestamp(this._when_accessed());
+        match this._when_accessed() {
+            case Ok(val) => {
+                return Result::Ok(aria.date.instant.Instant.new_with_local_timestamp(val));
+            }
+            case Err(err) => {
+                return Result::Err(err);
+            }
+        };
     }
 
     func modified() {
-        return aria.date.instant.Instant.new_with_local_timestamp(this._when_modified());
+        match this._when_modified() {
+            case Ok(val) => {
+                return Result::Ok(aria.date.instant.Instant.new_with_local_timestamp(val));
+            }
+            case Err(err) => {
+                return Result::Err(err);
+            }
+        };
     }
 
     # we could use the builtin _copy, except for type validation
