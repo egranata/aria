@@ -177,7 +177,7 @@ This module provides the `Nothing` enum, representing the absence of a value.
 
 ---
 
-### `aria.core.path`
+### `aria.io.path`
 
 This module provides a `Path` struct for interacting with the file system.
 
@@ -195,19 +195,19 @@ This module provides a `Path` struct for interacting with the file system.
     *   `parent()`: Returns a new `Path` object representing the parent directory of this path.
     *   `read()`: Reads the entire content of the file at this path as a `String`. Throws `File.IOError` on failure.
     *   `write(text)`: Writes a `String` `text` to the file at this path, overwriting existing content. Throws `File.IOError` on failure.
-    *   `accessed()`: Returns the last access time of the file/directory at this path as an `Instant`. Returns `Maybe::None` if not available.
-    *   `created()`: Returns the creation time of the file/directory at this path as an `Instant`. Returns `Maybe::None` if not available.
-    *   `modified()`: Returns the last modification time of the file/directory at this path as an `Instant`. Returns `Maybe::None` if not available.
+    *   `accessed()`: Returns the last access time of the file/directory at this path as an `Instant`. Returns `Result`.
+    *   `created()`: Returns the creation time of the file/directory at this path as an `Instant`. Returns `Result`.
+    *   `modified()`: Returns the last modification time of the file/directory at this path as an `Instant`. Returns `Result`.
     *   `copy_to(other: Path)`: Copies the file at this path to `other`. Returns `true` on success, `false` on failure.
     *   `is_absolute()`: Returns `true` if the path is absolute, `false` otherwise.
     *   `exists()`: Returns `true` if the path exists on the file system, `false` otherwise.
     *   `is_directory()`: Returns `true` if the path points to a directory, `false` otherwise.
     *   `is_file()`: Returns `true` if the path points to a regular file, `false` otherwise.
     *   `is_symlink()`: Returns `true` if the path points to a symbolic link, `false` otherwise.
-    *   `new_canonical()`: Returns a new `Path` object representing the canonical, absolute path (resolving symlinks). Returns `Maybe::None` if the canonical path cannot be resolved.
-    *   `size()`: Returns the size of the file at this path in bytes as an `Int`. Returns `Maybe::None` if not a file or path does not exist.
-    *   `get_filename()`: Returns the final component of the path (the file or directory name) as a `String`. Returns `Maybe::None` if the path has no filename component.
-    *   `get_extension()`: Returns the extension of the file at this path as a `String`. Returns `Maybe::None` if the path has no extension.
+    *   `new_canonical()`: Returns a new `Path` object representing the canonical, absolute path (resolving symlinks). Returns `Result`.
+    *   `size()`: Returns the size of the file at this path in bytes as an `Int`. Returns `Result`.
+    *   `get_filename()`: Returns the final component of the path (the file or directory name) as a `String`. Returns `Maybe`.
+    *   `get_extension()`: Returns the extension of the file at this path as a `String`. Returns `Maybe`.
     *   `entries()`: Returns an `Iterator` of `Path` objects representing the entries (files and subdirectories) within the directory pointed to by this path.
     *   `mkdir()`: Creates a new directory at this path. Returns `true` on success, `false` on failure.
     *   `rmdir()`: Removes an empty directory at this path. Returns `true` on success, `false` on failure.
