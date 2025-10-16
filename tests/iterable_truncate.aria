@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.iterator.mixin;
+
+func main() {
+    val l = [1,2,3,4,5,6,7,8,9,10];
+
+    assert l.iterator().truncate(5).sum() == 15;
+    assert l.iterator().truncate(0).sum() == 0;
+    assert l.iterator().truncate(1000).sum() == 55;
+
+    assert l.iterator().truncate(3).truncate(2).sum() == 3;
+}
