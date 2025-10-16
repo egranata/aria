@@ -3,3 +3,5 @@
 
 # List more specific code owners here
 .github/workflows/macos* @enricobolzonello
+native-libs/path @ZocoLini
+lib/aria/io/path.aria @ZocoLini
