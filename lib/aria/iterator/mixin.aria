@@ -51,6 +51,31 @@ struct MappingIterator {
     }
 }
 
+struct CountReducer {
+    type func new() = alloc(This) {.count = 0};
+    operator () (_x,_y) {
+        this.count += 1;
+        return this;
+    }
+}
+
+struct TruncatedIterator {
+    type func new(i, n: Int) {
+        return alloc(This){
+            .it = i,
+            .remaining = n,
+        };
+    }
+
+    func next() {
+        if this.remaining <= 0 {
+            return Maybe::None;
+        }
+        this.remaining -= 1;
+        return this.it.next();
+    }
+}
+
 func append_to_list(x,y) {
     x.append(y);
     return x;
@@ -140,13 +165,9 @@ mixin Iterator {
         return acc;
     }
 
-    func sum() {
-        return this.reduce(|x,y| => x+y, 0);
-    }
+    func sum(v0=0) = this.reduce(|x,y| => x+y, v0);
 
-    func product() {
-        return this.reduce(|x,y| => x*y, 1);
-    }
+    func product(v0=1) = this.reduce(|x,y| => x*y, v0);
 
     func max() {
         val first_item = this.next();
@@ -203,8 +224,17 @@ mixin Iterator {
         }
         return Maybe::None;
     }
-}
 
+    func skip(n: Int) {
+        while n > 0 {
+            val _ = this.next();
+            n -= 1;
+        }
+        return this;
+    }
+
+    func truncate(n: Int) = TruncatedIterator.new(this, n);
+}
 
 extension FilteringIterator {
     include Iterator
@@ -214,74 +244,33 @@ extension MappingIterator {
     include Iterator
 }
 
+extension TruncatedIterator {
+    include Iterator
+}
+
 extension List.ListIterator {
     include Iterator
 }
 
 mixin Iterable {
-    func where(f) {
-        return this.iterator().where(f);
-    }
-
-    func map(f) {
-        return this.iterator().map(f);
-    }
-
-    func reduce(f,v0) {
-        return this.iterator().reduce(f,v0);
-    }
-
-    func to_list() {
-        return this.iterator().to_list();
-    }
-
-    func all(f) {
-        return this.iterator().all(f);
-    }
-
-    func any(f) {
-        return this.iterator().any(f);
-    }
-
-    func find(f) {
-        return this.iterator().find(f);
-    }
-
-    func position(f) {
-        return this.iterator().position(f);
-    }
-
-    func sum() {
-        return this.iterator().sum();
-    }
-
-    func product() {
-        return this.iterator().product();
-    }
-
-    func max() {
-        return this.iterator().max();
-    }
-
-    func min() {
-        return this.iterator().min();
-    }
-
-    func count() {
-        return this.iterator().count();
-    }
-
-    func first() {
-        return this.iterator().first();
-    }
-
-    func last() {
-        return this.iterator().last();
-    }
-
-    func nth(n) {
-        return this.iterator().nth(n);
-    }
+    func where(f) = this.iterator().where(f);
+    func map(f) = this.iterator().map(f);
+    func reduce(f,v0) = this.iterator().reduce(f,v0);
+    func to_list() = this.iterator().to_list();
+    func all(f) = this.iterator().all(f);
+    func any(f) = this.iterator().any(f);
+    func find(f) = this.iterator().find(f);
+    func position(f) = this.iterator().position(f);
+    func sum(v0=0) = this.iterator().sum(v0);
+    func product(v0=1) = this.iterator().product(v0);
+    func max() = this.iterator().max();
+    func min() = this.iterator().min();
+    func count() = this.iterator().count();
+    func first() = this.iterator().first();
+    func last() = this.iterator().last();
+    func nth(n) = this.iterator().nth(n);
+    func skip(n: Int) = this.iterator().skip(n);
+    func truncate(n: Int) = this.iterator().truncate(n);
 }
 
 extension List {

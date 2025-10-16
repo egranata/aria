@@ -402,8 +402,8 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `any(f)`: Returns `true` if the predicate function `f` returns `true` for at least one item in the iterator, `false` otherwise. This method short-circuits, i.e. it stops consuming the iterator as soon as the outcome is determined.
     *   `find(f)`: Returns `Maybe::Some(value)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
     *   `position(f)`: Returns `Maybe::Some(index)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
-    *   `sum()`: Consumes the iterator and returns the sum of all its items. Assumes items support the `+` operator.
-    *   `product()`: Consumes the iterator and returns the product of all its items. Assumes items support the `*` operator.
+    *   `sum(v0=0)`: Consumes the iterator and returns the sum of all its items, starting from a base value `v0`. Assumes items support the `+` operator.
+    *   `product(v0=1)`: Consumes the iterator and returns the product of all its items, starting from a base value `v0`. Assumes items support the `*` operator.
     *   `max()`: Returns `Maybe::Some(value)` with the maximum value in the iterator, or `Maybe::None` if the iterator is empty. Assumes items support the `>` operator.
     *   `min()`: Returns `Maybe::Some(value)` with the minimum value in the iterator, or `Maybe::None` if the iterator is empty. Assumes items support the `<` operator.
     *   `count()`: Consumes the iterator and returns the total number of items.
@@ -411,6 +411,8 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `last()`: Consumes the iterator and returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterator was empty.
     *   `nth(n: Int)`: Consumes the iterator up to the nth item and returns `Maybe::Some(value)`. Returns `Maybe::None` if `n` is negative or the iterator has fewer than `n+1` items.
     *   `iterator()`: Returns the iterator itself, allowing an `Iterator` to be used where an iterable value is expected.
+    *   `skip(n: Int)`: Skips the first `n` items of the iterator.
+    *   `truncate(n: Int)`: Returns a new iterator that yields only the first `n` items from this iterator.
 
 *   **`Iterable`**
     A mixin that defines the contract for an object that can produce an `Iterator`. It provides convenience methods that delegate to the iterator produced by the `iterator()` method.
@@ -427,14 +429,16 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `any(f)`: Returns `true` if the predicate function `f` returns `true` for at least one item, `false` otherwise.
     *   `find(f)`: Returns `Maybe::Some(value)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
     *   `position(f)`: Returns `Maybe::Some(index)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
-    *   `sum()`: Returns the sum of all items. Assumes items support the `+` operator.
-    *   `product()`: Returns the product of all items. Assumes items support the `*` operator.
+    *   `sum(v0=0)`: Returns the sum of all items, starting from a base value `v0`. Assumes items support the `+` operator.
+    *   `product(v0=1)`: Returns the product of all items, starting from a base value `v0`. Assumes items support the `*` operator.
     *   `max()`: Returns `Maybe::Some(value)` with the maximum value, or `Maybe::None` if the iterable is empty. Assumes items support the `>` operator.
     *   `min()`: Returns `Maybe::Some(value)` with the minimum value, or `Maybe::None` if the iterable is empty. Assumes items support the `<` operator.
     *   `count()`: Returns the total number of items.
     *   `first()`: Returns `Maybe::Some(value)` with the first item, or `Maybe::None` if the iterable is empty.
     *   `last()`: Returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterable is empty.
     *   `nth(n: Int)`: Returns `Maybe::Some(value)` for the nth item. Returns `Maybe::None` if `n` is out of bounds.
+    *   `skip(n: Int)`: Skips the first `n` items of the iterator.
+    *   `truncate(n: Int)`: Returns a new iterator that yields only the first `n` items from this iterator.
 
 ---
 
