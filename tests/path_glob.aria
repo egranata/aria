@@ -1,0 +1,20 @@
+import Path from aria.io.path;
+import Set from aria.structures.set;
+
+func main() {
+    val glob_iter = Path.glob("**/*.yml")!!;
+    
+    val expected_paths = Set.new_with_items(
+        ".github/dependabot.yml",
+        ".github/workflows/linux_build_test.yml",
+        ".github/workflows/macos_build_test.yml",
+        ".github/workflows/release.yml",
+        "docs/_config.yml"
+    );
+    
+    for path in glob_iter {
+        expected_paths.remove(path.prettyprint());
+    }
+    
+    assert expected_paths.len() == 0;
+}

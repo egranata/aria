@@ -1260,6 +1260,7 @@ dependencies = [
 name = "path-lib"
 version = "0.9.20251013"
 dependencies = [
+ "glob",
  "opcodes-lib",
  "vm-lib",
 ]
