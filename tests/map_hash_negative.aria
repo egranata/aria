@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+
+struct Foo {
+    type func new(x) = alloc(This) { .x };
+    func hash() {
+        return -1;
+    }
+    operator==(rhs: Foo) {
+        return this.x == rhs.x;
+    }
+}
+
+func main() {
+    val m = Map.new();
+    val f = Foo.new(42);
+    m[f] = "The answer";
+    assert m[f] == "The answer";
+}

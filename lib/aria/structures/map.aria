@@ -7,7 +7,9 @@ struct Map {
     }
 
     func calc_hash(k) {
-        return k.hash() % this.capacity;
+        val h = k.hash();
+        val n = this.capacity;
+        return ((h % n) + n) % n;
     }
 
     type func new() {
