@@ -43,7 +43,7 @@ fn create_path_result_err(
     message: String,
     vm: &mut vm::VirtualMachine,
 ) -> Result<RuntimeValue, VmErrorReason> {
-    let path_error = path_struct.extract_field("Error", |field| field.as_struct())?;
+    let path_error = path_struct.extract_field("Error", |field| field.as_struct().cloned())?;
 
     let path_error = Object::new(&path_error);
     path_error.write("msg", RuntimeValue::String(message.into()));
@@ -74,7 +74,7 @@ impl BuiltinFunctionImpl for New {
         frame: &mut Frame,
         _: &mut vm::VirtualMachine,
     ) -> vm::ExecutionResult<RunloopExit> {
-        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().clone())?;
+        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
         let the_path =
             VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
 
@@ -103,7 +103,7 @@ impl BuiltinFunctionImpl for Cwd {
         frame: &mut Frame,
         _: &mut vm::VirtualMachine,
     ) -> vm::ExecutionResult<RunloopExit> {
-        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().clone())?;
+        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
 
         let cwd = ok_or_err!(
             std::env::current_dir(),
@@ -721,18 +721,10 @@ impl BuiltinFunctionImpl for Entries {
     ) -> vm::ExecutionResult<RunloopExit> {
         let aria_object = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let rust_obj = mut_path_from_aria(&aria_object)?;
-
         let aria_struct = aria_object.get_struct().clone();
-        let iterator_struct = some_or_err!(
-            some_or_err!(
-                aria_struct.load_named_value("Iterator"),
-                VmErrorReason::UnexpectedVmState.into()
-            )
-            .as_struct(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let iterator_struct = aria_struct.extract_field("Iterator", |f| f.as_struct().cloned())?;
 
+        let rust_obj = mut_path_from_aria(&aria_object)?;
         let rfo = rust_obj.content.borrow_mut();
 
         if let Ok(rd) = rfo.read_dir() {

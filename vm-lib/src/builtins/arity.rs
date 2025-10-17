@@ -63,8 +63,8 @@ impl Arity {
             );
 
             let cache = Cache {
-                arity_struct,
-                upper_bound_enum,
+                arity_struct: arity_struct.clone(),
+                upper_bound_enum: upper_bound_enum.clone(),
                 bounded_idx,
                 vararg_idx,
             };

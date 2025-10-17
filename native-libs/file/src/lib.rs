@@ -64,12 +64,7 @@ struct MutableFile {
 }
 
 fn throw_io_error(the_struct: &Struct, message: String) -> crate::vm::ExecutionResult<RunloopExit> {
-    let io_error = the_struct
-        .load_named_value("IOError")
-        .expect("missing IOError")
-        .as_struct()
-        .expect("invalid IOError");
-    let io_error = Object::new(&io_error);
+    let io_error = the_struct.extract_field("IOError", |f| f.as_object().cloned())?;
     io_error.write("message", RuntimeValue::String(message.into()));
     Ok(RunloopExit::Exception(VmException::from_value(
         RuntimeValue::Object(io_error),
@@ -84,7 +79,7 @@ impl BuiltinFunctionImpl for New {
         frame: &mut Frame,
         _: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
-        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().clone())?;
+        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
         let the_path =
             VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
         let the_mode =

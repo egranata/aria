@@ -501,12 +501,12 @@ impl RuntimeValue {
         RuntimeValue::BoundFunction(BoundFunction::bind(self.clone(), f))
     }
 
-    pub fn as_struct(&self) -> Option<Struct> {
-        self.as_type().and_then(|rt| rt.as_struct()).cloned()
+    pub fn as_struct(&self) -> Option<&Struct> {
+        self.as_type().and_then(|rt| rt.as_struct())
     }
 
-    pub fn as_enum(&self) -> Option<Enum> {
-        self.as_type().and_then(|rt| rt.as_enum()).cloned()
+    pub fn as_enum(&self) -> Option<&Enum> {
+        self.as_type().and_then(|rt| rt.as_enum())
     }
 
     pub fn is_struct(&self) -> bool {
@@ -517,8 +517,8 @@ impl RuntimeValue {
         self.as_enum().is_some()
     }
 
-    pub fn as_builtin_type(&self) -> Option<BuiltinType> {
-        self.as_type().and_then(|rt| rt.as_builtin()).cloned()
+    pub fn as_builtin_type(&self) -> Option<&BuiltinType> {
+        self.as_type().and_then(|rt| rt.as_builtin())
     }
 
     pub fn as_opaque_concrete<T: 'static>(&self) -> Option<Rc<T>> {

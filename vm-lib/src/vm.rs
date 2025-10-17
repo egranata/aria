@@ -422,7 +422,7 @@ impl VirtualMachine {
         let root = {
             match module.load_named_value(cmp0) {
                 Some(cmp0_obj) => match cmp0_obj.as_enum() {
-                    Some(s) => s,
+                    Some(s) => s.clone(),
                     _ => {
                         return Err(VmErrorReason::UnexpectedType);
                     }
@@ -444,7 +444,7 @@ impl VirtualMachine {
         ) -> Result<Enum, VmErrorReason> {
             match current_struct.load_named_value(name) {
                 Some(existing_val) => match existing_val.as_enum() {
-                    Some(s) => Ok(s),
+                    Some(s) => Ok(s.clone()),
                     _ => Err(VmErrorReason::UnexpectedType),
                 },
                 None => {
