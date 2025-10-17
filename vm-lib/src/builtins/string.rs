@@ -8,6 +8,7 @@ use crate::{
         RuntimeValue, builtin_type::BuiltinType, function::BuiltinFunctionImpl,
         kind::RuntimeValueType, list::List,
     },
+    some_or_err,
     vm::RunloopExit,
 };
 
@@ -292,7 +293,7 @@ impl BuiltinFunctionImpl for FromBytes {
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let this_str_type = match frame
             .stack
-            .pop_if(|x| RuntimeValue::as_builtin_type(&x).clone())
+            .pop_if(|x| RuntimeValue::as_builtin_type(&x).cloned())
         {
             Some(x) => x,
             None => {
@@ -317,13 +318,18 @@ impl BuiltinFunctionImpl for FromBytes {
         let dest = match String::from_utf8(bytes) {
             Ok(s) => s,
             Err(_) => {
-                let encoding_err_type = this_str_type
-                    .read("EncodingError")
-                    .expect("EncodingError not found")
-                    .as_struct()
-                    .expect("EncodingError not a struct");
+                let encoding_err_rv = some_or_err!(
+                    this_str_type.read("EncodingError"),
+                    VmErrorReason::NoSuchIdentifier("EncodingError".to_owned()).into()
+                );
+                
+                let encoding_err_struct = some_or_err!(
+                    encoding_err_rv.as_struct(),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                
                 return Ok(RunloopExit::throw_struct(
-                    &encoding_err_type,
+                    encoding_err_struct,
                     &[("msg", RuntimeValue::String("invalid utf8".into()))],
                 ));
             }

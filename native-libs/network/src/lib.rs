@@ -20,12 +20,10 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
         let headers = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
         let this_url = this.extract_field("url", |field| field.as_string().cloned())?;
         let this_timeout = this.extract_field("timeout", |field| field.as_float().cloned())?;
-        let this_response = this
-            .get_struct()
-            .extract_field("Response", |field| field.as_struct())?;
-        let this_error = this
-            .get_struct()
-            .extract_field("Error", |field| field.as_struct())?;
+        let as_struct = this.get_struct();
+        let this_response =
+            as_struct.extract_field("Response", |field| field.as_struct().cloned())?;
+        let this_error = as_struct.extract_field("Error", |field| field.as_struct().cloned())?;
 
         let mut client = reqwest::blocking::Client::new()
             .get(this_url.raw_value())
@@ -131,12 +129,10 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
 
         let this_url = this.extract_field("url", |field| field.as_string().cloned())?;
         let this_timeout = this.extract_field("timeout", |field| field.as_float().cloned())?;
-        let this_response = this
-            .get_struct()
-            .extract_field("Response", |field| field.as_struct())?;
-        let this_error = this
-            .get_struct()
-            .extract_field("Error", |field| field.as_struct())?;
+        let as_struct = this.get_struct();
+        let this_response =
+            as_struct.extract_field("Response", |field| field.as_struct().cloned())?;
+        let this_error = as_struct.extract_field("Error", |field| field.as_struct().cloned())?;
 
         let mut client = reqwest::blocking::Client::new()
             .post(this_url.raw_value())

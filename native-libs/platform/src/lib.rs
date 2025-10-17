@@ -25,7 +25,7 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
             Err(_) => String::from("unknown"),
         };
 
-        let platform_enum = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_enum().clone())?;
+        let platform_enum = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_enum().cloned())?;
 
         let linux_info = some_or_err!(
             platform_enum.load_named_value("LinuxPlatform"),

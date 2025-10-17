@@ -35,7 +35,7 @@ fn create_regex_error(
 struct New {}
 impl BuiltinFunctionImpl for New {
     fn eval(&self, frame: &mut Frame, _: &mut VirtualMachine) -> ExecutionResult<RunloopExit> {
-        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().clone())?;
+        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
         let the_pattern = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?;
 
         let rust_regex_obj = match regex::Regex::new(&the_pattern.raw_value()) {
@@ -113,15 +113,11 @@ struct Matches {}
 impl BuiltinFunctionImpl for Matches {
     fn eval(&self, frame: &mut Frame, _: &mut VirtualMachine) -> ExecutionResult<RunloopExit> {
         let aria_regex = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+        let aria_struct = aria_regex.get_struct().clone();
         let the_haystack =
             VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
 
-        let match_struct_type = aria_regex
-            .get_struct()
-            .load_named_value("Match")
-            .unwrap()
-            .as_struct()
-            .unwrap();
+        let match_struct_type = aria_struct.extract_field("Match", |e| e.as_struct().cloned())?;
 
         let rust_regex_obj = match aria_regex.read("__pattern") {
             Some(s) => s,
