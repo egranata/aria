@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+import SipHasher from aria.structures.hash.sip;
+
+struct Foo {
+    type func new(x,y,z) = alloc(This) { .x, .y, .z };
+
+    func hash() {
+        val hasher = SipHasher.new(0xdeadbeef, 0xabad1dea);
+        hasher.write(this.x).write(this.y).write(this.z);
+        return hasher.finish();
+    }
+}
+
+func main() {
+    val foo1 = Foo.new(1,2,3);
+    val foo2 = Foo.new(4,5,6);
+    
+    assert foo1.hash() != foo2.hash();
+    assert foo1.hash() == foo1.hash();
+    assert foo2.hash() == foo2.hash();
+
+    foo1.x = foo2.x;
+    foo1.y = foo2.y;
+    foo1.z = foo2.z;
+
+    assert foo1.hash() == foo2.hash();
+}
