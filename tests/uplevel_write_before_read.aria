@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val variable = 10;
+    val g = || => {
+        variable = 11;
+        return variable;
+    };
+    assert g() == 11;
+    assert variable == 10;
+}
