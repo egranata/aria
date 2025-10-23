@@ -25,7 +25,7 @@ fn create_regex_error(
 
     let regex_error = some_or_err!(regex_error.as_struct(), VmErrorReason::UnexpectedType);
 
-    let regex_error = Object::new(&regex_error);
+    let regex_error = Object::new(regex_error);
     regex_error.write("msg", RuntimeValue::String(message.into()));
 
     Ok(RuntimeValue::Object(regex_error))

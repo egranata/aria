@@ -322,12 +322,12 @@ impl BuiltinFunctionImpl for FromBytes {
                     this_str_type.read("EncodingError"),
                     VmErrorReason::NoSuchIdentifier("EncodingError".to_owned()).into()
                 );
-                
+
                 let encoding_err_struct = some_or_err!(
                     encoding_err_rv.as_struct(),
                     VmErrorReason::UnexpectedVmState.into()
                 );
-                
+
                 return Ok(RunloopExit::throw_struct(
                     encoding_err_struct,
                     &[("msg", RuntimeValue::String("invalid utf8".into()))],

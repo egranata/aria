@@ -51,18 +51,15 @@ fn create_path_result_err(
     Ok(ok_or_err!(
         vm.builtins
             .create_result_err(RuntimeValue::Object(path_error)),
-        VmErrorReason::UnexpectedVmState.into()
+        VmErrorReason::UnexpectedVmState
     ))
 }
 
 fn mut_path_from_aria(aria_object: &Object) -> Result<Rc<MutablePath>, VmErrorReason> {
-    let rust_obj = some_or_err!(
-        aria_object.read("__path"),
-        VmErrorReason::UnexpectedVmState.into()
-    );
+    let rust_obj = some_or_err!(aria_object.read("__path"), VmErrorReason::UnexpectedVmState);
     Ok(some_or_err!(
         rust_obj.as_opaque_concrete::<MutablePath>(),
-        VmErrorReason::UnexpectedVmState.into()
+        VmErrorReason::UnexpectedVmState
     ))
 }
 
