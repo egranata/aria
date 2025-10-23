@@ -35,7 +35,7 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
             linux_info.as_struct(),
             VmErrorReason::UnexpectedVmState.into()
         );
-        let linux_info = Object::new(&linux_info);
+        let linux_info = Object::new(linux_info);
         linux_info.write(
             "kernel_version",
             RuntimeValue::String(kernel_version.into()),
