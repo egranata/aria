@@ -1,6 +1,10 @@
 # Rust & Cargo
 /target
 
+# Profilers
+callgrind.out.*
+perf.*
+
 # IDEs and Editors
 .vscode/
 .idea/
