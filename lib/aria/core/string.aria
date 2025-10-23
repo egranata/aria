@@ -209,7 +209,6 @@ extension String {
 
 extension String {
     func printf(...) {
-        println(varargs);
         val s = this._format_impl(varargs);
         print(s);
     }
