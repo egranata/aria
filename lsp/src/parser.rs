@@ -29,33 +29,12 @@ pub struct Parse {
     errors: Vec<String>,
 }
 
-fn tree_to_string(node: SyntaxNode) -> String {
-    let mut result = Vec::new();
-    tree_to_string_impl(&node, 0, &mut result);
-    result.join("\n")
-}
-
-fn tree_to_string_impl(node: &SyntaxNode, depth: usize, result: &mut Vec<String>) {
-    let indent = "  ".repeat(depth);
-    result.push(format!("{}{:?}@{:?}", indent, node.kind(), node.text_range()));
-    
-    for child in node.children_with_tokens() {
-        match child {
-            rowan::NodeOrToken::Node(child_node) => {
-                tree_to_string_impl(&child_node, depth + 1, result);
-            }
-            rowan::NodeOrToken::Token(token) => {
-                let token_indent = "  ".repeat(depth + 1);
-                result.push(format!("{}{:?}@{:?} {:?}", 
-                    token_indent, 
-                    token.kind(), 
-                    token.text_range(),
-                    token.text()
-                ));
-            }
-        }
+impl Parse {
+    fn syntax(&self) -> SyntaxNode {
+        SyntaxNode::new_root(self.green_node.clone())
     }
 }
+
 pub fn parse(text: &str) -> Parse {
     #[derive(Debug)]
     enum Event {
@@ -1099,16 +1078,38 @@ type SyntaxToken = rowan::SyntaxToken<Lang>;
 #[allow(unused)]
 type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
 
-impl Parse {
-    fn syntax(&self) -> SyntaxNode {
-        SyntaxNode::new_root(self.green_node.clone())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    fn tree_to_string(node: SyntaxNode) -> String {
+        let mut result = Vec::new();
+        tree_to_string_impl(&node, 0, &mut result);
+        result.join("\n")
+    }
+
+    fn tree_to_string_impl(node: &SyntaxNode, depth: usize, result: &mut Vec<String>) {
+        let indent = "  ".repeat(depth);
+        result.push(format!("{}{:?}@{:?}", indent, node.kind(), node.text_range()));
+        
+        for child in node.children_with_tokens() {
+            match child {
+                rowan::NodeOrToken::Node(child_node) => {
+                    tree_to_string_impl(&child_node, depth + 1, result);
+                }
+                rowan::NodeOrToken::Token(token) => {
+                    let token_indent = "  ".repeat(depth + 1);
+                    result.push(format!("{}{:?}@{:?} {:?}", 
+                        token_indent, 
+                        token.kind(), 
+                        token.text_range(),
+                        token.text()
+                    ));
+                }
+            }
+        }
+    }
 
     fn expect_tree(input: &str, lines: &[&str]) {
         let node = parse(input).syntax();
