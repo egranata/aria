@@ -43,7 +43,8 @@ It provides a convenient interface for building and running benchmarks, handling
 
 `p` takes two optional arguments:
 
-- `command` (required): One of the following:. -`bench` runs the benchmarks using Criterion. This is what most users will use to measure the performance of the code they are developing or optimizing.
+- `command` (required): One of the following:. 
+    - `bench` runs the benchmarks using Criterion. This is what most users will use to measure the performance of the code they are developing or optimizing.
     - `perf` profiles execution using Linux’s `perf` tool.
     - `valgrind` runs under Valgrind’s `callgrind` tool to analyze performance.
     - `time` measures wall time, user time, and system time for a single run. Useful for quick checks, but only reliable if your environment is properly tuned.
