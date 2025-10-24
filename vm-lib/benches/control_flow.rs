@@ -7,6 +7,27 @@ use haxby_vm::
     haxby_eval
 ;
 
+fn bench_aria_code_aux(bench_name: &str, src: &str, c: &mut Criterion) {
+    c.bench_function(&format!("{}/compile", bench_name), |b| {
+        b.iter(|| {
+            let sb = SourceBuffer::stdin(src);
+            black_box(
+                compile_from_source(&sb, &Default::default()).expect("module did not compile"),
+            );
+        })
+    });
+
+    let sb = SourceBuffer::stdin(src);
+
+    c.bench_function(&format!("{}/eval", bench_name), |b| {
+        b.iter_batched(
+            || compile_from_source(&sb, &Default::default()).expect("module did not compile"),
+            |module| black_box(haxby_eval(module, Default::default()).unwrap()),
+            criterion::BatchSize::SmallInput,
+        )
+    });
+}
+
 fn bench_if(c: &mut Criterion) {
     const INPUT: &str = r#"
     func main() {
@@ -23,24 +44,7 @@ fn bench_if(c: &mut Criterion) {
     }
     "#;
 
-    c.bench_function("control_flow/if/compile", |b| {
-        b.iter(|| {
-            let sb = SourceBuffer::stdin(INPUT);
-            black_box(
-                compile_from_source(&sb, &Default::default()).expect("module did not compile"),
-            );
-        })
-    });
-
-    let sb = SourceBuffer::stdin(INPUT);
-
-    c.bench_function("control_flow/if/eval", |b| {
-        b.iter_batched(
-            || compile_from_source(&sb, &Default::default()).expect("module did not compile"),
-            |module| black_box(haxby_eval(module, Default::default()).unwrap()),
-            criterion::BatchSize::SmallInput,
-        )
-    });
+    bench_aria_code_aux("control_flow/if", INPUT, c);
 }
 
 fn bench_for(c: &mut Criterion) {
@@ -52,24 +56,7 @@ fn bench_for(c: &mut Criterion) {
     }
     "#;
 
-    c.bench_function("control_flow/for/compile", |b| {
-        b.iter(|| {
-            let sb = SourceBuffer::stdin(INPUT);
-            black_box(
-                compile_from_source(&sb, &Default::default()).expect("module did not compile"),
-            );
-        })
-    });
-
-    let sb = SourceBuffer::stdin(INPUT);
-
-    c.bench_function("control_flow/for/eval", |b| {
-        b.iter_batched(
-            || compile_from_source(&sb, &Default::default()).expect("module did not compile"),
-            |module| black_box(haxby_eval(module, Default::default()).unwrap()),
-            criterion::BatchSize::SmallInput,
-        )
-    });
+    bench_aria_code_aux("control_flow/for", INPUT, c);
 }
 
 fn bench_while(c: &mut Criterion) {
@@ -82,24 +69,7 @@ fn bench_while(c: &mut Criterion) {
     }
     "#;
 
-    c.bench_function("control_flow/while/compile", |b| {
-        b.iter(|| {
-            let sb = SourceBuffer::stdin(INPUT);
-            black_box(
-                compile_from_source(&sb, &Default::default()).expect("module did not compile"),
-            );
-        })
-    });
-
-    let sb = SourceBuffer::stdin(INPUT);
-
-    c.bench_function("control_flow/while/eval", |b| {
-        b.iter_batched(
-            || compile_from_source(&sb, &Default::default()).expect("module did not compile"),
-            |module| black_box(haxby_eval(module, Default::default()).unwrap()),
-            criterion::BatchSize::SmallInput,
-        )
-    });
+    bench_aria_code_aux("control_flow/while", INPUT, c);
 }
 
 criterion_group!(control_flow, bench_if, bench_for, bench_while);
