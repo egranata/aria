@@ -32,16 +32,16 @@ Note: These are only recommendations and may not be applicable to all systems or
 
 As mentioned before, the framework we use to benchmark the Rust code is [`Criterion`](https://crates.io/crates/criterion). For detailed information on how to create benchmarks with it, please refer to its official documentation.
 
-To execute benchmarks in Aria, we recommend using the `p` script located at the root of the repository.
+To execute benchmarks in Aria, we recommend using the `b` script located at the root of the repository.
 It provides a convenient interface for building and running benchmarks, handling paths, and ensuring Aria can locate the libraries.
 
-### Usage of the `p` script
+### Usage of the `b` script
 
 ```bash
-./p $COMMAND $BENCH
+./b $COMMAND $BENCH
 ```
 
-`p` takes two optional arguments:
+`b` takes two optional arguments:
 
 - `command` (required): One of the following:. 
     - `bench` runs the benchmarks using Criterion. This is what most users will use to measure the performance of the code they are developing or optimizing.
