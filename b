@@ -16,7 +16,7 @@ if [ -z "$TYPE" ]; then
 fi
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ARIA_BUILD_CONFIG="${ARIA_BUILD_CONFIG:-dev}"
+ARIA_BUILD_CONFIG="${ARIA_BUILD_CONFIG:-release}"
 ARIA_LIB_DIR="${ARIA_LIB_DIR:-${SELF_DIR}/lib:${SELF_DIR}/lib-test}"
 
 if [ "$TYPE" = "bench" ]; then
