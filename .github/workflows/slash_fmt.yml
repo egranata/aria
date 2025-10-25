@@ -1,0 +1,23 @@
+name: SlashFmt
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dispatch:
+    if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/fmt') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/slash-command-dispatch@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          reaction-token: ${{ secrets.GITHUB_TOKEN }}
+          commands: fmt
+          dispatch-type: repository
+          issue-type: pull-request
+          repository: ${{ github.repository }}
