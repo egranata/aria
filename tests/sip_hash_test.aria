@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-import SipHasher from aria.structures.hash.sip;
+import SipHasher from aria.structures.hash.algo.sip;
 
 struct Foo {
     type func new(x,y,z) = alloc(This) { .x, .y, .z };
