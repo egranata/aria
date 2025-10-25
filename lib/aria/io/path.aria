@@ -32,6 +32,10 @@ struct Path {
         return This._new(s);
     }
 
+    type func glob(s: String) {
+        return This._glob(s);
+    }
+
     func append(rhs: String|Path) {
         if rhs isa String {
             this._append(rhs);

@@ -48,11 +48,7 @@ fn create_path_result_err(
     let path_error = Object::new(&path_error);
     path_error.write("msg", RuntimeValue::String(message.into()));
 
-    Ok(ok_or_err!(
-        vm.builtins
-            .create_result_err(RuntimeValue::Object(path_error)),
-        VmErrorReason::UnexpectedVmState
-    ))
+    vm.builtins.create_result_err(RuntimeValue::Object(path_error))
 }
 
 fn mut_path_from_aria(aria_object: &Object) -> Result<Rc<MutablePath>, VmErrorReason> {
@@ -89,6 +85,57 @@ impl BuiltinFunctionImpl for New {
 
     fn name(&self) -> &str {
         "_new"
+    }
+}
+
+#[derive(Default)]
+struct Glob {}
+impl BuiltinFunctionImpl for Glob {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        vm: &mut vm::VirtualMachine,
+    ) -> vm::ExecutionResult<RunloopExit> {
+        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
+        let glob_expr =
+            VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
+
+        let val = match glob::glob(&glob_expr) {
+            Ok(path) => {
+                let iterator_rv = some_or_err!(
+                    the_struct.load_named_value("Iterator"),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+                let iterator_struct = some_or_err!(
+                    iterator_rv.as_struct(),
+                    VmErrorReason::UnexpectedVmState.into()
+                );
+
+                let flatten = path
+                    .flatten()
+                    .map(move |e| new_from_path(&the_struct, e));
+
+                let iterator = create_iterator_struct(&iterator_struct, NativeIteratorImpl::new(flatten));
+
+                vm.builtins.create_result_ok(iterator)?
+            }
+            Err(e) => create_path_result_err(&the_struct, e.to_string(), vm)?,
+        };
+
+        frame.stack.push(val);
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
+    }
+
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
+    }
+
+    fn name(&self) -> &str {
+        "_glob"
     }
 }
 
@@ -1023,6 +1070,7 @@ pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult
             };
 
             path_struct.insert_builtin::<New>();
+            path_struct.insert_builtin::<Glob>();
             path_struct.insert_builtin::<Cwd>();
             path_struct.insert_builtin::<Prettyprint>();
             path_struct.insert_builtin::<Append>();
