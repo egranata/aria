@@ -48,7 +48,8 @@ fn create_path_result_err(
     let path_error = Object::new(&path_error);
     path_error.write("msg", RuntimeValue::String(message.into()));
 
-    vm.builtins.create_result_err(RuntimeValue::Object(path_error))
+    vm.builtins
+        .create_result_err(RuntimeValue::Object(path_error))
 }
 
 fn mut_path_from_aria(aria_object: &Object) -> Result<Rc<MutablePath>, VmErrorReason> {
@@ -111,11 +112,10 @@ impl BuiltinFunctionImpl for Glob {
                     VmErrorReason::UnexpectedVmState.into()
                 );
 
-                let flatten = path
-                    .flatten()
-                    .map(move |e| new_from_path(&the_struct, e));
+                let flatten = path.flatten().map(move |e| new_from_path(&the_struct, e));
 
-                let iterator = create_iterator_struct(&iterator_struct, NativeIteratorImpl::new(flatten));
+                let iterator =
+                    create_iterator_struct(iterator_struct, NativeIteratorImpl::new(flatten));
 
                 vm.builtins.create_result_ok(iterator)?
             }

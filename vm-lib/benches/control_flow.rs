@@ -1,11 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
 use std::hint::black_box;
 
 use aria_compiler::compile_from_source;
 use aria_parser::ast::SourceBuffer;
 use criterion::{Criterion, criterion_group, criterion_main};
-use haxby_vm::
-    haxby_eval
-;
+use haxby_vm::haxby_eval;
 
 fn bench_aria_code_aux(bench_name: &str, src: &str, c: &mut Criterion) {
     c.bench_function(&format!("{}/compile", bench_name), |b| {
