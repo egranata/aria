@@ -190,6 +190,7 @@ This module provides a `Path` struct for interacting with the file system.
     *   `type func new(s: String)`: Creates a new `Path` object from a string representation.
     *   `type func new_with_current_directory()`: Returns a `Path` object representing the current working directory.
     *   `type func new_with_environment_variable(var)`: Returns a `Path` object from the value of an environment variable `var`.
+    *   `type func glob(pattern: String)`: Returns a `Result` containing an `Iterator` of `Path` objects over matching paths if the pattern is valid or an `Path.Error` if it is not.
     *   `append(rhs: String|Path)`: Appends a component (`String` or `Path`) to the end of this path. Returns the modified path.
     *   `op_div(rhs: String|Path)` (Operator `/`): Returns a new `Path` object by joining this path with `rhs`.
     *   `parent()`: Returns a new `Path` object representing the parent directory of this path.

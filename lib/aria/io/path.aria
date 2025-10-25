@@ -32,8 +32,8 @@ struct Path {
         return This._new(s);
     }
 
-    type func glob(s: String) {
-        return This._glob(s);
+    type func glob(pattern: String) {
+        return This._glob(pattern);
     }
 
     func append(rhs: String|Path) {
