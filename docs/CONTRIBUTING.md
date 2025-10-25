@@ -1,4 +1,6 @@
 ---
+title: "Aria Contributor's Guide"
+description: "Process, tips, tricks and overall guidance for contributing to Aria."
 ---
 
 # Contributing to Aria
@@ -84,6 +86,6 @@ Once your changes are ready, it's time to submit a pull request.
 
 3.  Go to the original Aria repository on GitHub and open a pull request. If you use the github tool, `gh pr create` will also guide you through some of these steps.
 
-4.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged.
+4.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged. Please note that maintainers may need to cherry-pick your patch in accordance with the [Release Policy](release_policy.md). While this process is generally the responsibility of the maintainers, you can help by ensuring that your commits are atomic and well-documented. You may also be asked to help with the cherry-pick in case of conflicts or ambiguity.
 
 Thank you again for your contribution. It's an exciting time for Aria, and we're happy to have you on board!
