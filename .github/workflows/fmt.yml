@@ -1,0 +1,68 @@
+name: Format PR with cargo fmt
+
+on:
+  repository_dispatch:
+    types: [fmt]
+
+# Needs write to push a commit
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve PR head
+        id: pr
+        run: |
+          echo "repo=${{ github.event.client_payload.pull_request.head.repo.full_name }}" >> "$GITHUB_OUTPUT"
+          echo "ref=${{ github.event.client_payload.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
+          echo "number=${{ github.event.client_payload.pull_request.number }}" >> "$GITHUB_OUTPUT"
+
+      # Use a repo-scoped PAT for forks, else fall back to GITHUB_TOKEN
+      - name: Set push token
+        id: token
+        run: |
+          if [ -n "${{ secrets.REPO_SCOPED_TOKEN }}" ]; then
+            echo "token=${{ secrets.REPO_SCOPED_TOKEN }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "token=${{ secrets.GITHUB_TOKEN }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.pr.outputs.repo }}
+          ref: ${{ steps.pr.outputs.ref }}
+          token: ${{ steps.token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Install Rust (stable + rustfmt)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Run cargo fmt
+        run: cargo fmt --all
+
+      - name: Commit changes if any
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "gh-actions"
+            git config user.email "actions@users.noreply.github.com"
+            git add -A
+            git commit -m "chore(fmt): apply cargo fmt via /fmt"
+            git push origin "HEAD:${{ steps.pr.outputs.ref }}"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No formatting changes"
+          fi
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ steps.token.outputs.token }}
+          issue-number: ${{ steps.pr.outputs.number }}
+          body: |
+            ✅ `cargo fmt` completed on `${{ steps.pr.outputs.ref }}`. Changes were pushed if any.
