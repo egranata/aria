@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import aria.structures.hash.list;
+
+func main() {
+    val l1 = [1,2,3];
+    val l2 = ["1", "2", "3"];
+    val l3 = [3,2,1];
+    val l4 = [];
+
+    assert l1.hash() != l2.hash();
+    assert l1.hash() != l3.hash();
+    assert l1.hash() != l4.hash();
+    assert l2.hash() != l3.hash();
+    assert l2.hash() != l4.hash();
+    assert l3.hash() != l4.hash();
+
+    assert l1.hash() == l1.hash();
+    assert l2.hash() == l2.hash();
+    assert l3.hash() == l3.hash();
+    assert l4.hash() == l4.hash();
+}
