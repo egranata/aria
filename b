@@ -19,8 +19,10 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARIA_BUILD_CONFIG="${ARIA_BUILD_CONFIG:-release}"
 ARIA_LIB_DIR="${ARIA_LIB_DIR:-${SELF_DIR}/lib:${SELF_DIR}/lib-test}"
 
+export ARIA_LIB_DIR="$ARIA_LIB_DIR"
+
 if [ "$TYPE" = "bench" ]; then
-    ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo bench --profile "$ARIA_BUILD_CONFIG" --package vm-lib "$BENCH"
+    cargo bench --profile "$ARIA_BUILD_CONFIG" --package vm-lib "$BENCH"
 elif [ "$TYPE" = "perf" ] || [ "$TYPE" = "valgrind" ] || [ "$TYPE" = "time" ]; then
     OUTPUT=$(cargo bench --no-run --profile "$ARIA_BUILD_CONFIG" --package vm-lib "$BENCH" 2>&1)
     echo "$OUTPUT"
