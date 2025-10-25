@@ -91,4 +91,8 @@ struct Path {
     func copy_to(other: Path) {
         this._copy(other);
     }
+
+    func hash() {
+        return this.prettyprint().hash();
+    }
 }

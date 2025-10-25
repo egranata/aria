@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+import Path from aria.io.path;
+
+func main() {
+    val p1 = Path.new("/some/test/path");
+    val p2 = Path.new("/some/test/path");
+
+    assert p1.hash() == p2.hash();
+    assert p1.hash() == p1.hash();
+
+    val p3 = p1  / "subdir" / "file.txt";
+    val p4 = Path.new("/some/test/path/subdir/file.txt");
+    
+    assert p3.hash() == p4.hash();
+    assert p3.hash() != p1.hash();
+}
