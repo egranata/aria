@@ -2,15 +2,15 @@
 set -e
 
 print_usage() {
-    echo "Usage: $0 <type> <bench>"
-    echo "type: bench, perf, valgrind, time"
+    echo "Usage: $0 <command> <bench>"
+    echo "command: bench, perf, valgrind, time"
     echo "bench: Name or partial name of the benchmark to run"
 }
 
-TYPE=$1
+COMMAND=$1
 BENCH=$2
 
-if [ -z "$TYPE" ]; then
+if [ -z "$COMMAND" ]; then
     print_usage
     exit 1
 fi
@@ -21,14 +21,14 @@ ARIA_LIB_DIR="${ARIA_LIB_DIR:-${SELF_DIR}/lib:${SELF_DIR}/lib-test}"
 
 export ARIA_LIB_DIR="$ARIA_LIB_DIR"
 
-if [ "$TYPE" = "bench" ]; then
+if [ "$COMMAND" = "bench" ]; then
     cargo bench --profile "$ARIA_BUILD_CONFIG" --package vm-lib "$BENCH"
-elif [ "$TYPE" = "perf" ] || [ "$TYPE" = "valgrind" ] || [ "$TYPE" = "time" ]; then
+else
     OUTPUT=$(cargo bench --no-run --profile "$ARIA_BUILD_CONFIG" --package vm-lib "$BENCH" 2>&1)
     echo "$OUTPUT"
     EXECUTABLE_PATH=$(echo "$OUTPUT" | grep "^  Executable" | tail -n1 | awk '{gsub(/[()]/,"",$NF); print $NF}')
-    
-    case "$TYPE" in
+
+    case "$COMMAND" in
         perf)
             echo "Running with perf..."
             perf record -g "$EXECUTABLE_PATH" "$BENCH"
@@ -42,8 +42,10 @@ elif [ "$TYPE" = "perf" ] || [ "$TYPE" = "valgrind" ] || [ "$TYPE" = "time" ]; t
             echo "Running with time..."
             time "$EXECUTABLE_PATH" "$BENCH"
             ;;
+        *)
+            echo "Invalid command"
+            print_usage
+            exit 1
+            ;;
     esac
-else
-    print_usage
-    exit 1
 fi
