@@ -14,26 +14,52 @@ pub struct StringCache {
     buffers: HashMap<String, Source>,
 }
 
-impl ariadne::Cache<String> for StringCache {
+impl ariadne::Cache<AriadneSourceId> for StringCache {
     type Storage = String;
 
     fn fetch(
         &mut self,
-        path: &String,
-    ) -> Result<&Source<<Self as ariadne::Cache<String>>::Storage>, impl std::fmt::Debug> {
-        Ok::<&Source, Source>(&self.buffers[path])
+        path: &AriadneSourceId,
+    ) -> Result<&Source<<Self as ariadne::Cache<AriadneSourceId>>::Storage>, impl std::fmt::Debug>
+    {
+        Ok::<&Source, Source>(&self.buffers[path.as_str()])
     }
 
     #[allow(refining_impl_trait)]
-    fn display<'a>(&self, path: &'a String) -> Option<impl std::fmt::Display + 'a> {
-        Some(Box::new((*path).clone()))
+    fn display<'a>(&self, path: &'a AriadneSourceId) -> Option<impl std::fmt::Display + 'a> {
+        Some(Box::new((*path.as_str()).to_owned()))
     }
 }
 
 pub(crate) type PrintableReport<'a> = (
-    ariadne::Report<'a, (std::string::String, std::ops::Range<usize>)>,
+    ariadne::Report<'a, (AriadneSourceId, std::ops::Range<usize>)>,
     StringCache,
 );
+
+#[allow(clippy::derived_hash_with_manual_eq)]
+#[derive(Debug, Clone, Hash)]
+pub(crate) struct AriadneSourceId {
+    name: String,
+}
+
+impl AriadneSourceId {
+    fn new(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+        }
+    }
+
+    fn as_str(&self) -> &str {
+        &self.name
+    }
+}
+
+impl PartialEq for AriadneSourceId {
+    fn eq(&self, _: &Self) -> bool {
+        false
+    }
+}
+impl Eq for AriadneSourceId {}
 
 fn build_report_from_msg_and_location<'a>(
     msg: &str,
@@ -42,29 +68,29 @@ fn build_report_from_msg_and_location<'a>(
     let config = ariadne::Config::default().with_index_type(ariadne::IndexType::Byte);
     let magenta = Color::Magenta;
     let primary_span = locations.first();
-    let mut report = Report::build(
-        ReportKind::Error,
-        if let Some(primary_span) = primary_span {
-            (
-                primary_span.buffer.name.clone(),
-                primary_span.location.start..primary_span.location.stop,
-            )
-        } else {
-            ("unknown".to_owned(), 0..0)
-        },
-    )
-    .with_message(msg)
-    .with_config(config);
+    let mut report: ariadne::ReportBuilder<'_, (AriadneSourceId, std::ops::Range<usize>)> =
+        Report::build(
+            ReportKind::Error,
+            if let Some(primary_span) = primary_span {
+                (
+                    AriadneSourceId::new(&primary_span.buffer.name),
+                    primary_span.location.start..primary_span.location.stop,
+                )
+            } else {
+                (AriadneSourceId::new("unknown"), 0..0)
+            },
+        )
+        .with_message(msg)
+        .with_config(config);
     let mut cache = StringCache::default();
-    for loc in &locations {
+    for (idx, loc) in locations.iter().enumerate() {
         let loc = loc.clone();
+        let asi = AriadneSourceId::new(&loc.buffer.name);
         report = report.with_label(
-            Label::new((
-                loc.buffer.name.clone(),
-                loc.location.start..loc.location.stop,
-            ))
-            .with_message("here")
-            .with_color(magenta),
+            Label::new((asi.clone(), loc.location.start..loc.location.stop))
+                .with_message("here")
+                .with_color(magenta)
+                .with_priority(idx as i32),
         );
         if !cache.buffers.contains_key(&loc.buffer.name) {
             cache.buffers.insert(
