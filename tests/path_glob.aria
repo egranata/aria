@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 import Path from aria.io.path;
 import Set from aria.structures.set;
 
