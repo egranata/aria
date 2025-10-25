@@ -14,4 +14,10 @@ func main() {
     }
     
     assert expected_paths.len() == 0;
+
+    val glob_iter = Path.glob("**/*.pepepapa")!!;
+    assert glob_iter.count() == 0;
+    
+    val glob_iter = Path.glob("a**/b/*.yml");
+    assert glob_iter.is_Err();
 }
