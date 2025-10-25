@@ -4,8 +4,12 @@ on:
   issue_comment:
     types: [created]
 
+# Needed:
+# - issues: write  → add 👍 reaction
+# - contents: write → fire repository_dispatch
 permissions:
-  contents: read
+  contents: write
+  issues: write
   pull-requests: read
 
 jobs:
@@ -15,6 +19,7 @@ jobs:
     steps:
       - uses: peter-evans/slash-command-dispatch@v4
         with:
+          # Use GITHUB_TOKEN now that it has write perms
           token: ${{ secrets.GITHUB_TOKEN }}
           reaction-token: ${{ secrets.GITHUB_TOKEN }}
           commands: fmt
