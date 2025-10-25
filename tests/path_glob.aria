@@ -2,14 +2,11 @@ import Path from aria.io.path;
 import Set from aria.structures.set;
 
 func main() {
-    val glob_iter = Path.glob("**/*.yml")!!;
+    val glob_iter = Path.glob("**/*.aria")!!;
     
     val expected_paths = Set.new_with_items(
-        ".github/dependabot.yml",
-        ".github/workflows/linux_build_test.yml",
-        ".github/workflows/macos_build_test.yml",
-        ".github/workflows/release.yml",
-        "docs/_config.yml"
+        "tests/path_glob.aria",
+        "lib/aria/io/path.aria",
     );
     
     for path in glob_iter {
