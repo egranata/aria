@@ -1,3 +1,6 @@
 [submodule "bench-bin/deps/nanobench"]
 	path = bench-bin/deps/nanobench
 	url = https://github.com/martinus/nanobench
+[submodule "bench-bin/deps/json"]
+	path = bench-bin/deps/json
+	url = https://github.com/nlohmann/json
