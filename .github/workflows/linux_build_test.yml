@@ -18,6 +18,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Check tree
+      run: ./tree_check.sh
     - name: Build
       run: cargo build --verbose
     - name: Run tests

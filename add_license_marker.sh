@@ -30,7 +30,10 @@ while IFS= read -r -d '' file; do
     *.rs)   handle_file "$file" "$rust_license_comment" ;;
     *.aria) handle_file "$file" "$aria_license_comment" ;;
   esac
-done < <(find . -type f \( -name '*.rs' -o -name '*.aria' \) -print0)
+done < <(
+  find . -type d -name target -prune -o \
+         -type f \( -name '*.rs' -o -name '*.aria' \) -print0
+)
 
 if $check_mode; then
   if (( missing == 1 )); then exit 1; fi

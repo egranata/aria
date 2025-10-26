@@ -88,7 +88,7 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
             mac_info.as_struct(),
             VmErrorReason::UnexpectedVmState.into()
         );
-        let mac_info = Object::new(&mac_info);
+        let mac_info = Object::new(mac_info);
         mac_info.write("os_build", RuntimeValue::String(mac_version.into()));
 
         let mac_case = some_or_err!(
