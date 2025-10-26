@@ -8,6 +8,7 @@ use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
 
 use lsp::parser::{self, SyntaxNode, SyntaxToken};
+use lsp::lexer;
 
 #[derive(Clone)]
 struct DocumentState {
@@ -73,6 +74,19 @@ fn token_at_offset(root: &SyntaxNode, offset: rowan::TextSize) -> Option<SyntaxT
         if let rowan::NodeOrToken::Token(tok) = el {
             if tok.text_range().contains(offset) {
                 return Some(tok);
+            }
+        }
+    }
+    None
+}
+
+// Find token at original source byte offset using the lexer spans
+fn lex_token_at_offset(source: &str, offset: usize) -> Option<(lexer::SyntaxKind, logos::Span, String)> {
+    let tokens = lexer::lex(source);
+    for t in tokens {
+        if let Ok((kind, slice, span)) = t {
+            if (span.start..span.end).contains(&offset) || span.start == offset {
+                return Some((kind, span, slice.to_string()));
             }
         }
     }
@@ -145,17 +159,15 @@ impl LanguageServer for Backend {
 
         let docs = self.documents.lock();
         let Some(doc) = docs.get(&uri) else { return Ok(None) };
-        // Parse a fresh syntax tree for current text
-        let tree = parser::parse(&doc.text).syntax();
-
-        // Convert LSP position to byte offset using LineIndex
+        // Convert LSP position to byte offset using LineIndex (original source coordinates)
         let line_col = line_index::LineCol { line: position.line as u32, col: position.character as u32 };
-        let offset = doc.line_index.offset(line_col);
+        let Some(offset) = doc.line_index.offset(line_col) else { return Ok(None) };
+        let byte_off: usize = u32::from(offset) as usize;
 
-        // Find identifier token under cursor
-        if let Some(tok) = token_at_offset(&tree, offset.unwrap()) {
-            if tok.kind() == lsp::lexer::SyntaxKind::Identifier {
-                let name = tok.text().to_string();
+        // Find identifier token under cursor using lexer's original spans
+        if let Some((kind, _span, text)) = lex_token_at_offset(&doc.text, byte_off) {
+            if kind == lsp::lexer::SyntaxKind::Identifier {
+                let name = text;
                 if let Some(ranges) = doc.defs.get(&name) {
                     // Prefer the first definition for now
                     if let Some(def_range) = ranges.first() {
@@ -183,4 +195,77 @@ async fn main() {
     .finish();
 
     Server::new(stdin, stdout, socket).serve(service).await;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rowan::TextSize;
+
+    fn idx_of(src: &str, needle: &str) -> usize {
+        src.find(needle).expect("needle not found")
+    }
+
+    #[test]
+    fn index_collects_val_func_param() {
+        let src = "func foo(a) { val x = a; }".to_string();
+        let parse = parser::parse(&src);
+        let root = parse.syntax();
+
+        let defs = build_index(&root);
+        assert!(defs.contains_key("foo"));
+        assert!(defs.contains_key("a"));
+        assert!(defs.contains_key("x"));
+    }
+
+    fn token_text_at(root: &SyntaxNode, range: TextRange) -> Option<String> {
+        for el in root.descendants_with_tokens() {
+            if let rowan::NodeOrToken::Token(tok) = el {
+                if tok.text_range() == range {
+                    return Some(tok.text().to_string());
+                }
+            }
+        }
+        None
+    }
+
+    #[test]
+    fn goto_on_val_usage_resolves_definition() {
+        let src = "val x = 1; x = 2;".to_string();
+        let parse = parser::parse(&src);
+        let root = parse.syntax();
+        let defs = build_index(&root);
+
+        // Byte offset of the usage (second `x`)
+        let usage_start = idx_of(&src, " x = 2");
+        let byte_off = usage_start + 1;
+        let (kind, _span, text) = lex_token_at_offset(&src, byte_off).expect("token at offset");
+        assert_eq!(kind, lsp::lexer::SyntaxKind::Identifier);
+        let name = text;
+        let def_ranges = defs.get(&name).expect("def exists");
+        // The first definition should be the `x` after `val`
+        let first_def = def_ranges.first().unwrap();
+        // Verify via the tree token text (rowan coordinates)
+        let def_text = token_text_at(&root, *first_def).expect("token at def range");
+        assert_eq!(def_text, "x");
+    }
+
+    #[test]
+    fn goto_on_param_usage_resolves_param_def() {
+        let src = "func foo(a) { val x = a; }".to_string();
+        let parse = parser::parse(&src);
+        let root = parse.syntax();
+        let defs = build_index(&root);
+
+        // Byte offset of the usage of `a` inside the block
+        let usage_start = idx_of(&src, "= a;");
+        let byte_off = usage_start + 2;
+        let (kind, _span, text) = lex_token_at_offset(&src, byte_off).expect("token at offset");
+        assert_eq!(kind, lsp::lexer::SyntaxKind::Identifier);
+        let name = text;
+        assert_eq!(name, "a");
+        let def_ranges = defs.get(&name).expect("param def exists");
+        // Ensure at least one definition exists for the param
+        assert!(!def_ranges.is_empty());
+    }
 }
