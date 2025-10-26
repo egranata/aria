@@ -77,13 +77,20 @@ Once your changes are ready, it's time to submit a pull request.
 
     There is no specific required format, as long as your commit message describes what you changed and (perhaps more importantly *why* you changed it), and adds a `Fixes` tag, if your patch is fixing a GitHub issue.
 
-2.  Push your branch to your fork on GitHub:
+2.  If you have not installed the pre-commit hooks, please run the checks manually to ensure your code meets the project's standards:
+    ```shell
+    ./tree_check.sh
+    ```
+
+    The GitHub CI will run the same checks, and will reject your pull request if they fail, but it's faster to catch issues locally before pushing. If you need help with any of the checks, please leave a comment on your pull request and a project maintainer will assist you.
+
+3.  Push your branch to your fork on GitHub:
     ```shell
     git push origin fix-issue-42-json-parsing-error
     ```
 
-3.  Go to the original Aria repository on GitHub and open a pull request. If you use the github tool, `gh pr create` will also guide you through some of these steps.
+4.  Go to the original Aria repository on GitHub and open a pull request. If you use the github tool, `gh pr create` will also guide you through some of these steps.
 
-4.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged.
+5.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged.
 
 Thank you again for your contribution. It's an exciting time for Aria, and we're happy to have you on board!
