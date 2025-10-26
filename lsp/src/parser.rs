@@ -11,7 +11,7 @@ impl From<SyntaxKind> for rowan::SyntaxKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-enum Lang {}
+pub enum Lang {}
 impl rowan::Language for Lang {
     type Kind = SyntaxKind;
     fn kind_from_raw(raw: rowan::SyntaxKind) -> Self::Kind {
@@ -30,7 +30,7 @@ pub struct Parse {
 }
 
 impl Parse {
-    fn syntax(&self) -> SyntaxNode {
+    pub fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green_node.clone())
     }
 }
@@ -1070,13 +1070,13 @@ pub fn parse(text: &str) -> Parse {
     parser.build_tree()
 }
 
-type SyntaxNode = rowan::SyntaxNode<Lang>;
+pub type SyntaxNode = rowan::SyntaxNode<Lang>;
 
 #[allow(unused)]
-type SyntaxToken = rowan::SyntaxToken<Lang>;
+pub type SyntaxToken = rowan::SyntaxToken<Lang>;
 
 #[allow(unused)]
-type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
+pub type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
 
 #[cfg(test)]
 mod tests {
