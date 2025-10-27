@@ -65,14 +65,12 @@ impl BuiltinFunctionImpl for Next {
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let aria_this = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let iterator_impl = 
-            aria_this.read("__impl").ok_or_else(|| 
-            VmErrorReason::UnexpectedVmState
-        )?;
-        let rust_native_iter = 
-            iterator_impl.as_opaque_concrete::<RefCell<NativeIteratorImpl>>().ok_or_else(|| 
-            VmErrorReason::UnexpectedVmState
-        )?;
+        let iterator_impl = aria_this
+            .read("__impl")
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
+        let rust_native_iter = iterator_impl
+            .as_opaque_concrete::<RefCell<NativeIteratorImpl>>()
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         if let Some(next) = rust_native_iter.borrow_mut().next() {
             frame.stack.push(vm.builtins.create_maybe_some(next)?);
