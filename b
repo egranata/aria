@@ -27,7 +27,7 @@ if [ "$COMMAND" = "bench" ]; then
 elif [ "$COMMAND" = "nanobench" ]; then
     (
         cd "$SELF_DIR/bench-bin" || exit 1
-        echo -e "\e[1;32mBuilding nanobench manager...\e[0m"
+        echo -e "\e[1;32mBuilding nanobench wrapper...\e[0m"
         bash build.sh
     )
     
