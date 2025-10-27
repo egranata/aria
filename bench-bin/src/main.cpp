@@ -205,6 +205,11 @@ void from_json(const json &j, BenchmarkData &d) {
 
 void show_comparison_with_baseline() {
   std::ifstream baseline_f("target/nanobench/baseline/mustache.render.json");
+
+  if (!baseline_f.is_open()) {
+    return;
+  }
+
   json baseline_json = json::parse(baseline_f);
   BenchmarkData baseline_data = baseline_json.get<BenchmarkData>();
 
@@ -244,7 +249,7 @@ void show_comparison_with_baseline() {
                                    : "\033[1;91m"; // shiny red
 
     const char *reset = "\033[0m";
-    
+
     printf("| %10.6f | %10.6f | %s%+6.2f%%%s | %s \n", old_val, new_val, color,
            diff_percent, reset, base.name.c_str());
   }
