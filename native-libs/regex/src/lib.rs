@@ -17,13 +17,13 @@ fn create_regex_error(
     regex_struct: &Struct,
     message: String,
 ) -> Result<RuntimeValue, VmErrorReason> {
-    let regex_error =regex_struct
+    let regex_error = regex_struct
         .load_named_value("Error")
-        .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+        .ok_or(VmErrorReason::UnexpectedVmState)?;
 
     let regex_error = regex_error
         .as_struct()
-        .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+        .ok_or(VmErrorReason::UnexpectedType)?;
 
     let regex_error = Object::new(regex_error);
     regex_error.write("msg", RuntimeValue::String(message.into()));

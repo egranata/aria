@@ -81,7 +81,7 @@ impl VmException {
                 }
             };
         }
-        
+
         let rt_err_type = some_or_err!(
             builtins.get_builtin_type_by_id(BUILTIN_TYPE_RUNTIME_ERROR),
             err

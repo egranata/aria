@@ -27,10 +27,10 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
 
         let linux_info = platform_enum
             .load_named_value("LinuxPlatform")
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
         let linux_info = linux_info
             .as_struct()
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
         let linux_info = Object::new(linux_info);
         linux_info.write(
             "kernel_version",
@@ -39,11 +39,11 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
 
         let linux_case = platform_enum
             .get_idx_of_case("Linux")
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         let linux_enum_instance = platform_enum
             .make_value(linux_case, Some(RuntimeValue::Object(linux_info)))
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         frame
             .stack
@@ -74,20 +74,20 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
 
         let mac_info = platform_enum
             .load_named_value("macOSPlatform")
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
         let mac_info = mac_info
             .as_struct()
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
         let mac_info = Object::new(mac_info);
         mac_info.write("os_build", RuntimeValue::String(mac_version.into()));
 
         let mac_case = platform_enum
             .get_idx_of_case("macOS")
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         let mac_enum_instance = platform_enum
             .make_value(mac_case, Some(RuntimeValue::Object(mac_info)))
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         frame.stack.push(RuntimeValue::EnumValue(mac_enum_instance));
         Ok(RunloopExit::Ok(()))
@@ -105,11 +105,11 @@ impl BuiltinFunctionImpl for GetPlatformInfo {
 
         let unknown_case = platform_enum
             .get_idx_of_case("Unknown")
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         let unknown_enum_instance = platform_enum
             .make_value(unknown_case, None)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         frame
             .stack

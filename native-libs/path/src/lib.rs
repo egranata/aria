@@ -53,10 +53,10 @@ fn create_path_result_err(
 fn mut_path_from_aria(aria_object: &Object) -> Result<Rc<MutablePath>, VmErrorReason> {
     let rust_obj = aria_object
         .read("__path")
-        .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+        .ok_or(VmErrorReason::UnexpectedVmState)?;
     rust_obj
         .as_opaque_concrete::<MutablePath>()
-        .ok_or_else(|| VmErrorReason::UnexpectedVmState)
+        .ok_or(VmErrorReason::UnexpectedVmState)
 }
 
 #[derive(Default)]
@@ -104,10 +104,10 @@ impl BuiltinFunctionImpl for Glob {
             Ok(path) => {
                 let iterator_rv = the_struct
                     .load_named_value("Iterator")
-                    .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+                    .ok_or(VmErrorReason::UnexpectedVmState)?;
                 let iterator_struct = iterator_rv
                     .as_struct()
-                    .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+                    .ok_or(VmErrorReason::UnexpectedVmState)?;
 
                 let flatten = path.flatten().map(move |e| new_from_path(&the_struct, e));
 
@@ -652,9 +652,7 @@ impl BuiltinFunctionImpl for Filename {
         let rfo = rust_obj.content.borrow_mut();
         match rfo.file_name() {
             Some(name) => {
-                let name = name
-                    .to_str()
-                    .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+                let name = name.to_str().ok_or(VmErrorReason::UnexpectedVmState)?;
                 let val = vm
                     .builtins
                     .create_maybe_some(RuntimeValue::String(name.into()))?;
@@ -696,9 +694,7 @@ impl BuiltinFunctionImpl for Extension {
         let rfo = rust_obj.content.borrow_mut();
         match rfo.extension() {
             Some(name) => {
-                let name = name
-                    .to_str()
-                    .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+                let name = name.to_str().ok_or(VmErrorReason::UnexpectedVmState)?;
                 let val = vm
                     .builtins
                     .create_maybe_some(RuntimeValue::String(name.into()))?;

@@ -36,14 +36,14 @@ impl Arity {
             })?;
             let arity_struct = arity_struct
                 .as_struct()
-                .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+                .ok_or(VmErrorReason::UnexpectedType)?;
             let upper_bound_enum =
                 arity_struct.load_named_value("UpperBound").ok_or_else(|| {
                     VmErrorReason::NoSuchIdentifier("aria.core.arity.Arity.UpperBound".to_owned())
                 })?;
             let upper_bound_enum = upper_bound_enum
                 .as_enum()
-                .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+                .ok_or(VmErrorReason::UnexpectedType)?;
 
             let vararg_idx = upper_bound_enum
                 .get_idx_of_case("Varargs")
@@ -108,7 +108,7 @@ impl BuiltinFunctionImpl for Arity {
                 )),
             )
         }
-        .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+        .ok_or(VmErrorReason::UnexpectedType)?;
 
         let upper_bound_value = RuntimeValue::EnumValue(upper_bound_value);
 

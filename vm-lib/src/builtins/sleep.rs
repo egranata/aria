@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use super::VmBuiltins;
 use crate::{
-    error::vm_error::VmErrorReason, frame::Frame,
-    runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
+    error::vm_error::VmErrorReason, frame::Frame, runtime_value::function::BuiltinFunctionImpl,
+    vm::RunloopExit,
 };
 
 #[derive(Default)]

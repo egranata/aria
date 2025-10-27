@@ -152,10 +152,8 @@ impl VmBuiltins {
     pub fn create_maybe_some(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
         let rt_maybe = self
             .get_builtin_type_by_id(BUILTIN_TYPE_MAYBE)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
-        let rt_maybe_enum = rt_maybe
-            .as_enum()
-            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
+        let rt_maybe_enum = rt_maybe.as_enum().ok_or(VmErrorReason::UnexpectedType)?;
 
         let some_idx = rt_maybe_enum
             .get_idx_of_case("Some")
@@ -163,7 +161,7 @@ impl VmBuiltins {
 
         let rv = rt_maybe_enum
             .make_value(some_idx, Some(x))
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
@@ -171,10 +169,8 @@ impl VmBuiltins {
     pub fn create_result_ok(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
         let rt_result = self
             .get_builtin_type_by_id(BUILTIN_TYPE_RESULT)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
-        let rt_result_enum = rt_result
-            .as_enum()
-            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
+        let rt_result_enum = rt_result.as_enum().ok_or(VmErrorReason::UnexpectedType)?;
 
         let ok_idx = rt_result_enum
             .get_idx_of_case("Ok")
@@ -182,7 +178,7 @@ impl VmBuiltins {
 
         let rv = rt_result_enum
             .make_value(ok_idx, Some(x))
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
@@ -190,10 +186,8 @@ impl VmBuiltins {
     pub fn create_maybe_none(&self) -> Result<RuntimeValue, VmErrorReason> {
         let rt_maybe = self
             .get_builtin_type_by_id(BUILTIN_TYPE_MAYBE)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
-        let rt_maybe_enum = rt_maybe
-            .as_enum()
-            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
+        let rt_maybe_enum = rt_maybe.as_enum().ok_or(VmErrorReason::UnexpectedType)?;
 
         let none_idx = rt_maybe_enum
             .get_idx_of_case("None")
@@ -201,7 +195,7 @@ impl VmBuiltins {
 
         let rv = rt_maybe_enum
             .make_value(none_idx, None)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
@@ -209,10 +203,8 @@ impl VmBuiltins {
     pub fn create_result_err(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
         let rt_result = self
             .get_builtin_type_by_id(BUILTIN_TYPE_RESULT)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
-        let rt_result_enum = rt_result
-            .as_enum()
-            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
+        let rt_result_enum = rt_result.as_enum().ok_or(VmErrorReason::UnexpectedType)?;
 
         let err_idx = rt_result_enum
             .get_idx_of_case("Err")
@@ -220,26 +212,24 @@ impl VmBuiltins {
 
         let rv = rt_result_enum
             .make_value(err_idx, Some(x))
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
 
     pub fn create_unit_object(&self) -> Result<RuntimeValue, VmErrorReason> {
-        let rt_unit =self
+        let rt_unit = self
             .get_builtin_type_by_id(BUILTIN_TYPE_UNIT)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
-        let rt_unit_enum = rt_unit
-            .as_enum()
-            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
+        let rt_unit_enum = rt_unit.as_enum().ok_or(VmErrorReason::UnexpectedType)?;
 
-        let unit_idx =rt_unit_enum
+        let unit_idx = rt_unit_enum
             .get_idx_of_case("unit")
             .ok_or_else(|| VmErrorReason::NoSuchCase("unit".to_owned()))?;
 
-        let rv =rt_unit_enum
+        let rv = rt_unit_enum
             .make_value(unit_idx, None)
-            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
-    builtins::VmBuiltins, frame::Frame,
-    runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
+    builtins::VmBuiltins, frame::Frame, runtime_value::function::BuiltinFunctionImpl,
+    vm::RunloopExit,
 };
 
 #[derive(Default)]

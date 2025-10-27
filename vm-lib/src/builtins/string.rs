@@ -323,7 +323,7 @@ impl BuiltinFunctionImpl for FromBytes {
 
                 let encoding_err_struct = encoding_err_rv
                     .as_struct()
-                    .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+                    .ok_or(VmErrorReason::UnexpectedVmState)?;
 
                 return Ok(RunloopExit::throw_struct(
                     encoding_err_struct,
