@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use super::VmBuiltins;
 use crate::{
-    error::vm_error::VmErrorReason, frame::Frame, ok_or_err,
+    error::vm_error::VmErrorReason, frame::Frame,
     runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
 };
 
@@ -24,10 +24,7 @@ impl BuiltinFunctionImpl for Sleep {
             );
         }
 
-        cur_frame.stack.push(ok_or_err!(
-            vm.builtins.create_unit_object(),
-            VmErrorReason::UnexpectedVmState.into()
-        ));
+        cur_frame.stack.push(vm.builtins.create_unit_object()?);
         Ok(RunloopExit::Ok(()))
     }
 

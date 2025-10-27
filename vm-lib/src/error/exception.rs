@@ -71,28 +71,17 @@ impl VmException {
     }
 }
 
-#[macro_export]
-macro_rules! some_or_err {
-    ($opt:expr, $err:expr) => {
-        match $opt {
-            Some(val) => val,
-            None => return Err($err),
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! ok_or_err {
-    ($opt:expr, $err:expr) => {
-        match $opt {
-            Ok(val) => val,
-            Err(_) => return Err($err),
-        }
-    };
-}
-
 impl VmException {
     pub fn from_vmerror(err: VmError, builtins: &VmBuiltins) -> Result<VmException, VmError> {
+        macro_rules! some_or_err {
+            ($opt:expr, $err:expr) => {
+                match $opt {
+                    Some(val) => val,
+                    None => return Err($err),
+                }
+            };
+        }
+        
         let rt_err_type = some_or_err!(
             builtins.get_builtin_type_by_id(BUILTIN_TYPE_RUNTIME_ERROR),
             err
