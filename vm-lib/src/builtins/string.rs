@@ -8,7 +8,6 @@ use crate::{
         RuntimeValue, builtin_type::BuiltinType, function::BuiltinFunctionImpl,
         kind::RuntimeValueType, list::List,
     },
-    some_or_err,
     vm::RunloopExit,
 };
 
@@ -318,15 +317,13 @@ impl BuiltinFunctionImpl for FromBytes {
         let dest = match String::from_utf8(bytes) {
             Ok(s) => s,
             Err(_) => {
-                let encoding_err_rv = some_or_err!(
-                    this_str_type.read("EncodingError"),
-                    VmErrorReason::NoSuchIdentifier("EncodingError".to_owned()).into()
-                );
+                let encoding_err_rv = this_str_type
+                    .read("EncodingError")
+                    .ok_or_else(|| VmErrorReason::NoSuchIdentifier("EncodingError".to_owned()))?;
 
-                let encoding_err_struct = some_or_err!(
-                    encoding_err_rv.as_struct(),
-                    VmErrorReason::UnexpectedVmState.into()
-                );
+                let encoding_err_struct = encoding_err_rv
+                    .as_struct()
+                    .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
 
                 return Ok(RunloopExit::throw_struct(
                     encoding_err_struct,

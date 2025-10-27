@@ -150,103 +150,96 @@ impl VmBuiltins {
 
 impl VmBuiltins {
     pub fn create_maybe_some(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
-        let rt_maybe = crate::some_or_err!(
-            self.get_builtin_type_by_id(BUILTIN_TYPE_MAYBE),
-            VmErrorReason::UnexpectedVmState
-        );
-        let rt_maybe_enum = crate::some_or_err!(rt_maybe.as_enum(), VmErrorReason::UnexpectedType);
+        let rt_maybe = self
+            .get_builtin_type_by_id(BUILTIN_TYPE_MAYBE)
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+        let rt_maybe_enum = rt_maybe
+            .as_enum()
+            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
 
-        let some_idx = crate::some_or_err!(
-            rt_maybe_enum.get_idx_of_case("Some"),
-            VmErrorReason::NoSuchCase("Some".to_owned())
-        );
+        let some_idx = rt_maybe_enum
+            .get_idx_of_case("Some")
+            .ok_or_else(|| VmErrorReason::NoSuchCase("Some".to_owned()))?;
 
-        let rv = crate::some_or_err!(
-            rt_maybe_enum.make_value(some_idx, Some(x)),
-            VmErrorReason::UnexpectedVmState
-        );
+        let rv = rt_maybe_enum
+            .make_value(some_idx, Some(x))
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
 
     pub fn create_result_ok(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
-        let rt_result = crate::some_or_err!(
-            self.get_builtin_type_by_id(BUILTIN_TYPE_RESULT),
-            VmErrorReason::UnexpectedVmState
-        );
-        let rt_result_enum =
-            crate::some_or_err!(rt_result.as_enum(), VmErrorReason::UnexpectedType);
+        let rt_result = self
+            .get_builtin_type_by_id(BUILTIN_TYPE_RESULT)
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+        let rt_result_enum = rt_result
+            .as_enum()
+            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
 
-        let ok_idx = crate::some_or_err!(
-            rt_result_enum.get_idx_of_case("Ok"),
-            VmErrorReason::NoSuchCase("Ok".to_owned())
-        );
+        let ok_idx = rt_result_enum
+            .get_idx_of_case("Ok")
+            .ok_or_else(|| VmErrorReason::NoSuchCase("Ok".to_owned()))?;
 
-        let rv = crate::some_or_err!(
-            rt_result_enum.make_value(ok_idx, Some(x)),
-            VmErrorReason::UnexpectedVmState
-        );
+        let rv = rt_result_enum
+            .make_value(ok_idx, Some(x))
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
 
     pub fn create_maybe_none(&self) -> Result<RuntimeValue, VmErrorReason> {
-        let rt_maybe = crate::some_or_err!(
-            self.get_builtin_type_by_id(BUILTIN_TYPE_MAYBE),
-            VmErrorReason::UnexpectedVmState
-        );
-        let rt_maybe_enum = crate::some_or_err!(rt_maybe.as_enum(), VmErrorReason::UnexpectedType);
+        let rt_maybe = self
+            .get_builtin_type_by_id(BUILTIN_TYPE_MAYBE)
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+        let rt_maybe_enum = rt_maybe
+            .as_enum()
+            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
 
-        let none_idx = crate::some_or_err!(
-            rt_maybe_enum.get_idx_of_case("None"),
-            VmErrorReason::NoSuchCase("None".to_owned())
-        );
+        let none_idx = rt_maybe_enum
+            .get_idx_of_case("None")
+            .ok_or_else(|| VmErrorReason::NoSuchCase("None".to_owned()))?;
 
-        let rv = crate::some_or_err!(
-            rt_maybe_enum.make_value(none_idx, None),
-            VmErrorReason::UnexpectedVmState
-        );
+        let rv = rt_maybe_enum
+            .make_value(none_idx, None)
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
 
     pub fn create_result_err(&self, x: RuntimeValue) -> Result<RuntimeValue, VmErrorReason> {
-        let rt_result = crate::some_or_err!(
-            self.get_builtin_type_by_id(BUILTIN_TYPE_RESULT),
-            VmErrorReason::UnexpectedVmState
-        );
-        let rt_result_enum =
-            crate::some_or_err!(rt_result.as_enum(), VmErrorReason::UnexpectedType);
+        let rt_result = self
+            .get_builtin_type_by_id(BUILTIN_TYPE_RESULT)
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+        let rt_result_enum = rt_result
+            .as_enum()
+            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
 
-        let err_idx = crate::some_or_err!(
-            rt_result_enum.get_idx_of_case("Err"),
-            VmErrorReason::NoSuchCase("Err".to_owned())
-        );
+        let err_idx = rt_result_enum
+            .get_idx_of_case("Err")
+            .ok_or_else(|| VmErrorReason::NoSuchCase("Err".to_owned()))?;
 
-        let rv = crate::some_or_err!(
-            rt_result_enum.make_value(err_idx, Some(x)),
-            VmErrorReason::UnexpectedVmState
-        );
+        let rv = rt_result_enum
+            .make_value(err_idx, Some(x))
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
 
     pub fn create_unit_object(&self) -> Result<RuntimeValue, VmErrorReason> {
-        let rt_unit = crate::some_or_err!(
-            self.get_builtin_type_by_id(BUILTIN_TYPE_UNIT),
-            VmErrorReason::UnexpectedVmState
-        );
-        let rt_unit_enum = crate::some_or_err!(rt_unit.as_enum(), VmErrorReason::UnexpectedType);
+        let rt_unit =self
+            .get_builtin_type_by_id(BUILTIN_TYPE_UNIT)
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
+        let rt_unit_enum = rt_unit
+            .as_enum()
+            .ok_or_else(|| VmErrorReason::UnexpectedType)?;
 
-        let unit_idx = crate::some_or_err!(
-            rt_unit_enum.get_idx_of_case("unit"),
-            VmErrorReason::NoSuchCase("unit".to_owned())
-        );
+        let unit_idx =rt_unit_enum
+            .get_idx_of_case("unit")
+            .ok_or_else(|| VmErrorReason::NoSuchCase("unit".to_owned()))?;
 
-        let rv = crate::some_or_err!(
-            rt_unit_enum.make_value(unit_idx, None),
-            VmErrorReason::UnexpectedVmState
-        );
+        let rv =rt_unit_enum
+            .make_value(unit_idx, None)
+            .ok_or_else(|| VmErrorReason::UnexpectedVmState)?;
 
         Ok(RuntimeValue::EnumValue(rv))
     }
