@@ -105,9 +105,16 @@ fn to_lsp_range(li: &LineIndex, range: TextRange) -> Range {
     )
 }
 
+impl Backend {
+    async fn info(&self, msg: String) {
+        let _ = self.client.log_message(MessageType::INFO, msg).await;
+    }
+}
+
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
+        self.info("Initializing Aria LSP".to_string()).await;
         Ok(InitializeResult {
             server_info: None,
             capabilities: ServerCapabilities {
@@ -121,7 +128,7 @@ impl LanguageServer for Backend {
     }
 
     async fn initialized(&self, _: InitializedParams) {
-        let _ = self.client.log_message(MessageType::INFO, "Aria LSP initialized").await;
+         self.info("Aria LSP initialized".to_string()).await;
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -131,15 +138,21 @@ impl LanguageServer for Backend {
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         let uri = params.text_document.uri;
         let text = params.text_document.text;
+       
+        self.info(format!("opened file {uri}")).await;
+       
         let mut docs = self.documents.lock();
         docs.insert(uri, DocumentState::new(text));
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         let uri = params.text_document.uri;
+
+        self.info(format!("file changed {uri}")).await;
+
         let mut docs = self.documents.lock();
+
         if let Some(doc) = docs.get_mut(&uri) {
-            // For simplicity, rebuild from full text if provided, otherwise apply incremental naive
             if let Some(change) = params.content_changes.into_iter().last() {
                 let text = change.text;
                 doc.update_text(text);
@@ -159,17 +172,16 @@ impl LanguageServer for Backend {
 
         let docs = self.documents.lock();
         let Some(doc) = docs.get(&uri) else { return Ok(None) };
-        // Convert LSP position to byte offset using LineIndex (original source coordinates)
+
         let line_col = line_index::LineCol { line: position.line as u32, col: position.character as u32 };
         let Some(offset) = doc.line_index.offset(line_col) else { return Ok(None) };
         let byte_off: usize = u32::from(offset) as usize;
 
-        // Find identifier token under cursor using lexer's original spans
         if let Some((kind, _span, text)) = lex_token_at_offset(&doc.text, byte_off) {
             if kind == lsp::lexer::SyntaxKind::Identifier {
                 let name = text;
                 if let Some(ranges) = doc.defs.get(&name) {
-                    // Prefer the first definition for now
+
                     if let Some(def_range) = ranges.first() {
                         let lsp_range = to_lsp_range(&doc.line_index, *def_range);
                         let loc = Location::new(uri.clone(), lsp_range);

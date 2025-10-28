@@ -7,6 +7,11 @@
 *.swp
 *.swo
 
+# NPM
+node_modules/
+
+out/
+
 # Aria-specific
 history.aria
 /vscode/aria/*.vsix
@@ -15,3 +20,4 @@ history.aria
 # OS-specific
 .DS_Store
 Thumbs.db
+
