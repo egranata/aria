@@ -91,11 +91,11 @@ struct RangeImpl {
     }
 
     func hash() {
-        val h = this.from ^ (this.to + -7046029254386353131);
+        val h = this.from ^ (this.to + 0x9e3779b97f4a7c15);
         h = h ^ (h >> 30);
-        h = h * -4658895280553007687;
+        h = h * 0xbf58476d1ce4e5b9;
         h = h ^ (h >> 27);
-        h = h * -7723592293110705685;
+        h = h * 0x94d049bb133111eb;
         h = h ^ (h >> 31);
         return h;
     }
