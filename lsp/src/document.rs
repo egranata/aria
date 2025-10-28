@@ -84,3 +84,72 @@ fn build_index(root: &SyntaxNode) -> HashMap<String, Vec<TextRange>> {
 
     defs
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_text() -> String {
+        // 0: "val x = 1;"
+        // 1: "func foo(a, b) {}"
+        // 2: "func bar() { val y = 2; }"
+        "val x = 1;\nfunc foo(a, b) {}\nfunc bar() { val y = 2; }\n".to_string()
+    }
+
+    #[test]
+    fn indexes_defs_for_val_func_and_params() {
+        let doc = DocumentState::new(sample_text());
+
+        let defs_x = doc.def("x").expect("def x present");
+        assert!(!defs_x.is_empty());
+        assert!(defs_x.iter().any(|r| doc.line_col(r.start()).line == 0));
+
+        let defs_foo = doc.def("foo").expect("def foo present");
+        assert!(!defs_foo.is_empty());
+        assert!(defs_foo.iter().any(|r| doc.line_col(r.start()).line == 1));
+
+        let defs_a = doc.def("a").expect("def a present");
+        assert!(!defs_a.is_empty());
+        assert!(defs_a.iter().any(|r| doc.line_col(r.start()).line == 1));
+
+        let defs_b = doc.def("b").expect("def b present");
+        assert!(!defs_b.is_empty());
+        assert!(defs_b.iter().any(|r| doc.line_col(r.start()).line == 1));
+
+        let defs_bar = doc.def("bar").expect("def bar present");
+        assert!(!defs_bar.is_empty());
+
+        let defs_y = doc.def("y").expect("def y present");
+        assert!(!defs_y.is_empty());
+        assert!(defs_y.iter().any(|r| doc.line_col(r.start()).line == 2));
+    }
+
+    #[test]
+    fn token_at_line_col_out_of_bounds_is_none() {
+        let doc = DocumentState::new(sample_text());
+        assert!(doc.token_at_line_col(100, 0).is_none());
+        assert!(doc.token_at_line_col(0, 10_000).is_none());
+    }
+
+    #[test]
+    fn update_text_rebuilds_index() {
+        let mut doc = DocumentState::new("val a = 1;\n".to_string());
+        assert!(doc.def("a").is_some());
+        assert!(doc.def("b").is_none());
+
+        doc.update_text("val b = 2;\n".to_string());
+        assert!(doc.def("a").is_none());
+        let defs_b = doc.def("b").expect("def b present after update");
+        assert!(!defs_b.is_empty());
+    }
+
+    #[test]
+    fn line_col_matches_token_start() {
+        let doc = DocumentState::new(sample_text());
+        let x_tok = doc.token_at_line_col(0, 4).expect("token x");
+        let start = x_tok.text_range().start();
+        let lc = doc.line_col(start);
+        assert_eq!(lc.line, 0);
+        assert_eq!(lc.col, 4);
+    }
+}
