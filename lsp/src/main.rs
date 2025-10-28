@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::OnceLock;
 
 use line_index::LineIndex;
 use rowan::TextRange;
@@ -9,6 +8,7 @@ use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
 
 use lsp::parser::{self, Parse, SyntaxNode, SyntaxToken};
+use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 
 #[derive(Clone)]
 struct DocumentState {
@@ -54,20 +54,29 @@ impl DocumentState {
     }
 }
 
-static LOGGER_CLIENT: OnceLock<Client> = OnceLock::new();
-
-fn init_logger(client: Client) {
-    let _ = LOGGER_CLIENT.set(client);
+#[derive(Clone)]
+struct Logger {
+    tx: UnboundedSender<String>,
 }
 
-pub async fn info(msg: String) {
-    if let Some(client) = LOGGER_CLIENT.get() {
-        let _ = client.log_message(MessageType::INFO, msg).await;
+impl Logger {
+    fn new(client: Client) -> Self {
+        let (tx, mut rx) = unbounded_channel::<String>();
+        tokio::spawn(async move {
+            while let Some(msg) = rx.recv().await {
+                let _ = client.log_message(MessageType::INFO, msg).await;
+            }
+        });
+        Self { tx }
+    }
+
+    fn info(&self, msg: impl Into<String>) {
+        let _ = self.tx.send(msg.into());
     }
 }
 
 struct Backend {
-    client: Client,
+    logger: Logger,
     documents: parking_lot::Mutex<HashMap<Url, DocumentState>>,
 }
 
@@ -108,15 +117,15 @@ fn to_lsp_range(li: &LineIndex, range: TextRange) -> Range {
 }
 
 impl Backend {
-    async fn info(&self, msg: String) {
-        info(msg).await;
+    fn info(&self, msg: String) {
+        self.logger.info(msg);
     }
 }
 
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
-        self.info("Initializing Aria LSP".to_string()).await;
+        self.info("Initializing Aria LSP".to_string());
         Ok(InitializeResult {
             server_info: None,
             capabilities: ServerCapabilities {
@@ -130,7 +139,7 @@ impl LanguageServer for Backend {
     }
 
     async fn initialized(&self, _: InitializedParams) {
-        self.info("Aria LSP initialized".to_string()).await;
+        self.info("Aria LSP initialized".to_string());
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -141,7 +150,7 @@ impl LanguageServer for Backend {
         let uri = params.text_document.uri;
         let text = params.text_document.text;
        
-        self.info(format!("opened file {uri}")).await;
+        self.info(format!("opened file {uri}"));
        
         let mut docs = self.documents.lock();
         docs.insert(uri, DocumentState::new(text));
@@ -170,7 +179,7 @@ impl LanguageServer for Backend {
         let uri = params.text_document_position_params.text_document.uri;
         let position = params.text_document_position_params.position;
 
-        self.info(format!("goto_definition {} {:?}", uri.clone(), position.clone())).await;
+        self.info(format!("goto_definition {} {:?}", uri.clone(), position.clone()));
 
         {
             let docs = self.documents.lock();
@@ -188,7 +197,8 @@ impl LanguageServer for Backend {
                             let lsp_range = to_lsp_range(&doc.line_index, *def_range);
                             let loc = Location::new(uri.clone(), lsp_range);
                         
-                            
+                            self.info(format!("found a definition for {} at {:?}", name, loc));
+
                             return Ok(Some(GotoDefinitionResponse::Scalar(loc)));
                         }
                     }
@@ -196,7 +206,7 @@ impl LanguageServer for Backend {
             }
         }
 
-        self.info("no definitions found".to_string()).await;
+        self.info("no definitions found".to_string());
 
         Ok(None)
     }
@@ -208,9 +218,9 @@ async fn main() {
     let stdout = tokio::io::stdout();
 
     let (service, socket) = LspService::build(|client| {
-        init_logger(client.clone());
+        let logger = Logger::new(client.clone());
         Backend {
-            client,
+            logger,
             documents: parking_lot::Mutex::new(HashMap::new()),
         }
     })

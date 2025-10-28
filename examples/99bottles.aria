@@ -47,3 +47,8 @@ func main() {
         println(verse);
     }
 }
+
+func test(x) {
+    val y = 5;
+    val z = x + y;
+}
