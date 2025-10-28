@@ -14,7 +14,7 @@ jobs:
     env:
       BIN_TARGETS: "aria"
       DYLIB_CRATES: "aria_file aria_http aria_path aria_platform aria_regex aria_timezone"
-      EXTRA_FILES: ""
+      EXTRA_FILES: "CHANGELOG.md"
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4

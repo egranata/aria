@@ -34,6 +34,8 @@ Aria releases will be versioned using the language's own version and a date mark
 
 Before releasing a new version of Aria, ensure that all tests pass and that the codebase is in a stable state. If any new features or bug fixes have been added, they should be clearly documented in the appropriate documents.
 
+The person cutting the release should make sure that the `CHANGELOG.md` file is updated with the changes that went into the release. This includes new features, bug fixes, and any other relevant information. The format and structure of the changelog is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), but contributors and maintainers should exercise their best judgement as to the specific format and content of the file.
+
 If all these steps have been followed, the release can be cut by a maintainer by updating the version number in the Cargo manifest files, committing the changes to the main branch, and tagging the release with the `v<...>` tag (e.g. `0.9.20251010`) and pushing the tag to GitHub. This will automatically trigger the creation of a release on GitHub, which will build the release artifacts and make them available for download.
 
 ## 4. When to Release

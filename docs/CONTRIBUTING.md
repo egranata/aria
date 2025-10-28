@@ -56,7 +56,7 @@ The Aria compiler and VM are written in Rust, as are some core parts of the Aria
 
 *   **Coding Style:** Please try to match the existing coding style. For Rust code, we use `rustfmt` (which is run automatically by the pre-commit hooks if you install them). For Aria code, please observe the style in surrounding files.
 *   **Add Tests:** If you are adding a new feature or fixing a bug, please add a corresponding test case to the `tests/` directory. This is crucial for maintaining the quality of the project.
-*   **Add Documentation:** If you are adding new behavior to the language or new APIs to the standard library, update the corresponding documentation. This is crucial to allow discoverability of your feature.
+*   **Add Documentation:** If you are adding new behavior to the language or new APIs to the standard library, update the corresponding documentation. This is crucial to allow discoverability of your feature. If your change makes a substantial addition or change to the language or standard library, please also update the [CHANGELOG.md](CHANGELOG.md) file to document your changes. This also applies if you're fixing an interesting bug, or removing a feature. A maintainer can work with you to decide if a changelog note is necessary.
 
 ### 4. Submit a Pull Request
 
