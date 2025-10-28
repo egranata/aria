@@ -9,7 +9,7 @@ parser-lib = { path = "../parser-lib" }
 compiler-lib = { path = "../compiler-lib" }
 vm-lib = { path = "../vm-lib" }
 clap = { version = "4.5.50", features = ["derive"] }
-ariadne = { version = "0.5.0", features = ["auto-color"] }
+ariadne = { git = "https://github.com/zesterer/ariadne.git", rev="b60b500" }
 reedline = "0.43.0"
 
 [[bin]]

@@ -4,7 +4,7 @@ version = "0.9.20251013"
 edition = "2024"
 
 [dependencies]
-ariadne = { version = "0.5.0", features = ["auto-color"] }
+ariadne = { git = "https://github.com/zesterer/ariadne.git", rev="b60b500" }
 clap = { version = "4.5.50", features = ["derive"] }
 glob = "0.3.3"
 rayon = "1.11.0"
