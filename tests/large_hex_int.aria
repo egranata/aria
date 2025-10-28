@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+val n = 0x94d049bb133111eb;
+assert n == -7723592293110705685;

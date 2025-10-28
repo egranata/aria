@@ -259,3 +259,17 @@ fn repl_test_printf() {
         &["hello = 42 hi = 43\n"],
     );
 }
+
+#[test]
+fn repl_test_invalid_literal() {
+    let cmdline_options = Args::default();
+    let mut repl = build_test_repl(&cmdline_options);
+
+    run_check_repl_line(
+        &mut repl,
+        "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+        false,
+        &["0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF is not a valid literal"],
+        &[],
+    );
+}

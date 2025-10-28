@@ -162,7 +162,7 @@ impl From<&InputLocation> for Location {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntLiteral {
     pub loc: SourcePointer,
-    pub val: i64,
+    pub val: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
