@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+import Instant from aria.date.instant;
+
+func main() {
+    val i1 = Instant.now();
+    val i2 = Instant.new_with_utc_timestamp(0);
+    val i3 = Instant.now().with_timezone_offset(1); # nowhere real should have a 1 minute TZ offset
+
+    assert i1 != i2;
+    assert i1 != i3;
+    assert i3 != i2;
+
+    assert i1.hash() == i1.hash();
+    assert i1.hash() != i2.hash();
+    assert i1.hash() != i3.hash();
+    assert i2.hash() != i3.hash();
+}

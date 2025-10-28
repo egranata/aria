@@ -8,12 +8,10 @@ use haxby_vm::{
     },
     error::{dylib_load::LoadResult, vm_error::VmErrorReason},
     frame::Frame,
-    ok_or_err,
     runtime_module::RuntimeModule,
     runtime_value::{
         RuntimeValue, function::BuiltinFunctionImpl, object::Object, opaque::OpaqueValue,
     },
-    some_or_err,
     vm::{self, RunloopExit},
 };
 
@@ -48,19 +46,17 @@ fn create_path_result_err(
     let path_error = Object::new(&path_error);
     path_error.write("msg", RuntimeValue::String(message.into()));
 
-    Ok(ok_or_err!(
-        vm.builtins
-            .create_result_err(RuntimeValue::Object(path_error)),
-        VmErrorReason::UnexpectedVmState
-    ))
+    vm.builtins
+        .create_result_err(RuntimeValue::Object(path_error))
 }
 
 fn mut_path_from_aria(aria_object: &Object) -> Result<Rc<MutablePath>, VmErrorReason> {
-    let rust_obj = some_or_err!(aria_object.read("__path"), VmErrorReason::UnexpectedVmState);
-    Ok(some_or_err!(
-        rust_obj.as_opaque_concrete::<MutablePath>(),
-        VmErrorReason::UnexpectedVmState
-    ))
+    let rust_obj = aria_object
+        .read("__path")
+        .ok_or(VmErrorReason::UnexpectedVmState)?;
+    rust_obj
+        .as_opaque_concrete::<MutablePath>()
+        .ok_or(VmErrorReason::UnexpectedVmState)
 }
 
 #[derive(Default)]
@@ -93,6 +89,54 @@ impl BuiltinFunctionImpl for New {
 }
 
 #[derive(Default)]
+struct Glob {}
+impl BuiltinFunctionImpl for Glob {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        vm: &mut vm::VirtualMachine,
+    ) -> vm::ExecutionResult<RunloopExit> {
+        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
+        let glob_expr =
+            VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
+
+        let val = match glob::glob(&glob_expr) {
+            Ok(path) => {
+                let iterator_rv = the_struct
+                    .load_named_value("Iterator")
+                    .ok_or(VmErrorReason::UnexpectedVmState)?;
+                let iterator_struct = iterator_rv
+                    .as_struct()
+                    .ok_or(VmErrorReason::UnexpectedVmState)?;
+
+                let flatten = path.flatten().map(move |e| new_from_path(&the_struct, e));
+
+                let iterator =
+                    create_iterator_struct(iterator_struct, NativeIteratorImpl::new(flatten));
+
+                vm.builtins.create_result_ok(iterator)?
+            }
+            Err(e) => create_path_result_err(&the_struct, e.to_string(), vm)?,
+        };
+
+        frame.stack.push(val);
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
+    }
+
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
+    }
+
+    fn name(&self) -> &str {
+        "_glob"
+    }
+}
+
+#[derive(Default)]
 struct Cwd {}
 impl BuiltinFunctionImpl for Cwd {
     fn eval(
@@ -102,10 +146,7 @@ impl BuiltinFunctionImpl for Cwd {
     ) -> vm::ExecutionResult<RunloopExit> {
         let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
 
-        let cwd = ok_or_err!(
-            std::env::current_dir(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let cwd = std::env::current_dir().map_err(|_| VmErrorReason::UnexpectedVmState)?;
 
         frame.stack.push(new_from_path(&the_struct, &cwd));
         Ok(RunloopExit::Ok(()))
@@ -177,10 +218,7 @@ impl BuiltinFunctionImpl for Append {
         let mut rfo = rust_obj.content.borrow_mut();
         rfo.push(the_path);
 
-        frame.stack.push(ok_or_err!(
-            vm.builtins.create_unit_object(),
-            VmErrorReason::UnexpectedVmState.into()
-        ));
+        frame.stack.push(vm.builtins.create_unit_object()?);
         Ok(RunloopExit::Ok(()))
     }
 
@@ -404,10 +442,8 @@ impl BuiltinFunctionImpl for Canonical {
         let val = match rfo.canonicalize() {
             Ok(path) => {
                 let canonical_object = new_from_path(aria_object.get_struct(), &path);
-                ok_or_err!(
-                    vm.builtins.create_result_ok(canonical_object),
-                    VmErrorReason::UnexpectedVmState.into()
-                )
+
+                vm.builtins.create_result_ok(canonical_object)?
             }
             Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
         };
@@ -443,13 +479,9 @@ impl BuiltinFunctionImpl for Size {
 
         let rfo = rust_obj.content.borrow_mut();
         let val = match rfo.metadata() {
-            Ok(md) => {
-                ok_or_err!(
-                    vm.builtins
-                        .create_result_ok(RuntimeValue::Integer((md.len() as i64).into())),
-                    VmErrorReason::UnexpectedVmState.into()
-                )
-            }
+            Ok(md) => vm
+                .builtins
+                .create_result_ok(RuntimeValue::Integer((md.len() as i64).into()))?,
             Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
         };
 
@@ -491,11 +523,8 @@ impl BuiltinFunctionImpl for CreatedTime {
                         .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap()
                         .as_millis();
-                    ok_or_err!(
-                        vm.builtins
-                            .create_result_ok(RuntimeValue::Integer((val as i64).into())),
-                        VmErrorReason::UnexpectedVmState.into()
-                    )
+                    vm.builtins
+                        .create_result_ok(RuntimeValue::Integer((val as i64).into()))?
                 }
             },
             Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
@@ -539,11 +568,8 @@ impl BuiltinFunctionImpl for AccessedTime {
                         .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap()
                         .as_millis();
-                    ok_or_err!(
-                        vm.builtins
-                            .create_result_ok(RuntimeValue::Integer((val as i64).into())),
-                        VmErrorReason::UnexpectedVmState.into()
-                    )
+                    vm.builtins
+                        .create_result_ok(RuntimeValue::Integer((val as i64).into()))?
                 }
             },
             Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
@@ -587,11 +613,8 @@ impl BuiltinFunctionImpl for ModifiedTime {
                         .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap()
                         .as_millis();
-                    ok_or_err!(
-                        vm.builtins
-                            .create_result_ok(RuntimeValue::Integer((val as i64).into())),
-                        VmErrorReason::UnexpectedVmState.into()
-                    )
+                    vm.builtins
+                        .create_result_ok(RuntimeValue::Integer((val as i64).into()))?
                 }
             },
             Err(e) => create_path_result_err(aria_object.get_struct(), e.to_string(), vm)?,
@@ -629,19 +652,14 @@ impl BuiltinFunctionImpl for Filename {
         let rfo = rust_obj.content.borrow_mut();
         match rfo.file_name() {
             Some(name) => {
-                let name = some_or_err!(name.to_str(), VmErrorReason::UnexpectedVmState.into());
-                let val = ok_or_err!(
-                    vm.builtins
-                        .create_maybe_some(RuntimeValue::String(name.into())),
-                    VmErrorReason::UnexpectedVmState.into()
-                );
+                let name = name.to_str().ok_or(VmErrorReason::UnexpectedVmState)?;
+                let val = vm
+                    .builtins
+                    .create_maybe_some(RuntimeValue::String(name.into()))?;
                 frame.stack.push(val);
             }
             None => {
-                let val = ok_or_err!(
-                    vm.builtins.create_maybe_none(),
-                    VmErrorReason::UnexpectedVmState.into()
-                );
+                let val = vm.builtins.create_maybe_none()?;
                 frame.stack.push(val);
             }
         }
@@ -676,19 +694,14 @@ impl BuiltinFunctionImpl for Extension {
         let rfo = rust_obj.content.borrow_mut();
         match rfo.extension() {
             Some(name) => {
-                let name = some_or_err!(name.to_str(), VmErrorReason::UnexpectedVmState.into());
-                let val = ok_or_err!(
-                    vm.builtins
-                        .create_maybe_some(RuntimeValue::String(name.into())),
-                    VmErrorReason::UnexpectedVmState.into()
-                );
+                let name = name.to_str().ok_or(VmErrorReason::UnexpectedVmState)?;
+                let val = vm
+                    .builtins
+                    .create_maybe_some(RuntimeValue::String(name.into()))?;
                 frame.stack.push(val);
             }
             None => {
-                let val = ok_or_err!(
-                    vm.builtins.create_maybe_none(),
-                    VmErrorReason::UnexpectedVmState.into()
-                );
+                let val = vm.builtins.create_maybe_none()?;
                 frame.stack.push(val);
             }
         }
@@ -936,21 +949,14 @@ impl BuiltinFunctionImpl for CommonAncestor {
         let this_path = this_path.content.borrow_mut();
         let other_path = other_path.content.borrow_mut();
 
-        match this_path.ancestors().find(|p| other_path.starts_with(p)) {
-            Some(p) => {
-                frame.stack.push(ok_or_err!(
-                    vm.builtins.create_maybe_some(new_from_path(this_struct, p)),
-                    VmErrorReason::UnexpectedVmState.into()
-                ));
-            }
-            None => {
-                frame.stack.push(ok_or_err!(
-                    vm.builtins.create_maybe_none(),
-                    VmErrorReason::UnexpectedVmState.into()
-                ));
-            }
-        }
+        let val = match this_path.ancestors().find(|p| other_path.starts_with(p)) {
+            Some(p) => vm
+                .builtins
+                .create_maybe_some(new_from_path(this_struct, p))?,
+            None => vm.builtins.create_maybe_none()?,
+        };
 
+        frame.stack.push(val);
         Ok(RunloopExit::Ok(()))
     }
 
@@ -1023,6 +1029,7 @@ pub extern "C" fn dylib_haxby_inject(module: *const RuntimeModule) -> LoadResult
             };
 
             path_struct.insert_builtin::<New>();
+            path_struct.insert_builtin::<Glob>();
             path_struct.insert_builtin::<Cwd>();
             path_struct.insert_builtin::<Prettyprint>();
             path_struct.insert_builtin::<Append>();

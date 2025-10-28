@@ -205,4 +205,12 @@ struct Instant {
             offset_ms_to_string(this.offset_ms)
         );
     }
+
+    func hash() {
+        return this.unix_ts ^ this.offset_ms;
+    }
+
+    operator == (other: Instant) {
+        return this.unix_ts == other.unix_ts && this.offset_ms == other.offset_ms;
+    }
 }

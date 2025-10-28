@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
-    builtins::VmBuiltins, error::vm_error::VmErrorReason, frame::Frame, ok_or_err,
+    builtins::VmBuiltins, error::vm_error::VmErrorReason, frame::Frame,
     runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
 };
 
@@ -26,10 +26,7 @@ impl BuiltinFunctionImpl for Setenv {
         unsafe {
             std::env::set_var(var_name.raw_value(), var_value.raw_value());
         }
-        frame.stack.push(ok_or_err!(
-            vm.builtins.create_unit_object(),
-            VmErrorReason::UnexpectedVmState.into()
-        ));
+        frame.stack.push(vm.builtins.create_unit_object()?);
         Ok(RunloopExit::Ok(()))
     }
 

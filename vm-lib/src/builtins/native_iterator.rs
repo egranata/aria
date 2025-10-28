@@ -9,7 +9,6 @@ use crate::{
     builtins::VmBuiltins,
     error::vm_error::VmErrorReason,
     frame::Frame,
-    ok_or_err,
     runtime_value::{
         RuntimeValue,
         function::{BuiltinFunctionImpl, Function},
@@ -17,7 +16,6 @@ use crate::{
         opaque::OpaqueValue,
         structure::Struct,
     },
-    some_or_err,
     vm::RunloopExit,
 };
 
@@ -67,25 +65,17 @@ impl BuiltinFunctionImpl for Next {
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let aria_this = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
 
-        let iterator_impl = some_or_err!(
-            aria_this.read("__impl"),
-            VmErrorReason::UnexpectedVmState.into()
-        );
-        let rust_native_iter = some_or_err!(
-            iterator_impl.as_opaque_concrete::<RefCell<NativeIteratorImpl>>(),
-            VmErrorReason::UnexpectedVmState.into()
-        );
+        let iterator_impl = aria_this
+            .read("__impl")
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
+        let rust_native_iter = iterator_impl
+            .as_opaque_concrete::<RefCell<NativeIteratorImpl>>()
+            .ok_or(VmErrorReason::UnexpectedVmState)?;
 
         if let Some(next) = rust_native_iter.borrow_mut().next() {
-            frame.stack.push(ok_or_err!(
-                vm.builtins.create_maybe_some(next),
-                VmErrorReason::UnexpectedVmState.into()
-            ));
+            frame.stack.push(vm.builtins.create_maybe_some(next)?);
         } else {
-            frame.stack.push(ok_or_err!(
-                vm.builtins.create_maybe_none(),
-                VmErrorReason::UnexpectedVmState.into()
-            ));
+            frame.stack.push(vm.builtins.create_maybe_none()?);
         }
 
         Ok(RunloopExit::Ok(()))

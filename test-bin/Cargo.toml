@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 ariadne = { version = "0.5.0", features = ["auto-color"] }
-clap = { version = "4.5.49", features = ["derive"] }
+clap = { version = "4.5.50", features = ["derive"] }
 glob = "0.3.3"
 rayon = "1.11.0"
 parser-lib = { path = "../parser-lib" }

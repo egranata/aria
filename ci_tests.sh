@@ -1,2 +1,6 @@
 #!/usr/bin/env bash
-./t  --sequential
+set -e
+
+SELF_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+
+${SELF_DIR}/t  --sequential

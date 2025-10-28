@@ -32,6 +32,10 @@ struct Path {
         return This._new(s);
     }
 
+    type func glob(pattern: String) {
+        return This._glob(pattern);
+    }
+
     func append(rhs: String|Path) {
         if rhs isa String {
             this._append(rhs);
@@ -86,5 +90,9 @@ struct Path {
     # we could use the builtin _copy, except for type validation
     func copy_to(other: Path) {
         this._copy(other);
+    }
+
+    func hash() {
+        return this.prettyprint().hash();
     }
 }

@@ -190,6 +190,7 @@ This module provides a `Path` struct for interacting with the file system.
     *   `type func new(s: String)`: Creates a new `Path` object from a string representation.
     *   `type func new_with_current_directory()`: Returns a `Path` object representing the current working directory.
     *   `type func new_with_environment_variable(var)`: Returns a `Path` object from the value of an environment variable `var`.
+    *   `type func glob(pattern: String)`: Returns a `Result` containing an `Iterator` of `Path` objects over matching paths if the pattern is valid or an `Path.Error` if it is not.
     *   `append(rhs: String|Path)`: Appends a component (`String` or `Path`) to the end of this path. Returns the modified path.
     *   `op_div(rhs: String|Path)` (Operator `/`): Returns a new `Path` object by joining this path with `rhs`.
     *   `parent()`: Returns a new `Path` object representing the parent directory of this path.
@@ -1115,6 +1116,52 @@ This module provides a last-in, first-out (LIFO) stack.
     *   `is_empty()`: Returns `true` if the stack contains no items, `false` otherwise.
 
 ---
+
+# `aria.structures.hash` Module Reference
+
+This document provides a reference for the `aria.structures.hash` module, which contains support for hashing algorithms.
+
+---
+
+## Modules
+
+### `aria.numerics.hash.algo.list`
+
+This module provides support for hashing `List` instances.
+
+#### **Extensions**
+
+*   **`extension List`**
+    Extends the built-in `List` type.
+
+    **Methods:**
+    *   `hash()`: Returns an integer hash value for the list. It requires that every element in the list also implements a `hash()` method.
+---
+
+# `aria.structures.hash.algo` Module Reference
+
+This document provides a reference for the `aria.structures.hash.algo` module, which contains hashing algorithms.
+
+---
+
+## Modules
+
+### `aria.numerics.hash.algo.sip`
+
+This module provides a `SipHasher` algorithm implementation.
+
+#### **Structs**
+
+*   **`SipHasher`**
+    A struct implementing the SipHash hashing algorithm.
+
+    **Methods:**
+    *   `type func new(k0: Int, k1: Int)`: Creates a new `SipHasher` with the given key.
+    *   `write(data)`: Feeds data into the hasher. `data` can be an `Int` or a `List` of `Int` values.
+    *   `finish()`: Computes the hash of the given data using the SipHash algorithm.
+
+---
+
 # `aria.test` Module Reference
 
 This document provides a reference for the `aria.test` module, which contains utilities for writing and running tests.
