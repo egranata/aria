@@ -56,7 +56,7 @@ fn build_report_from_msg_and_location<'a>(
     .with_message(msg)
     .with_config(config);
     let mut cache = StringCache::default();
-    for loc in &locations {
+    for (idx, loc) in locations.iter().enumerate() {
         let loc = loc.clone();
         report = report.with_label(
             Label::new((
@@ -64,6 +64,7 @@ fn build_report_from_msg_and_location<'a>(
                 loc.location.start..loc.location.stop,
             ))
             .with_message("here")
+            .with_order(idx as i32)
             .with_color(magenta),
         );
         if !cache.buffers.contains_key(&loc.buffer.name) {

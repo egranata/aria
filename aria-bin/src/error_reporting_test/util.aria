@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo(f, n) {
+    return f(3,n);
+}

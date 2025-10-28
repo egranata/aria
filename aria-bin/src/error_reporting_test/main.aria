@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+import foo from util;
+
+func op(x,y) {
+    if x > 0 {
+        throw "x is positive :(";
+    }
+    return y + x;
+}
+
+func main() {
+    # this is reported as 6:9 (the location of the throw, not the location of the call)
+    # which is a bug, but I need to fix that orthogonally to this test
+    foo(op,3);
+}
