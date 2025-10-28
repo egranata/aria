@@ -6,7 +6,6 @@ use crate::{
     error::vm_error::{VmError, VmErrorReason},
     frame::Frame,
     runtime_value::{RuntimeValue, function::BuiltinFunctionImpl, object::Object},
-    some_or_err,
     vm::RunloopExit,
 };
 
@@ -26,41 +25,33 @@ impl Arity {
         if let Some(cache) = self.cache.get() {
             Ok(cache)
         } else {
-            let arity_mod = some_or_err!(
-                vm.find_imported_module("aria.core.arity"),
+            let arity_mod = vm.find_imported_module("aria.core.arity").ok_or_else(|| {
                 VmErrorReason::ImportNotAvailable(
                     "aria.core.arity".to_owned(),
-                    "module not found".to_owned()
+                    "module not found".to_owned(),
                 )
-                .into()
-            );
-            let arity_struct = some_or_err!(
-                arity_mod.load_named_value("Arity"),
-                VmErrorReason::NoSuchIdentifier("aria.core.arity.Arity".to_owned(),).into()
-            );
-            let arity_struct = some_or_err!(
-                arity_struct.as_struct(),
-                VmErrorReason::UnexpectedType.into()
-            );
-            let upper_bound_enum = some_or_err!(
-                arity_struct.load_named_value("UpperBound"),
-                VmErrorReason::NoSuchIdentifier("aria.core.arity.Arity.UpperBound".to_owned())
-                    .into()
-            );
-            let upper_bound_enum = some_or_err!(
-                upper_bound_enum.as_enum(),
-                VmErrorReason::UnexpectedType.into()
-            );
+            })?;
+            let arity_struct = arity_mod.load_named_value("Arity").ok_or_else(|| {
+                VmErrorReason::NoSuchIdentifier("aria.core.arity.Arity".to_owned())
+            })?;
+            let arity_struct = arity_struct
+                .as_struct()
+                .ok_or(VmErrorReason::UnexpectedType)?;
+            let upper_bound_enum =
+                arity_struct.load_named_value("UpperBound").ok_or_else(|| {
+                    VmErrorReason::NoSuchIdentifier("aria.core.arity.Arity.UpperBound".to_owned())
+                })?;
+            let upper_bound_enum = upper_bound_enum
+                .as_enum()
+                .ok_or(VmErrorReason::UnexpectedType)?;
 
-            let vararg_idx = some_or_err!(
-                upper_bound_enum.get_idx_of_case("Varargs"),
-                VmErrorReason::NoSuchCase("Varargs".to_owned()).into()
-            );
+            let vararg_idx = upper_bound_enum
+                .get_idx_of_case("Varargs")
+                .ok_or_else(|| VmErrorReason::NoSuchCase("Varargs".to_owned()))?;
 
-            let bounded_idx = some_or_err!(
-                upper_bound_enum.get_idx_of_case("Bounded"),
-                VmErrorReason::NoSuchCase("Bounded".to_owned()).into()
-            );
+            let bounded_idx = upper_bound_enum
+                .get_idx_of_case("Bounded")
+                .ok_or_else(|| VmErrorReason::NoSuchCase("Bounded".to_owned()))?;
 
             let cache = Cache {
                 arity_struct: arity_struct.clone(),
@@ -105,21 +96,21 @@ impl BuiltinFunctionImpl for Arity {
 
         let argc_offset = if has_receiver { 1 } else { 0 };
 
-        let upper_bound_value = RuntimeValue::EnumValue(some_or_err!(
-            if is_vararg {
-                arity_cache
-                    .upper_bound_enum
-                    .make_value(arity_cache.vararg_idx, None)
-            } else {
-                arity_cache.upper_bound_enum.make_value(
-                    arity_cache.bounded_idx,
-                    Some(RuntimeValue::Integer(
-                        ((f_arity.optional + f_arity.required - argc_offset) as i64).into(),
-                    )),
-                )
-            },
-            VmErrorReason::UnexpectedType.into()
-        ));
+        let upper_bound_value = if is_vararg {
+            arity_cache
+                .upper_bound_enum
+                .make_value(arity_cache.vararg_idx, None)
+        } else {
+            arity_cache.upper_bound_enum.make_value(
+                arity_cache.bounded_idx,
+                Some(RuntimeValue::Integer(
+                    ((f_arity.optional + f_arity.required - argc_offset) as i64).into(),
+                )),
+            )
+        }
+        .ok_or(VmErrorReason::UnexpectedType)?;
+
+        let upper_bound_value = RuntimeValue::EnumValue(upper_bound_value);
 
         let lower_bound_value =
             RuntimeValue::Integer(((f_arity.required - argc_offset) as i64).into());

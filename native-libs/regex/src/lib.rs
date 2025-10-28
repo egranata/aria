@@ -10,7 +10,6 @@ use haxby_vm::{
         RuntimeValue, function::BuiltinFunctionImpl, list::List, object::Object,
         opaque::OpaqueValue, structure::Struct,
     },
-    some_or_err,
     vm::{ExecutionResult, RunloopExit, VirtualMachine},
 };
 
@@ -18,12 +17,13 @@ fn create_regex_error(
     regex_struct: &Struct,
     message: String,
 ) -> Result<RuntimeValue, VmErrorReason> {
-    let regex_error = some_or_err!(
-        regex_struct.load_named_value("Error"),
-        VmErrorReason::UnexpectedVmState
-    );
+    let regex_error = regex_struct
+        .load_named_value("Error")
+        .ok_or(VmErrorReason::UnexpectedVmState)?;
 
-    let regex_error = some_or_err!(regex_error.as_struct(), VmErrorReason::UnexpectedType);
+    let regex_error = regex_error
+        .as_struct()
+        .ok_or(VmErrorReason::UnexpectedType)?;
 
     let regex_error = Object::new(regex_error);
     regex_error.write("msg", RuntimeValue::String(message.into()));

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
-    builtins::VmBuiltins, error::vm_error::VmErrorReason, frame::Frame, ok_or_err,
-    runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
+    builtins::VmBuiltins, frame::Frame, runtime_value::function::BuiltinFunctionImpl,
+    vm::RunloopExit,
 };
 
 #[derive(Default)]
@@ -17,10 +17,7 @@ impl BuiltinFunctionImpl for Print {
         let mut console = vm.console().borrow_mut();
         assert!(console.print(&fmt).is_ok());
 
-        cur_frame.stack.push(ok_or_err!(
-            vm.builtins.create_unit_object(),
-            VmErrorReason::UnexpectedVmState.into()
-        ));
+        cur_frame.stack.push(vm.builtins.create_unit_object()?);
         Ok(RunloopExit::Ok(()))
     }
 
