@@ -1,4 +1,6 @@
 ---
+title: "Aria Contributor's Guide"
+description: "Process, tips, tricks and overall guidance for contributing to Aria."
 ---
 
 # Contributing to Aria
@@ -54,7 +56,7 @@ The Aria compiler and VM are written in Rust, as are some core parts of the Aria
 
 *   **Coding Style:** Please try to match the existing coding style. For Rust code, we use `rustfmt` (which is run automatically by the pre-commit hooks if you install them). For Aria code, please observe the style in surrounding files.
 *   **Add Tests:** If you are adding a new feature or fixing a bug, please add a corresponding test case to the `tests/` directory. This is crucial for maintaining the quality of the project.
-*   **Add Documentation:** If you are adding new behavior to the language or new APIs to the standard library, update the corresponding documentation. This is crucial to allow discoverability of your feature.
+*   **Add Documentation:** If you are adding new behavior to the language or new APIs to the standard library, update the corresponding documentation. This is crucial to allow discoverability of your feature. If your change makes a substantial addition or change to the language or standard library, please also update the [CHANGELOG.md](CHANGELOG.md) file to document your changes. This also applies if you're fixing an interesting bug, or removing a feature. A maintainer can work with you to decide if a changelog note is necessary.
 
 ### 4. Submit a Pull Request
 
@@ -91,6 +93,6 @@ Once your changes are ready, it's time to submit a pull request.
 
 4.  Go to the original Aria repository on GitHub and open a pull request. If you use the github tool, `gh pr create` will also guide you through some of these steps.
 
-5.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged.
+5.  One of the project maintainers will review your pull request, provide feedback, and work with you to get it merged. Please note that maintainers may need to cherry-pick your patch in accordance with the [Release Policy](release_policy.md). While this process is generally the responsibility of the maintainers, you can help by ensuring that your commits are atomic and well-documented. You may also be asked to help with the cherry-pick in case of conflicts or ambiguity.
 
 Thank you again for your contribution. It's an exciting time for Aria, and we're happy to have you on board!
