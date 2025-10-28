@@ -1,58 +1,12 @@
 use std::collections::HashMap;
-use std::sync::Arc;
-
-use line_index::LineIndex;
+use line_index::LineCol;
 use rowan::TextRange;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
-
-use lsp::parser::{self, Parse, SyntaxNode, SyntaxToken};
+use lsp::document::{DocumentState};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 
-#[derive(Clone)]
-struct DocumentState {
-    text: Arc<String>,
-    line_index: Arc<LineIndex>,
-    parse: Arc<Parse>,
-    defs: HashMap<String, Vec<TextRange>>,
-}
-
-impl DocumentState {
-    fn new(text: String) -> Self {
-        let line_index = LineIndex::new(&text);
-        let parse = parser::parse(&text);
-        let syntax = parse.syntax();
-        let defs = build_index(&syntax);
-        Self {
-            text: Arc::new(text),
-            parse: Arc::new(parse),
-            line_index: Arc::new(line_index),
-            defs,
-        }
-    }
-
-    fn update_text(&mut self, text: String) {
-        self.text = Arc::new(text);
-        self.line_index = Arc::new(LineIndex::new(&self.text));
-        let parse = parser::parse(&self.text);
-        let syntax = parse.syntax();
-
-        self.parse = Arc::new(parse);
-        self.defs = build_index(&syntax);
-    }
-
-    fn token_at_offset(&self, offset: rowan::TextSize) -> Option<SyntaxToken> {
-        for el in self.parse.syntax().descendants_with_tokens() {
-            if let rowan::NodeOrToken::Token(tok) = el {
-                if tok.text_range().contains(offset) {
-                    return Some(tok);
-                }
-            }
-        }
-        None
-    }
-}
 
 #[derive(Clone)]
 struct Logger {
@@ -80,46 +34,22 @@ struct Backend {
     documents: parking_lot::Mutex<HashMap<Url, DocumentState>>,
 }
 
-fn build_index(root: &SyntaxNode) -> HashMap<String, Vec<TextRange>> {
-    use lsp::lexer::SyntaxKind as K;
-    let mut defs: HashMap<String, Vec<TextRange>> = HashMap::new();
-
-    for node in root.descendants() {
-        match node.kind() {
-            K::StmtVal | K::Param | K::Func => {
-                // First Identifier token child is the declared name
-                if let Some(tok) = node
-                    .children_with_tokens()
-                    .filter_map(|e| e.into_token())
-                    .find(|t| t.kind() == K::Identifier)
-                {
-                    let name = tok.text().to_string();
-                    defs.entry(name).or_default().push(tok.text_range());
-                }
-            }
-            _ => {}
-        }
-    }
-
-    defs
-}
-
-fn to_lsp_position(li: &LineIndex, offset: rowan::TextSize) -> Position {
-    let lc = li.line_col(offset);
-    Position::new(lc.line as u32, lc.col as u32)
-}
-
-fn to_lsp_range(li: &LineIndex, range: TextRange) -> Range {
-    Range::new(
-        to_lsp_position(li, range.start()),
-        to_lsp_position(li, range.end()),
-    )
-}
-
 impl Backend {
     fn info(&self, msg: String) {
         self.logger.info(msg);
     }
+}
+
+fn to_lsp_position(doc: &DocumentState, offset: rowan::TextSize) -> Position {
+    let lc = doc.line_col(offset);
+    Position::new(lc.line as u32, lc.col as u32)
+}
+
+fn to_lsp_range(doc: &DocumentState, range: TextRange) -> Range {
+    Range::new(
+        to_lsp_position(doc, range.start()),
+        to_lsp_position(doc, range.end()),
+    )
 }
 
 #[tower_lsp::async_trait]
@@ -181,29 +111,28 @@ impl LanguageServer for Backend {
 
         self.info(format!("goto_definition {} {:?}", uri.clone(), position.clone()));
 
-        {
-            let docs = self.documents.lock();
-            let Some(doc) = docs.get(&uri) else { return Ok(None) };
+        let docs = self.documents.lock();
+        let Some(doc) = docs.get(&uri) else { return Ok(None) };
+        
+        if let Some(tok) = doc.token_at_line_col(position.line, position.character) {
+            self.info(format!("found token of type {}", tok));
 
-            let line_col = line_index::LineCol { line: position.line as u32, col: position.character as u32 };
-            let Some(offset) = doc.line_index.offset(line_col) else { return Ok(None) };
+            if tok.kind() == lsp::lexer::SyntaxKind::Identifier {
+                let name = tok.text();
+                if let Some(ranges) = doc.def(name) {
 
-            if let Some(tok) = doc.token_at_offset(offset) {
-                if tok.kind() == lsp::lexer::SyntaxKind::Identifier {
-                    let name = tok.text();
-                    if let Some(ranges) = doc.defs.get(name) {
+                    if let Some(def_range) = ranges.first() {
+                        let lsp_range = to_lsp_range(&doc, *def_range);
+                        let loc = Location::new(uri.clone(), lsp_range);
+                    
+                        self.info(format!("found a definition for {} at {:?}", name, loc));
 
-                        if let Some(def_range) = ranges.first() {
-                            let lsp_range = to_lsp_range(&doc.line_index, *def_range);
-                            let loc = Location::new(uri.clone(), lsp_range);
-                        
-                            self.info(format!("found a definition for {} at {:?}", name, loc));
-
-                            return Ok(Some(GotoDefinitionResponse::Scalar(loc)));
-                        }
+                        return Ok(Some(GotoDefinitionResponse::Scalar(loc)));
                     }
                 }
             }
+        } else {
+            self.info("no token found".to_string());
         }
 
         self.info("no definitions found".to_string());
