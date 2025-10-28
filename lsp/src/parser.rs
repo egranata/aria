@@ -1,7 +1,6 @@
 use std::cell::Cell;
-use line_index::LineIndex;
 use crate::{SyntaxKind, lexer};
-use rowan::{GreenNode, GreenNodeBuilder, TextSize};
+use rowan::{GreenNode, GreenNodeBuilder};
 use SyntaxKind::*;
 
 impl From<SyntaxKind> for rowan::SyntaxKind {
@@ -25,14 +24,19 @@ impl rowan::Language for Lang {
 
 pub struct Parse {
     green_node: GreenNode,
-    #[allow(unused)]
-    errors: Vec<String>,
+    errors: Vec<ParseError>,
 }
 
 impl Parse {
     pub fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green_node.clone())
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct ParseError {
+    msg: String,
+    pos: Option<usize>,
 }
 
 pub fn parse(text: &str) -> Parse {
@@ -50,14 +54,15 @@ pub fn parse(text: &str) -> Parse {
     struct MarkClosed {
         index: usize,
     }
+
+    
     
     struct Parser<'a> {
         tokens: Vec<(SyntaxKind, &'a str, logos::Span)>,
         pos: usize,
         fuel: Cell<u32>, 
         events: Vec<Event>,
-        errors: Vec<String>,
-        line_index: LineIndex
+        errors: Vec<ParseError>
     }
 
     fn prefix_binding_power(op: SyntaxKind) -> Option<((), u8)> {
@@ -993,7 +998,7 @@ pub fn parse(text: &str) -> Parse {
                 return;
             }
             // TODO: replace this with error message instead of assert
-            self.assert_tok(kind);
+            self.report_error(&format!("expected token {:?}", kind));
         }
     
         fn advance_with_error(&mut self, error: &str) {
@@ -1004,32 +1009,21 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn report_error(&mut self, error: &str) {            
-            let msg = if let Some(tok) = self.nth_token(0) {                
+            let pos = if let Some(tok) = self.nth_token(0) {                
                 let pos = &tok.2;
-                let line_col = self.line_index.line_col(TextSize::new(pos.start.try_into().unwrap()));
-
-                format!("{error} at line {}, column {}", line_col.line + 1, line_col.col + 1)
+                Some(pos.start)
             } else {
-                format!("{error}")
+                None
             };
             
-            self.errors.push(msg);
-        }
-
-        fn get_context_msg(&mut self) -> String {
-            if let Some(tok) = self.nth_token(0) {                
-                let pos = &tok.2;
-                let line_col = self.line_index.line_col(TextSize::new(pos.start.try_into().unwrap()));
-
-                format!("{:?}, line: {}, col: {}", tok.0, line_col.line + 1, line_col.col + 1)
-            } else {
-                format!("no token available")
-            }
+            self.errors.push(ParseError { 
+                msg: error.to_string(), 
+                pos: pos
+            });
         }
 
         fn assert_tok(&mut self, kind: SyntaxKind) {
-            let msg = self.get_context_msg();
-            assert!(self.at(kind), "expected {:?} instead of {}\n{:?}", kind, msg, self.events);
+            assert!(self.at(kind));
         }
 
         fn build_tree(self) -> Parse {
@@ -1062,10 +1056,9 @@ pub fn parse(text: &str) -> Parse {
     }  
 
 
-    let line_index = LineIndex::new(text);
     let lex = lexer::lex(text);
     let tokens = lex.into_iter().map(|res| res.unwrap()).collect();
-    let mut parser = Parser { tokens, pos: 0, line_index, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
+    let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
     parser.file();
     parser.build_tree()
 }
@@ -1492,7 +1485,7 @@ mod tests {
                 if !parse_result.errors.is_empty() {
                     println!("\n{} has parse errors:", filename);
                     for error in &parse_result.errors {
-                        println!("  {}", error);
+                        println!("  {:?}", error);
                     }
                     panic!("Parse errors found in {}", filename);
                 }
