@@ -89,6 +89,20 @@ struct RangeImpl {
     func prettyprint() {
         return "Range from={0} to={1}".format(this.from, this.to);
     }
+
+    func hash() {
+        val h = this.from ^ (this.to + -7046029254386353131);
+        h = h ^ (h >> 30);
+        h = h * -4658895280553007687;
+        h = h ^ (h >> 27);
+        h = h * -7723592293110705685;
+        h = h ^ (h >> 31);
+        return h;
+    }
+
+    operator == (other: RangeImpl) {
+        return this.from == other.from && this.to == other.to;
+    }
 }
 
 struct RangeFrom {

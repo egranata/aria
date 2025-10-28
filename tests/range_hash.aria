@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import Range from aria.range.range;
+
+func main() {
+    val r1 = Range.from(5).to(10);
+    val r2 = Range.from(6).to(10);
+    val r3 = Range.from(5).to(11);
+
+    assert r1.hash() != r2.hash();
+    assert r1.hash() != r3.hash();
+    assert r2.hash() != r3.hash();
+
+    assert r1.hash() == r1.hash();
+    assert r2.hash() == r2.hash();
+    assert r3.hash() == r3.hash();
+
+    val r4 = Range.from(6).to(10);
+
+    assert r4.hash() == r2.hash();
+    assert r2 == r4;
+}
