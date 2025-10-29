@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import File from aria.io.file;
+import Enumerate from aria.iterator.enumerate;
+import guard from aria.utils.guard;
 
 func main() {
     val path = getenv("ARIA_TEST_DIR").unwrap_Some();
@@ -7,11 +9,10 @@ func main() {
 
     val msg = "First line of text.\nSecond line of text.\n\nThird line of text.\nFourth line of text.";
 
-    guard file = File.open(path, File.OpenMode.new().write().truncate()) {
+    guard(File.open(path, File.OpenMode.new().write().truncate())).do(|file| => {
         file.write(msg);
-    }
+    });
 
-    val i = 0;
     val lines = [
         "First line of text.",
         "Second line of text.",
@@ -20,11 +21,11 @@ func main() {
         "Fourth line of text."
     ];
 
-    guard file = File.open(path, File.OpenMode.new().read()) {
-        for line in file.lines() {
+    guard(File.open(path, File.OpenMode.new().read())).do(|file| => {
+        for idx_line in Enumerate.new(file.lines()) {
+            val line = idx_line.value;
+            val i = idx_line.index;
             assert line == lines[i];
-            i += 1;
         }
-        assert i == 5;
-    }
+    });
 }

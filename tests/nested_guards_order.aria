@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+import guard from aria.utils.guard;
+
 struct GuardOne {
     type val COUNTER = 1;
 
@@ -16,19 +18,19 @@ struct GuardTwo {
 }
 
 func add(x,y) {
-    guard a = alloc(GuardOne) {
-        guard b = alloc(GuardTwo) {
+    return guard(alloc(GuardOne)).do(|_| => {
+        return guard(alloc(GuardTwo)).do(|_| => {
             return x + y;
-        }
-    }
+        });
+    });
 }
 
 func add_again(x,y) {
-    guard b = alloc(GuardTwo) {
-        guard a = alloc(GuardOne) {
+    return guard(alloc(GuardTwo)).do(|_| => {
+        return guard(alloc(GuardOne)).do(|_| => {
             return x + y;
-        }
-    }
+        });
+    });
 }
 
 func main() {
