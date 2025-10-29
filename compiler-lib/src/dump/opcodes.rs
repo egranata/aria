@@ -157,8 +157,6 @@ pub fn opcode_prettyprint(
         | Opcode::JumpIfArgSupplied(..)
         | Opcode::Call(_)
         | Opcode::Return
-        | Opcode::GuardEnter
-        | Opcode::GuardExit
         | Opcode::TryEnter(_)
         | Opcode::TryExit
         | Opcode::Throw

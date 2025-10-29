@@ -50,8 +50,6 @@ pub const OPCODE_JUMP_TRUE: u8 = 63;
 pub const OPCODE_JUMP_FALSE: u8 = 64;
 pub const OPCODE_JUMP_IF_ARG_SUPPLIED: u8 = 65;
 // ...
-pub const OPCODE_GUARD_ENTER: u8 = 70;
-pub const OPCODE_GUARD_EXIT: u8 = 71;
 pub const OPCODE_TRY_ENTER: u8 = 72;
 pub const OPCODE_TRY_EXIT: u8 = 73;
 pub const OPCODE_THROW: u8 = 74;
@@ -182,8 +180,6 @@ pub enum Opcode {
     JumpIfArgSupplied(u8, u16),
     Call(u8),
     Return,
-    GuardEnter,
-    GuardExit,
     TryEnter(u16),
     TryExit,
     Throw,
@@ -259,8 +255,6 @@ impl std::fmt::Display for Opcode {
             Self::JumpIfArgSupplied(arg0, arg1) => write!(f, "JUMP_IF_ARG_SUPPLIED {arg0} {arg1}"),
             Self::Call(arg0) => write!(f, "CALL {arg0}"),
             Self::Return => write!(f, "RETURN"),
-            Self::GuardEnter => write!(f, "ENTER_GUARD"),
-            Self::GuardExit => write!(f, "EXIT_GUARD"),
             Self::TryEnter(arg0) => write!(f, "ENTER_TRY {arg0}"),
             Self::TryExit => write!(f, "EXIT_TRY"),
             Self::Throw => write!(f, "THROW"),
@@ -338,8 +332,6 @@ impl Opcode {
             Self::Jump(_) => 3,
             Self::Call(_) => 2,
             Self::Return => 1,
-            Self::GuardEnter => 1,
-            Self::GuardExit => 1,
             Self::TryEnter(_) => 3,
             Self::TryExit => 1,
             Self::Throw => 1,
