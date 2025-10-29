@@ -18,6 +18,7 @@ pub enum BuiltinValueKind {
     Float,
     List,
     String,
+    Type,
 }
 
 struct BuiltinTypeImpl {
@@ -115,6 +116,7 @@ impl std::fmt::Debug for BuiltinType {
             BuiltinValueKind::Float => write!(f, "Float"),
             BuiltinValueKind::List => write!(f, "List"),
             BuiltinValueKind::String => write!(f, "String"),
+            BuiltinValueKind::Type => write!(f, "Type"),
         }
     }
 }

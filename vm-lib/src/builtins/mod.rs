@@ -36,6 +36,7 @@ mod setenv;
 mod sleep;
 mod string;
 mod system;
+mod typ;
 mod typeof_builtin;
 mod writeattr;
 
@@ -92,12 +93,13 @@ impl Default for VmBuiltins {
         prettyprint::insert_builtins(&mut this);
         print::insert_builtins(&mut this);
         println::insert_builtins(&mut this);
+        readattr::insert_builtins(&mut this);
         readln::insert_builtins(&mut this);
         setenv::insert_builtins(&mut this);
-        string::insert_string_builtins(&mut this);
-        readattr::insert_builtins(&mut this);
         sleep::insert_builtins(&mut this);
+        string::insert_string_builtins(&mut this);
         system::insert_builtins(&mut this);
+        typ::insert_type_builtins(&mut this);
         typeof_builtin::insert_builtins(&mut this);
         writeattr::insert_builtins(&mut this);
 

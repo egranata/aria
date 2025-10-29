@@ -39,7 +39,6 @@ pub enum RuntimeValueType {
     Opaque,
     Struct(Struct),
     Enum(Enum),
-    Type,
     Union(Vec<RuntimeValueType>),
 }
 
@@ -117,7 +116,6 @@ impl std::fmt::Debug for RuntimeValueType {
                     .join("|");
                 write!(f, "{us}")
             }
-            Self::Type => write!(f, "Type"),
         }
     }
 }
