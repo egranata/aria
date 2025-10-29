@@ -1214,6 +1214,33 @@ This module provides the core components for defining test cases and organizing 
     *   `run(silent=false)`: Executes all test cases added to the suite. Prints the result of each test and a summary of passed/failed tests. Returns the number of failed tests. If `silent` is `true`, it suppresses the test runner's output during execution.
 
 ---
+
+# `aria.utils` Module Reference
+
+This document provides a reference for the `aria.utils` module, which contains utility functions and types for common programming tasks.
+
+---
+
+## Modules
+
+### `aria.utils.guard`
+
+This module provides the implementation for `guard`, a resource management utility.
+
+#### **Functions**
+
+*   **`guard(obj)`**
+    Creates a new `GuardImpl` that wraps the provided object `obj`. The `obj` may optionally define a `guard_exit()` method, which will be called when the guard completes execution.
+
+#### **Structs**
+
+*   **`GuardImpl`**
+    A wrapper for a managed resource that ensures a cleanup function is called when the guard completes execution.
+
+    **Methods:**
+    *   `do(f)`: Runs `f` passing the guarded object as its sole argument. On completion, calls the cleanup function (`guard_exit`) on the guarded object, if one is provided. It returns a `Result` equivalent to `f(...)??`, or re-throws, if `f` throws.
+
+---
 # Built-in Values
 
 This section provides a reference for the built-in values of the Aria language.
