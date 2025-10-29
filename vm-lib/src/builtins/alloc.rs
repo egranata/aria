@@ -18,26 +18,18 @@ impl BuiltinFunctionImpl for Alloc {
         frame: &mut Frame,
         _: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
+        use crate::runtime_value::builtin_type::BuiltinValueKind as BVK;
         let alloc_type = VmBuiltins::extract_arg(frame, |x| x.as_type().cloned())?;
 
         match alloc_type {
             RuntimeValueType::Builtin(b) => {
                 let rv = match b.get_tag() {
-                    crate::runtime_value::builtin_type::BuiltinValueKind::Boolean => {
-                        RuntimeValue::Boolean(false.into())
-                    }
-                    crate::runtime_value::builtin_type::BuiltinValueKind::Integer => {
-                        RuntimeValue::Integer(0.into())
-                    }
-                    crate::runtime_value::builtin_type::BuiltinValueKind::Float => {
-                        RuntimeValue::Float(0.0.into())
-                    }
-                    crate::runtime_value::builtin_type::BuiltinValueKind::List => {
-                        RuntimeValue::List(crate::runtime_value::list::List::from(&[]))
-                    }
-                    crate::runtime_value::builtin_type::BuiltinValueKind::String => {
-                        RuntimeValue::String("".into())
-                    }
+                    BVK::Boolean => RuntimeValue::Boolean(false.into()),
+                    BVK::Integer => RuntimeValue::Integer(0.into()),
+                    BVK::Float => RuntimeValue::Float(0.0.into()),
+                    BVK::List => RuntimeValue::List(crate::runtime_value::list::List::from(&[])),
+                    BVK::String => RuntimeValue::String("".into()),
+                    BVK::Type => return Err(VmErrorReason::UnexpectedType.into()),
                 };
                 frame.stack.push(rv);
             }

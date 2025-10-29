@@ -84,12 +84,6 @@ impl VirtualMachine {
         &self.options.console
     }
 
-    fn load_type_into_builtins(self) -> Self {
-        self.builtins
-            .insert("Type", RuntimeValue::Type(RuntimeValueType::Type));
-        self
-    }
-
     fn load_version_into_builtins(self) -> Self {
         let aria_version = env!("CARGO_PKG_VERSION");
         assert!(!aria_version.is_empty());
@@ -148,8 +142,7 @@ impl VirtualMachine {
             imported_modules: Default::default(),
             loaded_dylibs: Default::default(),
         }
-        .load_version_into_builtins()
-        .load_type_into_builtins();
+        .load_version_into_builtins();
         for (builtin_name, source) in BUILTIN_VALUES_TO_INJECT {
             let rmod = this.load_core_file_into_builtins(builtin_name, source);
             this = this.load_named_value_into_builtins(builtin_name, &rmod);
