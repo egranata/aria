@@ -1,0 +1,7 @@
+import Buzz from widget.buzz;
+
+struct Paco {
+    type func build_buzz() {
+        return alloc(Buzz);
+    }
+}

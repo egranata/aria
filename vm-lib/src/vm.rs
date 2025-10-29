@@ -390,7 +390,7 @@ impl VirtualMachine {
     }
 
     fn resolve_import_path_to_path(&self, ipath: &str) -> Result<PathBuf, VmErrorReason> {
-        if let Some(ipath) = ipath.strip_prefix("self.") {
+        if let Some(ipath) = ipath.strip_prefix("widget.") {
             return if let Some(self_module_path) = &self.options.self_module_path {
                 let ipath = format!("{}.aria", ipath.replace(".", "/"));
 
