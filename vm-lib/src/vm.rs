@@ -49,7 +49,7 @@ pub struct VmOptions {
     pub dump_stack: bool,
     pub vm_args: Vec<String>,
     pub console: ConsoleHandle,
-    pub main_file: Option<String>,
+    pub self_module_path: Option<PathBuf>,
 }
 
 impl Default for VmOptions {
@@ -59,7 +59,7 @@ impl Default for VmOptions {
             dump_stack: Default::default(),
             vm_args: Default::default(),
             console: Rc::new(RefCell::new(StdConsole {})),
-            main_file: None,
+            self_module_path: None,
         }
     }
 }
@@ -391,13 +391,10 @@ impl VirtualMachine {
 
     fn resolve_import_path_to_path(&self, ipath: &str) -> Result<PathBuf, VmErrorReason> {
         if let Some(ipath) = ipath.strip_prefix("self.") {
-            return if let Some(main_path) = &self.options.main_file {
+            return if let Some(self_module_path) = &self.options.self_module_path {
                 let ipath = format!("{}.aria", ipath.replace(".", "/"));
-                let project_path = Path::new(main_path)
-                    .parent()
-                    .expect("main file must have a parent directory");
 
-                Self::try_get_import_path_from_name(project_path, &ipath).ok_or_else(|| {
+                Self::try_get_import_path_from_name(self_module_path, &ipath).ok_or_else(|| {
                     VmErrorReason::ImportNotAvailable(
                         ipath.to_owned(),
                         "import not found in project".to_owned(),
