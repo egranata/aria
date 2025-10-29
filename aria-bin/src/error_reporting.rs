@@ -41,20 +41,9 @@ fn build_report_from_msg_and_location<'a>(
 ) -> PrintableReport<'a> {
     let config = ariadne::Config::default().with_index_type(ariadne::IndexType::Byte);
     let magenta = Color::Magenta;
-    let primary_span = locations.first();
-    let mut report = Report::build(
-        ReportKind::Error,
-        if let Some(primary_span) = primary_span {
-            (
-                primary_span.buffer.name.clone(),
-                primary_span.location.start..primary_span.location.stop,
-            )
-        } else {
-            ("unknown".to_owned(), 0..0)
-        },
-    )
-    .with_message(msg)
-    .with_config(config);
+    let mut report = Report::build(ReportKind::Error, ("unknown".to_owned(), 0..0))
+        .with_message(msg)
+        .with_config(config);
     let mut cache = StringCache::default();
     for (idx, loc) in locations.iter().enumerate() {
         let loc = loc.clone();
