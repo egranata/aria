@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import Foo from self.as_user_printable; # This is a test file in the root of tests with a Foo struct 
-import Foo2 from self.helpers.foo; # This is a test file in the tests/helpers folder with a Foo2 struct 
+
+import self.helpers.foo; # This is a test file in the tests/helpers folder with a Foo2 struct 
+val Foo2 = self.helpers.foo.Foo2;
 
 struct Foo3 {
     func prettyprint() {

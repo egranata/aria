@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+# This file is being used as a test in its own and also as a helper for project_structure.aria
 struct Foo {
     func prettyprint() {
         return "I'm a Foo";
