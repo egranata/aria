@@ -114,4 +114,14 @@ struct Complex {
             throw alloc(Unimplemented);
         }
     }
+
+    func hash() {
+        val h = this.real.hash() ^ (this.imag.hash() + 0x9e3779b97f4a7c15);
+        h = h ^ (h >> 30);
+        h = h * 0xbf58476d1ce4e5b9;
+        h = h ^ (h >> 27);
+        h = h * 0x94d049bb133111eb;
+        h = h ^ (h >> 31);
+        return h;
+    }
 }

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+import Complex from aria.numerics.complex;
+
+func main() {
+    val c1 = Complex.new(3,5);
+    val c2 = Complex.new(4,3);
+    val c3 = Complex.new(1,1);
+
+    assert c1.hash() != c2.hash();
+    assert c1.hash() != c3.hash();
+    assert c2.hash() != c3.hash();
+
+    assert c1.hash() == c1.hash();
+    assert c2.hash() == c2.hash();
+    assert c3.hash() == c3.hash();
+
+    val c4 = Complex.new(1,1);
+
+    assert c4.hash() == c3.hash();
+    assert c3 == c4;
+}
