@@ -2,7 +2,7 @@
 use crate::{
     ast::{
         AssertStatement, AssignStatement, BreakStatement, CodeBlock, ContinueStatement, EnumDecl,
-        ExpressionStatement, ForStatement, FunctionDecl, GuardBlock, IfStatement, MatchStatement,
+        ExpressionStatement, ForStatement, FunctionDecl, IfStatement, MatchStatement,
         ReturnStatement, Statement, StructDecl, ThrowStatement, TryBlock, ValDeclStatement,
         WhileStatement, WriteOpEqStatement,
         derive::Derive,
@@ -20,7 +20,6 @@ impl Derive for Statement {
         (continue_stmt, ContinueStatement),
         (expr_stmt, ExpressionStatement),
         (for_stmt, ForStatement),
-        (guard_block, GuardBlock),
         (if_stmt, IfStatement),
         (match_stmt, MatchStatement),
         (return_stmt, ReturnStatement),
@@ -49,7 +48,6 @@ impl PrettyPrintable for Statement {
             Self::CodeBlock(c) => c.prettyprint(buffer),
             Self::ReturnStatement(r) => r.prettyprint(buffer),
             Self::ThrowStatement(t) => t.prettyprint(buffer),
-            Self::GuardBlock(g) => g.prettyprint(buffer),
             Self::TryBlock(t) => t.prettyprint(buffer),
             Self::AssertStatement(a) => a.prettyprint(buffer),
             Self::ExpressionStatement(e) => e.prettyprint(buffer),

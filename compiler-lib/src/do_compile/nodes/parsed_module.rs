@@ -97,9 +97,6 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
                 aria_parser::ast::TopLevelEntry::CodeBlock(c) => {
                     collate_error_if_any!(c.do_compile(params), errors)
                 }
-                aria_parser::ast::TopLevelEntry::GuardBlock(g) => {
-                    collate_error_if_any!(g.do_compile(params), errors)
-                }
                 aria_parser::ast::TopLevelEntry::TryBlock(t) => {
                     collate_error_if_any!(t.do_compile(params), errors)
                 }

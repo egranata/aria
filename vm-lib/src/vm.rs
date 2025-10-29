@@ -1239,41 +1239,6 @@ impl VirtualMachine {
             Opcode::Return => {
                 return Ok(OpcodeRunExit::Return);
             }
-            Opcode::GuardEnter => {
-                let x = pop_or_err!(next, frame, op_idx);
-                let x_exit = match x.read_attribute("guard_exit", &self.builtins) {
-                    Ok(x) => x,
-                    Err(_) => {
-                        return build_vm_error!(
-                            VmErrorReason::NoSuchIdentifier("guard_exit".to_owned()),
-                            next,
-                            frame,
-                            op_idx
-                        );
-                    }
-                };
-                frame
-                    .ctrl_blocks
-                    .push(crate::frame::ControlBlock::Guard(x_exit));
-            }
-            Opcode::GuardExit => match frame.ctrl_blocks.try_pop() {
-                Some(block) => match block {
-                    crate::frame::ControlBlock::Guard(guard) => {
-                        let _ = guard.eval(0, frame, self, true);
-                    }
-                    _ => {
-                        return build_vm_error!(
-                            VmErrorReason::InvalidControlInstruction,
-                            next,
-                            frame,
-                            op_idx
-                        );
-                    }
-                },
-                _ => {
-                    return build_vm_error!(VmErrorReason::EmptyStack, next, frame, op_idx);
-                }
-            },
             Opcode::TryEnter(offset) => {
                 frame
                     .ctrl_blocks
@@ -1282,14 +1247,6 @@ impl VirtualMachine {
             Opcode::TryExit => match frame.ctrl_blocks.try_pop() {
                 Some(block) => match block {
                     crate::frame::ControlBlock::Try(_) => {}
-                    _ => {
-                        return build_vm_error!(
-                            VmErrorReason::InvalidControlInstruction,
-                            next,
-                            frame,
-                            op_idx
-                        );
-                    }
                 },
                 _ => {
                     return build_vm_error!(VmErrorReason::EmptyStack, next, frame, op_idx);
@@ -1898,7 +1855,6 @@ impl VirtualMachine {
             match self.run_opcode(next, op_idx, reader, module, frame) {
                 Ok(OpcodeRunExit::Continue) => {}
                 Ok(OpcodeRunExit::Return) => {
-                    frame.drop_all_guards(self);
                     return Ok(RunloopExit::Ok(()));
                 }
                 Ok(OpcodeRunExit::Exception(except)) => {
@@ -1916,7 +1872,6 @@ impl VirtualMachine {
                         } else {
                             err
                         };
-                        frame.drop_all_guards(self);
                         return Err(err);
                     }
                 },
@@ -1936,7 +1891,6 @@ impl VirtualMachine {
                             } else {
                                 except
                             };
-                        frame.drop_all_guards(self);
                         return Ok(RunloopExit::Exception(new_except));
                     }
                 }

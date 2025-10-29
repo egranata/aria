@@ -25,7 +25,6 @@ impl Default for LocalVariable {
 
 #[derive(Clone)]
 pub enum ControlBlock {
-    Guard(RuntimeValue),
     Try(u16),
 }
 
@@ -39,25 +38,9 @@ pub struct Frame {
 }
 
 impl Frame {
-    pub(crate) fn drop_all_guards(&mut self, vm: &mut VirtualMachine) {
-        while let Some(block) = self.ctrl_blocks.try_pop() {
+    pub(crate) fn drop_to_first_try(&mut self, _: &mut VirtualMachine) -> Option<u16> {
+        if let Some(block) = self.ctrl_blocks.try_pop() {
             match block {
-                ControlBlock::Guard(guard) => {
-                    let _ = guard.eval(0, self, vm, true);
-                }
-                ControlBlock::Try(_) => {
-                    // don't do anything here
-                }
-            }
-        }
-    }
-
-    pub(crate) fn drop_to_first_try(&mut self, vm: &mut VirtualMachine) -> Option<u16> {
-        while let Some(block) = self.ctrl_blocks.try_pop() {
-            match block {
-                ControlBlock::Guard(guard) => {
-                    let _ = guard.eval(0, self, vm, true);
-                }
                 ControlBlock::Try(x) => {
                     return Some(x);
                 }
