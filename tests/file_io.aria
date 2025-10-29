@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import File from aria.io.file;
+import guard from aria.utils.guard;
 
 func main() {
     val path = getenv("ARIA_TEST_DIR").unwrap_Some();
@@ -7,11 +8,11 @@ func main() {
 
     val msg = "First line of text.\nSecond line of text.\nThird line of text.";
 
-    guard file = File.open(path, File.OpenMode.new().write().truncate()) {
+    guard(File.open(path, File.OpenMode.new().write().truncate())).do(|file| => {
         file.write(msg);
-    }
+    });
 
-    guard file = File.open(path, File.OpenMode.new().read()) {
+    guard(File.open(path, File.OpenMode.new().read())).do(|file| => {
         assert file.get_position() == 0;
         val l1 = file.readln();
         assert file.get_position() == 20;
@@ -45,5 +46,5 @@ func main() {
         file.seek(File.SeekMode::End(-4));
         s = file.read(4);
         assert s == "ext.";
-    }
+    });
 }

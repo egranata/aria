@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
+import guard from aria.utils.guard;
+
 struct Guard {
     type val COUNTER = 0;
 
@@ -8,9 +10,9 @@ struct Guard {
 }
 
 func ths() {
-    guard _ = alloc(Guard) {
+    guard(alloc(Guard)).do(|g| => {
         throw 1;
-    }
+    });
 }
 
 func catches() {

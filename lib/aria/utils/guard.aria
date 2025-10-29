@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+import ok,err from aria.core.result;
+
+func guard(x) = GuardImpl.new(x);
+
+struct GuardImpl {
+    struct GuardError {
+        type func new(msg) = alloc(This) { .msg };
+        func prettyprint() = "GuardError: {0}".format(this.msg);
+    }
+
+    type func new(obj) = alloc(This) { .obj };
+
+    func _call_guard_exit() {
+        if hasattr(this.obj, "guard_exit") {
+            val arity_exit = arity(this.obj.guard_exit);
+            if arity_exit.can_call_with_argc(0) {
+                try {
+                    this.obj.guard_exit();
+                } catch _ {
+                    # ignore errors during guard_exit in this context
+                }
+            }
+        }
+    }
+
+    func do(f) {
+        val arity_f = arity(f);
+        if !arity_f.can_call_with_argc(1) {
+            return Result::Err(GuardError::new("guard function must take exactly one argument"));
+        }
+        try {
+            val ret = f(this.obj);
+            this._call_guard_exit();
+            return ret??;
+        } catch e {
+            this._call_guard_exit();
+            throw e;
+        }
+    }
+}
