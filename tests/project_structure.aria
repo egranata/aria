@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+import Foo from self.as_user_printable; # This is a test file in the root of tests with a Foo struct 
+import Foo2 from self.helpers.foo; # This is a test file in the tests/helpers folder with a Foo2 struct 
+
+struct Foo3 {
+    func prettyprint() {
+        return "I'm a Foo inside the main file wowowowo!";
+    }
+}
+
+func main() {
+    val foo3 = alloc(Foo3);
+    assert(foo3.prettyprint() == "I'm a Foo inside the main file wowowowo!");
+    
+    val foo2 = alloc(Foo2);
+    assert(foo2.prettyprint() == Foo2.static_print());
+    
+    val foo = alloc(Foo);
+    assert(foo.prettyprint() == "I'm a Foo");
+}
