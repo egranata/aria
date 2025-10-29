@@ -50,6 +50,7 @@ impl From<&Args> for VmOptions {
         }
 
         options.vm_args = value.extra_args.clone();
+        options.main_file = value.path.clone();
 
         options
     }

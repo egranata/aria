@@ -49,6 +49,7 @@ pub struct VmOptions {
     pub dump_stack: bool,
     pub vm_args: Vec<String>,
     pub console: ConsoleHandle,
+    pub main_file: Option<String>,
 }
 
 impl Default for VmOptions {
@@ -58,6 +59,7 @@ impl Default for VmOptions {
             dump_stack: Default::default(),
             vm_args: Default::default(),
             console: Rc::new(RefCell::new(StdConsole {})),
+            main_file: None,
         }
     }
 }
@@ -374,8 +376,11 @@ impl VirtualMachine {
         })
     }
 
-    fn try_get_import_path_from_name(aria_lib_dir: &Path, ipath: &str) -> Option<PathBuf> {
-        let mut module_path = aria_lib_dir.to_path_buf();
+    fn try_get_import_path_from_name(
+        aria_lib_dir: impl AsRef<Path>,
+        ipath: &str,
+    ) -> Option<PathBuf> {
+        let mut module_path = aria_lib_dir.as_ref().to_path_buf();
         module_path.push(ipath);
         if module_path.exists() {
             Some(module_path)
@@ -384,11 +389,29 @@ impl VirtualMachine {
         }
     }
 
-    fn resolve_import_path_to_path(ipath: &str) -> Result<PathBuf, VmErrorReason> {
-        let ipath = format!("{}.aria", ipath.replace(".", "/"));
+    fn resolve_import_path_to_path(&self, ipath: &str) -> Result<PathBuf, VmErrorReason> {
+        if let Some(ipath) = ipath.strip_prefix("self.") {
+            return if let Some(main_path) = &self.options.main_file {
+                let ipath = format!("{}.aria", ipath.replace(".", "/"));
+                let project_path = Path::new(main_path)
+                    .parent()
+                    .expect("main file must have a parent directory");
 
-        let err_ret =
-            VmErrorReason::ImportNotAvailable(ipath.to_owned(), "no such path".to_owned());
+                Self::try_get_import_path_from_name(project_path, &ipath).ok_or_else(|| {
+                    VmErrorReason::ImportNotAvailable(
+                        ipath.to_owned(),
+                        "import not found in project".to_owned(),
+                    )
+                })
+            } else {
+                Err(VmErrorReason::ImportNotAvailable(
+                    ipath.to_owned(),
+                    "self can only be used within a project".to_owned(),
+                ))
+            };
+        }
+
+        let ipath = format!("{}.aria", ipath.replace(".", "/"));
 
         let aria_lib_dirs = VirtualMachine::get_aria_library_paths();
         for aria_lib_dir in aria_lib_dirs {
@@ -396,7 +419,11 @@ impl VirtualMachine {
                 return Ok(path);
             }
         }
-        Err(err_ret)
+
+        Err(VmErrorReason::ImportNotAvailable(
+            ipath.to_owned(),
+            "no such path".to_owned(),
+        ))
     }
 
     fn create_import_model_from_path(
@@ -1750,7 +1777,7 @@ impl VirtualMachine {
 
                     frame.stack.push(RuntimeValue::Module(mli.module.clone()));
                 } else {
-                    let import_path = match Self::resolve_import_path_to_path(&ipath) {
+                    let import_path = match self.resolve_import_path_to_path(&ipath) {
                         Ok(ipath) => ipath,
                         Err(err) => {
                             return build_vm_error!(err, next, frame, op_idx);
