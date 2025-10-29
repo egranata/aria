@@ -134,16 +134,14 @@ statement = {
   | throw_stmt
   | return_stmt
   | code_block
-  | guard_block
   | try_block
   | struct_decl
   | enum_decl
   | function_decl
 }
 
-code_block  = { "{" ~ (statement)* ~ "}" }
-guard_block = { "guard" ~ identifier ~ "=" ~ expression ~ code_block }
-try_block   = { "try" ~ code_block ~ "catch" ~ identifier ~ code_block }
+code_block = { "{" ~ (statement)* ~ "}" }
+try_block  = { "try" ~ code_block ~ "catch" ~ identifier ~ code_block }
 
 vararg_marker = { "..." ~ ","? }
 arg_decl      = { decl_id ~ ("=" ~ expression)? }
@@ -196,7 +194,6 @@ top_level_entry = {
   | while_stmt
   | for_stmt
   | code_block
-  | guard_block
   | try_block
 }
 

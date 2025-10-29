@@ -58,8 +58,6 @@ pub enum BasicBlockOpcode {
     JumpIfArgSupplied(u8, Rc<BasicBlock>),
     Call(u8),
     Return,
-    GuardEnter,
-    GuardExit,
     TryEnter(Rc<BasicBlock>),
     TryExit,
     Throw,
@@ -135,8 +133,6 @@ impl BasicBlockOpcode {
             Self::JumpIfArgSupplied(..) => false,
             Self::Call(_) => false,
             Self::Return => true,
-            Self::GuardEnter => false,
-            Self::GuardExit => false,
             Self::TryEnter(_) => false,
             Self::TryExit => false,
             Self::Throw => true,
@@ -212,8 +208,6 @@ impl BasicBlockOpcode {
             Self::JumpIfArgSupplied(..) => 4,
             Self::Call(_) => 2,
             Self::Return => 1,
-            Self::GuardEnter => 1,
-            Self::GuardExit => 1,
             Self::TryEnter(_) => 3,
             Self::TryExit => 1,
             Self::Throw => 1,
@@ -301,8 +295,6 @@ impl BasicBlockOpcode {
             }
             Self::Call(n) => vec![Opcode::Call(*n)],
             Self::Return => vec![Opcode::Return],
-            Self::GuardEnter => vec![Opcode::GuardEnter],
-            Self::GuardExit => vec![Opcode::GuardExit],
             Self::TryEnter(dst) => {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
                 vec![Opcode::TryEnter(offset)]

@@ -13,7 +13,6 @@ impl<'a> CompileNode<'a> for aria_parser::ast::Statement {
             Self::ForStatement(f) => f.do_compile(params),
             Self::ReturnStatement(r) => r.do_compile(params),
             Self::ThrowStatement(t) => t.do_compile(params),
-            Self::GuardBlock(g) => g.do_compile(params),
             Self::TryBlock(t) => t.do_compile(params),
             Self::AssertStatement(a) => a.do_compile(params),
             Self::CodeBlock(c) => c.do_compile(params),
