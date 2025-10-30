@@ -14,7 +14,7 @@ pub enum Lang {}
 impl rowan::Language for Lang {
     type Kind = SyntaxKind;
     fn kind_from_raw(raw: rowan::SyntaxKind) -> Self::Kind {
-        assert!(raw.0 <= Arg as u16);
+        assert!(raw.0 <= Eof as u16);
         unsafe { std::mem::transmute::<u16, SyntaxKind>(raw.0) }
     }
     fn kind_to_raw(kind: Self::Kind) -> rowan::SyntaxKind {
@@ -61,6 +61,10 @@ pub fn parse(text: &str) -> Parse {
         fuel: Cell<u32>, 
         events: Vec<Event>,
         errors: Vec<ParseError>
+    }
+
+    fn is_trivia(kind: SyntaxKind) -> bool {
+        matches!(kind, SyntaxKind::Whitespace | SyntaxKind::LineComment)
     }
 
     fn prefix_binding_power(op: SyntaxKind) -> Option<((), u8)> {
@@ -943,6 +947,16 @@ pub fn parse(text: &str) -> Parse {
         }
     
         fn advance(&mut self) { 
+            // Before consuming a significant token, emit any leading trivia
+            while let Some(tok) = self.tokens.get(self.pos) {
+                if is_trivia(tok.0) {
+                    self.events.push(Event::Advance);
+                    self.pos += 1;
+                } else {
+                    break;
+                }
+            }
+
             assert!(!self.eof());
             self.fuel.set(256); 
             self.events.push(Event::Advance);
@@ -950,7 +964,16 @@ pub fn parse(text: &str) -> Parse {
         }
     
         fn eof(&self) -> bool {
-            self.pos == self.tokens.len()
+            // true if there are no more non-trivia tokens
+            let mut idx = self.pos;
+            while let Some(tok) = self.tokens.get(idx) {
+                if is_trivia(tok.0) {
+                    idx += 1;
+                    continue;
+                }
+                return false;
+            }
+            true
         }
     
         fn nth(&self, lookahead: usize) -> SyntaxKind { 
@@ -958,8 +981,21 @@ pub fn parse(text: &str) -> Parse {
                 panic!("parser is stuck")
             }
             self.fuel.set(self.fuel.get() - 1);
-            self.tokens.get(self.pos + lookahead)
-                .map_or(Eof, |it| it.0)
+
+            let mut idx = self.pos;
+            let mut remaining = lookahead;
+            while let Some(tok) = self.tokens.get(idx) {
+                if is_trivia(tok.0) {
+                    idx += 1;
+                    continue;
+                }
+                if remaining == 0 {
+                    return tok.0;
+                }
+                remaining -= 1;
+                idx += 1;
+            }
+            Eof
         }
 
         fn nth_token(&self, lookahead: usize) -> Option<&(SyntaxKind, &str, logos::Span)> {
@@ -1020,6 +1056,17 @@ pub fn parse(text: &str) -> Parse {
             });
         }
 
+        fn consume_remaining_trivia(&mut self) {
+            while let Some(tok) = self.tokens.get(self.pos) {
+                if is_trivia(tok.0) {
+                    self.events.push(Event::Advance);
+                    self.pos += 1;
+                } else {
+                    break;
+                }
+            }
+        }
+
         fn assert_tok(&mut self, kind: SyntaxKind) {
             assert!(self.at(kind));
         }
@@ -1058,6 +1105,8 @@ pub fn parse(text: &str) -> Parse {
     let tokens = lex.into_iter().map(|res| res.unwrap()).collect();
     let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
     parser.file();
+    // flush trailing trivia so the green tree includes all input text
+    parser.consume_remaining_trivia();
     parser.build_tree()
 }
 
@@ -1076,27 +1125,82 @@ mod tests {
 
     fn tree_to_string(node: SyntaxNode) -> String {
         let mut result = Vec::new();
-        tree_to_string_impl(&node, 0, &mut result);
+        let index = CompressedIndex::new(&node);
+        tree_to_string_impl(&node, 0, &index, &mut result);
         result.join("\n")
     }
 
-    fn tree_to_string_impl(node: &SyntaxNode, depth: usize, result: &mut Vec<String>) {
+    // Build a mapping from original token ranges to compressed coordinates
+    // that exclude trivia.
+    struct CompressedIndex {
+        // (original_text_range, compressed_start, compressed_end)
+        entries: Vec<(rowan::TextRange, usize, usize)>,
+    }
+
+    impl CompressedIndex {
+        fn new(root: &SyntaxNode) -> Self {
+            use crate::lexer::SyntaxKind as K;
+            let mut entries = Vec::new();
+            let mut comp = 0usize;
+            for el in root.descendants_with_tokens() {
+                if let rowan::NodeOrToken::Token(tok) = el {
+                    if matches!(tok.kind(), K::Whitespace | K::LineComment) { continue; }
+                    let len = tok.text().len();
+                    let start = comp;
+                    let end = comp + len;
+                    entries.push((tok.text_range(), start, end));
+                    comp = end;
+                }
+            }
+            Self { entries }
+        }
+
+        fn token_range(&self, tok: &SyntaxToken) -> Option<(usize, usize)> {
+            let r = tok.text_range();
+            self.entries.iter().find_map(|(rr, s, e)| if *rr == r { Some((*s, *e)) } else { None })
+        }
+
+        fn node_range(&self, node: &SyntaxNode) -> Option<(usize, usize)> {
+            use crate::lexer::SyntaxKind as K;
+            let mut first: Option<usize> = None;
+            let mut last: Option<usize> = None;
+            for el in node.descendants_with_tokens() {
+                if let rowan::NodeOrToken::Token(tok) = el {
+                    if matches!(tok.kind(), K::Whitespace | K::LineComment) { continue; }
+                    if let Some((s, e)) = self.token_range(&tok) {
+                        if first.is_none() { first = Some(s); }
+                        last = Some(e);
+                    }
+                }
+            }
+            match (first, last) {
+                (Some(s), Some(e)) => Some((s, e)),
+                _ => None,
+            }
+        }
+    }
+
+    fn tree_to_string_impl(node: &SyntaxNode, depth: usize, index: &CompressedIndex, result: &mut Vec<String>) {
         let indent = "  ".repeat(depth);
-        result.push(format!("{}{:?}@{:?}", indent, node.kind(), node.text_range()));
+        if let Some((s, e)) = index.node_range(node) {
+            result.push(format!("{}{:?}@{}..{}", indent, node.kind(), s, e));
+        } else {
+            // empty node
+            result.push(format!("{}{:?}@0..0", indent, node.kind()));
+        }
         
         for child in node.children_with_tokens() {
             match child {
                 rowan::NodeOrToken::Node(child_node) => {
-                    tree_to_string_impl(&child_node, depth + 1, result);
+                    tree_to_string_impl(&child_node, depth + 1, index, result);
                 }
                 rowan::NodeOrToken::Token(token) => {
+                    use crate::lexer::SyntaxKind as K;
+                    if matches!(token.kind(), K::Whitespace | K::LineComment) { continue; }
                     let token_indent = "  ".repeat(depth + 1);
-                    result.push(format!("{}{:?}@{:?} {:?}", 
-                        token_indent, 
-                        token.kind(), 
-                        token.text_range(),
-                        token.text()
-                    ));
+                    if let Some((s, e)) = index.token_range(&token) {
+                        result.push(format!("{}{:?}@{}..{} {:?}", token_indent, token.kind(), s, e, token.text()));
+                    }
                 }
             }
         }

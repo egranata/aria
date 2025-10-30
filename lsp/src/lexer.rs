@@ -1,8 +1,6 @@
 use logos::Logos;
 
 #[derive(Logos, Debug, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, Copy)]
-#[logos(skip r"[ \t\n\f]+")]
-#[logos(skip r"#[^\n]*")]
 #[repr(u16)]
 pub enum SyntaxKind {
     #[token("assert")]
@@ -180,6 +178,13 @@ pub enum SyntaxKind {
     Identifier,
 
 
+    // trivia
+    #[regex(r"[ \t\n\f]+")]
+    Whitespace,
+    #[regex(r"#[^\n]*")]
+    LineComment,
+
+
     // Error token for unrecognized input
     Error,
 
@@ -264,73 +269,73 @@ pub struct LexError {
 mod tests {
     use super::*;
 
+    fn non_trivia_tokens(input: &str) -> Vec<SyntaxKind> {
+        use SyntaxKind::*;
+        lex(input)
+            .into_iter()
+            .filter_map(|r| r.ok())
+            .map(|(k, _, _)| k)
+            .filter(|k| !matches!(k, Whitespace | LineComment))
+            .collect()
+    }
+
     #[test]
     fn test_keywords() {
-        let lexer = SyntaxKind::lexer("func if else while");
-        let tokens: Vec<_> = lexer.collect();
-        
+        let tokens = non_trivia_tokens("func if else while");
         assert_eq!(tokens.len(), 4);
-        assert_eq!(tokens[0], Ok(SyntaxKind::FuncKwd));
-        assert_eq!(tokens[1], Ok(SyntaxKind::IfKwd));
-        assert_eq!(tokens[2], Ok(SyntaxKind::ElseKwd));
-        assert_eq!(tokens[3], Ok(SyntaxKind::WhileKwd));
+        assert_eq!(tokens[0], SyntaxKind::FuncKwd);
+        assert_eq!(tokens[1], SyntaxKind::IfKwd);
+        assert_eq!(tokens[2], SyntaxKind::ElseKwd);
+        assert_eq!(tokens[3], SyntaxKind::WhileKwd);
     }
 
     #[test]
     fn test_identifiers() {
-        let lexer = SyntaxKind::lexer("myVar _private $special");
-        let tokens: Vec<_> = lexer.collect();
-        
+        let tokens = non_trivia_tokens("myVar _private $special");
         assert_eq!(tokens.len(), 3);
-        assert!(matches!(tokens[0], Ok(SyntaxKind::Identifier)));
-        assert!(matches!(tokens[1], Ok(SyntaxKind::Identifier)));
-        assert!(matches!(tokens[2], Ok(SyntaxKind::Identifier)));
+        assert_eq!(tokens[0], SyntaxKind::Identifier);
+        assert_eq!(tokens[1], SyntaxKind::Identifier);
+        assert_eq!(tokens[2], SyntaxKind::Identifier);
     }
 
     #[test]
     fn test_literals() {
-        let lexer = SyntaxKind::lexer(r#"42 0x1A 0o77 0b101 3.14 "hello" 'world'"#);
-        let tokens: Vec<_> = lexer.collect();
-        
+        let tokens = non_trivia_tokens(r#"42 0x1A 0o77 0b101 3.14 "hello" 'world'"#);
         assert_eq!(tokens.len(), 7);
-        assert!(matches!(tokens[0], Ok(SyntaxKind::DecIntLiteral)));
-        assert!(matches!(tokens[1], Ok(SyntaxKind::HexIntLiteral)));
-        assert!(matches!(tokens[2], Ok(SyntaxKind::OctIntLiteral)));
-        assert!(matches!(tokens[3], Ok(SyntaxKind::BinIntLiteral)));
-        assert!(matches!(tokens[4], Ok(SyntaxKind::FloatLiteral)));
-        assert!(matches!(tokens[5], Ok(SyntaxKind::StringLiteral)));
-        assert!(matches!(tokens[6], Ok(SyntaxKind::StringLiteral)));
+        assert_eq!(tokens[0], SyntaxKind::DecIntLiteral);
+        assert_eq!(tokens[1], SyntaxKind::HexIntLiteral);
+        assert_eq!(tokens[2], SyntaxKind::OctIntLiteral);
+        assert_eq!(tokens[3], SyntaxKind::BinIntLiteral);
+        assert_eq!(tokens[4], SyntaxKind::FloatLiteral);
+        assert_eq!(tokens[5], SyntaxKind::StringLiteral);
+        assert_eq!(tokens[6], SyntaxKind::StringLiteral);
     }
 
     #[test]
     fn test_operators() {
-        let lexer = SyntaxKind::lexer("+ - * / % == != <= >= << >> && ||");
-        let tokens: Vec<_> = lexer.collect();
-        
+        let tokens = non_trivia_tokens("+ - * / % == != <= >= << >> && ||");
         assert_eq!(tokens.len(), 13);
-        assert_eq!(tokens[0], Ok(SyntaxKind::Plus));
-        assert_eq!(tokens[1], Ok(SyntaxKind::Minus));
-        assert_eq!(tokens[2], Ok(SyntaxKind::Star));
-        assert_eq!(tokens[3], Ok(SyntaxKind::Slash));
-        assert_eq!(tokens[4], Ok(SyntaxKind::Percent));
-        assert_eq!(tokens[5], Ok(SyntaxKind::Equal));
-        assert_eq!(tokens[6], Ok(SyntaxKind::NotEqual));
-        assert_eq!(tokens[7], Ok(SyntaxKind::LessEqual));
-        assert_eq!(tokens[8], Ok(SyntaxKind::GreaterEqual));
-        assert_eq!(tokens[9], Ok(SyntaxKind::LeftShift));
-        assert_eq!(tokens[10], Ok(SyntaxKind::RightShift));
-        assert_eq!(tokens[11], Ok(SyntaxKind::LogicalAnd));
-        assert_eq!(tokens[12], Ok(SyntaxKind::LogicalOr));
+        assert_eq!(tokens[0], SyntaxKind::Plus);
+        assert_eq!(tokens[1], SyntaxKind::Minus);
+        assert_eq!(tokens[2], SyntaxKind::Star);
+        assert_eq!(tokens[3], SyntaxKind::Slash);
+        assert_eq!(tokens[4], SyntaxKind::Percent);
+        assert_eq!(tokens[5], SyntaxKind::Equal);
+        assert_eq!(tokens[6], SyntaxKind::NotEqual);
+        assert_eq!(tokens[7], SyntaxKind::LessEqual);
+        assert_eq!(tokens[8], SyntaxKind::GreaterEqual);
+        assert_eq!(tokens[9], SyntaxKind::LeftShift);
+        assert_eq!(tokens[10], SyntaxKind::RightShift);
+        assert_eq!(tokens[11], SyntaxKind::LogicalAnd);
+        assert_eq!(tokens[12], SyntaxKind::LogicalOr);
     }
 
     #[test]
     fn test_comments_and_whitespace() {
-        let lexer = SyntaxKind::lexer("func # this is a comment\n  main");
-        let tokens: Vec<_> = lexer.collect();
-        
+        let tokens = non_trivia_tokens("func # this is a comment\n  main");
         assert_eq!(tokens.len(), 2);
-        assert_eq!(tokens[0], Ok(SyntaxKind::FuncKwd));
-        assert!(matches!(tokens[1], Ok(SyntaxKind::Identifier)));
+        assert_eq!(tokens[0], SyntaxKind::FuncKwd);
+        assert_eq!(tokens[1], SyntaxKind::Identifier);
     }
 
     #[test]
@@ -470,7 +475,11 @@ mod tests {
     fn test_emoji_identifiers() {
         // Test emoji identifiers still work
         let tokens = lex("😎 💯");
-        let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
+        let successful_tokens: Vec<_> = tokens
+            .into_iter()
+            .filter_map(|t| t.ok())
+            .filter(|(k, _, _)| !matches!(k, SyntaxKind::Whitespace | SyntaxKind::LineComment))
+            .collect();
         
         assert_eq!(successful_tokens.len(), 2);
         assert_eq!(successful_tokens[0].0, SyntaxKind::Identifier);

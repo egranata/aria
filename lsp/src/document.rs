@@ -40,16 +40,22 @@ impl DocumentState {
     pub fn token_at_line_col(&self, line: u32, col: u32) -> Option<SyntaxToken> {
         let line_col = line_index::LineCol { line, col };
         let Some(offset) = self.line_index.offset(line_col) else { return None };
+        use crate::lexer::SyntaxKind as K;
 
-        for el in self.parse.syntax().descendants_with_tokens() {
-            if let rowan::NodeOrToken::Token(tok) = el {
-                if tok.text_range().contains(offset) {
-                    eprintln!("{:?}", tok);
-                    return Some(tok);
+        match self.parse.syntax().token_at_offset(offset) {
+            rowan::TokenAtOffset::Single(tok) => Some(tok),
+            rowan::TokenAtOffset::Between(left, right) => {
+                // Prefer non-trivia if possible
+                let is_trivia = |t: &SyntaxToken| matches!(t.kind(), K::Whitespace | K::LineComment);
+                match (is_trivia(&left), is_trivia(&right)) {
+                    (false, false) => Some(left),
+                    (false, true) => Some(left),
+                    (true, false) => Some(right),
+                    (true, true) => Some(left),
                 }
             }
+            rowan::TokenAtOffset::None => None,
         }
-        None
     }
 
     pub fn def(&self, name: &str) -> Option<&Vec<TextRange>> {
