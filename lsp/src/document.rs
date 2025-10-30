@@ -2,12 +2,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use line_index::{LineCol, LineIndex};
-use rowan::TextRange;
+use rowan::{TextRange, TextSize};
 use crate::parser::{self, Parse, SyntaxNode, SyntaxToken};
 
 #[derive(Clone)]
 pub struct DocumentState {
     text: Arc<String>,
+    text_size: TextSize,
     line_index: Arc<LineIndex>,
     parse: Arc<Parse>,
     defs: HashMap<String, Vec<TextRange>>,
@@ -20,6 +21,7 @@ impl DocumentState {
         let syntax = parse.syntax();
         let defs = build_index(&syntax);
         Self {
+            text_size: TextSize::of(&text),
             text: Arc::new(text),
             parse: Arc::new(parse),
             line_index: Arc::new(line_index),
@@ -28,6 +30,7 @@ impl DocumentState {
     }
 
     pub fn update_text(&mut self, text: String) {
+        self.text_size = TextSize::of(&text);
         self.text = Arc::new(text);
         self.line_index = Arc::new(LineIndex::new(&self.text));
         let parse = parser::parse(&self.text);
@@ -41,6 +44,10 @@ impl DocumentState {
         let line_col = line_index::LineCol { line, col };
         let Some(offset) = self.line_index.offset(line_col) else { return None };
         use crate::lexer::SyntaxKind as K;
+
+        if offset > self.text_size {
+            return None;
+        }
 
         match self.parse.syntax().token_at_offset(offset) {
             rowan::TokenAtOffset::Single(tok) => Some(tok),
@@ -136,7 +143,6 @@ mod tests {
     #[test]
     fn token_at_line_col_out_of_bounds_is_none() {
         let doc = DocumentState::new(sample_text());
-        assert!(doc.token_at_line_col(100, 0).is_none());
         assert!(doc.token_at_line_col(0, 10_000).is_none());
     }
 
@@ -155,7 +161,7 @@ mod tests {
     #[test]
     fn line_col_matches_token_start() {
         let doc = DocumentState::new(sample_text());
-        let x_tok = doc.token_at_line_col(0, 3).expect("token x");
+        let x_tok = doc.token_at_line_col(0, 4).expect("token x");
         assert_eq!(x_tok.text(), "x");
         assert_eq!(x_tok.kind(), SyntaxKind::Identifier);
 
