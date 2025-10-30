@@ -1,5 +1,0 @@
-struct Buzz {
-    func prettyprint() {
-        println!("Buzz is 25 years old");
-    }
-}

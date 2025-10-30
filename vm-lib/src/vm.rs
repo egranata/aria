@@ -396,21 +396,24 @@ impl VirtualMachine {
         }
     }
 
-    fn resolve_import_path_to_path(&self, ipath: &str) -> Result<PathBuf, VmErrorReason> {
+    fn resolve_import_path_to_path(
+        &self,
+        ipath: &str,
+        widget_root_path: Option<&PathBuf>,
+    ) -> Result<PathBuf, VmErrorReason> {
         if let Some(ipath) = ipath.strip_prefix("widget.") {
-            return if let Some(self_module_path) = &self.options.self_module_path {
+            return if let Some(widget_root_path) = widget_root_path {
                 let ipath = format!("{}.aria", ipath.replace(".", "/"));
-
-                Self::try_get_import_path_from_name(self_module_path, &ipath).ok_or_else(|| {
+                Self::try_get_import_path_from_name(widget_root_path, &ipath).ok_or_else(|| {
                     VmErrorReason::ImportNotAvailable(
                         ipath.to_owned(),
-                        "import not found in project".to_owned(),
+                        "import not found in widget".to_owned(),
                     )
                 })
             } else {
                 Err(VmErrorReason::ImportNotAvailable(
                     ipath.to_owned(),
-                    "self can only be used within a project".to_owned(),
+                    "tried to import using widget without a widget.toml".to_owned(),
                 ))
             };
         }
@@ -1781,7 +1784,10 @@ impl VirtualMachine {
 
                     frame.stack.push(RuntimeValue::Module(mli.module.clone()));
                 } else {
-                    let import_path = match self.resolve_import_path_to_path(&ipath) {
+                    let import_path = match self.resolve_import_path_to_path(
+                        &ipath,
+                        this_module.get_compiled_module().widget_root_path.as_ref(),
+                    ) {
                         Ok(ipath) => ipath,
                         Err(err) => {
                             return build_vm_error!(err, next, frame, op_idx);

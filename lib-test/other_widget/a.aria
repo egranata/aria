@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+import InnerB from widget.mod.b;
+
+struct A {
+    type func new() {
+        return alloc(A);
+    }
+    
+    func prettyprint() {
+        return "A";
+    }
+}
+
+struct B {
+    type func new() {
+        return alloc(B) { .b = alloc(InnerB) };
+    }
+    
+    func prettyprint() {
+        return this.b.prettyprint();
+    }
+}
