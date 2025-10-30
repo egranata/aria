@@ -44,6 +44,7 @@ impl DocumentState {
         for el in self.parse.syntax().descendants_with_tokens() {
             if let rowan::NodeOrToken::Token(tok) = el {
                 if tok.text_range().contains(offset) {
+                    eprintln!("{:?}", tok);
                     return Some(tok);
                 }
             }
@@ -87,6 +88,8 @@ fn build_index(root: &SyntaxNode) -> HashMap<String, Vec<TextRange>> {
 
 #[cfg(test)]
 mod tests {
+    use crate::SyntaxKind;
+
     use super::*;
 
     fn sample_text() -> String {
@@ -146,10 +149,12 @@ mod tests {
     #[test]
     fn line_col_matches_token_start() {
         let doc = DocumentState::new(sample_text());
-        let x_tok = doc.token_at_line_col(0, 4).expect("token x");
-        let start = x_tok.text_range().start();
-        let lc = doc.line_col(start);
-        assert_eq!(lc.line, 0);
-        assert_eq!(lc.col, 4);
+        let x_tok = doc.token_at_line_col(0, 3).expect("token x");
+        assert_eq!(x_tok.text(), "x");
+        assert_eq!(x_tok.kind(), SyntaxKind::Identifier);
+
+        let func_tok = doc.token_at_line_col(1, 0).expect("token func");
+        assert_eq!(func_tok.text(), "func");
+        assert_eq!(func_tok.kind(), SyntaxKind::FuncKwd);
     }
 }

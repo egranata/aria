@@ -54,8 +54,6 @@ pub fn parse(text: &str) -> Parse {
     struct MarkClosed {
         index: usize,
     }
-
-    
     
     struct Parser<'a> {
         tokens: Vec<(SyntaxKind, &'a str, logos::Span)>,

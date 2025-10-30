@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use line_index::LineCol;
 use rowan::TextRange;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
@@ -115,7 +114,7 @@ impl LanguageServer for Backend {
         let Some(doc) = docs.get(&uri) else { return Ok(None) };
         
         if let Some(tok) = doc.token_at_line_col(position.line, position.character) {
-            self.info(format!("found token of type {}", tok));
+            self.info(format!("found token of type {:?}", tok.kind()));
 
             if tok.kind() == lsp::lexer::SyntaxKind::Identifier {
                 let name = tok.text();
