@@ -6,8 +6,6 @@ mod repl_eval;
 #[cfg(test)]
 mod test;
 
-use std::path::Path;
-
 use clap::Parser;
 use haxby_vm::vm::{VirtualMachine, VmOptions};
 
@@ -52,12 +50,6 @@ impl From<&Args> for VmOptions {
         }
 
         options.vm_args = value.extra_args.clone();
-        options.self_module_path = value.path.as_ref().map(|path| {
-            Path::new(path)
-                .parent()
-                .expect("main file must have a parent directory")
-                .to_path_buf()
-        });
 
         options
     }
