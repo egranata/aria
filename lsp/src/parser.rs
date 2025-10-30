@@ -112,6 +112,8 @@ pub fn parse(text: &str) -> Parse {
     impl Parser<'_> {
         fn file(&mut self) {
             let m: MarkOpened = self.open(); 
+            // include any leading trivia at the start of the file
+            self.consume_remaining_trivia();
 
             while !self.eof() {
                 match self.nth(0) {
@@ -127,7 +129,8 @@ pub fn parse(text: &str) -> Parse {
                     _ => {let _ = self.expr();}
                 }
             }
-            
+            // include any trailing trivia before closing the file
+            self.consume_remaining_trivia();
             self.close(m, File); 
         }
 
@@ -1072,31 +1075,83 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn build_tree(self) -> Parse {
-            let mut tokens = self.tokens.into_iter();
+
+            // Preflight validation
+            {
+                let mut opens = 0usize;
+                let mut closes = 0usize;
+                let mut advances = 0usize;
+                let mut depth = 0isize;
+                for (i, ev) in self.events.iter().enumerate() {
+                    match ev {
+                        Event::Open { .. } => { opens += 1; depth += 1; }
+                        Event::Close => {
+                            closes += 1;
+                            depth -= 1;
+                            assert!(depth >= 0, "Unbalanced Close at event {} (more closes than opens)", i);
+                        }
+                        Event::Advance => { advances += 1; }
+                    }
+                }
+                assert_eq!(opens, closes, "Mismatched Open/Close count: opens={} closes={}", opens, closes);
+                let total_tokens = self.tokens.len();
+                assert_eq!(advances, total_tokens, "Advance count {} does not match tokens len {}", advances, total_tokens);
+            }
 
             // TODO: add a shared node cache
             let mut builder = GreenNodeBuilder::new();
+            let mut tokens = self.tokens.into_iter();
                 
-            for event in self.events {
-              match event {
-                Event::Open { kind } => {
-                    builder.start_node(kind.into());
+            let mut recent: Vec<String> = Vec::new();
+            let mut sim_depth: isize = 0;
+            let mut open_close_log: Vec<(usize, &'static str)> = Vec::new();
+            for (idx, event) in self.events.into_iter().enumerate() {
+                let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    match event {
+                        Event::Open { kind } => {
+                            recent.push(format!("{}: Open({:?})", idx, kind));
+                            open_close_log.push((idx, "Open"));
+                            sim_depth += 1;
+                            builder.start_node(kind.into());
+                        }
+                        Event::Close => {
+                            recent.push(format!("{}: Close", idx));
+                            open_close_log.push((idx, "Close"));
+                            sim_depth -= 1;
+                            builder.finish_node();
+                        }
+                        Event::Advance => {
+                            let (token, slice, _) = tokens.next().unwrap();
+                            recent.push(format!("{}: Advance({:?}, {:?})", idx, token, slice));
+                            builder.token(token.into(), slice);
+                        }
+                    }
+                    // keep recent buffer short
+                    if recent.len() > 50 { recent.drain(0..recent.len()-50); }
+                }));
+                if res.is_err() {
+                    eprintln!("Rowan builder panic at event index {}. Recent events:", idx);
+                    for line in &recent { eprintln!("  {}", line); }
+                    std::panic::resume_unwind(res.err().unwrap());
                 }
-        
-                Event::Close => {
-                    builder.finish_node();
-                }
-        
-                Event::Advance => {
-                    let (token, slice, _) = tokens.next().unwrap();
-                    builder.token(token.into(), slice);
-                }
-              }
             }
-        
+            assert_eq!(sim_depth, 0, "Simulation depth not zero at end: {}", sim_depth);
+
             assert!(tokens.next().is_none());
 
-            Parse { green_node: builder.finish(), errors: self.errors }
+            let res_finish = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| builder.finish()));
+            match res_finish {
+                Ok(gn) => Parse { green_node: gn, errors: self.errors },
+                Err(p) => {
+                    eprintln!("Rowan builder.finish() panic. Open/Close events (last 100):");
+                    for (idx, typ) in open_close_log.iter().rev().take(100).rev() {
+                        eprintln!("  {}: {}", idx, typ);
+                    }
+                    eprintln!("Recent events before finish:");
+                    for line in &recent { eprintln!("  {}", line); }
+                    std::panic::resume_unwind(p)
+                }
+            }
         }
     }  
 
@@ -1105,8 +1160,6 @@ pub fn parse(text: &str) -> Parse {
     let tokens = lex.into_iter().map(|res| res.unwrap()).collect();
     let mut parser = Parser { tokens, pos: 0, fuel: Cell::new(256), events: Vec::new(), errors: Vec::new() };
     parser.file();
-    // flush trailing trivia so the green tree includes all input text
-    parser.consume_remaining_trivia();
     parser.build_tree()
 }
 
