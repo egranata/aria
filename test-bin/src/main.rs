@@ -2,7 +2,6 @@
 
 use std::{
     collections::{HashMap, HashSet},
-    path::Path,
     process::{ExitCode, Termination, exit},
     time::{Duration, Instant},
 };
@@ -106,7 +105,6 @@ fn run_test_from_pattern(path: &str) -> TestCaseResult {
         };
 
         let mut vm = VirtualMachine::default();
-        vm.options.self_module_path = Some(Path::new(path).parent().unwrap().to_path_buf());
 
         let entry_rm = match vm.load_module("", entry_cm) {
             Ok(rle) => match rle {

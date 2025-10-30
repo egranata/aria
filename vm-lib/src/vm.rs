@@ -49,7 +49,6 @@ pub struct VmOptions {
     pub dump_stack: bool,
     pub vm_args: Vec<String>,
     pub console: ConsoleHandle,
-    pub self_module_path: Option<PathBuf>,
 }
 
 impl Default for VmOptions {
@@ -59,7 +58,6 @@ impl Default for VmOptions {
             dump_stack: Default::default(),
             vm_args: Default::default(),
             console: Rc::new(RefCell::new(StdConsole {})),
-            self_module_path: None,
         }
     }
 }
@@ -397,7 +395,6 @@ impl VirtualMachine {
     }
 
     fn resolve_import_path_to_path(
-        &self,
         ipath: &str,
         widget_root_path: Option<&PathBuf>,
     ) -> Result<PathBuf, VmErrorReason> {
@@ -1784,7 +1781,7 @@ impl VirtualMachine {
 
                     frame.stack.push(RuntimeValue::Module(mli.module.clone()));
                 } else {
-                    let import_path = match self.resolve_import_path_to_path(
+                    let import_path = match Self::resolve_import_path_to_path(
                         &ipath,
                         this_module.get_compiled_module().widget_root_path.as_ref(),
                     ) {
