@@ -1018,14 +1018,6 @@ pub struct ContinueStatement {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GuardBlock {
-    pub loc: SourcePointer,
-    pub id: Identifier,
-    pub expr: Expression,
-    pub body: CodeBlock,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TryBlock {
     pub loc: SourcePointer,
     pub body: CodeBlock,
@@ -1046,7 +1038,6 @@ pub enum Statement {
     CodeBlock(CodeBlock),
     ReturnStatement(ReturnStatement),
     ThrowStatement(ThrowStatement),
-    GuardBlock(GuardBlock),
     TryBlock(TryBlock),
     AssertStatement(AssertStatement),
     ExpressionStatement(ExpressionStatement),
@@ -1070,7 +1061,6 @@ impl Statement {
             Self::CodeBlock(a) => &a.loc,
             Self::ReturnStatement(a) => &a.loc,
             Self::ThrowStatement(a) => &a.loc,
-            Self::GuardBlock(a) => &a.loc,
             Self::TryBlock(a) => &a.loc,
             Self::AssertStatement(a) => &a.loc,
             Self::ExpressionStatement(a) => &a.loc,
@@ -1378,7 +1368,6 @@ pub enum TopLevelEntry {
     WhileStatement(WhileStatement),
     ForStatement(ForStatement),
     CodeBlock(CodeBlock),
-    GuardBlock(GuardBlock),
     TryBlock(TryBlock),
 }
 

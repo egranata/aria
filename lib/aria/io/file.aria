@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: uses_dylib("aria_file");
 
+import guard from aria.utils.guard;
 import aria.io.path;
 
 struct File {
@@ -173,14 +174,14 @@ struct FileLineIterator {
 
 extension aria.io.path.Path {
     func read() {
-        guard file = File.open(this.prettyprint(), File.OpenMode.new().read()) {
+        return guard(File.open(this.prettyprint(), File.OpenMode.new().read())).do(|file| => {
             return file.read_all();
-        }
+        });
     }
 
     func write(text) {
-        guard file = File.open(this.prettyprint(), File.OpenMode.new().write().truncate()) {
+        guard(File.open(this.prettyprint(), File.OpenMode.new().write().truncate())).do(|file| => {
             file.write(text);
-        }
+        });
     }
 }

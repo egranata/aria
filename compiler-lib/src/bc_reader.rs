@@ -201,8 +201,6 @@ impl BytecodeReader {
                 .read_u8()
                 .map_or(Err(DecodeError::InsufficientData), |b| Ok(Opcode::Call(b))),
             haxby_opcodes::OPCODE_RETURN => Ok(Opcode::Return),
-            haxby_opcodes::OPCODE_GUARD_ENTER => Ok(Opcode::GuardEnter),
-            haxby_opcodes::OPCODE_GUARD_EXIT => Ok(Opcode::GuardExit),
             haxby_opcodes::OPCODE_TRY_ENTER => self
                 .read_u16()
                 .map_or(Err(DecodeError::InsufficientData), |b| {

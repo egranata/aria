@@ -982,9 +982,11 @@ To help with defining a coherent set of comparison operators, the standard libra
 
 ## 👮 Guards
 
-A guard statement is used to create a scoped block that can deallocate some managed resource on exit.
+A guard is used to create a scoped block that can deallocate some managed resource on exit. Note that a `guard`'s `do` block is not a lexical block, but it accepts a function (or really any callable object) that is invoked with the guarded object as argument. This means that the guarded object can outlive the `do` block if it is returned or stored somewhere else. It also means that the `do` block can capture variables from its caller scope, but these will be treated as captures, not as local variables.
 
 ```
+import guard from aria.utils.guard;
+
 struct LoggedTask {
     type func new(op) {
         println("Starting {0}...".format(op));
@@ -999,19 +1001,25 @@ struct LoggedTask {
 }
 
 func main() {
-    guard op1 = LoggedTask.new("first task") { # prints Starting first task...
+    guard(LoggedTask.new("first task")).do(|x| => { # prints Starting first task...
         # do the thing
-    } # prints first task completed
+    }); # prints first task completed
 
-    guard op2 = LoggedTask.new("second task") { # prints Starting second task...
+    guard(LoggedTask.new("second task")).do(|x| => { # prints Starting second task...
         # do the thing
-    } # prints second task completed
+    }); # prints second task completed
 }
 ```
 
 In the general case, objects are deallocated transparently by the Aria VM, and there is no way to control the time and flow of the deallocation.
 
 If an object needs to execute some custom cleanup, a `guard` block is the right way to assign additional behavior independent of the general VM deallocation. Note that an object can live outside of its guard block, and it's up to the object to respond safely to that.
+
+`guard`s return a `Result` based on what their `do` block returns:
+- if the block returns normally with a value, the guard returns `Result::Ok(value);
+- if the block returns with a `Result::Ok(value)`, the guard returns `Result::Ok(value);
+- if the block returns with a `Result::Err(err)`, the guard returns `Result::Err(err)`;
+- if the block throws an exception, the guard re-throws it.
 
 ## 🥗 Mixins
 
