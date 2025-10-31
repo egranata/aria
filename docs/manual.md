@@ -913,16 +913,16 @@ Operators are overloaded by an `operator` declaration:
 ```
 struct Integer {
     type func new(n) {
-        alloc(This){
+        return alloc(This){
             .n = n,
         };
     }
 
     operator %(rhs) {
         if rhs isa Integer {
-            Integer.new(this.n % rhs.n);
+            return Integer.new(this.n % rhs.n);
         } elsif rhs isa Int {
-            Integer.new(this.n % rhs);
+            return Integer.new(this.n % rhs);
         } else {
             throw alloc(Unimplemented);
         }
