@@ -25,7 +25,7 @@ impl rowan::Language for Lang {
 
 #[derive(Debug, Clone)]
 pub struct ParseError {
-    kind: SyntaxKind,
+    expected: SyntaxKind,
     pos: Option<Range<usize>>,
 }
 
@@ -45,7 +45,7 @@ impl Parse {
 }
 
 impl ParseError {
-    pub fn kind(&self) -> SyntaxKind { self.kind }
+    pub fn kind(&self) -> SyntaxKind { self.expected }
     pub fn pos(&self) -> Option<Range<usize>> { self.pos.clone() }
 }
 
@@ -172,11 +172,11 @@ pub fn parse(text: &str) -> Parse {
 
         fn struct_entry(&mut self) {
             let m = self.open();
-            self.entry();
+            self.entry(StructEntry);
             self.close(m, StructEntry);
         }
 
-        fn entry(&mut self) {
+        fn entry(&mut self, kind: SyntaxKind) {
             match self.nth(0) {
                 FuncKwd => self.decl_func(),
                 OperatorKwd | ReverseKwd => self.decl_operator(),
@@ -190,7 +190,7 @@ pub fn parse(text: &str) -> Parse {
                         self.decl_val();
                     }
                 }
-                _ => self.advance_with_error(StructEntry)
+                _ => self.advance_with_error(kind)
             }
         }
 
@@ -235,7 +235,7 @@ pub fn parse(text: &str) -> Parse {
 
         fn enum_entry(&mut self) {
             let m = self.open();
-            self.entry();
+            self.entry(EnumEntry);
             self.close(m, EnumEntry);
         }
 
@@ -247,7 +247,6 @@ pub fn parse(text: &str) -> Parse {
             self.expect(Identifier);
             self.expect(LeftBrace);
             
-            // Parse mixin entries (method_decl | operator_decl | mixin_include_decl)
             while !self.at(RightBrace) && !self.eof() {
                 self.mixin_entry();
             }
@@ -263,6 +262,8 @@ pub fn parse(text: &str) -> Parse {
                 FuncKwd | TypeKwd | InstanceKwd => self.decl_func(),
                 OperatorKwd | ReverseKwd => self.decl_operator(),
                 IncludeKwd => self.mixin_include(),
+                StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
+                EnumKwd => self.decl_enum(),
                 _ => self.advance_with_error(MixinEntry)
             }
             
@@ -324,6 +325,13 @@ pub fn parse(text: &str) -> Parse {
             
             if self.at(LeftBrace) { 
                 self.block();
+            } else if self.at(Assign) {
+                self.expect(Assign);
+                let _ = self.expr();
+                // allow optional semicolon after expression-bodied funcs
+                if self.at(Semicolon) {
+                    self.expect(Semicolon);
+                }
             }
           
             self.close(m, Func);
@@ -704,8 +712,11 @@ pub fn parse(text: &str) -> Parse {
             while self.at(Dot) {
                 self.expect(Dot);
                 self.expect(Identifier);
-                self.expect(Assign);
-                let _ = self.expr();
+                // Optional assignment; allow shorthand field init like `.x, .y`
+                if self.at(Assign) {
+                    self.expect(Assign);
+                    let _ = self.expr();
+                }
 
                 if !self.at(RightBrace) {
                     self.expect(Comma);
@@ -1092,14 +1103,14 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, ErrorTree);
         }
 
-        fn report_error(&mut self, kind: SyntaxKind) {            
+        fn report_error(&mut self, expected: SyntaxKind) {            
             let pos = if let Some(tok) = self.nth_token(0) {                
                 Some(tok.2.clone())
             } else {
                 None
             };
             
-            self.errors.push(ParseError { kind, pos });
+            self.errors.push(ParseError { expected, pos });
         }
 
         fn consume_remaining_trivia(&mut self) {
@@ -1667,7 +1678,7 @@ mod tests {
                     let line_index = LineIndex::new(&content);
                     for error in &parse_result.errors {
                         let line = line_index.line_col(error.pos.as_ref().unwrap().start.try_into().unwrap());
-                        println!("  {:?} at line {:?}", error, line);
+                        println!("  {:?} at {:?}", error, line);
                     }
                     panic!("Parse errors found in {}", filename);
                 }
