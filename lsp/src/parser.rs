@@ -780,7 +780,7 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn expr(&mut self) -> MarkClosed {
-            if self.at(Pipe) {
+            if self.at(Pipe) || self.at(LogicalOr) {
                 self.decl_lambda()
             } else {
                 self.expr_bp(0)
@@ -790,7 +790,13 @@ pub fn parse(text: &str) -> Parse {
         fn decl_lambda(&mut self) -> MarkClosed {
             let m = self.open();
             
-            self.param_list(Pipe, Pipe);
+            if self.at(LogicalOr) {
+                // Empty parameter list in the form of '||'
+                self.expect(LogicalOr);
+            } else {
+                // Standard parameter list in the form of '|x, y|'
+                self.param_list(Pipe, Pipe);
+            }
             self.expect(Arrow);
 
             if self.at(LeftBrace) {
