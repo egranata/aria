@@ -45,7 +45,7 @@ impl Parse {
 }
 
 impl ParseError {
-    pub fn kind(&self) -> SyntaxKind { self.expected }
+    pub fn expected(&self) -> SyntaxKind { self.expected }
     pub fn pos(&self) -> Option<Range<usize>> { self.pos.clone() }
 }
 

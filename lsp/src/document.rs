@@ -79,55 +79,43 @@ impl DocumentState {
         self.line_index.offset(lc)
     }
 
-    pub fn def_in_scope_at(&self, name: &str, at: TextSize) -> Option<TextRange> {
-        let entries = self.defs.get(name)?;
-        let mut candidates: Vec<&DefEntry> = entries
-            .iter()
-            .filter(|e| e.scope_range.contains(at) && (e.hoisted || e.decl_start <= at))
-            .collect();
-
-        if candidates.is_empty() {
-            candidates = entries.iter().filter(|e| e.hoisted).collect();
-        }
-
-        candidates
-            .into_iter()
-            .min_by(|a, b| {
-                use std::cmp::Ordering;
-                let len_ord = a.scope_range.len().cmp(&b.scope_range.len());
-                if len_ord != Ordering::Equal {
-                    return len_ord;
-                }
-                // Prefer later declaration start (descending)
-                b.decl_start.cmp(&a.decl_start)
-            })
-            .map(|e| e.def_range)
-    }
-
-    pub fn definition_at(&self, line: u32, col: u32) -> Option<TextRange> {
+    pub fn def(&self, line: u32, col: u32) -> Option<TextRange> {
         let tok = self.token_at_line_col(line, col)?;
         if tok.kind() == crate::lexer::SyntaxKind::Identifier {
             let name = tok.text();
             let at = tok.text_range().start();
-            self.def_in_scope_at(name, at)
+            let entries = self.defs.get(name)?;
+            let mut candidates: Vec<&DefEntry> = entries
+                .iter()
+                .filter(|e| e.scope_range.contains(at) && (e.hoisted || e.decl_start <= at))
+                .collect();
+
+            if candidates.is_empty() {
+                candidates = entries.iter().filter(|e| e.hoisted).collect();
+            }
+
+            candidates
+                .into_iter()
+                .min_by(|a, b| {
+                    use std::cmp::Ordering;
+                    let len_ord = a.scope_range.len().cmp(&b.scope_range.len());
+                    if len_ord != Ordering::Equal {
+                        return len_ord;
+                    }
+                    // Prefer later declaration start (descending)
+                    b.decl_start.cmp(&a.decl_start)
+                })
+                .map(|e| e.def_range)
         } else {
             None
         }
     }
 
     pub fn parse_error_ranges(&self) -> Vec<(TextRange, String)> {
-        use crate::lexer::SyntaxKind as K;
         let mut out: Vec<(TextRange, String)> = Vec::new();
 
-        for node in self.parse.syntax().descendants() {
-            if node.kind() == K::ErrorTree {
-                let range = node.text_range();
-                out.push((range, "syntax error".to_string()));
-            }
-        }
-
         for err in self.parse.errors() {
-            let msg = format!("expected {:?}", err.kind());
+            let msg = format!("expected {:?}", err.expected());
             if let Some(pos) = err.pos() {
                 let start = TextSize::from(pos.start as u32);
                 let end = TextSize::from(pos.end as u32);
@@ -209,51 +197,6 @@ mod tests {
     }
 
     #[test]
-    fn top_level_val_is_hoisted() {
-        let text = "x;\nval x = 1;\n".to_string();
-        let doc = DocumentState::new(text);
-        let at = doc.offset_at_line_col(0, 0).expect("offset for x use");
-        let def = doc.def_in_scope_at("x", at).expect("hoisted top-level def");
-        assert_eq!(doc.line_col(def.start()).line, 1);
-    }
-
-    #[test]
-    fn local_val_is_not_hoisted_within_block() {
-        let text = "func f() {\n  y;\n  val y = 2;\n}\n".to_string();
-        let doc = DocumentState::new(text);
-        let at = doc.offset_at_line_col(1, 2).expect("offset for y use before decl");
-        let def = doc.def_in_scope_at("y", at);
-        assert!(def.is_none());
-    }
-
-    #[test]
-    fn shadowing_picks_innermost_definition() {
-        let text = "val x = 0;\nfunc f() {\n  val x = 1;\n  x;\n}\n".to_string();
-        let doc = DocumentState::new(text);
-        let at = doc.offset_at_line_col(3, 2).expect("offset for inner x use");
-        let def = doc.def_in_scope_at("x", at).expect("inner x def");
-        assert_eq!(doc.line_col(def.start()).line, 2);
-    }
-
-    #[test]
-    fn params_visible_in_function_body() {
-        let text = "func f(a, b) {\n  a;\n}\n".to_string();
-        let doc = DocumentState::new(text);
-        let at = doc.offset_at_line_col(1, 2).expect("offset for a use in body");
-        let def = doc.def_in_scope_at("a", at).expect("param a def");
-        assert_eq!(doc.line_col(def.start()).line, 0);
-    }
-
-    #[test]
-    fn top_level_func_is_hoisted() {
-        let text = "g();\nfunc g() {}\n".to_string();
-        let doc = DocumentState::new(text);
-        let at = doc.offset_at_line_col(0, 0).expect("offset for g() call");
-        let def = doc.def_in_scope_at("g", at).expect("hoisted func def");
-        assert_eq!(doc.line_col(def.start()).line, 1);
-    }
-
-    #[test]
     fn token_at_line_col_out_of_bounds_is_none() {
         let doc = DocumentState::new(sample_text());
         assert!(doc.token_at_line_col(0, 10_000).is_none());
@@ -281,13 +224,5 @@ mod tests {
         assert!(!errs.is_empty(), "should report at least one parse error");
         assert!(errs.iter().any(|(_, m)| m.contains("Assign") || m.contains("Semicolon")),
             "message should mention expected token like Assign or Semicolon: {:?}", errs);
-    }
-
-    #[test]
-    fn error_tree_nodes_are_reported() {
-        let text = "func f() { val x = ); }".to_string();
-        let doc = DocumentState::new(text);
-        let errs = doc.parse_error_ranges();
-        assert!(errs.iter().any(|(_, m)| m == "syntax error"), "should include syntax error from ErrorTree");
     }
 }

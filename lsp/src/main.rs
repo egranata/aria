@@ -185,7 +185,7 @@ impl LanguageServer for Backend {
         let docs = self.documents.lock();
         let Some(doc) = docs.get(&uri) else { return Ok(None) };
                
-        if let Some(def_range) = doc.definition_at(position.line, position.character) {
+        if let Some(def_range) = doc.def(position.line, position.character) {
             let lsp_range = to_lsp_range(&doc, def_range);
             let loc = Location::new(uri.clone(), lsp_range);
             self.info(format!("found a definition at {:?}", loc));
