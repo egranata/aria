@@ -11,7 +11,7 @@ pub struct DocumentState {
     text_size: TextSize,
     line_index: Arc<LineIndex>,
     parse: Arc<Parse>,
-    defs: HashMap<String, Vec<TextRange>>,
+    defs: HashMap<String, Vec<DefEntry>>,
 }
 
 impl DocumentState {
@@ -66,10 +66,6 @@ impl DocumentState {
         }
     }
 
-    pub fn def(&self, name: &str) -> Option<&Vec<TextRange>> {
-        self.defs.get(name)
-    }
-
     pub fn line_col(&self, offset: rowan::TextSize) -> LineCol {
         self.line_index.line_col(offset)
     }
@@ -82,24 +78,88 @@ impl DocumentState {
         let lc = line_index::LineCol { line, col };
         self.line_index.offset(lc)
     }
+
+    pub fn def_in_scope_at(&self, name: &str, at: TextSize) -> Option<TextRange> {
+        let entries = self.defs.get(name)?;
+        let mut candidates: Vec<&DefEntry> = entries
+            .iter()
+            .filter(|e| e.scope_range.contains(at) && (e.hoisted || e.decl_start <= at))
+            .collect();
+
+        if candidates.is_empty() {
+            candidates = entries.iter().filter(|e| e.hoisted).collect();
+        }
+
+        candidates
+            .into_iter()
+            .min_by(|a, b| {
+                use std::cmp::Ordering;
+                let len_ord = a.scope_range.len().cmp(&b.scope_range.len());
+                if len_ord != Ordering::Equal {
+                    return len_ord;
+                }
+                // Prefer later declaration start (descending)
+                b.decl_start.cmp(&a.decl_start)
+            })
+            .map(|e| e.def_range)
+    }
+
+    pub fn definition_at(&self, line: u32, col: u32) -> Option<TextRange> {
+        let tok = self.token_at_line_col(line, col)?;
+        if tok.kind() == crate::lexer::SyntaxKind::Identifier {
+            let name = tok.text();
+            let at = tok.text_range().start();
+            self.def_in_scope_at(name, at)
+        } else {
+            None
+        }
+    }
 }
 
 
-fn build_index(root: &SyntaxNode) -> HashMap<String, Vec<TextRange>> {
+#[derive(Clone, Copy, Debug)]
+struct DefEntry {
+    def_range: TextRange,
+    scope_range: TextRange,
+    decl_start: TextSize,
+    hoisted: bool,
+}
+
+fn build_index(root: &SyntaxNode) -> HashMap<String, Vec<DefEntry>> {
     use crate::lexer::SyntaxKind as K;
-    let mut defs: HashMap<String, Vec<TextRange>> = HashMap::new();
+    let mut defs: HashMap<String, Vec<DefEntry>> = HashMap::new();
 
     for node in root.descendants() {
         match node.kind() {
             K::StmtVal | K::Param | K::Func => {
-                // First Identifier token child is the declared name
                 if let Some(tok) = node
                     .children_with_tokens()
                     .filter_map(|e| e.into_token())
                     .find(|t| t.kind() == K::Identifier)
                 {
                     let name = tok.text().to_string();
-                    defs.entry(name).or_default().push(tok.text_range());
+
+                    let mut scope_owner = node.parent();
+                    while let Some(parent) = scope_owner.clone() {
+                        match parent.kind() {
+                            K::Func | K::Block => break,
+                            _ => scope_owner = parent.parent(),
+                        }
+                    }
+
+                    let (scope_range, hoisted) = match scope_owner.as_ref() {
+                        Some(owner) => (owner.text_range(), false),
+                        None => (root.text_range(), true),
+                    };
+
+                    let entry = DefEntry {
+                        def_range: tok.text_range(),
+                        scope_range,
+                        decl_start: tok.text_range().start(),
+                        hoisted,
+                    };
+
+                    defs.entry(name).or_default().push(entry);
                 }
             }
             _ => {}
@@ -123,49 +183,54 @@ mod tests {
     }
 
     #[test]
-    fn indexes_defs_for_val_func_and_params() {
-        let doc = DocumentState::new(sample_text());
+    fn top_level_val_is_hoisted() {
+        let text = "x;\nval x = 1;\n".to_string();
+        let doc = DocumentState::new(text);
+        let at = doc.offset_at_line_col(0, 0).expect("offset for x use");
+        let def = doc.def_in_scope_at("x", at).expect("hoisted top-level def");
+        assert_eq!(doc.line_col(def.start()).line, 1);
+    }
 
-        let defs_x = doc.def("x").expect("def x present");
-        assert!(!defs_x.is_empty());
-        assert!(defs_x.iter().any(|r| doc.line_col(r.start()).line == 0));
+    #[test]
+    fn local_val_is_not_hoisted_within_block() {
+        let text = "func f() {\n  y;\n  val y = 2;\n}\n".to_string();
+        let doc = DocumentState::new(text);
+        let at = doc.offset_at_line_col(1, 2).expect("offset for y use before decl");
+        let def = doc.def_in_scope_at("y", at);
+        assert!(def.is_none());
+    }
 
-        let defs_foo = doc.def("foo").expect("def foo present");
-        assert!(!defs_foo.is_empty());
-        assert!(defs_foo.iter().any(|r| doc.line_col(r.start()).line == 1));
+    #[test]
+    fn shadowing_picks_innermost_definition() {
+        let text = "val x = 0;\nfunc f() {\n  val x = 1;\n  x;\n}\n".to_string();
+        let doc = DocumentState::new(text);
+        let at = doc.offset_at_line_col(3, 2).expect("offset for inner x use");
+        let def = doc.def_in_scope_at("x", at).expect("inner x def");
+        assert_eq!(doc.line_col(def.start()).line, 2);
+    }
 
-        let defs_a = doc.def("a").expect("def a present");
-        assert!(!defs_a.is_empty());
-        assert!(defs_a.iter().any(|r| doc.line_col(r.start()).line == 1));
+    #[test]
+    fn params_visible_in_function_body() {
+        let text = "func f(a, b) {\n  a;\n}\n".to_string();
+        let doc = DocumentState::new(text);
+        let at = doc.offset_at_line_col(1, 2).expect("offset for a use in body");
+        let def = doc.def_in_scope_at("a", at).expect("param a def");
+        assert_eq!(doc.line_col(def.start()).line, 0);
+    }
 
-        let defs_b = doc.def("b").expect("def b present");
-        assert!(!defs_b.is_empty());
-        assert!(defs_b.iter().any(|r| doc.line_col(r.start()).line == 1));
-
-        let defs_bar = doc.def("bar").expect("def bar present");
-        assert!(!defs_bar.is_empty());
-
-        let defs_y = doc.def("y").expect("def y present");
-        assert!(!defs_y.is_empty());
-        assert!(defs_y.iter().any(|r| doc.line_col(r.start()).line == 2));
+    #[test]
+    fn top_level_func_is_hoisted() {
+        let text = "g();\nfunc g() {}\n".to_string();
+        let doc = DocumentState::new(text);
+        let at = doc.offset_at_line_col(0, 0).expect("offset for g() call");
+        let def = doc.def_in_scope_at("g", at).expect("hoisted func def");
+        assert_eq!(doc.line_col(def.start()).line, 1);
     }
 
     #[test]
     fn token_at_line_col_out_of_bounds_is_none() {
         let doc = DocumentState::new(sample_text());
         assert!(doc.token_at_line_col(0, 10_000).is_none());
-    }
-
-    #[test]
-    fn update_text_rebuilds_index() {
-        let mut doc = DocumentState::new("val a = 1;\n".to_string());
-        assert!(doc.def("a").is_some());
-        assert!(doc.def("b").is_none());
-
-        doc.update_text("val b = 2;\n".to_string());
-        assert!(doc.def("a").is_none());
-        let defs_b = doc.def("b").expect("def b present after update");
-        assert!(!defs_b.is_empty());
     }
 
     #[test]

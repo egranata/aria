@@ -141,25 +141,11 @@ impl LanguageServer for Backend {
        
         self.info(doc.text());
         
-        if let Some(tok) = doc.token_at_line_col(position.line, position.character) {
-            self.info(format!("found token of type {:?}", tok.kind()));
-
-            if tok.kind() == lsp::lexer::SyntaxKind::Identifier {
-                let name = tok.text();
-                if let Some(ranges) = doc.def(name) {
-
-                    if let Some(def_range) = ranges.last() {
-                        let lsp_range = to_lsp_range(&doc, *def_range);
-                        let loc = Location::new(uri.clone(), lsp_range);
-                    
-                        self.info(format!("found a definition for {} at {:?}", name, loc));
-
-                        return Ok(Some(GotoDefinitionResponse::Scalar(loc)));
-                    }
-                }
-            }
-        } else {
-            self.info("no token found".to_string());
+        if let Some(def_range) = doc.definition_at(position.line, position.character) {
+            let lsp_range = to_lsp_range(&doc, def_range);
+            let loc = Location::new(uri.clone(), lsp_range);
+            self.info(format!("found a definition at {:?}", loc));
+            return Ok(Some(GotoDefinitionResponse::Scalar(loc)));
         }
 
         self.info("no definitions found".to_string());
