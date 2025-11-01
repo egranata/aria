@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Buzz {
+    func prettyprint() {
+        return "Buzz is 25 years old";
+    }
+}

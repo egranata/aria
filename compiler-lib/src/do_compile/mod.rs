@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{collections::HashSet, fmt::Display, rc::Rc};
+use std::{collections::HashSet, fmt::Display, path::PathBuf, rc::Rc};
 
 use aria_parser::ast::{
     ArgumentDecl, ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl,
@@ -944,5 +944,32 @@ pub(crate) fn compile_from_source(
         }
     };
 
-    compile_from_ast(&ast, options)
+    compile_from_ast(&ast, options).map(|mut module| {
+        // The source buffer name is the cannonalized path to the source file if it was created from a file.
+        // Once we check it is an existing file, we can use it to find the widget path.
+        let src_path = PathBuf::from(&src.name);
+
+        module.widget_root_path = if src_path.exists() {
+            // Ensure the source buffer name is a file path
+            debug_assert!(src_path.is_file());
+
+            let mut ancestors = src_path.ancestors();
+            loop {
+                if let Some(widget_path) = ancestors.next() {
+                    let widget_json = widget_path.join("widget.json");
+                    if !widget_json.exists() {
+                        continue;
+                    }
+
+                    break Some(widget_path.to_path_buf());
+                }
+
+                break None;
+            }
+        } else {
+            None
+        };
+
+        module
+    })
 }

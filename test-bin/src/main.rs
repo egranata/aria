@@ -105,6 +105,7 @@ fn run_test_from_pattern(path: &str) -> TestCaseResult {
         };
 
         let mut vm = VirtualMachine::default();
+
         let entry_rm = match vm.load_module("", entry_cm) {
             Ok(rle) => match rle {
                 haxby_vm::vm::RunloopExit::Ok(m) => m.module,

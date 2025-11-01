@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+import Paco from cool_widget.lib;
+import BWrapper from cool_widget.lib;
+import AWrapper from cool_widget.lib;
+import Buzz from cool_widget.buzz;
+
+func main() {
+    val buzz = Paco.build_buzz();
+    val real_buzz = alloc(Buzz);
+    
+    assert(buzz.prettyprint() == real_buzz.prettyprint());
+    
+    val a = AWrapper.new();
+    val b = BWrapper.new();
+    
+    assert(a.prettyprint() == "A");
+    assert(b.prettyprint() == "InnerB");
+}

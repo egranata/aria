@@ -1,9 +1,12 @@
+use std::path::PathBuf;
+
 // SPDX-License-Identifier: Apache-2.0
 use crate::constant_value::{CompiledCodeObject, ConstantValue, ConstantValues};
 
 #[derive(Default)]
 pub struct CompiledModule {
     pub constants: ConstantValues,
+    pub widget_root_path: Option<PathBuf>,
 }
 
 impl CompiledModule {

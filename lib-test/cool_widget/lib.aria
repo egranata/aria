@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+import Buzz from widget.buzz;
+import A from other_widget.a;
+import B from other_widget.a;
+
+struct Paco {
+    type func build_buzz() {
+        return alloc(Buzz);
+    }
+}
+
+struct AWrapper {
+    type func new() {
+        return alloc(AWrapper) { .a = alloc(A) };
+    }
+    
+    func prettyprint() {
+        return this.a.prettyprint();
+    }
+}
+
+struct BWrapper {
+    type func new() {
+        return alloc(BWrapper) { .b = B.new() };
+    }
+    
+    func prettyprint() {
+        return this.b.prettyprint();
+    }
+}

@@ -374,8 +374,11 @@ impl VirtualMachine {
         })
     }
 
-    fn try_get_import_path_from_name(aria_lib_dir: &Path, ipath: &str) -> Option<PathBuf> {
-        let mut module_path = aria_lib_dir.to_path_buf();
+    fn try_get_import_path_from_name(
+        aria_lib_dir: impl AsRef<Path>,
+        ipath: &str,
+    ) -> Option<PathBuf> {
+        let mut module_path = aria_lib_dir.as_ref().to_path_buf();
         module_path.push(ipath);
         if module_path.exists() {
             Some(module_path)
@@ -384,11 +387,28 @@ impl VirtualMachine {
         }
     }
 
-    fn resolve_import_path_to_path(ipath: &str) -> Result<PathBuf, VmErrorReason> {
-        let ipath = format!("{}.aria", ipath.replace(".", "/"));
+    fn resolve_import_path_to_path(
+        ipath: &str,
+        widget_root_path: Option<&PathBuf>,
+    ) -> Result<PathBuf, VmErrorReason> {
+        if let Some(ipath) = ipath.strip_prefix("widget.") {
+            return if let Some(widget_root_path) = widget_root_path {
+                let ipath = format!("{}.aria", ipath.replace(".", "/"));
+                Self::try_get_import_path_from_name(widget_root_path, &ipath).ok_or_else(|| {
+                    VmErrorReason::ImportNotAvailable(
+                        ipath.to_owned(),
+                        "import not found in widget".to_owned(),
+                    )
+                })
+            } else {
+                Err(VmErrorReason::ImportNotAvailable(
+                    ipath.to_owned(),
+                    "tried to import from widget without a widget.json".to_owned(),
+                ))
+            };
+        }
 
-        let err_ret =
-            VmErrorReason::ImportNotAvailable(ipath.to_owned(), "no such path".to_owned());
+        let ipath = format!("{}.aria", ipath.replace(".", "/"));
 
         let aria_lib_dirs = VirtualMachine::get_aria_library_paths();
         for aria_lib_dir in aria_lib_dirs {
@@ -396,7 +416,11 @@ impl VirtualMachine {
                 return Ok(path);
             }
         }
-        Err(err_ret)
+
+        Err(VmErrorReason::ImportNotAvailable(
+            ipath.to_owned(),
+            "no such path".to_owned(),
+        ))
     }
 
     fn create_import_model_from_path(
@@ -1750,7 +1774,10 @@ impl VirtualMachine {
 
                     frame.stack.push(RuntimeValue::Module(mli.module.clone()));
                 } else {
-                    let import_path = match Self::resolve_import_path_to_path(&ipath) {
+                    let import_path = match Self::resolve_import_path_to_path(
+                        &ipath,
+                        this_module.get_compiled_module().widget_root_path.as_ref(),
+                    ) {
                         Ok(ipath) => ipath,
                         Err(err) => {
                             return build_vm_error!(err, next, frame, op_idx);
