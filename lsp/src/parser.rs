@@ -366,6 +366,12 @@ pub fn parse(text: &str) -> Parse {
                 self.type_annotation();
             }
             
+            // Support default value for optional parameters: name [: type] = expr
+            if self.at(Assign) {
+                self.expect(Assign);
+                let _ = self.expr();
+            }
+            
             if !self.at(right_delim) { 
               self.expect(Comma);
             }
