@@ -264,26 +264,11 @@ pub fn parse(text: &str) -> Parse {
             self.expect(LeftBrace);
             
             while !self.at(RightBrace) && !self.eof() {
-                self.mixin_entry();
+                self.entry(MixinEntry);
             }
             
             self.expect(RightBrace);
             self.close(m, Mixin);
-        }
-
-        fn mixin_entry(&mut self) {
-            let m = self.open();
-            
-            match self.nth(0) {
-                FuncKwd | TypeKwd | InstanceKwd => self.decl_func(),
-                OperatorKwd | ReverseKwd => self.decl_operator(),
-                IncludeKwd => self.mixin_include(),
-                StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
-                EnumKwd => self.decl_enum(),
-                _ => self.advance_with_error(MixinEntry)
-            }
-            
-            self.close(m, MixinEntry);
         }
 
         fn decl_operator(&mut self) {
@@ -1707,7 +1692,7 @@ mod tests {
                         println!("  {:?} at {:?}", error, line);
                     }
 
-                    //println!("\n\ntree:\n\n{}", tree_to_string(parse_result.syntax()));
+                    println!("\n\n{}", tree_to_string(parse_result.syntax()));
 
                     panic!("Parse errors found in {}", filename);
                 }
