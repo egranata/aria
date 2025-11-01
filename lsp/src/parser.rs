@@ -2,6 +2,7 @@ use std::cell::Cell;
 use crate::{SyntaxKind, lexer};
 use rowan::{GreenNode, GreenNodeBuilder};
 use SyntaxKind::*;
+use core::ops::Range;
 
 impl From<SyntaxKind> for rowan::SyntaxKind {
     fn from(kind: SyntaxKind) -> Self {
@@ -36,7 +37,7 @@ impl Parse {
 #[derive(Debug, Clone)]
 pub struct ParseError {
     msg: String,
-    pos: Option<usize>,
+    pos: Option<Range<usize>>,
 }
 
 pub fn parse(text: &str) -> Parse {
@@ -1034,7 +1035,6 @@ pub fn parse(text: &str) -> Parse {
             if self.eat(kind) {
                 return;
             }
-            // TODO: replace this with error message instead of assert
             self.report_error(&format!("expected token {:?}", kind));
         }
     
@@ -1047,15 +1047,14 @@ pub fn parse(text: &str) -> Parse {
 
         fn report_error(&mut self, error: &str) {            
             let pos = if let Some(tok) = self.nth_token(0) {                
-                let pos = &tok.2;
-                Some(pos.start)
+                Some(tok.2.clone())
             } else {
                 None
             };
             
             self.errors.push(ParseError { 
                 msg: error.to_string(), 
-                pos: pos
+                pos
             });
         }
 
