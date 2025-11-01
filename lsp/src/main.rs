@@ -118,8 +118,6 @@ impl LanguageServer for Backend {
                     index = LineIndex::new(&text);
                 }
             }
-
-            self.info(format!("updating text for {}", uri));
             doc.update_text(text);
         }
     }
@@ -138,9 +136,7 @@ impl LanguageServer for Backend {
 
         let docs = self.documents.lock();
         let Some(doc) = docs.get(&uri) else { return Ok(None) };
-       
-        self.info(doc.text());
-        
+               
         if let Some(def_range) = doc.definition_at(position.line, position.character) {
             let lsp_range = to_lsp_range(&doc, def_range);
             let loc = Location::new(uri.clone(), lsp_range);
