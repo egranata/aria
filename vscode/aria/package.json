@@ -4,22 +4,62 @@
   "description": "Aria Language Support",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.95.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "Programming Languages"
   ],
+	"main": "./out/extension.js",
   "contributes": {
-    "languages": [{
-      "id": "aria",
-      "aliases": ["Aria", "aria"],
-      "extensions": [".aria"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "aria",
-      "scopeName": "source.aria",
-      "path": "./syntaxes/aria.tmLanguage.json"
-    }]
-  }
+    "languages": [
+      {
+        "id": "aria",
+        "aliases": [
+          "Aria",
+          "aria"
+        ],
+        "extensions": [
+          ".aria"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "title": "Aria",
+      "properties": {
+        "aria.lsp.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Aria LSP executable. Leave empty to use ../target/debug/lsp relative to this extension."
+        }
+      }
+    },
+    "grammars": [
+      {
+        "language": "aria",
+        "scopeName": "source.aria",
+        "path": "./syntaxes/aria.tmLanguage.json"
+      }
+    ]
+  },
+  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39",
+  "dependencies": {
+		"glob": "^11.0.0",
+		"vscode-languageclient": "^9.0.1"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.100.0",
+		"@vscode/test-electron": "^2.3.9",
+		"typescript": "^5.9.2",
+		"typescript-eslint": "^8.39.0",
+		"@types/mocha": "^10.0.6",
+		"@types/node": "^22"
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"lint": "eslint",
+		"test": "sh ./scripts/e2e.sh"
+	}
 }
