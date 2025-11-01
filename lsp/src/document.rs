@@ -32,6 +32,7 @@ impl DocumentState {
     pub fn update_text(&mut self, text: String) {
         self.text_size = TextSize::of(&text);
         self.text = Arc::new(text);
+
         self.line_index = Arc::new(LineIndex::new(&self.text));
         let parse = parser::parse(&self.text);
         let syntax = parse.syntax();
@@ -71,6 +72,15 @@ impl DocumentState {
 
     pub fn line_col(&self, offset: rowan::TextSize) -> LineCol {
         self.line_index.line_col(offset)
+    }
+
+    pub fn text(&self) -> String {
+        self.text.to_string()
+    }
+
+    pub fn offset_at_line_col(&self, line: u32, col: u32) -> Option<TextSize> {
+        let lc = line_index::LineCol { line, col };
+        self.line_index.offset(lc)
     }
 }
 
@@ -160,10 +170,12 @@ mod tests {
 
     #[test]
     fn line_col_matches_token_start() {
-        let doc = DocumentState::new(sample_text());
+        let mut doc = DocumentState::new(sample_text());
         let x_tok = doc.token_at_line_col(0, 4).expect("token x");
         assert_eq!(x_tok.text(), "x");
         assert_eq!(x_tok.kind(), SyntaxKind::Identifier);
+
+        doc.update_text(sample_text() + "\nval x = 5;");
 
         let func_tok = doc.token_at_line_col(1, 0).expect("token func");
         assert_eq!(func_tok.text(), "func");

@@ -4,6 +4,7 @@ use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
 use lsp::document::{DocumentState};
+use line_index::{LineIndex, LineCol};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 
 
@@ -87,14 +88,39 @@ impl LanguageServer for Backend {
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         let uri = params.text_document.uri;
-
         let mut docs = self.documents.lock();
 
         if let Some(doc) = docs.get_mut(&uri) {
-            if let Some(change) = params.content_changes.into_iter().last() {
-                let text = change.text;
-                doc.update_text(text);
+            let mut text = doc.text();
+            let mut index = LineIndex::new(&text);
+
+            for change in params.content_changes {
+                if let Some(range) = change.range {
+                    let Some(start_ts) = index.offset(LineCol { line: range.start.line, col: range.start.character }) else { continue };
+                    let Some(end_ts) = index.offset(LineCol { line: range.end.line, col: range.end.character }) else { continue };
+
+                    let start: usize = u32::from(start_ts) as usize;
+                    let end: usize = u32::from(end_ts) as usize;
+
+                    if start <= end && end <= text.len() {
+                        let mut new_text = String::with_capacity(text.len() - (end - start) + change.text.len());
+                        new_text.push_str(&text[..start]);
+                        new_text.push_str(&change.text);
+                        new_text.push_str(&text[end..]);
+                        text = new_text;
+                        index = LineIndex::new(&text);
+                    } else {
+                        self.info(format!("skipping invalid change range for {}: {:?}", uri, range));
+                    }
+                } else {
+                    // Full text replacement
+                    text = change.text;
+                    index = LineIndex::new(&text);
+                }
             }
+
+            self.info(format!("updating text for {}", uri));
+            doc.update_text(text);
         }
     }
 
@@ -112,6 +138,8 @@ impl LanguageServer for Backend {
 
         let docs = self.documents.lock();
         let Some(doc) = docs.get(&uri) else { return Ok(None) };
+       
+        self.info(doc.text());
         
         if let Some(tok) = doc.token_at_line_col(position.line, position.character) {
             self.info(format!("found token of type {:?}", tok.kind()));
@@ -120,7 +148,7 @@ impl LanguageServer for Backend {
                 let name = tok.text();
                 if let Some(ranges) = doc.def(name) {
 
-                    if let Some(def_range) = ranges.first() {
+                    if let Some(def_range) = ranges.last() {
                         let lsp_range = to_lsp_range(&doc, *def_range);
                         let loc = Location::new(uri.clone(), lsp_range);
                     
