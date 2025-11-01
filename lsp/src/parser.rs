@@ -23,6 +23,12 @@ impl rowan::Language for Lang {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct ParseError {
+    kind: SyntaxKind,
+    pos: Option<Range<usize>>,
+}
+
 pub struct Parse {
     green_node: GreenNode,
     errors: Vec<ParseError>,
@@ -32,12 +38,6 @@ impl Parse {
     pub fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green_node.clone())
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct ParseError {
-    msg: String,
-    pos: Option<Range<usize>>,
 }
 
 pub fn parse(text: &str) -> Parse {
@@ -162,6 +162,12 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn struct_entry(&mut self) {
+            let m = self.open();
+            self.entry();
+            self.close(m, StructEntry);
+        }
+
+        fn entry(&mut self) {
             match self.nth(0) {
                 FuncKwd => self.decl_func(),
                 OperatorKwd | ReverseKwd => self.decl_operator(),
@@ -175,7 +181,7 @@ pub fn parse(text: &str) -> Parse {
                         self.decl_val();
                     }
                 }
-                other => self.advance_with_error(&format!("expected entry instead of {:?}", other))
+                _ => self.advance_with_error(StructEntry)
             }
         }
 
@@ -188,9 +194,9 @@ pub fn parse(text: &str) -> Parse {
             self.expect(LeftBrace);
             
             while !self.at(RightBrace) && !self.eof() {
-                match self.nth(0) {
+                 match self.nth(0) {
                     CaseKwd => self.enum_case(),
-                    _ => self.struct_entry()
+                    _ => self.enum_entry()
                 }
                 
                 if self.at(Comma) {
@@ -218,6 +224,12 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, EnumCase);
         }
 
+        fn enum_entry(&mut self) {
+            let m = self.open();
+            self.entry();
+            self.close(m, EnumEntry);
+        }
+
         fn decl_mixin(&mut self) {
             assert!(self.at(MixinKwd));
             let m = self.open();
@@ -228,16 +240,24 @@ pub fn parse(text: &str) -> Parse {
             
             // Parse mixin entries (method_decl | operator_decl | mixin_include_decl)
             while !self.at(RightBrace) && !self.eof() {
-                match self.nth(0) {
-                    FuncKwd | TypeKwd | InstanceKwd => self.decl_func(),
-                    OperatorKwd | ReverseKwd => self.decl_operator(),
-                    IncludeKwd => self.mixin_include(),
-                    _ => self.advance_with_error("expected mixin entry")
-                }
+                self.mixin_entry();
             }
             
             self.expect(RightBrace);
             self.close(m, Mixin);
+        }
+
+        fn mixin_entry(&mut self) {
+            let m = self.open();
+            
+            match self.nth(0) {
+                FuncKwd | TypeKwd | InstanceKwd => self.decl_func(),
+                OperatorKwd | ReverseKwd => self.decl_operator(),
+                IncludeKwd => self.mixin_include(),
+                _ => self.advance_with_error(MixinEntry)
+            }
+            
+            self.close(m, MixinEntry);
         }
 
         fn decl_operator(&mut self) {
@@ -267,7 +287,7 @@ pub fn parse(text: &str) -> Parse {
                         self.expect(Assign)
                     }
                 },
-                _ => self.advance_with_error("expected operator symbol")
+                _ => self.advance_with_error(Operator)
             }
             
             if self.at(LeftParen) {
@@ -526,7 +546,7 @@ pub fn parse(text: &str) -> Parse {
                     self.advance(); // relational operator
                     let _ = self.expr();
                 }
-                _ => self.advance_with_error("expected match pattern")
+                _ => self.advance_with_error(MatchPattern)
             }
             
             self.close(m, MatchPattern);
@@ -1035,27 +1055,24 @@ pub fn parse(text: &str) -> Parse {
             if self.eat(kind) {
                 return;
             }
-            self.report_error(&format!("expected token {:?}", kind));
+            self.report_error(kind);
         }
     
-        fn advance_with_error(&mut self, error: &str) {
+        fn advance_with_error(&mut self, token: SyntaxKind) {
             let m = self.open();
-            self.report_error(error);
+            self.report_error(token);
             self.advance();
             self.close(m, ErrorTree);
         }
 
-        fn report_error(&mut self, error: &str) {            
+        fn report_error(&mut self, kind: SyntaxKind) {            
             let pos = if let Some(tok) = self.nth_token(0) {                
                 Some(tok.2.clone())
             } else {
                 None
             };
             
-            self.errors.push(ParseError { 
-                msg: error.to_string(), 
-                pos
-            });
+            self.errors.push(ParseError { kind, pos });
         }
 
         fn consume_remaining_trivia(&mut self) {
@@ -1173,6 +1190,7 @@ pub type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use line_index::LineIndex;
     use pretty_assertions::assert_eq;
 
     fn tree_to_string(node: SyntaxNode) -> String {
@@ -1638,8 +1656,10 @@ mod tests {
                 
                 if !parse_result.errors.is_empty() {
                     println!("\n{} has parse errors:", filename);
+                    let line_index = LineIndex::new(&content);
                     for error in &parse_result.errors {
-                        println!("  {:?}", error);
+                        let line = line_index.line_col(error.pos.as_ref().unwrap().start.try_into().unwrap());
+                        println!("  {:?} at line {:?}", error, line);
                     }
                     panic!("Parse errors found in {}", filename);
                 }
