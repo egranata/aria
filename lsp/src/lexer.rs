@@ -217,6 +217,7 @@ pub enum SyntaxKind {
     ExprAssign,
     ExprList,
     ExprType,
+    ExprNonNull,
     Mixin,
     MixinInclude,
     MixinEntry,

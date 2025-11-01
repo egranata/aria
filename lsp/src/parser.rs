@@ -838,6 +838,18 @@ pub fn parse(text: &str) -> Parse {
                     continue;
                 }
 
+                if op == Not && self.nth(1) == Not {
+                    let l_bp = 25u8;
+                    if l_bp < min_bp {
+                        break;
+                    }
+                    let m = self.open_before(lhs);
+                    self.expect(Not);
+                    self.expect(Not);
+                    lhs = self.close(m, ExprNonNull);
+                    continue;
+                }
+
                 if op == Question {
                     let (l_bp, r_bp) = (1, 2);
                     if l_bp < min_bp {
@@ -1133,40 +1145,26 @@ pub fn parse(text: &str) -> Parse {
             let mut builder = GreenNodeBuilder::new();
             let mut tokens = self.tokens.into_iter();
                 
-            let mut recent: Vec<String> = Vec::new();
-            let mut sim_depth: isize = 0;
-            let mut open_close_log: Vec<(usize, &'static str)> = Vec::new();
             for (idx, event) in self.events.into_iter().enumerate() {
                 let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                     match event {
                         Event::Open { kind } => {
-                            recent.push(format!("{}: Open({:?})", idx, kind));
-                            open_close_log.push((idx, "Open"));
-                            sim_depth += 1;
                             builder.start_node(kind.into());
                         }
                         Event::Close => {
-                            recent.push(format!("{}: Close", idx));
-                            open_close_log.push((idx, "Close"));
-                            sim_depth -= 1;
                             builder.finish_node();
                         }
                         Event::Advance => {
                             let (token, slice, _) = tokens.next().unwrap();
-                            recent.push(format!("{}: Advance({:?}, {:?})", idx, token, slice));
                             builder.token(token.into(), slice);
                         }
                     }
-                    // keep recent buffer short
-                    if recent.len() > 50 { recent.drain(0..recent.len()-50); }
                 }));
                 if res.is_err() {
-                    eprintln!("Rowan builder panic at event index {}. Recent events:", idx);
-                    for line in &recent { eprintln!("  {}", line); }
+                    eprintln!("Rowan builder panic at event index {}", idx);
                     std::panic::resume_unwind(res.err().unwrap());
                 }
             }
-            assert_eq!(sim_depth, 0, "Simulation depth not zero at end: {}", sim_depth);
 
             assert!(tokens.next().is_none());
 
@@ -1174,12 +1172,7 @@ pub fn parse(text: &str) -> Parse {
             match res_finish {
                 Ok(gn) => Parse { green_node: gn, errors: self.errors },
                 Err(p) => {
-                    eprintln!("Rowan builder.finish() panic. Open/Close events (last 100):");
-                    for (idx, typ) in open_close_log.iter().rev().take(100).rev() {
-                        eprintln!("  {}: {}", idx, typ);
-                    }
-                    eprintln!("Recent events before finish:");
-                    for line in &recent { eprintln!("  {}", line); }
+                    eprintln!("Rowan builder.finish() panic");
                     std::panic::resume_unwind(p)
                 }
             }
