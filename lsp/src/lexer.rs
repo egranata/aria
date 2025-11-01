@@ -215,7 +215,6 @@ pub enum SyntaxKind {
     ExprIndex,
     ExprTernary,
     ExprAssign,
-    ExprList,
     ExprType,
     ExprNonNull,
     ExprNullish,
@@ -236,7 +235,7 @@ pub enum SyntaxKind {
     IdentList,
     ImportPath,
     ArgList,
-    Arg,
+    ListLiteral,
     Eof
 }
 

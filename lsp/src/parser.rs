@@ -158,20 +158,15 @@ pub fn parse(text: &str) -> Parse {
             self.expect(LeftBrace);
             
             while !self.at(RightBrace) && !self.eof() {
-                self.struct_entry();
+                self.entry(StructEntry);
             }
             
             self.expect(RightBrace);
             self.close(m, kind);
         }
 
-        fn struct_entry(&mut self) {
-            let m = self.open();
-            self.entry(StructEntry);
-            self.close(m, StructEntry);
-        }
-
         fn entry(&mut self, kind: SyntaxKind) {
+            let m = self.open();
             match self.nth(0) {
                 FuncKwd => self.decl_func(),
                 OperatorKwd | ReverseKwd => self.decl_operator(),
@@ -187,6 +182,7 @@ pub fn parse(text: &str) -> Parse {
                 }
                 _ => self.advance_with_error(kind)
             }
+            self.close(m, StructEntry);
         }
 
         fn decl_enum(&mut self) {
@@ -299,9 +295,7 @@ pub fn parse(text: &str) -> Parse {
                 self.param_list(LeftParen, RightParen);
             }
             
-            if self.at(LeftBrace) {
-                self.block();
-            }
+            self.func_body();
             
             self.close(m, Operator);
         }
@@ -318,18 +312,19 @@ pub fn parse(text: &str) -> Parse {
                 self.param_list(LeftParen, RightParen);
             }
             
-            if self.at(LeftBrace) { 
+            self.func_body();
+          
+            self.close(m, Func);
+        }
+
+        fn func_body(&mut self) {
+            if self.at(LeftBrace) {
                 self.block();
             } else if self.at(Assign) {
                 self.expect(Assign);
                 let _ = self.expr();
-                // allow optional semicolon after expression-bodied funcs
-                if self.at(Semicolon) {
-                    self.expect(Semicolon);
-                }
+                self.expect(Semicolon);
             }
-          
-            self.close(m, Func);
         }
 
         fn parse_access_modifier(&mut self) {
@@ -428,6 +423,7 @@ pub fn parse(text: &str) -> Parse {
                 TryKwd => self.try_catch(),
                 StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                 EnumKwd => self.decl_enum(),
+                FuncKwd => self.decl_func(),
                 _ => self.stmt_expr(),
             }
         }
@@ -723,11 +719,7 @@ pub fn parse(text: &str) -> Parse {
             }
 
             while self.at(LeftBracket) {
-                
-                self.expect(LeftBracket);
-                let _ = self.expr();
-                self.expect(RightBracket);
-
+                self.expr_list(LeftBracket, RightBracket);
                 self.expect(Assign);
 
                 let _ = self.expr();
@@ -838,9 +830,7 @@ pub fn parse(text: &str) -> Parse {
                         }
                         LeftBracket => {
                             let m = self.open_before(lhs);
-                            self.expect(LeftBracket);
-                            let _ = self.expr_bp(0);
-                            self.expect(RightBracket);
+                            self.expr_list(LeftBracket, RightBracket);
                             self.close(m, ExprIndex)
                         }
                         Dot => {
@@ -953,15 +943,8 @@ pub fn parse(text: &str) -> Parse {
                 }
                 
                 LeftBracket => {
-                    self.expect(LeftBracket);
-                    if !self.at(RightBracket) {
-                        self.expr_list();
-                    }
-
-                    self.expect(RightBracket);
-                    self.init_block();
-
-                    self.close(m, ExprList)
+                    self.expr_list(LeftBracket, RightBracket);
+                    self.close(m, ListLiteral)
                 }
                 
                 op if prefix_binding_power(op).is_some() => {
@@ -980,38 +963,30 @@ pub fn parse(text: &str) -> Parse {
             }
         }
 
-        fn expr_list(&mut self) {
+        fn expr_list(&mut self, left_delim: SyntaxKind, right_delim: SyntaxKind) {
+            assert!(self.at(left_delim));            
+            self.expect(left_delim);
+
+            if self.at(right_delim) {
+                self.expect(right_delim);
+                return;
+            }
+
             let _ = self.expr_bp(0);
             while self.at(Comma) {
                 self.expect(Comma);
-                if !self.at(RightBracket) {
-                    let _ = self.expr_bp(0);
+                if !self.at(right_delim) {
+                    self.expr();
                 }
             }
+            self.expect(right_delim);
         }
 
         fn arg_list(&mut self) {
             assert!(self.at(LeftParen));
             let m = self.open();
-            
-            self.expect(LeftParen);
-            while !self.at(RightParen) && !self.eof() { 
-                self.arg();
-            }
-            self.expect(RightParen);
-            
+            self.expr_list(LeftParen, RightParen);
             self.close(m, ArgList);
-        }
-            
-        fn arg(&mut self) {
-            let m = self.open();
-            
-            let _ = self.expr();
-            if !self.at(RightParen) { 
-                self.expect(Comma);
-            }
-            
-            self.close(m, Arg);
         }
         
         fn open(&mut self) -> MarkOpened { 
@@ -1444,7 +1419,7 @@ mod tests {
             "        ValKwd@11..14 \"val\"",
             "        Identifier@14..15 \"x\"",
             "        Assign@15..16 \"=\"",
-            "        ExprList@16..18",
+            "        ListLiteral@16..18",
             "          LeftBracket@16..17 \"[\"",
             "          RightBracket@17..18 \"]\"",
             "        Semicolon@18..19 \";\"",
@@ -1468,7 +1443,7 @@ mod tests {
             "        ValKwd@11..14 \"val\"",
             "        Identifier@14..15 \"x\"",
             "        Assign@15..16 \"=\"",
-            "        ExprList@16..23",
+            "        ListLiteral@16..23",
             "          LeftBracket@16..17 \"[\"",
             "          ExprLiteral@17..18",
             "            DecIntLiteral@17..18 \"1\"",
@@ -1500,9 +1475,9 @@ mod tests {
             "        ValKwd@11..14 \"val\"",
             "        Identifier@14..15 \"x\"",
             "        Assign@15..16 \"=\"",
-            "        ExprList@16..27",
+            "        ListLiteral@16..27",
             "          LeftBracket@16..17 \"[\"",
-            "          ExprList@17..22",
+            "          ListLiteral@17..22",
             "            LeftBracket@17..18 \"[\"",
             "            ExprLiteral@18..19",
             "              DecIntLiteral@18..19 \"1\"",
@@ -1511,7 +1486,7 @@ mod tests {
             "              DecIntLiteral@20..21 \"2\"",
             "            RightBracket@21..22 \"]\"",
             "          Comma@22..23 \",\"",
-            "          ExprList@23..26",
+            "          ListLiteral@23..26",
             "            LeftBracket@23..24 \"[\"",
             "            ExprLiteral@24..25",
             "              DecIntLiteral@24..25 \"3\"",
@@ -1622,13 +1597,11 @@ mod tests {
             "            Identifier@16..19 \"foo\"",
             "          ArgList@19..24",
             "            LeftParen@19..20 \"(\"",
-            "            Arg@20..22",
-            "              ExprLiteral@20..21",
-            "                DecIntLiteral@20..21 \"1\"",
-            "              Comma@21..22 \",\"",
-            "            Arg@22..23",
-            "              ExprLiteral@22..23",
-            "                DecIntLiteral@22..23 \"2\"",
+            "            ExprLiteral@20..21",
+            "              DecIntLiteral@20..21 \"1\"",
+            "            Comma@21..22 \",\"",
+            "            ExprLiteral@22..23",
+            "              DecIntLiteral@22..23 \"2\"",
             "            RightParen@23..24 \")\"",
             "        Semicolon@24..25 \";\"",
             "      RightBrace@25..26 \"}\""
@@ -1708,6 +1681,9 @@ mod tests {
                         let line = line_index.line_col(error.pos.as_ref().unwrap().start.try_into().unwrap());
                         println!("  {:?} at {:?}", error, line);
                     }
+
+                    println!("\n\ntree:\n\n{}", tree_to_string(parse_result.syntax()));
+
                     panic!("Parse errors found in {}", filename);
                 }
             }
