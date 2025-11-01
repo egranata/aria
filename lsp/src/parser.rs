@@ -1,5 +1,5 @@
 use std::cell::Cell;
-use crate::{SyntaxKind, lexer};
+use crate::lexer::{self, SyntaxKind};
 use rowan::{GreenNode, GreenNodeBuilder};
 use SyntaxKind::*;
 use core::ops::Range;
@@ -38,6 +38,15 @@ impl Parse {
     pub fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green_node.clone())
     }
+
+    pub fn errors(&self) -> &Vec<ParseError> {
+        &self.errors
+    }
+}
+
+impl ParseError {
+    pub fn kind(&self) -> SyntaxKind { self.kind }
+    pub fn pos(&self) -> Option<Range<usize>> { self.pos.clone() }
 }
 
 pub fn parse(text: &str) -> Parse {

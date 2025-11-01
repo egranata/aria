@@ -114,6 +114,32 @@ impl DocumentState {
             None
         }
     }
+
+    pub fn parse_error_ranges(&self) -> Vec<(TextRange, String)> {
+        use crate::lexer::SyntaxKind as K;
+        let mut out: Vec<(TextRange, String)> = Vec::new();
+
+        for node in self.parse.syntax().descendants() {
+            if node.kind() == K::ErrorTree {
+                let range = node.text_range();
+                out.push((range, "syntax error".to_string()));
+            }
+        }
+
+        for err in self.parse.errors() {
+            let msg = format!("expected {:?}", err.kind());
+            if let Some(pos) = err.pos() {
+                let start = TextSize::from(pos.start as u32);
+                let end = TextSize::from(pos.end as u32);
+                out.push((TextRange::new(start, end), msg));
+            } else {
+                let eof = self.text_size;
+                out.push((TextRange::new(eof, eof), msg));
+            }
+        }
+
+        out
+    }
 }
 
 
@@ -171,7 +197,7 @@ fn build_index(root: &SyntaxNode) -> HashMap<String, Vec<DefEntry>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::SyntaxKind;
+    use crate::lexer::SyntaxKind;
 
     use super::*;
 
@@ -245,5 +271,23 @@ mod tests {
         let func_tok = doc.token_at_line_col(1, 0).expect("token func");
         assert_eq!(func_tok.text(), "func");
         assert_eq!(func_tok.kind(), SyntaxKind::FuncKwd);
+    }
+
+    #[test]
+    fn parse_errors_include_expected_tokens() {
+        let text = "val x".to_string();
+        let doc = DocumentState::new(text);
+        let errs = doc.parse_error_ranges();
+        assert!(!errs.is_empty(), "should report at least one parse error");
+        assert!(errs.iter().any(|(_, m)| m.contains("Assign") || m.contains("Semicolon")),
+            "message should mention expected token like Assign or Semicolon: {:?}", errs);
+    }
+
+    #[test]
+    fn error_tree_nodes_are_reported() {
+        let text = "func f() { val x = ); }".to_string();
+        let doc = DocumentState::new(text);
+        let errs = doc.parse_error_ranges();
+        assert!(errs.iter().any(|(_, m)| m == "syntax error"), "should include syntax error from ErrorTree");
     }
 }

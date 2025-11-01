@@ -31,6 +31,7 @@ impl Logger {
 
 struct Backend {
     logger: Logger,
+    client: Client,
     documents: parking_lot::Mutex<HashMap<Url, DocumentState>>,
 }
 
@@ -82,17 +83,40 @@ impl LanguageServer for Backend {
        
         self.info(format!("opened file {uri}"));
        
-        let mut docs = self.documents.lock();
-        docs.insert(uri, DocumentState::new(text));
+        let (diags, uri_clone) = {
+            let mut docs = self.documents.lock();
+            let doc = DocumentState::new(text);
+            let diags = {
+                let mut v = Vec::new();
+                for (range, msg) in doc.parse_error_ranges() {
+                    v.push(Diagnostic {
+                        range: to_lsp_range(&doc, range),
+                        severity: Some(DiagnosticSeverity::ERROR),
+                        code: None,
+                        code_description: None,
+                        source: Some("aria-parser".into()),
+                        message: msg,
+                        related_information: None,
+                        tags: None,
+                        data: None,
+                    });
+                }
+                v
+            };
+            docs.insert(uri.clone(), doc);
+            (diags, uri.clone())
+        };
+        let _ = self.client.publish_diagnostics(uri_clone, diags, None).await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         let uri = params.text_document.uri;
-        let mut docs = self.documents.lock();
+        let (diags_opt, uri_clone) = {
+            let mut docs = self.documents.lock();
 
-        if let Some(doc) = docs.get_mut(&uri) {
-            let mut text = doc.text();
-            let mut index = LineIndex::new(&text);
+            if let Some(doc) = docs.get_mut(&uri) {
+                let mut text = doc.text();
+                let mut index = LineIndex::new(&text);
 
             for change in params.content_changes {
                 if let Some(range) = change.range {
@@ -118,7 +142,31 @@ impl LanguageServer for Backend {
                     index = LineIndex::new(&text);
                 }
             }
-            doc.update_text(text);
+                doc.update_text(text);
+                let diags = {
+                    let mut v = Vec::new();
+                    for (range, msg) in doc.parse_error_ranges() {
+                        v.push(Diagnostic {
+                            range: to_lsp_range(&doc, range),
+                            severity: Some(DiagnosticSeverity::ERROR),
+                            code: None,
+                            code_description: None,
+                            source: Some("aria-parser".into()),
+                            message: msg,
+                            related_information: None,
+                            tags: None,
+                            data: None,
+                        });
+                    }
+                    v
+                };
+                (Some(diags), Some(uri.clone()))
+            } else {
+                (None, None)
+            }
+        };
+        if let (Some(diags), Some(uri2)) = (diags_opt, uri_clone) {
+            let _ = self.client.publish_diagnostics(uri2, diags, None).await;
         }
     }
 
@@ -159,6 +207,7 @@ async fn main() {
         let logger = Logger::new(client.clone());
         Backend {
             logger,
+            client: client.clone(),
             documents: parking_lot::Mutex::new(HashMap::new()),
         }
     })
