@@ -861,6 +861,18 @@ pub fn parse(text: &str) -> Parse {
                     continue;
                 }
 
+                if op == Question && self.nth(1) == Question {
+                    let l_bp = 25u8;
+                    if l_bp < min_bp {
+                        break;
+                    }
+                    let m = self.open_before(lhs);
+                    self.expect(Question);
+                    self.expect(Question);
+                    lhs = self.close(m, ExprNullish);
+                    continue;
+                }
+
                 if op == Question {
                     let (l_bp, r_bp) = (1, 2);
                     if l_bp < min_bp {
