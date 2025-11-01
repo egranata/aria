@@ -33,9 +33,4 @@ impl OpaqueValue {
             imp: OpaqueValueImpl { val: Rc::new(x) },
         }
     }
-
-    pub fn identity(&self) -> usize {
-        let ptr = Rc::as_ptr(&self.imp.val);
-        ptr as *const () as usize
-    }
 }

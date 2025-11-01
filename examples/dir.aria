@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import Instant from aria.date.instant;
+import Path from aria.io.path;
 
 func pad(n) {
     if n < 10 {
@@ -15,15 +16,10 @@ func run_over_dir(path: Path) {
     val total_size = 0;
 
     for entry in path.entries() {
-        val mod_time = entry.creation_ms_since_epoch();
-        match mod_time {
-            isa Maybe and case None => {
-                mod_time = 0;
-            }
-        }
-        val mod_time = Instant.from_unix_timestamp(mod_time);
+        val mod_time = entry
+                         .created()
+                         .unwrap_or(Instant.new_with_local_timestamp(0));
 
-        val month = pad(mod_time.month);
         val month = pad(mod_time.month);
         val day = pad(mod_time.day);
         val year = mod_time.year;
@@ -50,13 +46,16 @@ func run_over_dir(path: Path) {
             println("{0}  {1}       <DIR>          {2}".format(
                     date_str,
                     time_str,
-                    entry.get_filename()
+                    entry.get_filename().unwrap_or("")
             ));
         } else {
             val size = entry.size();
             match size {
-                isa Maybe and case None => {
+                case Err(_) => {
                     size = 0;
+                }
+                case Ok(bytes) => {
+                    size = bytes;
                 }
             }
             total_size += size;
@@ -65,12 +64,11 @@ func run_over_dir(path: Path) {
             val size_str = "{0}".format(size);
             val padding = " " * (14 - size_str.len());
 
-            println("{0}  {1} {2}{3} {4}".format(
+            println("{0}  {1}       {2}          {3}".format(
                 date_str,
                 time_str,
-                padding,
                 size_str,
-                entry.get_filename()
+                entry.get_filename().unwrap_or("")
             ));
         }
     }

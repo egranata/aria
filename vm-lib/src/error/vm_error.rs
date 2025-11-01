@@ -58,6 +58,9 @@ pub enum VmErrorReason {
     #[error("VM execution is not a valid state")]
     UnexpectedVmState,
 
+    #[error("The main function must have 0, 1 or variable arguments")]
+    InvalidMainSignature,
+
     #[error("uplevel {0} not available")]
     UplevelOutOfBounds(usize),
 
@@ -80,10 +83,10 @@ impl VmError {
     pub fn prettyprint(&self, module: Option<RuntimeModule>) -> String {
         let mut poa = PrintoutAccumulator::default();
         poa = poa << "vm error: " << self.reason.to_string();
-        if let Some(opcode) = &self.opcode {
-            if let Some(m) = module {
-                poa = opcode_prettyprint(opcode, &m, poa << " opcode: ");
-            }
+        if let Some(opcode) = &self.opcode
+            && let Some(m) = module
+        {
+            poa = opcode_prettyprint(opcode, &m, poa << " opcode: ");
         }
         if let Some(loc) = &self.loc {
             poa = poa << " at " << loc.to_string();

@@ -10,3 +10,12 @@ members = [
     "vm-lib",
 ]
 resolver = "2"
+
+[profile.dist]
+inherits = "release"
+codegen-units = 1
+lto = "fat"
+
+[profile.release]
+lto = "thin"
+

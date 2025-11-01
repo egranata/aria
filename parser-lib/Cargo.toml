@@ -1,6 +1,6 @@
 [package]
 name = "parser-lib"
-version = "0.9.0"
+version = "0.9.20251013"
 edition = "2024"
 
 [lib]
@@ -8,5 +8,5 @@ name = "aria_parser"
 path = "src/lib.rs"
 
 [dependencies]
-pest = "2.7.14"
-pest_derive = "2.7.14"
+pest = "2.8.3"
+pest_derive = "2.8.3"

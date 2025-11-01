@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    func inner(a,b,c) {
+        return a + b * c;
+    }
+
+    assert inner(3,4,5) == 23;
+
+    func inner(a,b) {
+        return a * b;
+    }
+
+    assert inner(3,4) == 12;
+
+    func inner() {
+        return 42;
+    }
+
+    assert inner() == 42;
+}

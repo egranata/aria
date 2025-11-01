@@ -162,7 +162,7 @@ impl From<&InputLocation> for Location {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntLiteral {
     pub loc: SourcePointer,
-    pub val: i64,
+    pub val: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -266,7 +266,7 @@ pub struct PostfixTermAttribute {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostfixTermIndex {
     pub loc: SourcePointer,
-    pub index: Expression,
+    pub index: ExpressionList,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -283,51 +283,68 @@ pub struct PostfixTermEnumCase {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermFieldSet {
+pub struct PostfixTermFieldWrite {
     pub loc: SourcePointer,
     pub id: Identifier,
-    pub val: Expression,
+    pub val: Option<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermFieldSetList {
+pub struct PostfixTermIndexWrite {
     pub loc: SourcePointer,
-    pub terms: Vec<PostfixTermFieldSet>,
+    pub idx: ExpressionList,
+    pub val: Expression,
+}
+
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PostfixTermWrite {
+    PostfixTermFieldWrite(PostfixTermFieldWrite),
+    PostfixTermIndexWrite(PostfixTermIndexWrite),
+}
+
+impl PostfixTermWrite {
+    pub fn loc(&self) -> &SourcePointer {
+        match self {
+            Self::PostfixTermFieldWrite(fw) => &fw.loc,
+            Self::PostfixTermIndexWrite(iw) => &iw.loc,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PostfixTermWriteList {
+    pub loc: SourcePointer,
+    pub terms: Vec<PostfixTermWrite>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostfixTermObjectWrite {
     pub loc: SourcePointer,
-    pub terms: PostfixTermFieldSetList,
+    pub terms: PostfixTermWriteList,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermIndexSet {
-    pub loc: SourcePointer,
-    pub idx: Expression,
-    pub val: Expression,
+pub enum TryProtocolMode {
+    Return,
+    Assert,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermFieldIndexList {
+pub struct PostfixTermTryProtocol {
     pub loc: SourcePointer,
-    pub terms: Vec<PostfixTermIndexSet>,
+    pub mode: TryProtocolMode,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PostfixTermContainerWrite {
-    pub loc: SourcePointer,
-    pub terms: PostfixTermFieldIndexList,
-}
-
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PostfixTerm {
     PostfixTermAttribute(PostfixTermAttribute),
     PostfixTermIndex(PostfixTermIndex),
     PostfixTermCall(PostfixTermCall),
     PostfixTermObjectWrite(PostfixTermObjectWrite),
-    PostfixTermContainerWrite(PostfixTermContainerWrite),
     PostfixTermEnumCase(PostfixTermEnumCase),
+    PostfixTermTryProtocol(PostfixTermTryProtocol),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -580,16 +597,46 @@ impl From<&CompOperation> for LogOperation {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::large_enum_variant)]
-pub enum LambaBody {
+pub enum LambdaBody {
     Expression(Expression),
     CodeBlock(CodeBlock),
+}
+
+impl From<&LambdaBody> for FunctionBody {
+    fn from(value: &LambdaBody) -> Self {
+        match value {
+            LambdaBody::Expression(e) => {
+                let ret_stmt = ReturnStatement {
+                    loc: e.loc().clone(),
+                    val: Some(e.clone()),
+                };
+                Self {
+                    code: CodeBlock {
+                        loc: ret_stmt.loc.clone(),
+                        entries: vec![Statement::ReturnStatement(ret_stmt)],
+                    },
+                }
+            }
+            LambdaBody::CodeBlock(b) => Self { code: b.clone() },
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LambdaFunction {
     pub loc: SourcePointer,
     pub args: ArgumentList,
-    pub body: Box<LambaBody>,
+    pub body: Box<LambdaBody>,
+}
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FunctionBody {
+    pub code: CodeBlock,
+}
+
+impl FunctionBody {
+    pub fn loc(&self) -> &SourcePointer {
+        &self.code.loc
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -647,6 +694,97 @@ impl Expression {
             Expression::LogOperation(c) => &c.loc,
             Expression::LambdaFunction(f) => &f.loc,
             Expression::TernaryExpression(t) => &t.loc,
+        }
+    }
+}
+
+impl Expression {
+    pub fn call_function_passing_me(&self, func_name: &str) -> Expression {
+        let loc = self.loc().clone();
+
+        let func_ident = Identifier {
+            loc: loc.clone(),
+            value: func_name.to_owned(),
+        };
+
+        let base = Primary::Identifier(func_ident);
+
+        let args = ExpressionList {
+            loc: loc.clone(),
+            expressions: vec![self.clone()],
+        };
+
+        let call = PostfixTerm::PostfixTermCall(PostfixTermCall {
+            loc: loc.clone(),
+            args,
+        });
+
+        let pfe = PostfixExpression {
+            loc,
+            base,
+            terms: vec![call],
+        };
+
+        Expression::from(&pfe)
+    }
+
+    pub fn is_function_call(&self) -> (bool, Option<&str>) {
+        fn peel(log: &LogOperation) -> Option<&PostfixExpression> {
+            if !log.right.is_empty() {
+                return None;
+            }
+            let comp: &CompOperation = &log.left;
+            if comp.right.is_some() {
+                return None;
+            }
+            let rel: &RelOperation = &comp.left;
+            if rel.right.is_some() {
+                return None;
+            }
+            let shift: &ShiftOperation = &rel.left;
+            if shift.right.is_some() {
+                return None;
+            }
+            let add: &AddOperation = &shift.left;
+            if !add.right.is_empty() {
+                return None;
+            }
+            let mul: &MulOperation = &add.left;
+            if !mul.right.is_empty() {
+                return None;
+            }
+            let UnaryOperation { postfix, .. } = &mul.left;
+            Some(&postfix.expr)
+        }
+
+        fn resolve_name(pfe: &PostfixExpression) -> Option<&str> {
+            let last = pfe.terms.last()?;
+            if !matches!(last, PostfixTerm::PostfixTermCall(_)) {
+                return None;
+            }
+            if pfe.terms.len() == 1
+                && let crate::ast::Primary::Identifier(id) = &pfe.base
+            {
+                return Some(&id.value);
+            }
+            if pfe.terms.len() >= 2
+                && let PostfixTerm::PostfixTermAttribute(attr) = &pfe.terms[pfe.terms.len() - 2]
+            {
+                return Some(&attr.id.value);
+            }
+            None
+        }
+
+        match self {
+            Expression::LogOperation(log) => {
+                if let Some(pfe) = peel(log)
+                    && matches!(pfe.terms.last(), Some(PostfixTerm::PostfixTermCall(_)))
+                {
+                    return (true, resolve_name(pfe));
+                }
+                (false, None)
+            }
+            _ => (false, None),
         }
     }
 }
@@ -741,6 +879,16 @@ pub struct MatchPatternRel {
     pub expr: Expression,
 }
 
+impl MatchPatternComp {
+    pub fn isa(loc: SourcePointer, expr: Expression) -> Self {
+        Self {
+            loc,
+            op: CompSymbol::Isa,
+            expr,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MatchPatternEnumCase {
     pub loc: SourcePointer,
@@ -770,6 +918,41 @@ pub struct MatchRule {
     pub loc: SourcePointer,
     pub patterns: Vec<MatchPattern>,
     pub then: CodeBlock,
+}
+
+impl MatchRule {
+    pub fn enum_and_case(
+        loc: SourcePointer,
+        enumm: &str,
+        case: &str,
+        payload: Option<Identifier>,
+        then: CodeBlock,
+    ) -> Self {
+        let enumm = Identifier {
+            loc: loc.clone(),
+            value: enumm.to_owned(),
+        };
+        let case = Identifier {
+            loc: loc.clone(),
+            value: case.to_owned(),
+        };
+        let payload = payload.map(|p| DeclarationId::from(&p));
+        let case_pattern = MatchPattern::MatchPatternEnumCase(MatchPatternEnumCase {
+            loc: enumm.loc.clone(),
+            case,
+            payload,
+        });
+        let isa_pattern = MatchPattern::MatchPatternComp(MatchPatternComp {
+            loc: loc.clone(),
+            op: CompSymbol::Isa,
+            expr: From::from(&enumm),
+        });
+        Self {
+            loc,
+            patterns: vec![isa_pattern, case_pattern],
+            then,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -871,6 +1054,7 @@ pub enum Statement {
     ContinueStatement(ContinueStatement),
     StructDecl(StructDecl),
     EnumDecl(EnumDecl),
+    FunctionDecl(FunctionDecl),
 }
 
 impl Statement {
@@ -894,6 +1078,7 @@ impl Statement {
             Self::ContinueStatement(a) => &a.loc,
             Self::StructDecl(s) => &s.loc,
             Self::EnumDecl(e) => &e.loc,
+            Self::FunctionDecl(f) => &f.loc,
         }
     }
 }
@@ -914,14 +1099,46 @@ impl From<&Statement> for CodeBlock {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArgumentDecl {
+    pub loc: SourcePointer,
+    pub id: DeclarationId,
+    pub deft: Option<Expression>,
+}
+
+impl ArgumentDecl {
+    pub fn name(&self) -> &String {
+        &self.id.name.value
+    }
+
+    pub fn type_info(&self) -> Option<&Expression> {
+        self.id.ty.as_ref()
+    }
+}
+
+impl From<&DeclarationId> for ArgumentDecl {
+    fn from(value: &DeclarationId) -> Self {
+        Self {
+            loc: value.loc.clone(),
+            id: value.clone(),
+            deft: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArgumentList {
     pub loc: SourcePointer,
-    pub names: Vec<DeclarationId>,
+    pub names: Vec<ArgumentDecl>,
+    pub vararg: bool,
 }
 
 impl ArgumentList {
     pub fn empty(loc: SourcePointer) -> Self {
-        Self { loc, names: vec![] }
+        Self {
+            loc,
+            names: vec![],
+            vararg: false,
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -938,8 +1155,7 @@ pub struct FunctionDecl {
     pub loc: SourcePointer,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub vararg: bool,
-    pub body: CodeBlock,
+    pub body: FunctionBody,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -954,8 +1170,7 @@ pub struct MethodDecl {
     pub access: MethodAccess,
     pub name: Identifier,
     pub args: ArgumentList,
-    pub vararg: bool,
-    pub body: CodeBlock,
+    pub body: FunctionBody,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -987,8 +1202,7 @@ pub struct OperatorDecl {
     pub reverse: bool,
     pub symbol: OperatorSymbol,
     pub args: ArgumentList,
-    pub vararg: bool,
-    pub body: CodeBlock,
+    pub body: FunctionBody,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1028,37 +1242,10 @@ pub struct StructDecl {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum MixinEntry {
-    Method(Box<MethodDecl>),
-    Operator(Box<OperatorDecl>),
-    Include(Box<MixinIncludeDecl>),
-}
-
-impl MixinEntry {
-    pub fn loc(&self) -> &SourcePointer {
-        match self {
-            Self::Method(m) => &m.loc,
-            Self::Operator(o) => &o.loc,
-            Self::Include(i) => &i.loc,
-        }
-    }
-}
-
-impl From<&MixinEntry> for StructEntry {
-    fn from(value: &MixinEntry) -> Self {
-        match value {
-            MixinEntry::Method(m) => StructEntry::Method(m.clone()),
-            MixinEntry::Operator(o) => StructEntry::Operator(o.clone()),
-            MixinEntry::Include(i) => StructEntry::MixinInclude(i.clone()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MixinDecl {
     pub loc: SourcePointer,
     pub name: Identifier,
-    pub body: Vec<MixinEntry>,
+    pub body: Vec<StructEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1174,7 +1361,9 @@ impl ModuleFlags {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::large_enum_variant)]
 pub enum TopLevelEntry {
+    ExpressionStatement(ExpressionStatement),
     ValDeclStatement(ValDeclStatement),
+    WriteOpEqStatement(WriteOpEqStatement),
     AssignStatement(AssignStatement),
     FunctionDecl(FunctionDecl),
     StructDecl(StructDecl),
@@ -1184,6 +1373,13 @@ pub enum TopLevelEntry {
     AssertStatement(AssertStatement),
     ImportStatement(ImportStatement),
     ImportFromStatement(ImportFromStatement),
+    IfStatement(IfStatement),
+    MatchStatement(MatchStatement),
+    WhileStatement(WhileStatement),
+    ForStatement(ForStatement),
+    CodeBlock(CodeBlock),
+    GuardBlock(GuardBlock),
+    TryBlock(TryBlock),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

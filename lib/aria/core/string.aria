@@ -21,11 +21,6 @@ func is_digit(s: String) {
     }
 }
 
-# these functions are never called, their sole purpose is to provide
-# type information for prettyprint with one or two arguments
-func _aria__prettyprint_unary(x) {assert(false);}
-func _aria__prettyprint_binary(x,y) {assert(false);}
-
 extension String {
     struct EncodingError {
         type func new(msg: String) {
@@ -67,20 +62,25 @@ extension String {
     }
 
     func format(...) {
+        return this._format_impl(varargs);
+    }
+
+    func _format_impl(varargs) {
         val ret = "";
         val chars = this.chars();
+        val len = this.len();
         val idx = 0;
 
-        while idx < chars.len() {
+        while idx < len {
             val c = chars[idx];
 
-            if c == "{" && idx + 1 < chars.len() && chars[idx + 1] == "{" {
+            if c == "{" && idx + 1 < len && chars[idx + 1] == "{" {
                 ret += "{";
                 idx += 2;
                 continue;
             }
 
-            if c == "}" && idx + 1 < chars.len() && chars[idx + 1] == "}" {
+            if c == "}" && idx + 1 < len && chars[idx + 1] == "}" {
                 ret += "}";
                 idx += 2;
                 continue;
@@ -91,31 +91,38 @@ extension String {
                 val num_str = "";
                 val style_str = "";
                 val has_style = false;
+                val found_closing_brace = false;
 
-                while idx < chars.len() {
+                while idx < len {
                     val c = chars[idx];
 
                     if c == "}" {
                         idx += 1;
+                        found_closing_brace = true;
                         break;
                     } elsif c == ":" && !has_style {
                         has_style = true;
                         idx += 1;
                     } elsif !has_style {
-                        if is_digit(c) {
-                            num_str += c;
-                            idx += 1;
-                        } else {
-                            break;
-                        }
+                        num_str += c;
+                        idx += 1;
                     } else {
                         style_str += c;
                         idx += 1;
                     }
                 }
 
+                if !found_closing_brace {
+                    if has_style {
+                        ret += "{" + num_str + ":" + style_str;
+                    } else {
+                        ret += "{" + num_str;
+                    }
+                    continue;
+                }
+
                 match Int.parse(num_str) {
-                    case Some(i) => {
+                    case Ok(i) => {
                         if i >= varargs.len() {
                             if has_style {
                                 ret += "{" + num_str + ":" + style_str + "}";
@@ -124,18 +131,23 @@ extension String {
                             }
                         } else {
                             val arg = varargs[i];
-                            val need_default = true;
                             if hasattr(arg, "prettyprint") {
-                                if arg.prettyprint isa typeof(_aria__prettyprint_binary) {
+                                val pp_arity = arity(arg.prettyprint);
+                                val accepts_1 = pp_arity.can_call_with_argc(1);
+                                val accepts_0 = pp_arity.can_call_with_argc(0);
+                                # Decision logic for calling prettyprint:
+                                # - If prettyprint(x) is a valid signature and no style string is provided,
+                                #   we would prefer to call prettyprint() with no arguments.
+                                # - However, if calling with no arguments would fail, use the 1-argument version
+                                #   with an empty style string if that's the only allowed call.
+                                if (has_style && accepts_1) || (!has_style && accepts_1 && !accepts_0) {
                                     ret += arg.prettyprint(style_str);
-                                    need_default = false;
-                                } elsif arg.prettyprint isa typeof(_aria__prettyprint_unary) {
+                                } elsif accepts_0 {
                                     ret += arg.prettyprint();
-                                    need_default = false;
+                                } else {
+                                    ret += prettyprint(arg);
                                 }
-                            }
-
-                            if need_default {
+                            } else {
                                 ret += prettyprint(arg);
                             }
                         }
@@ -178,5 +190,26 @@ extension String {
         }
 
         return ret;
+    }
+
+    func join(iter) {
+        val ret = "";
+        val first = true;
+        for item in iter {
+            val item = prettyprint(item);
+            if !first {
+                ret += this;
+            }
+            ret += item;
+            first = false;
+        }
+        return ret;
+    }
+}
+
+extension String {
+    func printf(...) {
+        val s = this._format_impl(varargs);
+        print(s);
     }
 }

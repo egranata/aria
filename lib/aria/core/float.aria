@@ -22,6 +22,8 @@ extension Float {
     type val pi = 3.14159265358979323846f;
     type val e =  2.71828182845904523536f;
     type val π = Float.pi;
+    type val phi = 1.618033988749895f;
+    type val φ = Float.phi;
 
     func abs() {
         return this >= 0 ? this : -this;
@@ -67,7 +69,7 @@ extension Float {
 
     type func parse(s: String) {
         if s.len() == 0 || s == "-" || s == "." {
-            return Maybe::None;
+            return Result::Err("invalid float format");
         }
         
         val ret = 0.0f;
@@ -87,13 +89,13 @@ extension Float {
             val chr = s[i];
             if chr == "." {
                 if decimal_found {
-                    return Maybe::None;
+                    return Result::Err("duplicate decimal point");
                 }
                 decimal_found = true;
             } else {
                 val digit = char_to_int(chr);
                 if digit == Maybe::None {
-                    return Maybe::None;
+                    return Result::Err("invalid float digit: " + chr);
                 }
                 if decimal_found {
                     ret = ret + digit * decimal_factor;
@@ -105,6 +107,6 @@ extension Float {
             i += 1;
         }
         
-        return Maybe::Some(sign * ret);
+        return Result::Ok(sign * ret);
     }
 }

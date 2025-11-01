@@ -99,6 +99,8 @@ This module provides extensions to the built-in `Float` type.
     **Fields:**
     *   `pi` (Float): The mathematical constant Pi (π).
     *   `e` (Float): The mathematical constant e (Euler's number).
+    *   `phi` (Float): The mathematical constant Phi (φ), the golden ratio.
+    *   `φ` (Float): Alias for `phi`.
     *   `π` (Float): Alias for `pi`.
     *   `inf` (Float): Represents positive infinity.
     *   `nan` (Float): Represents Not-a-Number.
@@ -131,8 +133,8 @@ This module provides extensions to the built-in `Int` type.
     *   `hash()`: Returns the integer itself as its hash value.
     *   `abs()`: Returns the absolute value of the integer.
     *   `float()`: Converts the integer to a `Float`.
-    *   `type func parse(s: String)`: Attempts to parse a `String` into an `Int`. Returns `Maybe::Some(Int)` on success, `Maybe::None` on failure.
-
+    *   `type func parse(s: String)`: Attempts to parse a `String` into an `Int`. It attempts to automatically detect the base used (10 by default, with support for `0x`, `0b` and `0o` prefixes). Returns `Maybe::Some(Int)` on success, `Maybe::None` on failure.
+    *   `type func parse_radix(s: String, base: Int)`: Attempts to parse a `String` into an `Int` using the specified `base`. Returns `Maybe::Some(Int)` on success, `Maybe::None` on failure. Supports bases from 2 to 36, only supports a sequence of digits in the given base (no prefixes).
 ---
 
 ### `aria.core.list`
@@ -151,7 +153,7 @@ This module provides extensions to the built-in `List` type.
     *   `repeat(n: Int)`: Returns a new list containing `this` list repeated `n` times.
     *   `op_mul(rhs: Int)` (Operator `*`): Returns a new list containing `this` list repeated `rhs` times.
     *   `op_rmul(lhs: Int)` (Operator `*`): Handles multiplication when the `List` is on the right-hand side of the `*` operator.
-    *   `join()`: Returns a string representation of the list elements joined by ", ".
+    *   `join(sep=", ")`: Returns a string representation of the list elements joined by `sep` (or ", " if sep is omitted).
     *   `contains(x)`: Returns `true` if the list contains element `x`, `false` otherwise.
     *   `type func from_function(f, n: Int)`: Creates a new list of length `n`, where each element is the result of calling function `f` with its index.
     *   `op_equals(rhs: List)` (Operator `==`): Compares this list for equality with `rhs`.
@@ -175,7 +177,7 @@ This module provides the `Nothing` enum, representing the absence of a value.
 
 ---
 
-### `aria.core.path`
+### `aria.io.path`
 
 This module provides a `Path` struct for interacting with the file system.
 
@@ -188,27 +190,68 @@ This module provides a `Path` struct for interacting with the file system.
     *   `type func new(s: String)`: Creates a new `Path` object from a string representation.
     *   `type func new_with_current_directory()`: Returns a `Path` object representing the current working directory.
     *   `type func new_with_environment_variable(var)`: Returns a `Path` object from the value of an environment variable `var`.
+    *   `type func glob(pattern: String)`: Returns a `Result` containing an `Iterator` of `Path` objects over matching paths if the pattern is valid or an `Path.Error` if it is not.
     *   `append(rhs: String|Path)`: Appends a component (`String` or `Path`) to the end of this path. Returns the modified path.
     *   `op_div(rhs: String|Path)` (Operator `/`): Returns a new `Path` object by joining this path with `rhs`.
     *   `parent()`: Returns a new `Path` object representing the parent directory of this path.
     *   `read()`: Reads the entire content of the file at this path as a `String`. Throws `File.IOError` on failure.
     *   `write(text)`: Writes a `String` `text` to the file at this path, overwriting existing content. Throws `File.IOError` on failure.
-    *   `creation_ms_since_epoch()`: Returns the creation time of the file/directory at this path as milliseconds since the Unix epoch. Returns `Maybe::None` if not available.
-    *   `modification_ms_since_epoch()`: Returns the last modification time of the file/directory at this path as milliseconds since the Unix epoch. Returns `Maybe::None` if not available.
+    *   `accessed()`: Returns the last access time of the file/directory at this path as an `Instant`. Returns `Result`.
+    *   `created()`: Returns the creation time of the file/directory at this path as an `Instant`. Returns `Result`.
+    *   `modified()`: Returns the last modification time of the file/directory at this path as an `Instant`. Returns `Result`.
     *   `copy_to(other: Path)`: Copies the file at this path to `other`. Returns `true` on success, `false` on failure.
     *   `is_absolute()`: Returns `true` if the path is absolute, `false` otherwise.
     *   `exists()`: Returns `true` if the path exists on the file system, `false` otherwise.
     *   `is_directory()`: Returns `true` if the path points to a directory, `false` otherwise.
     *   `is_file()`: Returns `true` if the path points to a regular file, `false` otherwise.
     *   `is_symlink()`: Returns `true` if the path points to a symbolic link, `false` otherwise.
-    *   `new_canonical()`: Returns a new `Path` object representing the canonical, absolute path (resolving symlinks).
-    *   `size()`: Returns the size of the file at this path in bytes as an `Int`. Returns `Maybe::None` if not a file or path does not exist.
-    *   `get_filename()`: Returns the final component of the path (the file or directory name) as a `String`. Returns `Maybe::None` if the path has no filename component.
-    *   `get_extension()`: Returns the extension of the file at this path as a `String`. Returns `Maybe::None` if the path has no extension.
-    *   `entries()`: Returns a `List` of `Path` objects representing the entries (files and subdirectories) within the directory pointed to by this path.
+    *   `new_canonical()`: Returns a new `Path` object representing the canonical, absolute path (resolving symlinks). Returns `Result`.
+    *   `size()`: Returns the size of the file at this path in bytes as an `Int`. Returns `Result`.
+    *   `get_filename()`: Returns the final component of the path (the file or directory name) as a `String`. Returns `Maybe`.
+    *   `get_extension()`: Returns the extension of the file at this path as a `String`. Returns `Maybe`.
+    *   `entries()`: Returns an `Iterator` of `Path` objects representing the entries (files and subdirectories) within the directory pointed to by this path.
     *   `mkdir()`: Creates a new directory at this path. Returns `true` on success, `false` on failure.
     *   `rmdir()`: Removes an empty directory at this path. Returns `true` on success, `false` on failure.
     *   `erase()`: Removes the file at this path. Returns `true` on success, `false` on failure.
+    *   `common_ancestor(p: Path)`: Returns the common ancestor path between this path and `p`, as a `Maybe`.
+
+---
+
+### `aria.core.result`
+
+This module defines a dynamic success/error carrier and bridges with `Maybe` and exceptions.
+
+#### **Enums**
+
+*   **`Result`**
+    Represents the outcome of an operation, which can be either a success with a value or an error with a message.
+
+    **Cases:**
+    *   `Ok(Any)`: Contains a successful result of any type.
+    *   `Err(Any)`: Contains an error message.
+
+    **Methods:**
+    *   `is_Ok()`: Returns `true` if the `Result` is `Ok`, `false` otherwise.
+    *   `is_Err()`: Returns `true` if the `Result` is `Err`, `false` otherwise.
+    *   `unwrap_Ok()`: Returns the value contained within `Ok`.
+    *   `unwrap_Err()`: Returns the value contained within `Err`.
+    *   `or_throw()`: If `Ok(v)`, returns `v`. If `Err(e)`, throws `e`.
+    *   `unwrap_or(default_value)`: Returns the value contained within `Ok`, or `default_value` if it is `Err`.
+    *   `apply(f)`: Result `f(v)` if the `Result` is `Ok(v)`. If `Result` is `Err`, returns the `Err` unchanged.
+    *   `type func new_with_maybe(m: Maybe)`: Returns `Ok(v)` if `m` is `Some(v)`, returns `Err(Unit.new())` if `m` is `None`.
+    *   `type func new_with_try(f)`: Executes `f()`. Returns `Ok(result)` if `f` completes. Returns `Err(e)` if `f` throws `e`.
+
+#### **Extensions**
+
+*   **`extension Maybe`**
+    Extends the built-in `Maybe` type.
+
+    **Methods:**
+    *   `new_with_result(r: Result):`: Returns `Maybe::Some(v)` if `r` is `Ok(v)`, returns `Maybe::None` if `r` is `Err`.
+
+#### **Functions**
+*   `ok(v)`: Shorthand constructor. Returns `Result::Ok(v)`.
+*   `err(e)`: Shorthand constructor. Returns `Result::Err(e)`.
 
 ---
 
@@ -225,11 +268,13 @@ This module provides extensions to the built-in `String` type.
     *   `repeat(n: Int)`: Returns a new string containing `this` string repeated `n` times.
     *   `op_mul(rhs: Int)` (Operator `*`): Returns a new string containing `this` string repeated `rhs` times.
     *   `op_rmul(lhs: Int)` (Operator `*`): Handles multiplication when the `String` is on the right-hand side of the `*` operator.
-    *   `trim()`: Returns a new string with leading and trailing whitespace removed.
+    *   `trim_head()`: Returns a new string with leading whitespace removed.
+    *   `trim_tail()`: Returns a new string with trailing whitespace removed.
     *   `format(...)`: Formats the string using positional arguments. Placeholders like `{0}` are replaced by corresponding arguments. Supports `{{` and `}}` for literal braces.
     *   `substring(from: Int, to: Int)`: Returns a new string that is a substring of `this` string, starting at `from` (inclusive) and ending at `to` (inclusive).
     *   `hash()`: Returns an integer hash value for the string.
-    *   `len()`: Returns the length of the string in bytes.
+    *   `join(iter)`: Joins elements from an iterable `iter` into a single string, with `this` string as the separator.
+    *   `len()`: Returns the length of the string in characters.
     *   `has_prefix(prefix: String)`: Returns `true` if the string starts with `prefix`, `false` otherwise.
     *   `has_suffix(suffix: String)`: Returns `true` if the string ends with `suffix`, `false` otherwise.
     *   `replace(current: String, wanted: String)`: Returns a new string with all occurrences of `current` replaced by `wanted`.
@@ -241,6 +286,7 @@ This module provides extensions to the built-in `String` type.
     *   `uppercase()`: Returns a new string with all characters converted to uppercase.
     *   `lowercase()`: Returns a new string with all characters converted to lowercase.
     *   `contains(substring: String)`: Returns `true` if the string contains the `substring`, `false` otherwise.
+    *   `printf(...)`: Formats and prints the string using positional arguments, without a newline. It uses the same syntax as `format`.
 
 ---
 
@@ -309,9 +355,20 @@ This module provides a struct for representing a specific moment in time, simila
 
     **Methods:**
     *   `type func now()`: Creates a new `Instant` object that represent the current time, in the local timezone.
-    *   `type func from_unix_timestamp(timestamp_ms)`: Creates a new `Instant` object from a provided Unix timestamp (in milliseconds), assuming UTC.
-    *   `type func from_localtime_unix_timestamp(timestamp_ms, offset_minutes)`: Creates a new `Instant` object from a provided Unix timestamp (in milliseconds), adjusted for a given timezone offset (in minutes).
+    *   `type func new_with_utc_timestamp(timestamp_ms)`: Creates a new `Instant` object from a provided Unix timestamp (in milliseconds), assuming UTC.
+    *   `type func new_with_timestamp_and_offset(timestamp_ms, offset_minutes)`: Creates a new `Instant` object from a provided Unix timestamp (in milliseconds), adjusted for a given timezone offset (in minutes).
+    *   `type func new_with_local_timestamp(timestamp_ms)`: Creates a new `Instant` object from a provided Unix timestamp (in milliseconds), assuming the timestamp is in the local timezone.
+    *   `instance func with_timezone_offset(offset_minutes)`: Changes the current `Instant` object with the timezone offset adjusted to the given offset in minutes.
     *   `instance func prettyprint()`: Returns a formatted string representation of the `Instant`.
+
+---
+
+### `aria.date.timezone`
+
+This module provides a function to collect timezone information.
+
+#### **Functions**
+*   `timezone_info()`: Returns a `List` containing the timezone offset in minutes (Int) and the timezone name (String).
 
 ---
 # `aria.iterator` Module Reference
@@ -332,19 +389,22 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     A mixin that defines the contract for an object that can be iterated over. It provides common functional methods for transforming the iteration stream.
 
     **Requirements:**
-    *   The struct including this mixin **must** implement an instance method `next()` that returns a `Box` object with two fields: `.done` (a `Bool` indicating if the iteration is complete) and `.value` (the current item, present only if `.done` is `false`).
+    *   The struct including this mixin **must** implement an instance method `next()` that returns a `Maybe` instance:
+        *   `Maybe::Some(value)`: Indicates the next item in the iteration.
+        *   `Maybe::None`: Indicates that the iteration is complete.
 
     **Methods Offered:**
     *   `map(f)`: Returns a new iterator that applies the function `f` to each item yielded by this iterator.
     *   `where(f)`: Returns a new iterator that yields only the items for which the predicate function `f` returns `true`.
     *   `reduce(f, initial)`: Applies a function `f` against an accumulator and each item in the iterator (from left to right) to reduce it to a single value. `initial` is the starting value of the accumulator.
     *   `to_list()`: Consumes the iterator and returns a `List` containing all its items.
+    *   `flatten_results()`: Consumes the iterator. If any items are `Result::Err(x)` returns `err(x)`. Otherwise, it returns `ok(List)` of all the unwrapped `Result::Ok(value)` items. Non-`Result` values are appended to the result list verbatim.
     *   `all(f)`: Returns `true` if the predicate function `f` returns `true` for all items in the iterator, `false` otherwise. This method short-circuits, i.e. it stops consuming the iterator as soon as the outcome is determined.
     *   `any(f)`: Returns `true` if the predicate function `f` returns `true` for at least one item in the iterator, `false` otherwise. This method short-circuits, i.e. it stops consuming the iterator as soon as the outcome is determined.
     *   `find(f)`: Returns `Maybe::Some(value)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
     *   `position(f)`: Returns `Maybe::Some(index)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
-    *   `sum()`: Consumes the iterator and returns the sum of all its items. Assumes items support the `+` operator.
-    *   `product()`: Consumes the iterator and returns the product of all its items. Assumes items support the `*` operator.
+    *   `sum(v0=0)`: Consumes the iterator and returns the sum of all its items, starting from a base value `v0`. Assumes items support the `+` operator.
+    *   `product(v0=1)`: Consumes the iterator and returns the product of all its items, starting from a base value `v0`. Assumes items support the `*` operator.
     *   `max()`: Returns `Maybe::Some(value)` with the maximum value in the iterator, or `Maybe::None` if the iterator is empty. Assumes items support the `>` operator.
     *   `min()`: Returns `Maybe::Some(value)` with the minimum value in the iterator, or `Maybe::None` if the iterator is empty. Assumes items support the `<` operator.
     *   `count()`: Consumes the iterator and returns the total number of items.
@@ -352,6 +412,8 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `last()`: Consumes the iterator and returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterator was empty.
     *   `nth(n: Int)`: Consumes the iterator up to the nth item and returns `Maybe::Some(value)`. Returns `Maybe::None` if `n` is negative or the iterator has fewer than `n+1` items.
     *   `iterator()`: Returns the iterator itself, allowing an `Iterator` to be used where an iterable value is expected.
+    *   `skip(n: Int)`: Skips the first `n` items of the iterator.
+    *   `truncate(n: Int)`: Returns a new iterator that yields only the first `n` items from this iterator.
 
 *   **`Iterable`**
     A mixin that defines the contract for an object that can produce an `Iterator`. It provides convenience methods that delegate to the iterator produced by the `iterator()` method.
@@ -368,14 +430,16 @@ This module defines the fundamental `Iterator` and `Iterable` mixins, which enab
     *   `any(f)`: Returns `true` if the predicate function `f` returns `true` for at least one item, `false` otherwise.
     *   `find(f)`: Returns `Maybe::Some(value)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
     *   `position(f)`: Returns `Maybe::Some(index)` for the first item for which the predicate function `f` returns `true`, or `Maybe::None` if no such item is found.
-    *   `sum()`: Returns the sum of all items. Assumes items support the `+` operator.
-    *   `product()`: Returns the product of all items. Assumes items support the `*` operator.
+    *   `sum(v0=0)`: Returns the sum of all items, starting from a base value `v0`. Assumes items support the `+` operator.
+    *   `product(v0=1)`: Returns the product of all items, starting from a base value `v0`. Assumes items support the `*` operator.
     *   `max()`: Returns `Maybe::Some(value)` with the maximum value, or `Maybe::None` if the iterable is empty. Assumes items support the `>` operator.
     *   `min()`: Returns `Maybe::Some(value)` with the minimum value, or `Maybe::None` if the iterable is empty. Assumes items support the `<` operator.
     *   `count()`: Returns the total number of items.
     *   `first()`: Returns `Maybe::Some(value)` with the first item, or `Maybe::None` if the iterable is empty.
     *   `last()`: Returns `Maybe::Some(value)` with the last item, or `Maybe::None` if the iterable is empty.
     *   `nth(n: Int)`: Returns `Maybe::Some(value)` for the nth item. Returns `Maybe::None` if `n` is out of bounds.
+    *   `skip(n: Int)`: Skips the first `n` items of the iterator.
+    *   `truncate(n: Int)`: Returns a new iterator that yields only the first `n` items from this iterator.
 
 ---
 
@@ -676,6 +740,115 @@ This module provides utility functions for finding minimum, maximum, and min-max
 *   `min_max_with_comparator(l: List, cmp)`: Returns a `Box` object with `.min` and `.max` fields, containing the minimum and maximum values in the provided list `l` using a custom comparator function `cmp`. The `cmp` function should take two arguments and return a `CompareResult`.
 
 ---
+
+# `aria.system` Module Reference
+
+This document provides a reference for the `aria.system` module, which contains utilities for interacting with the operating system.
+
+---
+
+## Modules
+
+### `aria.system.platform` Module Reference
+
+This module provides functionality for representing and identifying the operating system platform at runtime.
+
+#### Enums
+
+*   **`Platform`**
+An enumeration representing the supported operating system platforms.
+
+    **Cases:**
+    *   `Linux(Platform.LinuxPlatform)`: Represents a Linux platform, with kernel version information.
+    *   `macOS(Platform.macOSPlatform)`: Represents a macOS platform, with OS build information.
+    *   `Unknown`: Represents an unrecognized or unsupported platform.
+
+    **Methods:**
+    *   `prettyprint()`: Returns a formatted string describing the platform.  
+    *   name()`: Returns the platform name as a `String`.  
+
+---
+
+## Structs
+
+*   **`Platform.LinuxPlatform`**
+Represents Linux-specific platform data.
+
+    **Fields:**
+    *   `kernel_version` (`String`): The Linux kernel version string.
+
+    **Methods:**
+    *   `type func new(kernel_version: String)`: Creates a new `LinuxPlatform` instance with the specified kernel version.
+    *   `name()`: Returns `"Linux"`.
+
+---
+
+*   **`Platform.macOSPlatform`**
+Represents macOS-specific platform data.
+
+    **Fields:**
+    *   `os_build` (`String`): The macOS build identifier.
+
+    **Methods:**
+    *   `type func new(os_build: String)`: Creates a new `macOSPlatform` instance with the specified OS build identifier.
+    *   `name()`: Returns `"macOS"`.
+---
+
+### `aria.system.coloring`
+
+This module provides utilities for coloring terminal output using ANSI escape codes.
+
+#### **Enums**
+
+*   **`Color`**
+    An enumeration representing standard terminal colors.
+
+    **Cases:**
+    *   `Black`, `Red`, `Green`, `Yellow`, `Blue`, `Magenta`, `Cyan`, `White`
+    *   `BrightBlack`, `BrightRed`, `BrightGreen`, `BrightYellow`, `BrightBlue`, `BrightMagenta`, `BrightCyan`, `BrightWhite`
+    *   `RGB(Color.RGB)`: Represents a 24-bit RGB color.
+
+#### **Structs**
+
+*   **`Color.RGB`**
+    A struct to represent a 24-bit RGB color value.
+
+    **Fields:**
+    *   `red` (Int): The red component (0-255).
+    *   `green` (Int): The green component (0-255).
+    *   `blue` (Int): The blue component (0-255).
+
+    **Methods:**
+    *   `type func new(red: Int, green: Int, blue: Int)`: Creates a new `RGB` color. Values are clamped to the 0-255 range.
+    *   `type func new_with_hex_string(s: String)`: Creates a new `RGB` color from a hex string (e.g., `#RRGGBB` or `RRGGBB`). Returns `Maybe::Some(Color.RGB)` on success, `Maybe::None` on failure.
+
+*   **`ColorScheme`**
+    A struct for defining a combination of text styles (foreground color, background color, bold).
+
+    **Methods:**
+    *   `type func new()`: Creates a new, empty `ColorScheme`.
+    *   `reset()`: Resets the color scheme to its default (empty) state.
+    *   `with_background_color(c: Color)`: Sets the background color for the scheme. Returns `this` for chaining.
+    *   `with_foreground_color(c: Color)`: Sets the foreground color for the scheme. Returns `this` for chaining.
+    *   `with_bold(b: Bool)`: Enables or disables the bold attribute for the scheme. Returns `this` for chaining.
+    *   `apply(s: String)`: Applies the defined color scheme to a given string `s`, returning a new string with the appropriate ANSI escape codes.
+
+#### **Extensions**
+
+*   **`extension String`**
+    Extends the built-in `String` type with methods for easily applying colors and styles.
+
+    **Methods:**
+    *   `with_background_color(c: Color)`: Applies the specified `Color` to the string's background.
+    *   `with_foreground_color(c: Color)`: Applies the specified `Color` to the string's foreground.
+    *   `with_bold()`: Applies bold styling to the string.
+    *   `with_style(s: ColorScheme)`: Applies a full `ColorScheme` to the string.
+    *   `black()`, `red()`, `green()`, `yellow()`, `blue()`, `magenta()`, `cyan()`, `white()`: Shorthand methods for setting the foreground color.
+    *   `black_bg()`, `red_bg()`, `green_bg()`, `yellow_bg()`, `blue_bg()`, `magenta_bg()`, `cyan_bg()`, `white_bg()`: Shorthand methods for setting the background color.
+    *   `bright_black()`, `bright_red()`, etc.: Shorthand methods for setting the bright foreground color.
+    *   `bright_black_bg()`, `bright_red_bg()`, etc.: Shorthand methods for setting the bright background color.
+---
+
 # `aria.range` Module Reference
 
 This document provides a reference for the `aria.range` module, which contains utilities for creating and manipulating numeric ranges.
@@ -943,6 +1116,52 @@ This module provides a last-in, first-out (LIFO) stack.
     *   `is_empty()`: Returns `true` if the stack contains no items, `false` otherwise.
 
 ---
+
+# `aria.structures.hash` Module Reference
+
+This document provides a reference for the `aria.structures.hash` module, which contains support for hashing algorithms.
+
+---
+
+## Modules
+
+### `aria.numerics.hash.algo.list`
+
+This module provides support for hashing `List` instances.
+
+#### **Extensions**
+
+*   **`extension List`**
+    Extends the built-in `List` type.
+
+    **Methods:**
+    *   `hash()`: Returns an integer hash value for the list. It requires that every element in the list also implements a `hash()` method.
+---
+
+# `aria.structures.hash.algo` Module Reference
+
+This document provides a reference for the `aria.structures.hash.algo` module, which contains hashing algorithms.
+
+---
+
+## Modules
+
+### `aria.numerics.hash.algo.sip`
+
+This module provides a `SipHasher` algorithm implementation.
+
+#### **Structs**
+
+*   **`SipHasher`**
+    A struct implementing the SipHash hashing algorithm.
+
+    **Methods:**
+    *   `type func new(k0: Int, k1: Int)`: Creates a new `SipHasher` with the given key.
+    *   `write(data)`: Feeds data into the hasher. `data` can be an `Int` or a `List` of `Int` values.
+    *   `finish()`: Computes the hash of the given data using the SipHash algorithm.
+
+---
+
 # `aria.test` Module Reference
 
 This document provides a reference for the `aria.test` module, which contains utilities for writing and running tests.
@@ -992,4 +1211,111 @@ This module provides the core components for defining test cases and organizing 
     **Methods:**
     *   `type func new(name)`: Creates a new `TestSuite` with the given `name`.
     *   `add_test(test)`: Adds a `TestCase` instance to the suite. Returns the `TestSuite` instance for chaining.
-    *   `run()`: Executes all test cases added to the suite. Prints the result of each test and a summary of passed/failed tests. Returns the number of failed tests.
+    *   `run(silent=false)`: Executes all test cases added to the suite. Prints the result of each test and a summary of passed/failed tests. Returns the number of failed tests. If `silent` is `true`, it suppresses the test runner's output during execution.
+
+---
+# Built-in Values
+
+This section provides a reference for the built-in values of the Aria language.
+
+### ARIA_VERSION
+A string representing the current version of the Aria language. It is usually in the format major.minor.date (e.g. 0.9.20251225 for a build of version 0.9 released on December 25, 2025). It is **not** a semantic version. It is **discouraged** to use the version number for program logic.
+
+### `alloc(type)`
+Allocates a new object of the given type with a default value.
+*   **Arguments:**
+    *   `type`: The type to allocate (e.g. a struct type).
+*   **Returns:** A new object of the specified type.
+
+### `arity(callable)`
+Returns the arity of a callable object (function, bound function, etc.).
+*   **Arguments:**
+    *   `callable`: The callable object.
+*   **Returns:** A struct with the following fields:
+    *   `min` (Int): The minimum number of arguments.
+    *   `max` (Int or `UpperBound`): The maximum number of arguments.
+    *   `has_receiver` (Bool): Whether the callable has a receiver (`this`).
+
+### `cmdline_arguments()`
+Returns a list of strings representing the command-line arguments passed to the VM.
+*   **Returns:** A `List` of `String`s.
+
+### `getenv(name)`
+Returns the value of an environment variable.
+*   **Arguments:**
+    *   `name` (String): The name of the environment variable.
+*   **Returns:** `Maybe::Some(String)` if the variable is found, `Maybe::None` otherwise.
+
+### `hasattr(object, name)`
+Checks if an object has a specific attribute.
+*   **Arguments:**
+    *   `object`: The object to inspect.
+    *   `name` (String): The name of the attribute.
+*   **Returns:** `true` if the attribute exists, `false` otherwise.
+
+### `listattrs(object)`
+Returns a list of an object's attributes.
+*   **Arguments:**
+    *   `object`: The object to inspect.
+*   **Returns:** A `List` of `String`s representing the attribute names.
+
+### `now()`
+Returns the current time as the number of milliseconds since the Unix epoch.
+*   **Returns:** An `Int`.
+
+### `prettyprint(object)`
+Returns a string representation of an object.
+*   **Arguments:**
+    *   `object`: The object to represent.
+*   **Returns:** A `String`.
+
+### `print(object)`
+Prints a string representation of an object to the console.
+*   **Arguments:**
+    *   `object`: The object to print.
+*   **Returns:** `Unit`.
+
+### `println(object)`
+Prints a string representation of an object to the console, followed by a newline.
+*   **Arguments:**
+    *   `object`: The object to print.
+*   **Returns:** `Unit`.
+
+### `readattr(object, name)`
+Reads the value of an attribute from an object.
+*   **Arguments:**
+    *   `object`: The object to read from.
+    *   `name` (String): The name of the attribute.
+*   **Returns:** The value of the attribute.
+
+### `readln(prompt)`
+Reads a line of input from the user after displaying a prompt.
+=*   **Arguments:**
+    *   `prompt` (String): The prompt to display.
+*   **Returns:** A `String` containing the user's input.
+
+### `sleep_ms(milliseconds)`
+Pauses execution for a specified duration.
+*   **Arguments:**
+    *   `milliseconds` (Int): The number of milliseconds to sleep.
+*   **Returns:** `Unit`.
+
+### `system(command)`
+Executes a shell command.
+*   **Arguments:**
+    *   `command` (String): The command to execute.
+*   **Returns:** An `Int` object representing the exit code, with `stdout` and `stderr` attributes containing the command's output.
+
+### `typeof(object)`
+Returns the type of an object.
+*   **Arguments:**
+    *   `object`: The object to inspect.
+*   **Returns:** A `Type` object.
+
+### `writeattr(object, name, value)`
+Writes a value to an attribute of an object.
+*   **Arguments:**
+    *   `object`: The object to modify.
+    *   `name` (String): The name of the attribute.
+    *   `value`: The value to write.
+*   **Returns:** `Unit`.

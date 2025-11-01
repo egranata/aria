@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: no_std;
 
+import aria.core.arity;
+
 import aria.core.bool;
 
 import Box from aria.core.box;
@@ -10,6 +12,10 @@ import aria.core.float;
 import aria.core.int;
 
 import aria.core.list;
+
+import aria.core.maybe;
+
+import aria.core.result;
 
 import aria.core.string;
 

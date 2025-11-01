@@ -1,23 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: no_std;
 
-func char_to_int(c: String) {
-    match c {
-        == "0" => { return 0; },
-        == "1" => { return 1; },
-        == "2" => { return 2; },
-        == "3" => { return 3; },
-        == "4" => { return 4; },
-        == "5" => { return 5; },
-        == "6" => { return 6; },
-        == "7" => { return 7; },
-        == "8" => { return 8; },
-        == "9" => { return 9; },
-    } else {
-        return Maybe::None;
-    }
-}
-
 extension Int {
     func hash() {
         return this;
@@ -32,36 +15,110 @@ extension Int {
     }
 
     type func parse(s: String) {
-        if s.len() == 0 {
-            return Maybe::None;
+        val index: Int = 0;
+
+        val sign: Int = 1;
+        if s.has_prefix("-") {
+            sign = -1;
+            index = 1;
+        } elsif s.has_prefix("+") {
+            index = 1;
+        }
+        if index > 0 {
+            s = s.substring(index, s.len());
+            index = 0;
         }
 
-        if s == "-" {
-            return Maybe::None;
+        val base: Int = 10;
+        if s.has_prefix("0x") || s.has_prefix("0X") {
+            index = 2;
+            base = 16;
+        } elsif s.has_prefix("0b") || s.has_prefix("0B") {
+            index = 2;
+            base = 2;
+        } elsif s.has_prefix("0o") || s.has_prefix("0O") {
+            index = 2;
+            base = 8;
+        }
+        if index > 0 {
+            s = s.substring(index, s.len());
+            index = 0;
+        }
+
+        if s == "" {
+            return Result::Err("empty integer string");
+        }
+
+        match Int.parse_radix(s, base) {
+            case Ok(value) => {
+                return Result::Ok(sign * value);
+            },
+            case Err(e) => {
+                return Result::Err(e);
+            },
+        }
+    }
+
+    type func parse_radix(s: String, base: Int) {
+        if base < 2 || base > 36 {
+            return Result::Err("invalid radix");
+        }
+
+        if s.len() == 0 {
+            return Result::Err("empty integer string");
         }
 
         val s: List = s.chars();
 
-        val ret = 0;
-        val i = 0;
-        val sign = 1;
-
-        if s[0] == "-" {
-            i = 1;
-            sign = -1;
-        }
+        val ret: Int = 0;
+        val i: Int = 0;
 
         while i < s.len() {
             val chr = s[i];
-            val digit = char_to_int(chr);
-            if digit == Maybe::None {
-                return Maybe::None;
+            val digit = chr.encoding();
+            match digit {
+                >= 48 and <= 57 => {
+                    # decimal digits
+                    if (digit - 48) >= base {
+                        return Result::Err("invalid integer digit: " + chr);
+                    }
+                    digit = digit - 48;
+                },
+                >= 65 and <= 90 => {
+                    # uppercase letters
+                    if (digit - 65 + 10) >= base {
+                        return Result::Err("invalid integer digit: " + chr);
+                    }
+                    digit = digit - 65 + 10;
+                },
+                >= 97 and <= 122 => {
+                    # lowercase letters
+                    if (digit - 97 + 10) >= base {
+                        return Result::Err("invalid integer digit: " + chr);
+                    }
+                    digit = digit - 97 + 10;
+                },
             } else {
-                ret = ret * 10 + digit;
+                return Result::Err("invalid integer digit: " + chr);
             }
+            ret = ret * base + digit;
             i += 1;
         }
 
-        return Maybe::Some(sign*ret);
+        return Result::Ok(ret);
+    }
+}
+
+extension Int {
+    struct DomainError {
+        type func new(msg: String) {
+            return alloc(This) {
+                .msg = msg
+            };
+        }
+
+        instance func prettyprint() {
+            return "integer domain error: {0}".format(this.msg);
+        }
     }
 }

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-
 use enum_as_inner::EnumAsInner;
+use rustc_data_structures::fx::FxHashSet;
 
-use crate::builtins::VmBuiltins;
+use crate::{arity::Arity, builtins::VmBuiltins};
 
 use super::{
     AttributeError, RuntimeValue, builtin_type::BuiltinType, enumeration::Enum, structure::Struct,
@@ -12,7 +11,7 @@ use super::{
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct FunctionType {
-    pub arity: u8,
+    pub arity: Arity,
     pub varargs: bool,
 }
 
@@ -20,8 +19,9 @@ impl std::fmt::Debug for FunctionType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "({}{})",
-            self.arity,
+            "({}, {}{})",
+            self.arity.required,
+            self.arity.optional,
             if self.varargs { ", ..." } else { "" }
         )
     }
@@ -39,7 +39,6 @@ pub enum RuntimeValueType {
     Opaque,
     Struct(Struct),
     Enum(Enum),
-    Type(Box<RuntimeValueType>),
     Union(Vec<RuntimeValueType>),
 }
 
@@ -51,7 +50,6 @@ impl PartialEq for RuntimeValueType {
             (Self::Builtin(l0), Self::Builtin(r0)) => l0 == r0,
             (Self::Struct(l0), Self::Struct(r0)) => l0 == r0,
             (Self::Enum(l0), Self::Enum(r0)) => l0 == r0,
-            (Self::Type(l0), Self::Type(r0)) => l0 == r0,
             (Self::Union(l0), Self::Union(r0)) => {
                 if l0.len() != r0.len() {
                     false
@@ -87,7 +85,7 @@ impl RuntimeValueType {
                 arity: bf.func().arity(),
                 varargs: bf.func().varargs(),
             }),
-            RuntimeValue::Type(t) => Self::Type(Box::new(t.clone())),
+            RuntimeValue::Type(_) => builtins.get_builtin_type_by_name("Type"),
             RuntimeValue::Boolean(_) => builtins.get_builtin_type_by_name("Bool"),
             RuntimeValue::Integer(_) => builtins.get_builtin_type_by_name("Int"),
             RuntimeValue::Float(_) => builtins.get_builtin_type_by_name("Float"),
@@ -118,7 +116,6 @@ impl std::fmt::Debug for RuntimeValueType {
                     .join("|");
                 write!(f, "{us}")
             }
-            Self::Type(t) => write!(f, "<type:{t:?}>"),
         }
     }
 }
@@ -206,7 +203,7 @@ impl RuntimeValueType {
         }
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         if let Some(struk) = self.as_struct() {
             struk.list_attributes()
         } else if let Some(enumm) = self.as_enum() {
@@ -214,7 +211,7 @@ impl RuntimeValueType {
         } else if let Some(bt) = self.as_builtin() {
             bt.list_attributes()
         } else {
-            HashSet::new()
+            Default::default()
         }
     }
 }

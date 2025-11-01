@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import CompareResult, TotalOrdering from aria.ordering.compare;
+import aria.numerics.int.pow;
 
 func pow(x: Int, y: Int) {
     if y == 0 { return 1; }
@@ -25,11 +26,7 @@ struct Decimal {
                 return v.apply(|value| => This.new_with_parts(value, 0));
             },
             == 2 => {
-                val integer_part = Int.parse(parts[0]);
-                match integer_part {
-                    case None => { return Maybe::None; },
-                    case Some(i) => { integer_part = i; }
-                }
+                val integer_part = Int.parse(parts[0])??;
                 val decimal_part = parts[1];
                 val scale = decimal_part.len();
                 val combined_str = parts[0] + decimal_part;
@@ -37,7 +34,7 @@ struct Decimal {
                 return value.apply(|v| => This.new_with_parts(v, scale));
             }
         } else {
-            return Maybe::None;
+            return Result::Err("invalid decimal string");
         }
     }
 
@@ -199,7 +196,42 @@ struct Decimal {
         }
     }
 
-    func prettyprint() {
+    func prettyprint(fmt: String = "") {
+        if fmt == "" {
+            return this.default_prettyprint();
+        }
+
+        val parts = fmt.split(".");
+        if parts.len() != 2 || parts[0] != "" {
+            return this.default_prettyprint();
+        }
+
+        val n_maybe = Int.parse(parts[1]);
+        match n_maybe {
+            case Err => { return this.default_prettyprint(); },
+            case Ok(N) => {
+                if N <= 0 {
+                    return this.default_prettyprint();
+                }
+
+                if this.scale <= N {
+                    return this.default_prettyprint();
+                }
+
+                val drop = this.scale - N;
+                val factor = 10.pow(drop);
+                val v = this.value;
+
+                val rounded =
+                    v >= 0 ? (v + factor / 2) / factor
+                        : (v - factor / 2) / factor;
+
+                return Decimal.new_with_parts(rounded, N).default_prettyprint();
+            }
+        }
+    }
+
+    func default_prettyprint() {
         val abs_value_str = prettyprint(this.value.abs());
         val sign = "";
         if this.value < 0 { sign = "-"; }
@@ -219,6 +251,16 @@ struct Decimal {
         val fractional_part = value_str.substring(len - this.scale, len - 1);
         
         return sign + integer_part + "." + fractional_part;
+    }
+
+    func hash() {
+        val h = this.value ^ (this.scale + 0x9e3779b97f4a7c15);
+        h = h ^ (h >> 30);
+        h = h * 0xbf58476d1ce4e5b9;
+        h = h ^ (h >> 27);
+        h = h * 0x94d049bb133111eb;
+        h = h ^ (h >> 31);
+        return h;
     }
 
     include TotalOrdering

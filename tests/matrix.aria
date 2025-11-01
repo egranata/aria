@@ -5,14 +5,14 @@ func main() {
     val m = Matrix.new(3, 3);
     m.set(0, 0, 1.0f);
     m.set(1, 1, 2.0f);
-    m.set(2, 2, 3.0f);
+    m[2,2] = 3.0f;
     m.set(0, 1, 4.0f);
-    m.set(1, 0, 5.0f); 
+    m[1,0] = 5.0f;
 
     assert m.get(0, 0) == 1.0f;
-    assert m.get(1, 1) == 2.0f;
+    assert m[1,1] == 2.0f;
     assert m.get(2, 2) == 3.0f;
-    assert m.get(0, 1) == 4.0f;
+    assert m[0,1] == 4.0f;
     assert m.get(1, 0) == 5.0f;
     assert m.get(0, 2) == 0.0f;
 

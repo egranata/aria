@@ -1,34 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
-use aria_parser::ast::{CodeBlock, FunctionDecl, Identifier, ReturnStatement, Statement};
+use aria_parser::ast::{FunctionBody, FunctionDecl, Identifier};
 
 use crate::do_compile::{CompilationResult, CompileNode, CompileParams};
 
 impl<'a> CompileNode<'a> for aria_parser::ast::LambdaFunction {
     fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
-        let f_body = match self.body.as_ref() {
-            aria_parser::ast::LambaBody::Expression(e) => {
-                let ret_stmt = ReturnStatement {
-                    loc: e.loc().clone(),
-                    val: Some(e.clone()),
-                };
-                CodeBlock {
-                    loc: ret_stmt.loc.clone(),
-                    entries: vec![Statement::ReturnStatement(ret_stmt)],
-                }
-            }
-            aria_parser::ast::LambaBody::CodeBlock(b) => b.clone(),
-        };
-
+        let body: FunctionBody = From::from(self.body.as_ref());
         let f_name = format!("<anon_f_{}>", self.loc);
         let f_obj = FunctionDecl {
-            loc: f_body.loc.clone(),
+            loc: body.loc().clone(),
             name: Identifier {
                 loc: self.loc.clone(),
                 value: f_name.clone(),
             },
             args: self.args.clone(),
-            vararg: false,
-            body: f_body,
+            body,
         };
 
         let f_body_scope = params.scope.closure(params.writer.get_current_block());

@@ -95,25 +95,6 @@ impl RuntimeValue {
             _ => false,
         }
     }
-
-    pub fn identity(&self) -> usize {
-        match self {
-            RuntimeValue::Integer(a) => a.identity(),
-            RuntimeValue::String(a) => a.identity(),
-            RuntimeValue::Float(a) => a.identity(),
-            RuntimeValue::Boolean(a) => a.identity(),
-            RuntimeValue::Object(a) => a.identity(),
-            RuntimeValue::EnumValue(a) => a.identity(),
-            RuntimeValue::CodeObject(a) => a.identity(),
-            RuntimeValue::Function(a) => a.identity(),
-            RuntimeValue::BoundFunction(a) => a.identity(),
-            RuntimeValue::List(a) => a.identity(),
-            RuntimeValue::Mixin(a) => a.identity(),
-            RuntimeValue::Type(_) => todo!(),
-            RuntimeValue::Module(a) => a.identity(),
-            RuntimeValue::Opaque(a) => a.identity(),
-        }
-    }
 }
 
 pub(crate) enum OperatorEvalAttemptOutcome<SuccessType> {
@@ -520,12 +501,12 @@ impl RuntimeValue {
         RuntimeValue::BoundFunction(BoundFunction::bind(self.clone(), f))
     }
 
-    pub fn as_struct(&self) -> Option<Struct> {
-        self.as_type().and_then(|rt| rt.as_struct()).cloned()
+    pub fn as_struct(&self) -> Option<&Struct> {
+        self.as_type().and_then(|rt| rt.as_struct())
     }
 
-    pub fn as_enum(&self) -> Option<Enum> {
-        self.as_type().and_then(|rt| rt.as_enum()).cloned()
+    pub fn as_enum(&self) -> Option<&Enum> {
+        self.as_type().and_then(|rt| rt.as_enum())
     }
 
     pub fn is_struct(&self) -> bool {
@@ -536,8 +517,8 @@ impl RuntimeValue {
         self.as_enum().is_some()
     }
 
-    pub fn as_builtin_type(&self) -> Option<BuiltinType> {
-        self.as_type().and_then(|rt| rt.as_builtin()).cloned()
+    pub fn as_builtin_type(&self) -> Option<&BuiltinType> {
+        self.as_type().and_then(|rt| rt.as_builtin())
     }
 
     pub fn as_opaque_concrete<T: 'static>(&self) -> Option<Rc<T>> {
@@ -564,14 +545,14 @@ impl RuntimeValue {
     }
 
     pub fn prettyprint(&self, cur_frame: &mut Frame, vm: &mut VirtualMachine) -> String {
-        if let Ok(ppf) = self.read_attribute("prettyprint", &vm.builtins) {
-            if ppf.eval(0, cur_frame, vm, false).is_ok() {
-                // either check that the stack is doing ok - or have eval return the value
-                if let Some(val) = cur_frame.stack.try_pop() {
-                    if let Some(sv) = val.as_string() {
-                        return sv.raw_value().clone();
-                    }
-                }
+        if let Ok(ppf) = self.read_attribute("prettyprint", &vm.builtins)
+            && ppf.eval(0, cur_frame, vm, false).is_ok()
+        {
+            // either check that the stack is doing ok - or have eval return the value
+            if let Some(val) = cur_frame.stack.try_pop()
+                && let Some(sv) = val.as_string()
+            {
+                return sv.raw_value().clone();
             }
         }
 
@@ -606,6 +587,9 @@ impl RuntimeValue {
             Ok(())
         } else if let Some(t) = self.as_type() {
             t.write_attribute(attr_name, val)
+        } else if let Some(m) = self.as_mixin() {
+            m.store_named_value(attr_name, val);
+            Ok(())
         } else if let Some(m) = self.as_module() {
             m.store_named_value(attr_name, val);
             Ok(())
@@ -767,7 +751,7 @@ impl RuntimeValue {
             let val = t.read_attribute(attrib_name)?;
             if let Some(rf) = val.as_function() {
                 if !rf.attribute().is_type_method() {
-                    return Err(AttributeError::InvalidFunctionBinding);
+                    Err(AttributeError::InvalidFunctionBinding)
                 } else {
                     Ok(self.bind(rf.clone()))
                 }
@@ -786,27 +770,34 @@ impl RuntimeValue {
 
     pub fn read_index(
         &self,
-        idx: &RuntimeValue,
+        indices: &[RuntimeValue],
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
-    ) -> ExecutionResult {
+    ) -> ExecutionResult<CallResult> {
         if self.is_object() {
             match self.read_attribute("_op_impl_read_index", &vm.builtins) {
                 Ok(read_index) => {
-                    cur_frame.stack.push(idx.clone());
-                    read_index.eval(1_u8, cur_frame, vm, false)?;
-                    Ok(())
+                    for idx in indices.iter().rev() {
+                        cur_frame.stack.push(idx.clone());
+                    }
+                    read_index.eval(indices.len() as u8, cur_frame, vm, false)
                 }
                 _ => Err(VmErrorReason::UnexpectedType.into()),
             }
         } else if let Some(lst) = self.as_list() {
-            let val = lst.read_index(idx, cur_frame, vm)?;
+            if indices.len() != 1 {
+                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
+            }
+            let val = lst.read_index(&indices[0], cur_frame, vm)?;
             cur_frame.stack.push(val);
-            Ok(())
+            Ok(CallResult::OkNoValue)
         } else if let Some(str) = self.as_string() {
-            let val = str.read_index(idx, cur_frame, vm)?;
+            if indices.len() != 1 {
+                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
+            }
+            let val = str.read_index(&indices[0], cur_frame, vm)?;
             cur_frame.stack.push(val);
-            Ok(())
+            Ok(CallResult::OkNoValue)
         } else {
             Err(VmErrorReason::UnexpectedType.into())
         }
@@ -814,23 +805,28 @@ impl RuntimeValue {
 
     pub fn write_index(
         &self,
-        idx: &RuntimeValue,
+        indices: &[RuntimeValue],
         val: &RuntimeValue,
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
-    ) -> ExecutionResult {
+    ) -> ExecutionResult<CallResult> {
         if self.is_object() {
             match self.read_attribute("_op_impl_write_index", &vm.builtins) {
                 Ok(write_index) => {
                     cur_frame.stack.push(val.clone());
-                    cur_frame.stack.push(idx.clone());
-                    write_index.eval(2_u8, cur_frame, vm, true)?;
-                    Ok(())
+                    for idx in indices.iter().rev() {
+                        cur_frame.stack.push(idx.clone());
+                    }
+                    write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)
                 }
                 _ => Err(VmErrorReason::UnexpectedType.into()),
             }
         } else if let Some(lst) = self.as_list() {
-            lst.write_index(idx, val, cur_frame, vm)
+            if indices.len() != 1 {
+                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
+            }
+            lst.write_index(&indices[0], val, cur_frame, vm)?;
+            Ok(CallResult::OkNoValue)
         } else {
             Err(VmErrorReason::UnexpectedType.into())
         }

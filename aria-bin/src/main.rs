@@ -1,117 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
+mod error_reporting;
+mod file_eval;
+mod repl_eval;
 
-use std::collections::HashMap;
+#[cfg(test)]
+mod test;
 
-use aria_compiler::{CompilationOptions, compile_from_ast, do_compile::CompilationError};
-use aria_parser::ast::{
-    ParserError, SourceBuffer, SourcePointer,
-    prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
-    source_to_ast,
-};
-use ariadne::{Color, Label, Report, ReportKind, Source};
 use clap::Parser;
-use haxby_vm::{
-    error::{
-        exception::VmException,
-        vm_error::{VmError, VmErrorReason},
-    },
-    frame::Frame,
-    runtime_module::RuntimeModule,
-    vm::{VirtualMachine, VmOptions},
-};
+use haxby_vm::vm::{VirtualMachine, VmOptions};
 
-#[derive(Default, Debug, Clone)]
-pub struct StringCache {
-    buffers: HashMap<String, Source>,
-}
-
-impl ariadne::Cache<&String> for StringCache {
-    type Storage = String;
-
-    fn fetch(
-        &mut self,
-        path: &&String,
-    ) -> Result<
-        &Source<<Self as ariadne::Cache<&std::string::String>>::Storage>,
-        impl std::fmt::Debug,
-    > {
-        Ok::<&Source, Source>(&self.buffers[*path])
-    }
-
-    #[allow(refining_impl_trait)]
-    fn display<'a>(&self, path: &&'a String) -> Option<impl std::fmt::Display + 'a> {
-        Some(Box::new((**path).clone()))
-    }
-}
-
-fn report_from_msg_and_location(msg: &str, locations: &[&SourcePointer]) {
-    let config = ariadne::Config::default().with_index_type(ariadne::IndexType::Byte);
-    let magenta = Color::Magenta;
-    let primary_span = &locations[0];
-    let mut report = Report::build(
-        ReportKind::Error,
-        (
-            &primary_span.buffer.name,
-            primary_span.location.start..primary_span.location.stop,
-        ),
-    )
-    .with_message(msg)
-    .with_config(config);
-    let mut cache = StringCache::default();
-    for loc in locations {
-        report = report.with_label(
-            Label::new((&loc.buffer.name, loc.location.start..loc.location.stop))
-                .with_message("here")
-                .with_color(magenta),
-        );
-        if !cache.buffers.contains_key(&loc.buffer.name) {
-            cache.buffers.insert(
-                loc.buffer.name.clone(),
-                Source::from((*loc.buffer.content).clone()),
-            );
-        }
-    }
-    report.finish().eprint(cache).unwrap();
-}
-
-fn report_from_vm_error(err: &VmError) {
-    let msg = err.reason.to_string();
-    if err.backtrace.is_empty() {
-        if let Some(loc) = &err.loc {
-            report_from_msg_and_location(&msg, &[loc]);
-        } else {
-            eprintln!("vm execution error: {msg}");
-        }
-    } else {
-        let backtraces: Vec<_> = err.backtrace.entries_iter().collect();
-        report_from_msg_and_location(&msg, &backtraces);
-    }
-}
-
-fn report_from_vm_exception(vm: &mut VirtualMachine, exc: &VmException) {
-    let mut cur_frame = Frame::default();
-    let msg = exc.value.prettyprint(&mut cur_frame, vm);
-    let backtraces: Vec<_> = exc.backtrace.entries_iter().collect();
-    report_from_msg_and_location(&msg, backtraces.as_slice());
-}
-
-fn report_from_compiler_error(err: &CompilationError) {
-    let msg = err.reason.to_string();
-    let loc = &err.loc;
-    report_from_msg_and_location(&msg, &[loc]);
-}
-
-fn report_from_parser_error(err: &ParserError) {
-    let msg = &err.msg;
-    let loc = &err.loc;
-    report_from_msg_and_location(msg, &[loc]);
-}
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, trailing_var_arg = true)]
+#[derive(Default, Parser, Debug)]
+#[command(author, name = "aria", version = env!("CARGO_PKG_VERSION"), about, trailing_var_arg = true)]
 struct Args {
     /// The name of the program file to run
-    path: String,
+    path: Option<String>,
     /// Should the VM trace instruction execution
     #[arg(long("trace-exec"))]
     trace_exec: bool,
@@ -129,6 +31,11 @@ struct Args {
     disable_optimizer: bool,
     #[arg(trailing_var_arg = true)]
     extra_args: Vec<String>,
+    #[arg(long("print-lib-path"))]
+    print_lib_path: bool,
+    /// Turn off REPL preamble
+    #[arg(long("no-repl-preamble"))]
+    no_repl_preamble: bool,
 }
 
 impl From<&Args> for VmOptions {
@@ -148,106 +55,24 @@ impl From<&Args> for VmOptions {
     }
 }
 
-impl From<&Args> for CompilationOptions {
-    fn from(value: &Args) -> Self {
-        CompilationOptions {
-            optimize: !value.disable_optimizer,
-        }
-    }
-}
-
-fn file_eval(path: &str, args: &Args) {
-    let mut vm = VirtualMachine::with_options(VmOptions::from(args));
-
-    let buffer = SourceBuffer::file(path);
-    match buffer {
-        Ok(src) => {
-            let _ = eval_buffer(false, &None, src, &mut vm, args);
-        }
-        Err(err) => {
-            println!("error reading source file: {err}");
-        }
-    }
-}
-
-// To permit return Err(report_blah(x)) where report_blah(x) -> ()
-#[allow(clippy::unit_arg)]
-fn eval_buffer(
-    is_repl: bool,
-    prior_art: &Option<RuntimeModule>,
-    sb: SourceBuffer,
-    vm: &mut VirtualMachine,
-    args: &Args,
-) -> Result<RuntimeModule, ()> {
-    let ast = match source_to_ast(&sb) {
-        Ok(ast) => ast,
-        Err(err) => {
-            return Err(report_from_parser_error(&err));
-        }
-    };
-
-    if args.dump_ast {
-        let ast_buffer = PrintoutAccumulator::default();
-        let output = ast.prettyprint(ast_buffer).value();
-        println!("AST dump:\n{output}\n");
-    }
-
-    let comp_opts = CompilationOptions::from(args);
-
-    let c_module = match compile_from_ast(&ast, &comp_opts) {
-        Ok(module) => module,
-        Err(err) => {
-            err.iter().for_each(report_from_compiler_error);
-            return Err(());
-        }
-    };
-
-    if args.dump_mod {
-        let mod_buffer = PrintoutAccumulator::default();
-        let output = c_module.prettyprint(mod_buffer).value();
-        println!("Module dump:\n{output}\n");
-    }
-
-    let r_module = RuntimeModule::new(c_module);
-    let _ = prior_art.as_ref().is_some_and(|pa| {
-        r_module.lift_all_symbols_from_other(pa, vm);
-        true
-    });
-
-    let r_module = match vm.load_into_module("", r_module) {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(m) => m.module,
-            haxby_vm::vm::RunloopExit::Exception(exc) => {
-                return Err(report_from_vm_exception(vm, &exc));
-            }
-        },
-        Err(err) => {
-            return Err(report_from_vm_error(&err));
-        }
-    };
-
-    let exec_result = vm.execute_module(&r_module);
-
-    match exec_result {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(_) => Ok(r_module),
-            haxby_vm::vm::RunloopExit::Exception(exc) => Err(report_from_vm_exception(vm, &exc)),
-        },
-        Err(err) => {
-            let is_missing_main = match &err.reason {
-                VmErrorReason::NoSuchIdentifier(n) => n == "main",
-                _ => false,
-            };
-            if is_repl && is_missing_main {
-                Ok(r_module)
-            } else {
-                Err(report_from_vm_error(&err))
-            }
-        }
+fn print_lib_paths() {
+    let lib_paths = VirtualMachine::get_aria_library_paths();
+    for path in lib_paths {
+        println!("{}", path.display());
     }
 }
 
 fn main() {
     let args = Args::parse();
-    file_eval(&args.path, &args);
+
+    if args.print_lib_path {
+        print_lib_paths();
+        return;
+    }
+
+    if let Some(path) = &args.path {
+        file_eval::file_eval(path, &args);
+    } else {
+        repl_eval::repl_eval(&args);
+    }
 }

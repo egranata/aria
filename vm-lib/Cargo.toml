@@ -1,6 +1,6 @@
 [package]
 name = "vm-lib"
-version = "0.9.0"
+version = "0.9.20251013"
 edition = "2024"
 
 [lib]
@@ -8,12 +8,20 @@ name = "haxby_vm"
 path = "src/lib.rs"
 
 [dependencies]
-pest = "2.7.14"
-pest_derive = "2.7.14"
+pest = "2.8.3"
+pest_derive = "2.8.3"
 parser-lib = { path = "../parser-lib" }
 compiler-lib = { path = "../compiler-lib" }
 opcodes-lib = { path = "../opcodes-lib" }
 enum-as-inner = "0.6.1"
-thiserror = "2.0.12"
-libloading = "0.8.8"
-libc = "0.2.174"
+thiserror = "2.0.17"
+libloading = "0.8.9"
+libc = "0.2.177"
+rustc_data_structures = "0.1.2"
+
+[dev-dependencies]
+criterion = { version = "0.7.0" }
+
+[[bench]]
+name = "control_flow"
+harness = false

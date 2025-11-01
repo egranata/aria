@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+val c = 0;
+func bump() {
+    c = c + 1;
+    return Maybe::Some(c);
+}
+
+bump()??; bump()??;
+assert c == 2;
+assert bump()?? == 3;
+assert bump()!! == 4;

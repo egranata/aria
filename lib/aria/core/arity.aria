@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+struct Arity {
+    enum UpperBound {
+        case Bounded(Int),
+        case Varargs,
+
+        func prettyprint() {
+            match this {
+                case Bounded(n) => {
+                    return "up to {0}".format(n);
+                },
+                case Varargs => {
+                    return "varargs";
+                },
+            }
+        }
+    }
+
+    # this type is generally allocated by the Aria VM directly, not by user code
+    # new() is not going to be called
+    type func new() {
+        return alloc(This) {
+            .min = 0,
+            .max = This.UpperBound::Varargs,
+            .has_receiver = false,
+        };
+    }
+
+    func prettyprint() {
+        return "min: {0} (implicit receiver: {2}), max: {1}".format(this.min, this.max, this.has_receiver);
+    }
+
+    func is_Varargs() {
+        return this.max.is_Varargs();
+    }
+
+    func can_call_with_argc(argc: Int) {
+        if argc < this.min {
+            return false;
+        }
+        match this.max {
+            case Bounded(n) => {
+                return argc <= n;
+            },
+            case Varargs => {
+                return true;
+            },
+        }
+    }
+}

@@ -9,7 +9,7 @@ use crate::{
         backtrace::Backtrace,
         vm_error::{VmError, VmErrorReason},
     },
-    runtime_value::{RuntimeValue, object::Object},
+    runtime_value::{RuntimeValue, list::List, object::Object},
     vm::VirtualMachine,
 };
 
@@ -53,28 +53,35 @@ impl VmException {
     }
 }
 
-#[macro_export]
-macro_rules! some_or_err {
-    ($opt:expr, $err:expr) => {
-        match $opt {
-            Some(val) => val,
-            None => return Err($err),
+impl VmException {
+    pub(crate) fn fill_in_backtrace(&self) {
+        let bt_list = List::from(&[]);
+        for bt_entry in self.backtrace.entries_iter() {
+            let buf_name = bt_entry.buffer.name.clone();
+            let buf_line = bt_entry
+                .buffer
+                .line_index_for_position(bt_entry.location.start);
+            let buf_name = RuntimeValue::String(buf_name.into());
+            let buf_line = RuntimeValue::Integer((buf_line as i64).into());
+            bt_list.append(RuntimeValue::List(List::from(&[buf_name, buf_line])));
         }
-    };
-}
-
-#[macro_export]
-macro_rules! ok_or_err {
-    ($opt:expr, $err:expr) => {
-        match $opt {
-            Ok(val) => val,
-            Err(_) => return Err($err),
-        }
-    };
+        let _ = self
+            .value
+            .write_attribute("backtrace", RuntimeValue::List(bt_list));
+    }
 }
 
 impl VmException {
     pub fn from_vmerror(err: VmError, builtins: &VmBuiltins) -> Result<VmException, VmError> {
+        macro_rules! some_or_err {
+            ($opt:expr, $err:expr) => {
+                match $opt {
+                    Some(val) => val,
+                    None => return Err($err),
+                }
+            };
+        }
+
         let rt_err_type = some_or_err!(
             builtins.get_builtin_type_by_id(BUILTIN_TYPE_RUNTIME_ERROR),
             err
@@ -103,7 +110,7 @@ impl VmException {
             VmErrorReason::MismatchedArgumentCount(expected, actual) => {
                 let argc_mismatch = some_or_err!(rt_err.load_named_value("ArgcMismatch"), err);
                 let argc_mismatch = some_or_err!(argc_mismatch.as_struct(), err);
-                let argc_mismatch_obj = Object::new(&argc_mismatch);
+                let argc_mismatch_obj = Object::new(argc_mismatch);
                 argc_mismatch_obj
                     .write("expected", RuntimeValue::Integer((*expected as i64).into()));
                 argc_mismatch_obj.write("actual", RuntimeValue::Integer((*actual as i64).into()));
@@ -118,6 +125,10 @@ impl VmException {
             },
             VmErrorReason::NoSuchIdentifier(s) => ExceptionData {
                 case: some_or_err!(rt_err.get_idx_of_case("NoSuchIdentifier"), err),
+                payload: Some(RuntimeValue::String(s.clone().into())),
+            },
+            VmErrorReason::OperationFailed(s) => ExceptionData {
+                case: some_or_err!(rt_err.get_idx_of_case("OperationFailed"), err),
                 payload: Some(RuntimeValue::String(s.clone().into())),
             },
             VmErrorReason::UnexpectedType => ExceptionData {

@@ -1,7 +1,23 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: uses_dylib("aria_path");
+import aria.date.instant;
+import Iterator from aria.iterator.mixin;
 
 struct Path {
+    struct Error {
+        type func new(msg) = alloc(This) {.msg};
+
+        func prettyprint() {
+            return "path error: {0}".format(this.msg);
+        }
+    }
+    
+    struct Iterator {
+        func iterator() { return this; }
+
+        include Iterator
+    }
+
     type func new_with_current_directory() {
         return This._cwd();
     }
@@ -14,6 +30,10 @@ struct Path {
 
     type func new(s: String) {
         return This._new(s);
+    }
+
+    type func glob(pattern: String) {
+        return This._glob(pattern);
     }
 
     func append(rhs: String|Path) {
@@ -34,16 +54,45 @@ struct Path {
         return Path.new(this.prettyprint()).pop();
     }
 
-    func creation_ms_since_epoch() {
-        return this._when_created();
+    func created() {
+        match this._when_created() {
+            case Ok(val) => {
+                return Result::Ok(aria.date.instant.Instant.new_with_local_timestamp(val));
+            }
+            case Err(err) => {
+                return Result::Err(err);
+            }
+        };
     }
 
-    func modification_ms_since_epoch() {
-        return this._when_accessed();
+    func accessed() {
+        match this._when_accessed() {
+            case Ok(val) => {
+                return Result::Ok(aria.date.instant.Instant.new_with_local_timestamp(val));
+            }
+            case Err(err) => {
+                return Result::Err(err);
+            }
+        };
+    }
+
+    func modified() {
+        match this._when_modified() {
+            case Ok(val) => {
+                return Result::Ok(aria.date.instant.Instant.new_with_local_timestamp(val));
+            }
+            case Err(err) => {
+                return Result::Err(err);
+            }
+        };
     }
 
     # we could use the builtin _copy, except for type validation
     func copy_to(other: Path) {
         this._copy(other);
+    }
+
+    func hash() {
+        return this.prettyprint().hash();
     }
 }

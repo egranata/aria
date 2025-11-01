@@ -2,8 +2,8 @@
 import Set from aria.structures.set;
 
 func main() {
-    val s1 = Set.new_from_items(1,2,3,4,5);
-    val s2 = Set.new_from_items(2,4,6,8,10);
+    val s1 = Set.new_with_items(1,2,3,4,5);
+    val s2 = Set.new_with_items(2,4,6,8,10);
 
     val s3 = s1.union(s2);
     assert s3.len() == 8;

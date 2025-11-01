@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin HasSomeValue {
+    func get_foo() {
+        return this.FOO;
+    }
+
+    type val FOO = 1;
+}
+
+struct S1 {
+    include HasSomeValue
+}
+
+struct S2 {
+    include HasSomeValue
+}
+
+func main() {
+    assert S1.FOO == 1;
+    assert S2.FOO == 1;
+    assert alloc(S1).get_foo() == 1;
+    assert alloc(S2).get_foo() == 1;
+
+    S1.FOO = 2;
+    assert S1.FOO == 2;
+    assert S2.FOO == 1;
+    assert alloc(S1).get_foo() == 2;
+    assert alloc(S2).get_foo() == 1;
+
+    S2.FOO = 3;
+    assert S1.FOO == 2;
+    assert S2.FOO == 3;
+    assert alloc(S1).get_foo() == 2;
+    assert alloc(S2).get_foo() == 3;
+}

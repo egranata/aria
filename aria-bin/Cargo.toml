@@ -1,6 +1,6 @@
 [package]
 name = "aria-bin"
-version = "0.9.0"
+version = "0.9.20251013"
 edition = "2024"
 
 [dependencies]
@@ -8,8 +8,9 @@ opcodes-lib = { path = "../opcodes-lib" }
 parser-lib = { path = "../parser-lib" }
 compiler-lib = { path = "../compiler-lib" }
 vm-lib = { path = "../vm-lib" }
-clap = { version = "4.5.42", features = ["derive"] }
-ariadne = { version = "0.5.0", features = ["auto-color"] }
+clap = { version = "4.5.50", features = ["derive"] }
+ariadne = { git = "https://github.com/zesterer/ariadne.git", rev="b60b500" }
+reedline = "0.43.0"
 
 [[bin]]
 name = "aria"

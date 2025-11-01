@@ -7,13 +7,6 @@ func main() {
     assert exported_var.source.foo == 123;
     assert exported_var.source.fetch_foo() == 123;
 
-    # TODO: foo should be assignable?
-    #foo = 456;
-    #assert foo == 456;
-    #assert fetch_foo() == 456;
-    #assert exported_var.source.foo == 456;
-    #assert exported_var.source.fetch_foo() == 456;
-
     change_foo(111);
     assert foo == 123; # TODO: should it be 111?
     assert fetch_foo() == 111;

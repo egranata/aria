@@ -35,6 +35,7 @@ pub struct Frame {
     pub(crate) ctrl_blocks: Stack<ControlBlock>,
     pub(crate) locals: Vec<LocalVariable>,
     pub(crate) func: Option<Function>,
+    pub argc: u8,
 }
 
 impl Frame {
@@ -75,18 +76,24 @@ impl Frame {
         this
     }
 
-    pub fn new_with_n_locals(n: u8) -> Self {
+    pub(crate) fn new_with_n_locals(n: u8) -> Self {
         let mut this = Self {
             stack: Default::default(),
             line_table: None,
             ctrl_blocks: Default::default(),
             locals: Vec::with_capacity(n as usize),
             func: None,
+            argc: 0,
         };
         for _ in 0..n {
             this.locals.push(LocalVariable::default())
         }
         this
+    }
+
+    pub(crate) fn set_argc(&mut self, argc: u8) -> &mut Self {
+        self.argc = argc;
+        self
     }
 
     pub(crate) fn set_line_table(&mut self, lt: Option<&LineTable>) -> &mut Self {
@@ -109,6 +116,6 @@ impl Frame {
 
 impl Default for Frame {
     fn default() -> Self {
-        Self::new_with_n_locals(u8::MAX)
+        Self::new_with_n_locals(0)
     }
 }

@@ -1,0 +1,26 @@
+name: MacOSBuildAndTest
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check tree
+      run: ./tree_check.sh
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: ./ci_tests.sh

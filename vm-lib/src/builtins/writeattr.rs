@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
-    builtins::VmBuiltins, error::vm_error::VmErrorReason, frame::Frame, ok_or_err,
+    builtins::VmBuiltins, error::vm_error::VmErrorReason, frame::Frame,
     runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
 };
 
@@ -18,10 +18,7 @@ impl BuiltinFunctionImpl for WriteAttr {
         let result = the_object.write_attribute(&the_string.raw_value(), the_value);
         match result {
             Ok(_) => {
-                frame.stack.push(ok_or_err!(
-                    vm.builtins.create_unit_object(),
-                    VmErrorReason::UnexpectedVmState.into()
-                ));
+                frame.stack.push(vm.builtins.create_unit_object()?);
                 Ok(RunloopExit::Ok(()))
             }
             Err(e) => {
@@ -41,8 +38,8 @@ impl BuiltinFunctionImpl for WriteAttr {
         }
     }
 
-    fn arity(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {

@@ -30,25 +30,29 @@ expr_list = { expression ~ ("," ~ expression)* ~ ","? }
 paren_expr = { "(" ~ expression ~ ")" }
 primary    = { identifier | fp_literal | str_literal | int_literal | list_literal | paren_expr }
 
-postfix_field_set      = { "." ~ identifier ~ "=" ~ expression }
-postfix_field_set_list = { postfix_field_set ~ ("," ~ postfix_field_set)* ~ ","? }
+postfix_term_field_write = { "." ~ identifier ~ ("=" ~ expression)? }
+postfix_term_index_write = { "[" ~ expr_list? ~ "]" ~ "=" ~ expression }
 
-postfix_index_set      = { "[" ~ expression ~ "]" ~ "=" ~ expression }
-postfix_index_set_list = { postfix_index_set ~ ("," ~ postfix_index_set)* ~ ","? }
+postfix_term_write = {
+    postfix_term_field_write
+  | postfix_term_index_write
+}
 
-postfix_term_attrib    = { "." ~ identifier }
-postfix_term_index     = { "[" ~ expression ~ "]" }
-postfix_term_call      = { "(" ~ expr_list? ~ ")" }
-postfix_term_dot_write = { "{" ~ postfix_field_set_list ~ "}" }
-postfix_term_idx_write = { "{" ~ postfix_index_set_list ~ "}" }
-postfix_term_enum_case = { "::" ~ identifier ~ ("(" ~ expression ~ ")")? }
-postfix_term           = {
-    postfix_term_dot_write
-  | postfix_term_idx_write
+postfix_term_write_list = { postfix_term_write ~ ("," ~ postfix_term_write)* ~ ","? }
+
+postfix_term_attrib       = { "." ~ identifier }
+postfix_term_index        = { "[" ~ expr_list? ~ "]" }
+postfix_term_call         = { "(" ~ expr_list? ~ ")" }
+postfix_term_object_write = { "{" ~ postfix_term_write_list ~ "}" }
+postfix_term_enum_case    = { "::" ~ identifier ~ ("(" ~ expression ~ ")")? }
+postfix_term_try_protocol = { "??" | "!!" }
+postfix_term              = {
+    postfix_term_object_write
   | postfix_term_enum_case
   | postfix_term_attrib
   | postfix_term_index
   | postfix_term_call
+  | postfix_term_try_protocol
 }
 
 postfix_lv = { primary ~ postfix_term* }
@@ -116,10 +120,10 @@ expr_stmt     = { expression? ~ ";" }
 throw_stmt = { "throw" ~ expression ~ ";" }
 
 statement = {
-    assert_stmt
-  | break_stmt
+    break_stmt
   | continue_stmt
   | expr_stmt
+  | assert_stmt
   | val_write_stmt
   | val_decl_stmt
   | val_add_eq_write
@@ -134,25 +138,27 @@ statement = {
   | try_block
   | struct_decl
   | enum_decl
+  | function_decl
 }
 
 code_block  = { "{" ~ (statement)* ~ "}" }
 guard_block = { "guard" ~ identifier ~ "=" ~ expression ~ code_block }
 try_block   = { "try" ~ code_block ~ "catch" ~ identifier ~ code_block }
 
-arg_list      = { decl_id ~ ("," ~ decl_id)* ~ ","? }
 vararg_marker = { "..." ~ ","? }
-function_decl = { "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+arg_decl      = { decl_id ~ ("=" ~ expression)? }
+arg_list      = { (arg_decl ~ ("," ~ arg_decl)* ~ ","?)? ~ vararg_marker? }
+function_body = { code_block | ("=" ~ expression ~ ";") }
+function_decl = { "func" ~ identifier ~ "(" ~ arg_list? ~ ")" ~ function_body }
 
 method_access = @{ "instance" | "type" }
-method_decl   =  { method_access? ~ "func" ~ identifier ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+method_decl   =  { method_access? ~ "func" ~ identifier ~ "(" ~ arg_list? ~ ")" ~ function_body }
 
 operator_direction = @{ "reverse" }
 operator_symbol    = @{ "+" | "u-" | "-" | "*" | "/" | "%" | "<<" | ">>" | "==" | "<=" | ">=" | "<" | ">" | "&" | "|" | "^" | "()" | "[]=" | "[]" }
-operator_decl      =  { operator_direction? ~ "operator" ~ operator_symbol ~ "(" ~ arg_list? ~ vararg_marker? ~ ")" ~ code_block }
+operator_decl      =  { operator_direction? ~ "operator" ~ operator_symbol ~ "(" ~ arg_list? ~ ")" ~ function_body }
 
-mixin_entry = { method_decl | operator_decl | mixin_include_decl }
-mixin_decl  = { "mixin" ~ identifier ~ "{" ~ mixin_entry* ~ "}" }
+mixin_decl = { "mixin" ~ identifier ~ "{" ~ struct_entry* ~ "}" }
 
 mixin_include_decl = { "include" ~ expression }
 
@@ -175,14 +181,23 @@ import_id_stmt = { "import" ~ import_target ~ "from" ~ import_path ~ ";" }
 top_level_entry = {
     import_id_stmt
   | import_stmt
+  | expr_stmt
   | val_write_stmt
   | val_decl_stmt
+  | val_add_eq_write
   | struct_decl
   | mixin_decl
   | enum_decl
   | extension_decl
   | function_decl
   | assert_stmt
+  | if_stmt
+  | match_stmt
+  | while_stmt
+  | for_stmt
+  | code_block
+  | guard_block
+  | try_block
 }
 
 module_flag  = { "flag:" ~ identifier ~ ("(" ~ str_literal ~ ")")? ~ ";" }

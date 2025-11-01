@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+import ok, err from aria.core.result;
+import aria.range.int_extension;
+
+func give_out_a_result(x) {
+    if x % 2 == 0 {
+        return ok(x);
+    } else {
+        return err("odd number: {0}".format(x));
+    }
+}
+
+func main() {
+    val l = 1.to(4)
+        .map(give_out_a_result)
+        .flatten_results();
+
+    assert l == err("odd number: 1");
+
+    val l = 2.to(4)
+        .map(|x| => x * 2)    
+        .map(give_out_a_result)
+        .flatten_results();
+
+    assert l.is_Ok();
+    assert l.unwrap_Ok() == [4,6];
+}

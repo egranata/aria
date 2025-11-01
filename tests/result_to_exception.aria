@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+
+import ok, err from aria.core.result;
+
+func throws() {
+    throw 123;
+}
+
+func id(x) {
+    return x;
+}
+
+func main() {
+    val r1 = Result.new_with_try(throws);
+    val r2 = Result.new_with_try(|| => id(456));
+
+    assert r1.is_Err();
+    assert r2.is_Ok();
+
+    assert r1.unwrap_Err() == 123;
+    assert r2.unwrap_Ok() == 456;
+
+    assert r2.or_throw() == 456;
+
+    try {
+        r1.or_throw();
+        assert false;
+    } catch e {
+        assert e == 123;
+    }
+}

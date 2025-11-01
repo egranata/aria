@@ -55,28 +55,26 @@ func get_max_delta(nums) {
     return max_delta;
 }
 
-func main() {
-    val inputs = [
-        [7,6,4,2,1],
-        [1,2,7,8,9],
-        [9,7,6,2,1],
-        [8,6,4,4,1],
-        [1,3,6,7,9],
-    ];
+val inputs = [
+    [7,6,4,2,1],
+    [1,2,7,8,9],
+    [9,7,6,2,1],
+    [8,6,4,4,1],
+    [1,3,6,7,9],
+];
 
-    for input in inputs {
-        val directions = get_directions(input);
-        if directions.len() != 1 || directions.contains(Direction::Equal) {
-            println("Input {0} is unsafe (not always increasing/decreasing)".format(input.join()));
-            continue;
-        }
-
-        val max_delta = get_max_delta(input);
-        if max_delta > 3 {
-            println("Input {0} is unsafe (levels change by more than 3)".format(input.join()));
-            continue;
-        }
-
-        println("Input {0} is safe".format(input.join()));
+for input in inputs {
+    val directions = get_directions(input);
+    if directions.len() != 1 || directions.contains(Direction::Equal) {
+        println("Input {0} is unsafe (not always increasing/decreasing)".format(input.join()));
+        continue;
     }
+
+    val max_delta = get_max_delta(input);
+    if max_delta > 3 {
+        println("Input {0} is unsafe (levels change by more than 3)".format(input.join()));
+        continue;
+    }
+
+    println("Input {0} is safe".format(input.join()));
 }

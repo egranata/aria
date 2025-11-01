@@ -1,0 +1,112 @@
+# SPDX-License-Identifier: Apache-2.0
+func rotl64(x,r) = ((x << r) | (x >> (64 - r)));
+
+func load_le_u64(p) = p[0]
+    | (p[1] << 8)
+    | (p[2] << 16)
+    | (p[3] << 24)
+    | (p[4] << 32)
+    | (p[5] << 40)
+    | (p[6] << 48)
+    | (p[7] << 56);
+
+struct SipHasher {
+    type func new(k0: Int, k1: Int) = alloc(This) {
+        .k0,
+        .k1,
+        .v0 = k0 ^ 0x736f6d6570736575,
+        .v1 = k1 ^ 0x646f72616e646f6d,
+        .v2 = k0 ^ 0x6c7967656e657261,
+        .v3 = k1 ^ 0x7465646279746573,
+        .len = 0,
+        .buf = [0,0,0,0,0,0,0,0],
+        .buflen = 0,
+    };
+
+    func sip_round() {
+        this.v0 = this.v0 + this.v1;
+        this.v1 = rotl64(this.v1, 13);
+        this.v1 = this.v1 ^ this.v0;
+        this.v0 = rotl64(this.v0, 32);
+
+        this.v2 = this.v2 + this.v3;
+        this.v3 = rotl64(this.v3, 16);
+        this.v3 = this.v3 ^ this.v2;
+
+        this.v0 = this.v0 + this.v3;
+        this.v3 = rotl64(this.v3, 21);
+        this.v3 = this.v3 ^ this.v0;
+
+        this.v2 = this.v2 + this.v1;
+        this.v1 = rotl64(this.v1, 17);
+        this.v1 = this.v1 ^ this.v2;
+        this.v2 = rotl64(this.v2, 32);
+
+        return this;
+    }
+
+    func compress(m) {
+        this.v3 = this.v3 ^ m;
+        this.sip_round();
+        this.v0 = this.v0 ^ m;
+    }
+
+    func write(data) {
+        if !(data isa List) {
+            data = [data];
+        }
+
+        val i = 0;
+
+        if this.buflen > 0 {
+            while i < data.len() && this.buflen < 8 {
+                this.buf[this.buflen] = data[i];
+                this.buflen += 1;
+                i += 1;
+            }
+            if this.buflen == 8 {
+                this.compress(load_le_u64(this.buf));
+                this.buflen = 0;
+            }
+        }
+
+        while i + 8 <= data.len() {
+            val m8 = [0,0,0,0,0,0,0,0];
+            m8[0] = data[i+0]; m8[1] = data[i+1]; m8[2] = data[i+2]; m8[3] = data[i+3];
+            m8[4] = data[i+4]; m8[5] = data[i+5]; m8[6] = data[i+6]; m8[7] = data[i+7];
+            val m = load_le_u64(m8);
+            this.compress(m);
+            i += 8;
+        }
+
+        while i < data.len() {
+            this.buf[this.buflen] = data[i];
+            this.buflen += 1;
+            i += 1;
+        }
+        this.len += data.len();
+
+        return this;
+    }
+
+    func finish() {
+        val b = this.len << 56;
+        val i = 0;
+
+        while i < this.buflen {
+            b = b | this.buf[i] << (8 * i);
+            i += 1;
+        }
+
+        this.v3 = this.v3 ^ b;
+
+        this.sip_round();
+        this.v0 = this.v0 ^ b;
+
+        this.v2 = this.v2 ^ 0xff;
+
+        this.sip_round().sip_round().sip_round();
+
+        return (this.v0 ^ this.v1) ^ (this.v2 ^ this.v3);
+    }
+}

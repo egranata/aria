@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+import Decimal from aria.numerics.decimal;
+
+func main() {
+    val f1 = Decimal.parse("3.14159265359")!!;
+
+    assert "{0}".format(f1) == "3.14159265359";
+
+    assert "{0:.2}".format(f1) == "3.14";
+    assert "{0:.3}".format(f1) == "3.142";
+    assert "{0:.4}".format(f1) == "3.1416";
+}

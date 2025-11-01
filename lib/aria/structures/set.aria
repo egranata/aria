@@ -2,13 +2,11 @@
 import Map from aria.structures.map;
 
 struct Set {
-    type func new() {
-        return alloc(This) {
-            .impl = Map.new(),
-        };
-    }
+    type func new() = alloc(This) {
+        .impl = Map.new(),
+    };
 
-    type func new_from_items(...) {
+    type func new_with_items(...) {
         val ret = Set.new();
         for item in varargs {
             ret.set(item);
@@ -72,13 +70,13 @@ struct Set {
 
         func next() {
             val nv = this.impl.next();
-            if nv.done {
-                return nv;
-            } else {
-                return Box(){
-                    .done = false,
-                    .value = nv.value.key,
-                };
+            match nv {
+                case None => {
+                    return Maybe::None;
+                },
+                case Some(x) => {
+                    return Maybe::Some(x.key);
+                }
             }
         }
     }

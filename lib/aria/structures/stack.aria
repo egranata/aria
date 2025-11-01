@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 struct Stack {
-    type func new() {
-        return alloc(This) {
-            .store = [],
-            .count = 0,
-        };
-    }
+    type func new() = alloc(This) {
+        .store = [],
+        .count = 0,
+    };
 
     func len() {
         return this.count;

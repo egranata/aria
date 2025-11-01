@@ -35,8 +35,8 @@ impl BuiltinFunctionImpl for StringLen {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -73,8 +73,8 @@ impl BuiltinFunctionImpl for StringHasPrefix {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -111,8 +111,8 @@ impl BuiltinFunctionImpl for StringHasSuffix {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -157,8 +157,8 @@ impl BuiltinFunctionImpl for StringReplace {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {
@@ -199,8 +199,8 @@ impl BuiltinFunctionImpl for StringSplit {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -236,8 +236,8 @@ impl BuiltinFunctionImpl for StringChars {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -273,8 +273,8 @@ impl BuiltinFunctionImpl for StringBytes {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -292,7 +292,7 @@ impl BuiltinFunctionImpl for FromBytes {
     ) -> crate::vm::ExecutionResult<RunloopExit> {
         let this_str_type = match frame
             .stack
-            .pop_if(|x| RuntimeValue::as_builtin_type(&x).clone())
+            .pop_if(|x| RuntimeValue::as_builtin_type(&x).cloned())
         {
             Some(x) => x,
             None => {
@@ -317,13 +317,16 @@ impl BuiltinFunctionImpl for FromBytes {
         let dest = match String::from_utf8(bytes) {
             Ok(s) => s,
             Err(_) => {
-                let encoding_err_type = this_str_type
+                let encoding_err_rv = this_str_type
                     .read("EncodingError")
-                    .expect("EncodingError not found")
+                    .ok_or_else(|| VmErrorReason::NoSuchIdentifier("EncodingError".to_owned()))?;
+
+                let encoding_err_struct = encoding_err_rv
                     .as_struct()
-                    .expect("EncodingError not a struct");
+                    .ok_or(VmErrorReason::UnexpectedVmState)?;
+
                 return Ok(RunloopExit::throw_struct(
-                    &encoding_err_type,
+                    encoding_err_struct,
                     &[("msg", RuntimeValue::String("invalid utf8".into()))],
                 ));
             }
@@ -337,8 +340,8 @@ impl BuiltinFunctionImpl for FromBytes {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -374,8 +377,8 @@ impl BuiltinFunctionImpl for ToNumericEncoding {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -407,8 +410,8 @@ impl BuiltinFunctionImpl for TrimHead {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -440,8 +443,8 @@ impl BuiltinFunctionImpl for TrimTail {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -473,8 +476,8 @@ impl BuiltinFunctionImpl for Uppercase {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -506,8 +509,8 @@ impl BuiltinFunctionImpl for Lowercase {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -536,8 +539,8 @@ impl BuiltinFunctionImpl for Contains {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {

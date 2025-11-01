@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+func add(x: Int, y: Int = 1) {
+    return x + y;
+}
+
+func main() {
+    assert add(3) == 4;
+    assert add(3,4) == 7;
+}

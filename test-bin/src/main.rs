@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     process::{ExitCode, Termination, exit},
     time::{Duration, Instant},
 };
@@ -10,8 +10,9 @@ use aria_compiler::compile_from_source;
 use aria_parser::ast::SourceBuffer;
 use clap::{Parser, command};
 use glob::Paths;
-use haxby_vm::{frame::Frame, vm::VirtualMachine};
+use haxby_vm::vm::VirtualMachine;
 use rayon::prelude::*;
+use regex::Regex;
 
 #[derive(clap::ValueEnum, Clone, Debug, Default)]
 enum SortBy {
@@ -38,6 +39,9 @@ struct Args {
     #[arg(long, value_enum, default_value_t)]
     /// Sort test results by name or duration
     sort_by: SortBy,
+    /// Skip tests whose file name matches any of these regexes. May repeat.
+    #[arg(long = "skip-pattern")]
+    skip_pattern: Vec<String>,
 }
 
 enum TestCaseResult {
@@ -45,58 +49,111 @@ enum TestCaseResult {
     Fail(String),
 }
 
-fn run_test_from_pattern(path: &str) -> TestCaseResult {
-    let start = Instant::now();
+fn should_skip_file_name(path: &std::path::Path, skip_regex: &[Regex]) -> bool {
+    let Some(fname) = path.file_name().and_then(|s| s.to_str()) else {
+        return false;
+    };
+    skip_regex.iter().any(|re| re.is_match(fname))
+}
 
-    let buffer = match SourceBuffer::file(path) {
-        Ok(buffer) => buffer,
-        Err(err) => {
-            let fail_msg = format!("I/O error: {err}");
-            return TestCaseResult::Fail(fail_msg);
-        }
+fn parse_tags_from_file(path: &str) -> HashSet<String> {
+    let mut tags = HashSet::new();
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return tags;
     };
 
-    let entry_cm = match compile_from_source(&buffer, &Default::default()) {
-        Ok(m) => m,
-        Err(e) => {
-            let err_msg = e
-                .iter()
-                .map(|e| e.to_string())
-                .collect::<Vec<_>>()
-                .join("\n");
-            return TestCaseResult::Fail(format!("compilation error: {err_msg}"));
-        }
-    };
+    static TAGS_RE: once_cell::sync::Lazy<Regex> =
+        once_cell::sync::Lazy::new(|| Regex::new(r"(?i)^\s*###\s*TAGS:\s*(.+)\s*$").unwrap());
 
-    let mut vm = VirtualMachine::default();
-    let entry_rm = match vm.load_module("", entry_cm) {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(m) => m.module,
-            haxby_vm::vm::RunloopExit::Exception(e) => {
-                let mut frame = Frame::default();
-                let epp = e.value.prettyprint(&mut frame, &mut vm);
-                return TestCaseResult::Fail(epp);
+    for line in text.lines() {
+        if let Some(cap) = TAGS_RE.captures(line)
+            && let Some(list) = cap.get(1)
+        {
+            for t in list.as_str().split(',') {
+                let t = t.trim();
+                if !t.is_empty() {
+                    tags.insert(t.to_ascii_uppercase());
+                }
             }
-        },
-        Err(err) => {
-            return TestCaseResult::Fail(err.prettyprint(None));
         }
-    };
-
-    match vm.execute_module(&entry_rm) {
-        Ok(rle) => match rle {
-            haxby_vm::vm::RunloopExit::Ok(_) => {
-                let duration = start.elapsed();
-                TestCaseResult::Pass(duration)
-            }
-            haxby_vm::vm::RunloopExit::Exception(e) => {
-                let mut frame = Frame::default();
-                let epp = e.value.prettyprint(&mut frame, &mut vm);
-                TestCaseResult::Fail(epp)
-            }
-        },
-        Err(err) => TestCaseResult::Fail(err.prettyprint(Some(entry_rm))),
     }
+    tags
+}
+
+fn run_test_from_pattern(path: &str) -> TestCaseResult {
+    let tags = parse_tags_from_file(path);
+    let start_wall = Instant::now();
+
+    let run_once = || -> TestCaseResult {
+        let start = Instant::now();
+
+        let buffer = match SourceBuffer::file(path) {
+            Ok(buffer) => buffer,
+            Err(err) => return TestCaseResult::Fail(format!("I/O error: {err}")),
+        };
+
+        let entry_cm = match compile_from_source(&buffer, &Default::default()) {
+            Ok(m) => m,
+            Err(e) => {
+                let err_msg = e
+                    .iter()
+                    .map(|e| e.to_string())
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                return TestCaseResult::Fail(format!("compilation error: {err_msg}"));
+            }
+        };
+
+        let mut vm = VirtualMachine::default();
+        let entry_rm = match vm.load_module("", entry_cm) {
+            Ok(rle) => match rle {
+                haxby_vm::vm::RunloopExit::Ok(m) => m.module,
+                haxby_vm::vm::RunloopExit::Exception(e) => {
+                    let mut frame = Default::default();
+                    let epp = e.value.prettyprint(&mut frame, &mut vm);
+                    return TestCaseResult::Fail(epp);
+                }
+            },
+            Err(err) => return TestCaseResult::Fail(err.prettyprint(None)),
+        };
+
+        match vm.execute_module(&entry_rm) {
+            Ok(rle) => match rle {
+                haxby_vm::vm::RunloopExit::Ok(_) => TestCaseResult::Pass(start.elapsed()),
+                haxby_vm::vm::RunloopExit::Exception(e) => {
+                    let mut frame = Default::default();
+                    let epp = e.value.prettyprint(&mut frame, &mut vm);
+                    TestCaseResult::Fail(epp)
+                }
+            },
+            Err(err) => TestCaseResult::Fail(err.prettyprint(Some(entry_rm))),
+        }
+    };
+
+    let mut outcome = run_once();
+
+    let is_flaky = tags.contains("FLAKEY") || tags.contains("FLAKY");
+    if is_flaky && let TestCaseResult::Fail(_) = outcome {
+        let retry = run_once();
+        outcome = match retry {
+            ok @ TestCaseResult::Pass(_) => ok,
+            fail @ TestCaseResult::Fail(_) => fail,
+        };
+    }
+
+    let is_xfail = tags.contains("XFAIL");
+    if is_xfail {
+        match outcome {
+            TestCaseResult::Pass(_) => {
+                return TestCaseResult::Fail("unexpected pass (XFAIL)".into());
+            }
+            TestCaseResult::Fail(_) => {
+                return TestCaseResult::Pass(start_wall.elapsed());
+            }
+        }
+    }
+
+    outcome
 }
 
 #[derive(Default)]
@@ -149,7 +206,7 @@ impl Termination for SuiteReport {
     }
 }
 
-fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
+fn run_tests_from_pattern(patterns: Paths, args: &Args, skip_regex: &[Regex]) -> SuiteReport {
     let mut results = SuiteReport::default();
 
     let start = Instant::now();
@@ -157,6 +214,10 @@ fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
     let outcomes = if args.sequential {
         let mut ret = vec![];
         for pattern in patterns.flatten() {
+            if should_skip_file_name(&pattern, skip_regex) {
+                continue;
+            }
+
             let test_name = pattern.file_stem().unwrap().to_str().unwrap();
             let test_path = pattern.as_os_str().to_str().unwrap();
             if args.verbose {
@@ -172,6 +233,7 @@ fn run_tests_from_pattern(patterns: Paths, args: &Args) -> SuiteReport {
     } else {
         patterns
             .flatten()
+            .filter(|p| !should_skip_file_name(p, skip_regex))
             .par_bridge()
             .map(|path| {
                 let test_name = path.file_stem().unwrap().to_str().unwrap();
@@ -201,8 +263,19 @@ fn main() -> SuiteReport {
         println!("--fail-fast is only supported in sequential mode; ignoring");
     }
 
+    let mut skip_regex = Vec::new();
+    for pattern in &args.skip_pattern {
+        match Regex::new(pattern) {
+            Ok(re) => skip_regex.push(re),
+            Err(e) => {
+                eprintln!("invalid --skip-pattern `{pattern}`: {e}");
+                exit(2);
+            }
+        }
+    }
+
     let mut results = match glob::glob(&args.path) {
-        Ok(pattern) => run_tests_from_pattern(pattern, &args),
+        Ok(pattern) => run_tests_from_pattern(pattern, &args, &skip_regex),
         Err(err) => {
             eprintln!("invalid pattern: {err}");
             exit(1);

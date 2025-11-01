@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        ArgumentList, CodeBlock, Identifier, MethodAccess, MethodDecl, SourceBuffer,
+        ArgumentList, FunctionBody, Identifier, MethodAccess, MethodDecl, SourceBuffer,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -27,19 +27,12 @@ impl Derive for MethodDecl {
         } else {
             ArgumentList::empty(source.pointer(loc))
         };
-        let vararg = if inner.peek().unwrap().as_rule() == Rule::vararg_marker {
-            let _ = inner.next();
-            true
-        } else {
-            false
-        };
-        let body = CodeBlock::from_parse_tree(inner.next().expect("need body"), source);
+        let body = FunctionBody::from_parse_tree(inner.next().expect("need body"), source);
         Self {
             loc: source.pointer(loc),
             access,
             name,
             args,
-            vararg,
             body,
         }
     }
@@ -47,14 +40,6 @@ impl Derive for MethodDecl {
 
 impl PrettyPrintable for MethodDecl {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
-        buffer
-            << &self.access
-            << " func "
-            << &self.name
-            << " ("
-            << &self.args
-            << if self.vararg { "..." } else { "" }
-            << ") "
-            << &self.body
+        buffer << &self.access << " func " << &self.name << " (" << &self.args << ") " << &self.body
     }
 }

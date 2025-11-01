@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val s = "\x41bc\x20 \x42";
+    assert s == "Abc  B";
+
+    val t = "\u{41}ria == \u{2764}";
+    assert t == "Aria == ❤";
+}

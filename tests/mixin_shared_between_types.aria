@@ -3,7 +3,7 @@ mixin SomeBehavior {
     # requires
     # func input()
     func behavior() {
-        "input is {0}".format(this.input());
+        return "input is {0}".format(this.input());
     }
 }
 

@@ -12,7 +12,7 @@ enum Unit {
         return "unit";
     }
 
-    operator ==(rhs: Unit) {
-        return true;
+    operator ==(rhs) {
+        return rhs isa Unit;
     }
 }

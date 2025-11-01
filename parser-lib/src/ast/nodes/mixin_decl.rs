@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
     ast::{
-        Identifier, MixinDecl, MixinEntry, SourceBuffer,
+        Identifier, MixinDecl, SourceBuffer, StructEntry,
         derive::Derive,
         prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator},
     },
@@ -16,7 +16,7 @@ impl Derive for MixinDecl {
         let name = Identifier::from_parse_tree(inner.next().expect("need identifier"), source);
         let mut body = vec![];
         for next in inner {
-            let next = MixinEntry::from_parse_tree(next, source);
+            let next = StructEntry::from_parse_tree(next, source);
             body.push(next);
         }
         Self {

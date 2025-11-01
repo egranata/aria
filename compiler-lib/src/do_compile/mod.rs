@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{collections::HashSet, rc::Rc};
+use std::{collections::HashSet, fmt::Display, rc::Rc};
 
 use aria_parser::ast::{
-    ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl, EnumDecl,
-    EnumDeclEntry, Expression, Identifier, MatchPattern, MatchPatternEnumCase, MatchRule,
-    MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl, OperatorDecl, ParsedModule,
-    ReturnStatement, SourceBuffer, SourcePointer, Statement, StringLiteral, StructDecl,
-    StructEntry, ValDeclStatement, prettyprint::PrettyPrintable, source_to_ast,
+    ArgumentDecl, ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl,
+    EnumDecl, EnumDeclEntry, Expression, FunctionBody, Identifier, MatchPattern,
+    MatchPatternEnumCase, MatchRule, MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl,
+    OperatorDecl, ParsedModule, ReturnStatement, SourceBuffer, SourcePointer, Statement,
+    StringLiteral, StructDecl, StructEntry, ValDeclStatement, prettyprint::PrettyPrintable,
+    source_to_ast,
 };
 use haxby_opcodes::{builtin_type_ids::BUILTIN_TYPE_ANY, function_attribs::*};
 use thiserror::Error;
 
 use crate::{
     CompilationOptions,
-    constant_value::{CompiledCodeObject, ConstantValue, ConstantValuesError},
+    constant_value::{ConstantValue, ConstantValuesError},
     func_builder::{BasicBlock, BasicBlockOpcode, FunctionBuilder},
     module::CompiledModule,
     scope::{CompilationScope, ScopeError, ScopeErrorReason},
@@ -38,7 +39,7 @@ pub enum CompilationErrorReason {
     #[error("{0} cannot be reversed")]
     IrreversibleOperator(String),
     #[error("operator {0} accepts {1} arguments, but {2} were declared")]
-    OperatorArityMismatch(String, usize, usize),
+    OperatorArityMismatch(String, OperatorArity, usize),
     #[error("attempt to read a write-only value")]
     WriteOnlyValue,
     #[error("parser error: {0}")]
@@ -47,6 +48,8 @@ pub enum CompilationErrorReason {
     TooManyConstants,
     #[error("function accepts too many arguments")]
     TooManyArguments,
+    #[error("argument without a default value follows argument with default value")]
+    DefaultArgsMustTrail,
     #[error("flow control statement not permitted in current context")]
     FlowControlNotAllowed,
     #[error("argument name '{0}' is already defined for this function")]
@@ -141,97 +144,158 @@ trait CompileNode<'a, T = (), E = CompilationError> {
 mod nodes;
 mod postfix;
 
+fn ensure_arg_list_is_correct(args: &ArgumentList) -> CompilationResult {
+    ensure_unique_arg_names(args)?;
+    ensure_default_args_trailing(args)?;
+    Ok(())
+}
+
 fn ensure_unique_arg_names(args: &ArgumentList) -> CompilationResult {
     let mut arg_set = HashSet::new();
     for arg in &args.names {
-        if arg_set.contains(&arg.name.value) {
+        if arg_set.contains(arg.name()) {
             return Err(CompilationError {
                 loc: arg.loc.clone(),
-                reason: CompilationErrorReason::DuplicateArgumentName(arg.name.value.clone()),
+                reason: CompilationErrorReason::DuplicateArgumentName(arg.name().to_owned()),
             });
         } else {
-            arg_set.insert(arg.name.value.clone());
+            arg_set.insert(arg.name().to_owned());
         }
     }
 
     Ok(())
 }
 
-fn emit_args_at_target(args: &ArgumentList, params: &mut CompileParams) -> CompilationResult {
+fn ensure_default_args_trailing(args: &ArgumentList) -> CompilationResult {
+    let mut found_default = false;
     for arg in &args.names {
-        if let Some(ty) = &arg.ty {
-            ty.do_compile(params)?;
-        } else {
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(
-                    BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
-                    arg.loc.clone(),
-                );
+        if arg.deft.is_some() {
+            found_default = true;
+        } else if found_default {
+            return Err(CompilationError {
+                loc: arg.loc.clone(),
+                reason: CompilationErrorReason::DefaultArgsMustTrail,
+            });
         }
-        params.scope.emit_typed_define(
-            &arg.name.value,
-            &mut params.module.constants,
-            params.writer.get_current_block(),
-            arg.loc.clone(),
-        )?;
-        params.scope.emit_write(
-            &arg.name.value,
-            &mut params.module.constants,
-            params.writer.get_current_block(),
-            arg.loc.clone(),
-        )?;
     }
+
     Ok(())
 }
 
-fn compile_method_decl(pf: &MethodDecl, params: &mut CompileParams) -> CompilationResult {
-    if pf.args.names.len() > u8::MAX.into() {
+fn emit_arg_at_target(
+    arg: &ArgumentDecl,
+    idx: u8,
+    params: &mut CompileParams,
+) -> CompilationResult {
+    if let Some(deft_expr) = arg.deft.as_ref() {
+        let block = params
+            .writer
+            .append_block_at_end(&format!("supplied_arg_{idx}"));
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(
+                BasicBlockOpcode::JumpIfArgSupplied(idx, block.clone()),
+                arg.loc.clone(),
+            );
+        deft_expr.do_compile(params)?;
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(BasicBlockOpcode::Jump(block.clone()), arg.loc.clone());
+        params.writer.set_current_block(block);
+    }
+    if let Some(ty) = arg.type_info() {
+        ty.do_compile(params)?;
+    } else {
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(
+                BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
+                arg.loc.clone(),
+            );
+    }
+    params.scope.emit_typed_define(
+        arg.name(),
+        &mut params.module.constants,
+        params.writer.get_current_block(),
+        arg.loc.clone(),
+    )?;
+    params.scope.emit_write(
+        arg.name(),
+        &mut params.module.constants,
+        params.writer.get_current_block(),
+        arg.loc.clone(),
+    )?;
+
+    Ok(())
+}
+
+#[allow(dead_code)]
+struct ArgumentCountInfo {
+    user_args: u8,
+    required_args: u8,
+    default_args: u8,
+    varargs: bool,
+}
+
+fn emit_args_at_target(
+    prefix_args: &[ArgumentDecl],
+    args: &ArgumentList,
+    suffix_args: &[ArgumentDecl],
+    params: &mut CompileParams,
+) -> CompilationResult<ArgumentCountInfo> {
+    ensure_arg_list_is_correct(args)?;
+
+    let total_args = prefix_args.len() + args.names.len() + suffix_args.len();
+    if total_args > u8::MAX.into() {
         return Err(CompilationError {
-            loc: pf.loc.clone(),
+            loc: args.loc.clone(),
             reason: CompilationErrorReason::TooManyArguments,
         });
     }
 
-    let scope = CompilationScope::function(params.scope);
-    let mut writer = FunctionBuilder::default();
-    let cflow = ControlFlowTargets::default();
-    let mut c_params = CompileParams {
-        module: params.module,
-        scope: &scope,
-        writer: &mut writer,
-        cflow: &cflow,
-        options: params.options,
+    let mut argc_info = ArgumentCountInfo {
+        user_args: args.len() as u8,
+        required_args: 0,
+        default_args: 0,
+        varargs: args.vararg,
     };
-    let arity: u8 = pf.args.names.len() as u8 + 1;
-    pf.do_compile(&mut c_params)?;
-    let co = match writer.write(&params.module.constants, params.options) {
-        Ok(c) => c,
-        Err(er) => {
-            return Err(CompilationError {
-                loc: pf.loc.clone(),
-                reason: er,
-            });
+
+    let mut arg_idx: u8 = 0;
+
+    for arg in prefix_args {
+        emit_arg_at_target(arg, arg_idx, params)?;
+        argc_info.required_args += 1;
+        arg_idx += 1;
+    }
+
+    for arg in &args.names {
+        emit_arg_at_target(arg, arg_idx, params)?;
+        if arg.deft.is_some() {
+            argc_info.default_args += 1;
+        } else {
+            argc_info.required_args += 1;
         }
-    };
-    let frame_size = scope.as_function_root().unwrap().num_locals();
-    let line_table = writer.write_line_table().clone();
-    let cco = CompiledCodeObject {
-        name: pf.name.value.clone(),
-        body: co,
-        arity,
-        loc: pf.loc.clone(),
-        line_table,
-        frame_size,
-    };
-    let cco_idx =
-        pf.insert_const_or_fail(params, ConstantValue::CompiledCodeObject(cco), &pf.loc)?;
-    params
-        .writer
-        .get_current_block()
-        .write_opcode_and_source_info(BasicBlockOpcode::Push(cco_idx), pf.loc.clone());
-    Ok(())
+        arg_idx += 1;
+    }
+
+    for arg in suffix_args {
+        emit_arg_at_target(arg, arg_idx, params)?;
+        argc_info.required_args += 1;
+        arg_idx += 1;
+    }
+
+    if args.vararg {
+        params.scope.emit_untyped_define(
+            "varargs",
+            &mut params.module.constants,
+            params.writer.get_current_block(),
+            args.loc.clone(),
+        )?;
+    }
+    Ok(argc_info)
 }
 
 // assume your parent struct is on the stack
@@ -249,7 +313,8 @@ fn emit_type_mixin_include_decl_compile(
 
 // assume your parent struct is on the stack
 fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> CompilationResult {
-    compile_method_decl(md, params)?;
+    md.do_compile(params)?;
+
     let name_idx = md.insert_const_or_fail(
         params,
         ConstantValue::String(md.name.value.clone()),
@@ -260,8 +325,11 @@ fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> Comp
         .get_current_block()
         .write_opcode_and_source_info(
             BasicBlockOpcode::BindMethod(
-                if md.vararg { FUNC_ACCEPTS_VARARG } else { 0 }
-                    | FUNC_IS_METHOD
+                if md.args.vararg {
+                    FUNC_ACCEPTS_VARARG
+                } else {
+                    0
+                } | FUNC_IS_METHOD
                     | if md.access == MethodAccess::Type {
                         METHOD_ATTRIBUTE_TYPE
                     } else {
@@ -275,8 +343,40 @@ fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> Comp
     Ok(())
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OperatorArity {
+    Exactly(usize),
+    AtLeast(usize),
+}
+
+impl OperatorArity {
+    fn unary() -> Self {
+        OperatorArity::Exactly(1)
+    }
+
+    fn any() -> Self {
+        OperatorArity::AtLeast(0)
+    }
+
+    fn is_acceptable(&self, arg_count: usize) -> bool {
+        match self {
+            OperatorArity::Exactly(n) => *n == arg_count,
+            OperatorArity::AtLeast(n) => arg_count >= *n,
+        }
+    }
+}
+
+impl Display for OperatorArity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OperatorArity::Exactly(n) => write!(f, "exactly {n}"),
+            OperatorArity::AtLeast(n) => write!(f, "at least {n}"),
+        }
+    }
+}
+
 struct OperatorInfo {
-    arity: Option<usize>, // number of arguments (minus the receiver this)
+    arity: OperatorArity, // number of arguments (minus the receiver this)
     direct_name: &'static str,
     reverse_name: &'static str,
 }
@@ -288,7 +388,7 @@ lazy_static::lazy_static! {
         map.insert(
             "+",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "add",
                 reverse_name: "radd",
             },
@@ -297,7 +397,7 @@ lazy_static::lazy_static! {
         map.insert(
             "-",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "sub",
                 reverse_name: "rsub",
             },
@@ -306,7 +406,7 @@ lazy_static::lazy_static! {
         map.insert(
             "*",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "mul",
                 reverse_name: "rmul",
             },
@@ -315,7 +415,7 @@ lazy_static::lazy_static! {
         map.insert(
             "/",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "div",
                 reverse_name: "rdiv",
             },
@@ -324,7 +424,7 @@ lazy_static::lazy_static! {
         map.insert(
             "%",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "rem",
                 reverse_name: "rrem",
             },
@@ -333,7 +433,7 @@ lazy_static::lazy_static! {
         map.insert(
             "<<",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "lshift",
                 reverse_name: "rlshift",
             },
@@ -342,7 +442,7 @@ lazy_static::lazy_static! {
         map.insert(
             ">>",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "rshift",
                 reverse_name: "rrshift",
             },
@@ -350,7 +450,7 @@ lazy_static::lazy_static! {
 
         map.insert("==",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "equals",
                 reverse_name: "",
             },
@@ -358,7 +458,7 @@ lazy_static::lazy_static! {
 
         map.insert("<",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "lt",
                 reverse_name: "gt",
             },
@@ -366,7 +466,7 @@ lazy_static::lazy_static! {
 
         map.insert(">",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "gt",
                 reverse_name: "lt",
             },
@@ -374,7 +474,7 @@ lazy_static::lazy_static! {
 
         map.insert("<=",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "lteq",
                 reverse_name: "gteq",
             },
@@ -382,7 +482,7 @@ lazy_static::lazy_static! {
 
         map.insert(">=",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "gteq",
                 reverse_name: "lteq",
             },
@@ -390,7 +490,7 @@ lazy_static::lazy_static! {
 
         map.insert("&",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "bwand",
                 reverse_name: "rbwand",
             },
@@ -398,7 +498,7 @@ lazy_static::lazy_static! {
 
         map.insert("|",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "bwor",
                 reverse_name: "rbwor",
             },
@@ -406,7 +506,7 @@ lazy_static::lazy_static! {
 
         map.insert("^",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::unary(),
                 direct_name: "xor",
                 reverse_name: "rxor",
             },
@@ -414,7 +514,7 @@ lazy_static::lazy_static! {
 
         map.insert("u-",
             OperatorInfo {
-                arity: Some(0),
+                arity: OperatorArity::Exactly(0),
                 direct_name: "neg",
                 reverse_name: "",
             },
@@ -422,7 +522,7 @@ lazy_static::lazy_static! {
 
         map.insert("()",
             OperatorInfo {
-                arity: None, // call operator has no arity, it can take any number of arguments
+                arity: OperatorArity::any(),
                 direct_name: "call",
                 reverse_name: "",
             },
@@ -430,7 +530,7 @@ lazy_static::lazy_static! {
 
         map.insert("[]",
             OperatorInfo {
-                arity: Some(1),
+                arity: OperatorArity::any(),
                 direct_name: "read_index",
                 reverse_name: "",
             },
@@ -438,7 +538,7 @@ lazy_static::lazy_static! {
 
         map.insert("[]=",
             OperatorInfo {
-                arity: Some(2),
+                arity: OperatorArity::AtLeast(1),
                 direct_name: "write_index",
                 reverse_name: "",
             },
@@ -467,17 +567,15 @@ fn emit_operator_decl_compile(op: &OperatorDecl, params: &mut CompileParams) -> 
         }
     };
 
-    if let Some(arity) = op_info.arity {
-        if op.args.len() != arity {
-            return Err(CompilationError {
-                loc: op.loc.clone(),
-                reason: CompilationErrorReason::OperatorArityMismatch(
-                    op_symbol,
-                    arity,
-                    op.args.len(),
-                ),
-            });
-        }
+    if !op_info.arity.is_acceptable(op.args.len()) {
+        return Err(CompilationError {
+            loc: op.loc.clone(),
+            reason: CompilationErrorReason::OperatorArityMismatch(
+                op_symbol,
+                op_info.arity,
+                op.args.len(),
+            ),
+        });
     }
 
     if op.reverse && op_info.reverse_name.is_empty() {
@@ -504,7 +602,6 @@ fn emit_operator_decl_compile(op: &OperatorDecl, params: &mut CompileParams) -> 
             value: op_fn_name,
         },
         args: op.args.clone(),
-        vararg: op.vararg,
         body: op.body.clone(),
     };
 
@@ -707,7 +804,9 @@ fn generate_is_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
         }),
     };
 
-    let method_body = CodeBlock::from(&Statement::MatchStatement(match_statement));
+    let method_body = FunctionBody {
+        code: CodeBlock::from(&Statement::MatchStatement(match_statement)),
+    };
     MethodDecl {
         loc: case.loc.clone(),
         access: MethodAccess::Instance,
@@ -716,7 +815,6 @@ fn generate_is_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
             value: format!("is_{}", case.name.value),
         },
         args: ArgumentList::empty(case.loc.clone()),
-        vararg: false,
         body: method_body,
     }
 }
@@ -769,7 +867,9 @@ fn generate_unwap_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
         }),
     };
 
-    let method_body = CodeBlock::from(&Statement::MatchStatement(match_statement));
+    let method_body = FunctionBody {
+        code: CodeBlock::from(&Statement::MatchStatement(match_statement)),
+    };
     MethodDecl {
         loc: case.loc.clone(),
         access: MethodAccess::Instance,
@@ -778,7 +878,6 @@ fn generate_unwap_case_helper_for_enum(case: &EnumCaseDecl) -> MethodDecl {
             value: format!("unwrap_{}", case.name.value),
         },
         args: ArgumentList::empty(case.loc.clone()),
-        vararg: false,
         body: method_body,
     }
 }

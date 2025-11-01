@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use aria_compiler::{constant_value::ConstantValue, module::CompiledModule};
+use rustc_data_structures::fx::FxHashMap;
 
 use crate::{
     builtins::VmBuiltins,
-    runtime_value::{RuntimeValue, kind::RuntimeValueType},
+    error::vm_error::VmErrorReason,
+    runtime_value::{
+        RuntimeValue,
+        function::{BuiltinFunctionImpl, Function},
+        kind::RuntimeValueType,
+    },
 };
 
 #[derive(Clone)]
@@ -20,7 +22,7 @@ pub struct NamedValue {
 
 struct RuntimeModuleImpl {
     compiled_module: CompiledModule,
-    values: RefCell<HashMap<String, NamedValue>>,
+    values: RefCell<FxHashMap<String, NamedValue>>,
 }
 
 impl RuntimeModuleImpl {
@@ -65,25 +67,18 @@ impl RuntimeModuleImpl {
         name: &str,
         val: RuntimeValue,
         builtins: &VmBuiltins,
-    ) -> bool {
+    ) -> Result<(), VmErrorReason> {
         let mut bm = self.values.borrow_mut();
         if let Some(nval) = bm.get_mut(name) {
             if !val.isa(&nval.ty, builtins) {
-                return false;
+                Err(VmErrorReason::UnexpectedType)
             } else {
                 nval.val = val;
+                Ok(())
             }
         } else {
-            bm.insert(
-                name.to_owned(),
-                NamedValue {
-                    val,
-                    ty: RuntimeValueType::Any,
-                },
-            );
+            Err(VmErrorReason::NoSuchIdentifier(name.to_owned()))
         }
-
-        true
     }
 
     fn store_named_value(&self, name: &str, val: RuntimeValue) {
@@ -151,7 +146,7 @@ impl RuntimeModule {
         name: &str,
         val: RuntimeValue,
         builtins: &VmBuiltins,
-    ) -> bool {
+    ) -> Result<(), VmErrorReason> {
         self.imp.store_typechecked_named_value(name, val, builtins)
     }
 
@@ -159,15 +154,32 @@ impl RuntimeModule {
         self.imp.load_indexed_const(idx)
     }
 
-    pub fn lift_all_symbols_from_other(&self, prior_art: &Self, vm: &crate::VirtualMachine) {
+    pub fn lift_all_symbols_from_other(
+        &self,
+        prior_art: &Self,
+        vm: &crate::VirtualMachine,
+    ) -> Result<(), VmErrorReason> {
         for (name, val) in prior_art.named_values_of_this() {
             self.typedef_named_value(&name, val.ty.clone());
-            self.store_typechecked_named_value(&name, val.val.clone(), &vm.builtins);
+            self.store_typechecked_named_value(&name, val.val.clone(), &vm.builtins)?;
         }
+        Ok(())
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
+    pub fn extract_value<T, U>(&self, name: &str, f: T) -> Option<U>
+    where
+        T: FnOnce(RuntimeValue) -> Option<U>,
+    {
+        f(self.load_named_value(name)?)
+    }
+
+    pub fn insert_builtin<T>(&self)
+    where
+        T: 'static + Default + BuiltinFunctionImpl,
+    {
+        let t = T::default();
+        let name = t.name().to_owned();
+        self.store_named_value(&name, RuntimeValue::Function(Function::builtin_from(t)));
     }
 }
 

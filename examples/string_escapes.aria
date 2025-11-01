@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+import Color, ColorScheme from aria.system.coloring;
+
+println("Hello {0}, this is an {1} {2}".format(
+        "world".red(),
+        "example".blue().white_bg(),
+        "program".with_bold()
+));
+
+val color_scheme = ColorScheme.new().with_foreground_color(Color::BrightMagenta).with_background_color(Color::BrightWhite).with_bold(true);
+
+println("This is yet another example string".with_style(color_scheme));
+
+println("And this one is {0} unformatted.".format("mostly".with_foreground_color(Color::RGB(Color.RGB.new(255,165,0)))));
+
+println("And this one uses {0} background color".format("hexadecimal".with_background_color(Color::RGB(Color.RGB.new_with_hex_string("#c3e91c")!!))));

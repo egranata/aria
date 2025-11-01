@@ -1,0 +1,253 @@
+# SPDX-License-Identifier: Apache-2.0
+enum Color {
+    case Black,
+    case Red,
+    case Green,
+    case Yellow,
+    case Blue,
+    case Magenta,
+    case Cyan,
+    case White,
+    case BrightBlack,
+    case BrightRed,
+    case BrightGreen,
+    case BrightYellow,
+    case BrightBlue,
+    case BrightMagenta,
+    case BrightCyan,
+    case BrightWhite,
+
+    struct RGB {
+        type func new(red: Int, green: Int, blue: Int) {
+            if red < 0 {
+                red *= -1;
+            }
+            if green < 0 {
+                green *= -1;
+            }
+            if blue < 0 {
+                blue *= -1;
+            }
+
+            red = red % 256;
+            green = green % 256;
+            blue = blue % 256;
+
+            return alloc(This) {
+                .red,
+                .green,
+                .blue
+            };
+        }
+
+        type func new_with_hex_string(s: String) {
+            if s.len() == 7 && s[0] == '#' {
+                s = s.substring(1, s.len());
+            }
+
+            if s.len() != 6 {
+                return Result::Ok("Invalid RGB hex string length");
+            }
+
+            val red = s.substring(0,1);
+            val green = s.substring(2,3);
+            val blue = s.substring(4,5);
+
+            val red = Int.parse_radix(red, 16)??;
+            val green = Int.parse_radix(green, 16)??;
+            val blue = Int.parse_radix(blue, 16)??;
+
+            return Result::Ok(This.new(red, green, blue));
+        }
+
+        func prettyprint() {
+            return "RGB({0}, {1}, {2})".format(this.red, this.green, this.blue);
+        }
+
+        func to_ansi_sequence() {
+            return "2;{0};{1};{2}".format(this.red, this.green, this.blue);
+        }
+    }
+
+    case RGB(Color.RGB),
+}
+
+extension Color {
+    func prettyprint() {
+        match this {
+            case Black => { return "Black"; },
+            case Red => { return "Red"; },
+            case Green => { return "Green"; },
+            case Yellow => { return "Yellow"; },
+            case Blue => { return "Blue"; },
+            case Magenta => { return "Magenta"; },
+            case Cyan => { return "Cyan"; },
+            case White => { return "White"; },
+            case BrightBlack => { return "Bright Black"; },
+            case BrightRed => { return "Bright Red"; },
+            case BrightGreen => { return "Bright Green"; },
+            case BrightYellow => { return "Bright Yellow"; },
+            case BrightBlue => { return "Bright Blue"; },
+            case BrightMagenta => { return "Bright Magenta"; },
+            case BrightCyan => { return "Bright Cyan"; },
+            case BrightWhite => { return "Bright White"; },
+            case RGB(r) => { return r.prettyprint(); },
+        }
+    }
+}
+
+extension Color {
+    func to_ansi_sequence(fg: Bool) {
+        match this {
+            case Black => { return fg ? "30" : "40"; },
+            case Red => { return fg ? "31" : "41"; },
+            case Green => { return fg ? "32" : "42"; },
+            case Yellow => { return fg ? "33" : "43"; },
+            case Blue => { return fg ? "34" : "44"; },
+            case Magenta => { return fg ? "35" : "45"; },
+            case Cyan => { return fg ? "36" : "46"; },
+            case White => { return fg ? "37" : "47"; },
+            case BrightBlack => { return fg ? "90" : "100"; },
+            case BrightRed => { return fg ? "91" : "101"; },
+            case BrightGreen => { return fg ? "92" : "102"; },
+            case BrightYellow => { return fg ? "93" : "103"; },
+            case BrightBlue => { return fg ? "94" : "104"; },
+            case BrightMagenta => { return fg ? "95" : "105"; },
+            case BrightCyan => { return fg ? "96" : "106"; },
+            case BrightWhite => { return fg ? "97" : "107"; },
+            case RGB(r) => {
+                val color_seq = r.to_ansi_sequence();
+                return "{0};{1}".format(fg ? 38 : 48, color_seq);
+            }
+        }
+    }
+}
+
+struct ColorScheme {
+    type func new() = alloc(This).reset();
+
+    func reset() {
+        this.bold = false;
+        this.fg = Maybe::None;
+        this.bg = Maybe::None;
+        return this;
+    }
+
+    func with_background_color(c: Color) {
+        this.bg = Maybe::Some(c);
+        return this;
+    }
+
+    func with_foreground_color(c: Color) {
+        this.fg = Maybe::Some(c);
+        return this;
+    }
+
+    func with_bold(b: Bool) {
+        this.bold = b;
+        return this;
+    }
+
+    func apply(s: String) {
+        val result = s;
+        val flags_on = [];
+        val flags_off = [];
+ 
+        if this.bold {
+            flags_on.append("1");
+            flags_off.append("22");
+        }
+        
+        match this.fg {
+            case Some(c) => {
+                flags_on.append(c.to_ansi_sequence(true));
+                flags_off.append("39");
+            },
+        }
+        
+        match this.bg {
+            case Some(c) => {
+                flags_on.append(c.to_ansi_sequence(false));
+                flags_off.append("49");
+            },
+        }
+
+        assert flags_on.len() == flags_off.len();
+
+        if flags_on.len() == 0 {
+            return result;
+        } else {
+            return "\x1b[{0}m{1}\x1b[{2}m".format(";".join(flags_on), result, ";".join(flags_off));
+        }
+    }
+
+    func prettyprint() {
+        val fg_string = "foreground: default";
+        match this.fg {
+            case Some(c) => { fg_string = "foreground: " + c.prettyprint(); },
+        }
+
+        val bg_string = "background: default";
+        match this.bg {
+            case Some(c) => { bg_string = "background: " + c.prettyprint(); },
+        }
+
+        val bold_string = this.bold ? "bold: on" : "bold: off";
+
+        return "color scheme: " + fg_string + " " + bg_string + " " + bold_string;
+    }
+}
+
+extension String {
+    func with_background_color(c: Color) {
+        return "\x1b[{0}m{1}\x1b[49m".format(c.to_ansi_sequence(false), this);
+    }
+
+    func with_foreground_color(c: Color) {
+        return "\x1b[{0}m{1}\x1b[39m".format(c.to_ansi_sequence(true), this);
+    }
+
+    func with_bold() {
+        return "\x1b[1m{0}\x1b[22m".format(this);
+    }
+
+    func with_style(s: ColorScheme) {
+        return s.apply(this);
+    }
+
+    func black() = this.with_foreground_color(Color::Black);
+    func red() = this.with_foreground_color(Color::Red);
+    func green() = this.with_foreground_color(Color::Green);
+    func yellow() = this.with_foreground_color(Color::Yellow);
+    func blue() = this.with_foreground_color(Color::Blue);
+    func magenta() = this.with_foreground_color(Color::Magenta);
+    func cyan() = this.with_foreground_color(Color::Cyan);
+    func white() = this.with_foreground_color(Color::White);
+
+    func black_bg() = this.with_background_color(Color::Black);
+    func red_bg() = this.with_background_color(Color::Red);
+    func green_bg() = this.with_background_color(Color::Green);
+    func yellow_bg() = this.with_background_color(Color::Yellow);
+    func blue_bg() = this.with_background_color(Color::Blue);
+    func magenta_bg() = this.with_background_color(Color::Magenta);
+    func cyan_bg() = this.with_background_color(Color::Cyan);
+    func white_bg() = this.with_background_color(Color::White);
+
+    func bright_black() = this.with_foreground_color(Color::BrightBlack);
+    func bright_red() = this.with_foreground_color(Color::BrightRed);
+    func bright_green() = this.with_foreground_color(Color::BrightGreen);
+    func bright_yellow() = this.with_foreground_color(Color::BrightYellow);
+    func bright_blue() = this.with_foreground_color(Color::BrightBlue);
+    func bright_magenta() = this.with_foreground_color(Color::BrightMagenta);
+    func bright_cyan() = this.with_foreground_color(Color::BrightCyan);
+    func bright_white() = this.with_foreground_color(Color::BrightWhite);
+
+    func bright_black_bg() = this.with_background_color(Color::BrightBlack);
+    func bright_red_bg() = this.with_background_color(Color::BrightRed);
+    func bright_green_bg() = this.with_background_color(Color::BrightGreen);
+    func bright_yellow_bg() = this.with_background_color(Color::BrightYellow);
+    func bright_blue_bg() = this.with_background_color(Color::BrightBlue);
+    func bright_magenta_bg() = this.with_background_color(Color::BrightMagenta);
+    func bright_cyan_bg() = this.with_background_color(Color::BrightCyan);
+    func bright_white_bg() = this.with_background_color(Color::BrightWhite);
+}

@@ -10,6 +10,30 @@ RUST_MIN_STACK=16777216
 cargo build --workspace --profile "$ARIA_BUILD_CONFIG"
 
 ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo test --profile "$ARIA_BUILD_CONFIG" --package vm-lib
+ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo test --profile "$ARIA_BUILD_CONFIG" --package aria-bin
+
+set +e
+ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo run --profile "$ARIA_BUILD_CONFIG" --package aria-bin -- vm-lib/src/builtins/test_exit.aria
+EXIT_CODE=$?
+set -e
+if [ $EXIT_CODE -ne 42 ]; then
+    echo "❌ test_exit.aria exited with code $EXIT_CODE, expected 12"
+    exit 1
+fi
+
+ERROR_REPORTING_TEMPLATE="$SELF_DIR"/aria-bin/src/error_reporting_test/expected.txt
+ERROR_REPORTING_OUTPUT=$(ARIA_LIB_DIR_EXTRA="$SELF_DIR"/aria-bin/src/error_reporting_test \
+          ARIA_LIB_DIR="$ARIA_LIB_DIR" \
+          cargo run --profile "$ARIA_BUILD_CONFIG" \
+          --package aria-bin -- \
+          "$SELF_DIR"/aria-bin/src/error_reporting_test/main.aria 2>&1)
+echo "$ERROR_REPORTING_OUTPUT" | awk '
+  match($0, /\/[^[:space:]]+:[0-9]+:[0-9]+/) {
+    path = substr($0, RSTART, RLENGTH)
+    n = split(path, parts, "/")
+    print parts[n]
+  }
+' | diff -u "$ERROR_REPORTING_TEMPLATE" - && echo "OK" || { echo "Mismatch - actual output ${ERROR_REPORTING_OUTPUT}"; exit 1; }
 
 ARIA_TEST_DIR="$ARIA_TEST_DIR" \
 ARIA_LIB_DIR="$ARIA_LIB_DIR" \

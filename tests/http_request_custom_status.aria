@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+
+### TAGS: FLAKEY
+
+import Request from aria.network.request;
+import * from aria.network.retry;
+
+func main() {
+    val request = Request.new("https://httpbin.org/status/418");
+
+    val result = retry(|| => request.get(), |result| => {
+        match result {
+            case Ok(response) => {
+                val code = response.status_code;
+                return code == 418 || code == 503;
+            }
+        } else {
+            return false;
+        }
+    });
+
+    result = result.unwrap_Pass()!!;
+    if result.status_code == 503 {
+        println("Service Unavailable, try again later");
+        return true;
+    }
+}

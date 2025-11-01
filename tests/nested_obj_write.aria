@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Pair {
+    type func new(x,y) = alloc(This){.x, .y};
+}
+
+struct Quartet {
+    type func new(a,y,x,d) = alloc(This) {
+        .a = alloc(Pair) {
+            .x = a,
+            .y,
+        },
+        .c = alloc(Pair) {
+            .x,
+            .y = d
+        }
+    };
+}
+
+func main() {
+    val q = Quartet.new(1,2,3,4);
+
+    assert q.a.x == 1;
+    assert q.a.y == 2;
+    assert q.c.x == 3;
+    assert q.c.y == 4;
+}

@@ -9,8 +9,8 @@ use crate::{
 };
 
 use crate::ast::{
-    PostfixTermAttribute, PostfixTermCall, PostfixTermContainerWrite, PostfixTermEnumCase,
-    PostfixTermIndex, PostfixTermObjectWrite,
+    PostfixTermAttribute, PostfixTermCall, PostfixTermEnumCase, PostfixTermIndex,
+    PostfixTermObjectWrite, PostfixTermTryProtocol,
 };
 
 impl Derive for PostfixTerm {
@@ -20,8 +20,8 @@ impl Derive for PostfixTerm {
         (postfix_term_index, PostfixTermIndex),
         (postfix_term_call, PostfixTermCall),
         (postfix_term_enum_case, PostfixTermEnumCase),
-        (postfix_term_dot_write, PostfixTermObjectWrite),
-        (postfix_term_idx_write, PostfixTermContainerWrite)
+        (postfix_term_object_write, PostfixTermObjectWrite),
+        (postfix_term_try_protocol, PostfixTermTryProtocol)
     );
 }
 
@@ -33,7 +33,7 @@ impl PrettyPrintable for PostfixTerm {
             Self::PostfixTermCall(c) => c.prettyprint(buffer),
             Self::PostfixTermEnumCase(c) => c.prettyprint(buffer),
             Self::PostfixTermObjectWrite(w) => w.prettyprint(buffer),
-            Self::PostfixTermContainerWrite(w) => w.prettyprint(buffer),
+            Self::PostfixTermTryProtocol(t) => t.prettyprint(buffer),
         }
     }
 }

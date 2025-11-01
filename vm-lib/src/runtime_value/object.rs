@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
+
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 
 use crate::error::vm_error::VmErrorReason;
 
@@ -11,7 +9,7 @@ use super::{RuntimeValue, structure::Struct};
 
 #[derive(Default)]
 pub struct ObjectBox {
-    values: RefCell<HashMap<String, RuntimeValue>>,
+    values: RefCell<FxHashMap<String, RuntimeValue>>,
 }
 
 impl ObjectBox {
@@ -27,7 +25,15 @@ impl ObjectBox {
         self.values.borrow_mut().remove(name);
     }
 
-    pub(super) fn list_attributes(&self) -> HashSet<String> {
+    pub(super) fn list_attributes(&self) -> FxHashSet<String> {
+        self.values.borrow().keys().cloned().collect()
+    }
+
+    pub(crate) fn contains(&self, name: &str) -> bool {
+        self.values.borrow().contains_key(name)
+    }
+
+    pub(crate) fn keys(&self) -> FxHashSet<String> {
         self.values.borrow().keys().cloned().collect()
     }
 }
@@ -62,7 +68,7 @@ impl ObjectImpl {
         self.boxx.delete(name);
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
+    fn list_attributes(&self) -> FxHashSet<String> {
         self.boxx.list_attributes()
     }
 }
@@ -82,7 +88,7 @@ impl Object {
         self.imp.read(name)
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 
@@ -94,8 +100,9 @@ impl Object {
         &self.imp.kind
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
+    pub fn with_value(self, name: &str, val: RuntimeValue) -> Self {
+        self.write(name, val);
+        self
     }
 }
 

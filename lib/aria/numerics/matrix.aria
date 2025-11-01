@@ -57,12 +57,20 @@ struct Matrix {
         }
     }
 
+    operator[](row: Int, col: Int) {
+        return this.get(row, col);
+    }
+
     func set(row: Int, col: Int, value) {
         if row >= this.rows || col >= this.cols {
             throw Matrix.DimensionMismatch.new("Index out of bounds: ({0},{1})".format(row, col));
         }
 
         this.data.set(MatrixIndex.new(row, col), value);
+    }
+
+    operator[]=(row: Int, col: Int, value) {
+        this.set(row, col, value);
     }
 
     operator +(other: Matrix) {

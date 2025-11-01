@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: uses_dylib("aria_platform");
+
+enum Platform {
+    struct LinuxPlatform {
+        type func new(kernel_version: String) {
+            return alloc(This) {
+                .kernel_version = kernel_version
+            };
+        }
+
+        func prettyprint() {
+            return "Linux kernel version: {0}".format(this.kernel_version);
+        }
+
+        func name() {
+            return "Linux";
+        }
+    }
+
+    struct macOSPlatform {
+        type func new(os_build: String) {
+            return alloc(This) {
+                .os_build = os_build
+            };
+        }
+
+        func prettyprint() {
+            return "macOS build: {0}".format(this.os_build);
+        }
+
+        func name() {
+            return "macOS";
+        }
+    }
+
+    case Linux(Platform.LinuxPlatform),
+    case macOS(Platform.macOSPlatform),
+    case Unknown,
+
+    func prettyprint() {
+        match this {
+            case Linux(platform) => {
+                return platform.prettyprint();
+            }
+            case macOS(platform) => {
+                return platform.prettyprint();
+            }
+            case Unknown => {
+                return "Unknown platform";
+            }
+        }
+    }
+
+    func name() {
+        match this {
+            case Linux(platform) => {
+                return platform.name();
+            }
+            case macOS(platform) => {
+                return platform.name();
+            }
+            case Unknown => {
+                return "Unknown platform";
+            }
+        }
+    }
+}

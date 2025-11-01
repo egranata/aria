@@ -31,8 +31,8 @@ impl BuiltinFunctionImpl for FpHash {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -58,8 +58,8 @@ impl BuiltinFunctionImpl for FpFloor {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -85,8 +85,8 @@ impl BuiltinFunctionImpl for FpCeil {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
@@ -112,12 +112,64 @@ impl BuiltinFunctionImpl for FpInt {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(1)
     }
 
     fn name(&self) -> &str {
         "int"
+    }
+}
+
+#[derive(Default)]
+struct FpPrettyprint {}
+impl BuiltinFunctionImpl for FpPrettyprint {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        _: &mut crate::vm::VirtualMachine,
+    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        let this = VmBuiltins::extract_arg(frame, |x| x.as_float().cloned())?;
+        let format_opt = if !frame.stack.is_empty() {
+            Some(VmBuiltins::extract_arg(frame, |x| x.as_string().cloned())?)
+        } else {
+            None
+        };
+
+        let result = if let Some(format_str) = format_opt {
+            let format = format_str.raw_value();
+            if format == ".E" || format == ".e" {
+                format!("{:e}", this.raw_value())
+            } else if format.starts_with('.') && format.len() > 1 {
+                if let Ok(precision) = format[1..].parse::<usize>() {
+                    format!("{:.precision$}", this.raw_value(), precision = precision)
+                } else {
+                    this.raw_value().to_string()
+                }
+            } else {
+                this.raw_value().to_string()
+            }
+        } else {
+            this.raw_value().to_string()
+        };
+
+        frame.stack.push(RuntimeValue::String(result.into()));
+        Ok(RunloopExit::Ok(()))
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity {
+            required: 1,
+            optional: 1,
+        }
+    }
+
+    fn name(&self) -> &str {
+        "prettyprint"
     }
 }
 
@@ -128,6 +180,7 @@ pub(super) fn insert_float_builtins(builtins: &mut VmBuiltins) {
     fp_builtin.insert_builtin::<FpFloor>();
     fp_builtin.insert_builtin::<FpCeil>();
     fp_builtin.insert_builtin::<FpInt>();
+    fp_builtin.insert_builtin::<FpPrettyprint>();
 
     fp_builtin.write("inf", RuntimeValue::Float(f64::INFINITY.into()));
     fp_builtin.write("nan", RuntimeValue::Float(f64::NAN.into()));

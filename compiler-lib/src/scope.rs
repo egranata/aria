@@ -115,7 +115,7 @@ impl ModuleRootScope {
     pub fn emit_write(
         &self,
         name: &str,
-        _: &mut ConstantValues,
+        consts: &mut ConstantValues,
         dest: Rc<BasicBlock>,
         loc: SourcePointer,
     ) -> ScopeResult {
@@ -123,10 +123,19 @@ impl ModuleRootScope {
             dest.write_opcode_and_source_info(BasicBlockOpcode::WriteNamed(*existing_idx), loc);
             Ok(())
         } else {
-            Err(ScopeError {
-                loc,
-                reason: ScopeErrorReason::NoSuchIdentifier(name.to_owned()),
-            })
+            let symbol_idx = match consts.insert(crate::constant_value::ConstantValue::String(
+                name.to_owned(),
+            )) {
+                Ok(c) => c,
+                Err(_) => {
+                    return Err(ScopeError {
+                        loc,
+                        reason: ScopeErrorReason::TooManyConstants,
+                    });
+                }
+            };
+            dest.write_opcode_and_source_info(BasicBlockOpcode::WriteNamed(symbol_idx), loc);
+            Ok(())
         }
     }
 
@@ -161,6 +170,7 @@ impl ModuleRootScope {
         _: &str,
         _: Rc<BasicBlock>,
         _: SourcePointer,
+        _: bool,
     ) -> ScopeResult<Option<UplevelSymbolResolution>> {
         Ok(None)
     }
@@ -239,6 +249,7 @@ impl ModuleChildScope {
         _: &str,
         _: Rc<BasicBlock>,
         _: SourcePointer,
+        _: bool,
     ) -> ScopeResult<Option<UplevelSymbolResolution>> {
         Ok(None)
     }
@@ -311,6 +322,14 @@ impl FunctionRootScope {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
             dest.write_opcode_and_source_info(BasicBlockOpcode::WriteLocal(*existing_idx), loc);
             Ok(())
+        } else if let Some(uplevel_info) =
+            self.resolve_uplevel_symbol(name, dest.clone(), loc.clone(), false)?
+        {
+            dest.write_opcode_and_source_info(
+                BasicBlockOpcode::WriteLocal(uplevel_info.index_at_depth),
+                loc.clone(),
+            );
+            Ok(())
         } else {
             self.parent.emit_write(name, consts, dest, loc)
         }
@@ -322,6 +341,7 @@ impl FunctionRootScope {
         dest: Rc<BasicBlock>,
         loc: SourcePointer,
         uplevel: UplevelSymbolResolution,
+        want_dup_on_stack: bool,
     ) -> ScopeResult<UplevelSymbolResolution> {
         if uplevel.depth > 1 {
             return Err(ScopeError {
@@ -339,9 +359,11 @@ impl FunctionRootScope {
         dest.write_opcode_and_source_info(
             BasicBlockOpcode::ReadUplevel(uplevel.index_at_depth),
             loc.clone(),
-        )
-        .write_opcode_and_source_info(BasicBlockOpcode::Dup, loc.clone())
-        .write_opcode_and_source_info(BasicBlockOpcode::WriteLocal(index_in_local), loc);
+        );
+        if want_dup_on_stack {
+            dest.write_opcode_and_source_info(BasicBlockOpcode::Dup, loc.clone());
+        }
+        dest.write_opcode_and_source_info(BasicBlockOpcode::WriteLocal(index_in_local), loc);
         Ok(UplevelSymbolResolution {
             depth: 0,
             index_at_depth: index_in_local,
@@ -362,7 +384,7 @@ impl FunctionRootScope {
         }
 
         if self
-            .resolve_uplevel_symbol(name, dest.clone(), loc.clone())?
+            .resolve_uplevel_symbol(name, dest.clone(), loc.clone(), true)?
             .is_some()
         {
             return Ok(());
@@ -376,6 +398,7 @@ impl FunctionRootScope {
         name: &str,
         dest: Rc<BasicBlock>,
         loc: SourcePointer,
+        want_dup_on_stack: bool,
     ) -> ScopeResult<Option<UplevelSymbolResolution>> {
         let maybe_idx = self.symbols.borrow().get(name).cloned();
         if let Some(existing_idx) = maybe_idx {
@@ -385,9 +408,9 @@ impl FunctionRootScope {
             }))
         } else if let Some(cp) = &self.lexical_parent {
             let sr =
-                cp.0.resolve_uplevel_symbol(name, cp.1.clone(), loc.clone())?;
+                cp.0.resolve_uplevel_symbol(name, cp.1.clone(), loc.clone(), want_dup_on_stack)?;
             if let Some(sr) = sr {
-                let sr = self.store_uplevel_as_local(name, dest, loc, sr)?;
+                let sr = self.store_uplevel_as_local(name, dest, loc, sr, want_dup_on_stack)?;
                 Ok(Some(sr))
             } else {
                 Ok(None)
@@ -467,6 +490,7 @@ impl FunctionChildScope {
         name: &str,
         dest: Rc<BasicBlock>,
         loc: SourcePointer,
+        want_dup_on_stack: bool,
     ) -> ScopeResult<Option<UplevelSymbolResolution>> {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
             Ok(Some(UplevelSymbolResolution {
@@ -474,7 +498,8 @@ impl FunctionChildScope {
                 index_at_depth: *existing_idx,
             }))
         } else {
-            self.parent.resolve_uplevel_symbol(name, dest, loc)
+            self.parent
+                .resolve_uplevel_symbol(name, dest, loc, want_dup_on_stack)
         }
     }
 }
@@ -585,12 +610,13 @@ impl CompilationScope {
         name: &str,
         dest: Rc<BasicBlock>,
         loc: SourcePointer,
+        want_dup_on_stack: bool,
     ) -> ScopeResult<Option<UplevelSymbolResolution>> {
         match self {
-            Self::ModuleRoot(r) => r.resolve_uplevel_symbol(name, dest, loc),
-            Self::ModuleChild(c) => c.resolve_uplevel_symbol(name, dest, loc),
-            Self::FunctionRoot(r) => r.resolve_uplevel_symbol(name, dest, loc),
-            Self::FunctionChild(c) => c.resolve_uplevel_symbol(name, dest, loc),
+            Self::ModuleRoot(r) => r.resolve_uplevel_symbol(name, dest, loc, want_dup_on_stack),
+            Self::ModuleChild(c) => c.resolve_uplevel_symbol(name, dest, loc, want_dup_on_stack),
+            Self::FunctionRoot(r) => r.resolve_uplevel_symbol(name, dest, loc, want_dup_on_stack),
+            Self::FunctionChild(c) => c.resolve_uplevel_symbol(name, dest, loc, want_dup_on_stack),
         }
     }
 }

@@ -1,9 +1,0 @@
-# SPDX-License-Identifier: Apache-2.0
-import Request from aria.network.request;
-
-func main() {
-    val request = Request.new("https://httpbin.org/status/418");
-
-    val result = request.get();
-    assert result.status_code == 418;
-}

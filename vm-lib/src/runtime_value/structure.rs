@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 
-use crate::error::vm_error::VmErrorReason;
+use rustc_data_structures::fx::FxHashSet;
+
+use crate::{error::vm_error::VmErrorReason, runtime_value::object::ObjectBox};
 
 use super::{
     RuntimeValue,
@@ -15,7 +13,7 @@ use super::{
 
 struct StructImpl {
     name: String,
-    entries: RefCell<HashMap<String, RuntimeValue>>,
+    entries: ObjectBox,
     mixins: RefCell<crate::mixin_includer::MixinIncluder>,
 }
 
@@ -23,7 +21,7 @@ impl StructImpl {
     fn new(name: &str) -> Self {
         Self {
             name: name.to_owned(),
-            entries: RefCell::new(HashMap::new()),
+            entries: ObjectBox::default(),
             mixins: RefCell::new(crate::mixin_includer::MixinIncluder::default()),
         }
     }
@@ -33,7 +31,7 @@ impl StructImpl {
     }
 
     fn load_named_value(&self, name: &str) -> Option<RuntimeValue> {
-        if let Some(nv) = self.entries.borrow().get(name) {
+        if let Some(nv) = self.entries.read(name) {
             Some(nv.clone())
         } else {
             self.mixins.borrow().load_named_value(name)
@@ -41,15 +39,15 @@ impl StructImpl {
     }
 
     fn store_named_value(&self, name: &str, val: RuntimeValue) {
-        self.entries.borrow_mut().insert(name.to_owned(), val);
+        self.entries.write(name, val);
     }
 
     fn include_mixin(&self, mixin: &Mixin) {
         self.mixins.borrow_mut().include(mixin.clone());
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
-        let mut attrs: HashSet<String> = self.entries.borrow().keys().cloned().collect();
+    fn list_attributes(&self) -> FxHashSet<String> {
+        let mut attrs = self.entries.keys();
         attrs.extend(self.mixins.borrow().list_attributes());
         attrs
     }
@@ -87,7 +85,7 @@ impl Struct {
         self.imp.isa_mixin(mixin)
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 }

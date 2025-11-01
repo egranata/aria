@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    val x = 3;
+    val y = typeof(x);
+    assert x isa Int;
+    assert y == Int;
+    val z = typeof(y);
+    assert z == Type;
+    assert z isa Type; # Type is the root of the hierarchy so no matter how deep you go...
+    assert typeof(typeof(typeof(typeof(typeof(typeof(3)))))) == Type;
+}

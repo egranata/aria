@@ -28,22 +28,17 @@ struct Song {
 
     func next() {
         if this.n == 0 {
-            return Box(){.done = true};
+            return Maybe::None;
         }
 
         val n = this.n;
         this.n -= 1;
 
-        return Box() {
-            .done = false,
-            .value = Lyrics.new(n),
-        };
+        return Maybe::Some(Lyrics.new(n));
     }
 }
 
-func main() {
-    val song = Song.new(99);
-    for verse in song {
-        println(verse);
-    }
+val song = Song.new(99);
+for verse in song {
+    println(verse);
 }

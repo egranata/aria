@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 func x_and_then_some(this,x) {
-    this + x;
+    return this + x;
 }
 
 func for_int() {
@@ -31,7 +31,7 @@ func for_string() {
 }
 
 func negate_and(this,x) {
-    !this && x;
+    return !this && x;
 }
 
 func for_bool() {

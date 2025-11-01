@@ -2,7 +2,9 @@
 use aria_compiler::module::CompiledModule;
 use vm::{ExecutionResult, RunloopExit, VirtualMachine, VmOptions};
 
+pub mod arity;
 pub mod builtins;
+pub mod console;
 pub mod error;
 pub mod frame;
 pub mod mixin_includer;

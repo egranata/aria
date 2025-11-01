@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+struct Pair {
+    type func new(x,y) = alloc(This){.x, .y};
+
+    func swap() {
+        return Pair.new(this.y, this.x);
+    }
+}
+
+func main() {
+    val p = Pair.new(3,4);
+    assert p.x == 3;
+    assert p.y == 4;
+
+    val q = p.swap();
+    assert q.x == 4;
+    assert q.y == 3;
+}

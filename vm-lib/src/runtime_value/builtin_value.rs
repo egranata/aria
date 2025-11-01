@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{collections::HashSet, rc::Rc};
+use std::rc::Rc;
+
+use rustc_data_structures::fx::FxHashSet;
 
 use super::{RuntimeValue, object::ObjectBox};
 
@@ -23,7 +25,7 @@ where
         self.boxx.read(name)
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
+    fn list_attributes(&self) -> FxHashSet<String> {
         self.boxx.list_attributes()
     }
 }
@@ -75,11 +77,7 @@ where
         self.imp.read(name)
     }
 
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
-    }
-
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 }

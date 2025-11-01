@@ -10,7 +10,6 @@ use haxby_vm::{
         RuntimeValue, function::BuiltinFunctionImpl, list::List, object::Object,
         opaque::OpaqueValue, structure::Struct,
     },
-    some_or_err,
     vm::{ExecutionResult, RunloopExit, VirtualMachine},
 };
 
@@ -18,14 +17,15 @@ fn create_regex_error(
     regex_struct: &Struct,
     message: String,
 ) -> Result<RuntimeValue, VmErrorReason> {
-    let regex_error = some_or_err!(
-        regex_struct.load_named_value("Error"),
-        VmErrorReason::UnexpectedVmState
-    );
+    let regex_error = regex_struct
+        .load_named_value("Error")
+        .ok_or(VmErrorReason::UnexpectedVmState)?;
 
-    let regex_error = some_or_err!(regex_error.as_struct(), VmErrorReason::UnexpectedType);
+    let regex_error = regex_error
+        .as_struct()
+        .ok_or(VmErrorReason::UnexpectedType)?;
 
-    let regex_error = Object::new(&regex_error);
+    let regex_error = Object::new(regex_error);
     regex_error.write("msg", RuntimeValue::String(message.into()));
 
     Ok(RuntimeValue::Object(regex_error))
@@ -35,7 +35,7 @@ fn create_regex_error(
 struct New {}
 impl BuiltinFunctionImpl for New {
     fn eval(&self, frame: &mut Frame, _: &mut VirtualMachine) -> ExecutionResult<RunloopExit> {
-        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().clone())?;
+        let the_struct = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_struct().cloned())?;
         let the_pattern = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?;
 
         let rust_regex_obj = match regex::Regex::new(&the_pattern.raw_value()) {
@@ -63,8 +63,8 @@ impl BuiltinFunctionImpl for New {
         FUNC_IS_METHOD | METHOD_ATTRIBUTE_TYPE
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -99,8 +99,8 @@ impl BuiltinFunctionImpl for AnyMatch {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -113,15 +113,11 @@ struct Matches {}
 impl BuiltinFunctionImpl for Matches {
     fn eval(&self, frame: &mut Frame, _: &mut VirtualMachine) -> ExecutionResult<RunloopExit> {
         let aria_regex = VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_object().cloned())?;
+        let aria_struct = aria_regex.get_struct().clone();
         let the_haystack =
             VmBuiltins::extract_arg(frame, |x: RuntimeValue| x.as_string().cloned())?.raw_value();
 
-        let match_struct_type = aria_regex
-            .get_struct()
-            .load_named_value("Match")
-            .unwrap()
-            .as_struct()
-            .unwrap();
+        let match_struct_type = aria_struct.extract_field("Match", |e| e.as_struct().cloned())?;
 
         let rust_regex_obj = match aria_regex.read("__pattern") {
             Some(s) => s,
@@ -154,8 +150,8 @@ impl BuiltinFunctionImpl for Matches {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -196,8 +192,8 @@ impl BuiltinFunctionImpl for Replace {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {

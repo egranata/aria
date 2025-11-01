@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use haxby_opcodes::function_attribs::FUNC_IS_METHOD;
 use haxby_vm::{
-    error::{dylib_load::LoadResult, exception::VmException},
+    error::dylib_load::LoadResult,
     runtime_module::RuntimeModule,
     runtime_value::{RuntimeValue, list::List, object::Object},
     vm::ExecutionResult,
@@ -13,31 +13,29 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
     fn eval(
         &self,
         frame: &mut haxby_vm::frame::Frame,
-        _: &mut haxby_vm::vm::VirtualMachine,
+        vm: &mut haxby_vm::vm::VirtualMachine,
     ) -> haxby_vm::vm::ExecutionResult<haxby_vm::vm::RunloopExit> {
         let this = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_object().cloned())?;
         let headers = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
         let this_url = this.extract_field("url", |field| field.as_string().cloned())?;
         let this_timeout = this.extract_field("timeout", |field| field.as_float().cloned())?;
-        let this_response = this
-            .get_struct()
-            .extract_field("Response", |field| field.as_struct())?;
-        let this_error = this
-            .get_struct()
-            .extract_field("Error", |field| field.as_struct())?;
+        let as_struct = this.get_struct();
+        let this_response =
+            as_struct.extract_field("Response", |field| field.as_struct().cloned())?;
+        let this_error = as_struct.extract_field("Error", |field| field.as_struct().cloned())?;
 
         let mut client = reqwest::blocking::Client::new()
             .get(this_url.raw_value())
             .timeout(std::time::Duration::from_secs_f64(this_timeout.raw_value()));
         for i in 0..headers.len() {
             let header = headers.get_at(i).unwrap();
-            if let Some(list) = header.as_list() {
-                if list.len() == 2 {
-                    let key = list.get_at(0).unwrap();
-                    let value = list.get_at(1).unwrap();
-                    if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
-                        client = client.header(key.raw_value(), value.raw_value());
-                    }
+            if let Some(list) = header.as_list()
+                && list.len() == 2
+            {
+                let key = list.get_at(0).unwrap();
+                let value = list.get_at(1).unwrap();
+                if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
+                    client = client.header(key.raw_value(), value.raw_value());
                 }
             }
         }
@@ -70,23 +68,30 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
                             "msg",
                             RuntimeValue::String("content is not a valid String".into()),
                         );
-                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                            VmException::from_value(RuntimeValue::Object(error_obj)),
-                        ));
+                        let result_err = vm
+                            .builtins
+                            .create_result_err(RuntimeValue::Object(error_obj))?;
+                        frame.stack.push(result_err);
+                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()));
                     }
                 }
 
-                frame
-                    .stack
-                    .push(haxby_vm::runtime_value::RuntimeValue::Object(response_obj));
+                let result_ok = vm
+                    .builtins
+                    .create_result_ok(RuntimeValue::Object(response_obj.clone()))?;
+
+                frame.stack.push(result_ok);
                 Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
             Err(e) => {
                 let error_obj = Object::new(&this_error);
                 error_obj.write("msg", RuntimeValue::String(e.to_string().into()));
-                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                    VmException::from_value(RuntimeValue::Object(error_obj)),
-                ))
+                let result_err = vm
+                    .builtins
+                    .create_result_err(RuntimeValue::Object(error_obj))?;
+
+                frame.stack.push(result_err);
+                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
         }
     }
@@ -95,8 +100,8 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestGet {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        2_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(2)
     }
 
     fn name(&self) -> &str {
@@ -110,7 +115,7 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
     fn eval(
         &self,
         frame: &mut haxby_vm::frame::Frame,
-        _: &mut haxby_vm::vm::VirtualMachine,
+        vm: &mut haxby_vm::vm::VirtualMachine,
     ) -> haxby_vm::vm::ExecutionResult<haxby_vm::vm::RunloopExit> {
         let this = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_object().cloned())?;
         let headers = haxby_vm::builtins::VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
@@ -119,12 +124,10 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
 
         let this_url = this.extract_field("url", |field| field.as_string().cloned())?;
         let this_timeout = this.extract_field("timeout", |field| field.as_float().cloned())?;
-        let this_response = this
-            .get_struct()
-            .extract_field("Response", |field| field.as_struct())?;
-        let this_error = this
-            .get_struct()
-            .extract_field("Error", |field| field.as_struct())?;
+        let as_struct = this.get_struct();
+        let this_response =
+            as_struct.extract_field("Response", |field| field.as_struct().cloned())?;
+        let this_error = as_struct.extract_field("Error", |field| field.as_struct().cloned())?;
 
         let mut client = reqwest::blocking::Client::new()
             .post(this_url.raw_value())
@@ -132,13 +135,13 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
             .timeout(std::time::Duration::from_secs_f64(this_timeout.raw_value()));
         for i in 0..headers.len() {
             let header = headers.get_at(i).unwrap();
-            if let Some(list) = header.as_list() {
-                if list.len() == 2 {
-                    let key = list.get_at(0).unwrap();
-                    let value = list.get_at(1).unwrap();
-                    if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
-                        client = client.header(key.raw_value(), value.raw_value());
-                    }
+            if let Some(list) = header.as_list()
+                && list.len() == 2
+            {
+                let key = list.get_at(0).unwrap();
+                let value = list.get_at(1).unwrap();
+                if let (Some(key), Some(value)) = (key.as_string(), value.as_string()) {
+                    client = client.header(key.raw_value(), value.raw_value());
                 }
             }
         }
@@ -171,23 +174,31 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
                             "msg",
                             RuntimeValue::String("content is not a valid String".into()),
                         );
-                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                            VmException::from_value(RuntimeValue::Object(error_obj)),
-                        ));
+                        let result_err = vm
+                            .builtins
+                            .create_result_err(RuntimeValue::Object(error_obj))?;
+
+                        frame.stack.push(result_err);
+                        return ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()));
                     }
                 }
 
-                frame
-                    .stack
-                    .push(haxby_vm::runtime_value::RuntimeValue::Object(response_obj));
+                let result_ok = vm
+                    .builtins
+                    .create_result_ok(RuntimeValue::Object(response_obj.clone()))?;
+
+                frame.stack.push(result_ok);
                 Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
             Err(e) => {
                 let error_obj = Object::new(&this_error);
                 error_obj.write("msg", RuntimeValue::String(e.to_string().into()));
-                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Exception(
-                    VmException::from_value(RuntimeValue::Object(error_obj)),
-                ))
+                let result_err = vm
+                    .builtins
+                    .create_result_err(RuntimeValue::Object(error_obj))?;
+
+                frame.stack.push(result_err);
+                ExecutionResult::Ok(haxby_vm::vm::RunloopExit::Ok(()))
             }
         }
     }
@@ -196,8 +207,8 @@ impl haxby_vm::runtime_value::function::BuiltinFunctionImpl for RequestPost {
         FUNC_IS_METHOD
     }
 
-    fn arity(&self) -> u8 {
-        3_u8
+    fn arity(&self) -> haxby_vm::arity::Arity {
+        haxby_vm::arity::Arity::required(3)
     }
 
     fn name(&self) -> &str {

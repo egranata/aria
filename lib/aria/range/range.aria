@@ -2,11 +2,7 @@
 import Iterator,Iterable from aria.iterator.mixin;
 
 struct InvalidRangeError {
-    type func new(msg: String){
-        return alloc(This) {
-            .msg = msg,
-        };
-    }
+    type func new(msg: String) = alloc(This) {.msg};
 
     func prettyprint() {
         return "range error: {0}".format(this.msg);
@@ -37,32 +33,24 @@ struct RangeIterator {
     func next() {
         if this.step > 0 {
             if this.current >= this.limit {
-                return Box() { .done = true };
+                return Maybe::None;
             }
         } else {
             if this.current <= this.limit {
-                return Box() { .done = true };
+                return Maybe::None;
             }
         }
 
         val result = this.current;
         this.current += this.step;
-        return Box() {
-            .done = false,
-            .value = result,
-        };
+        return Maybe::Some(result);
     }
 
     include Iterator
 }
 
 struct RangeImpl {
-    type func new(from, to) {
-        return alloc(This) {
-            .from = from,
-            .to = to,
-        };
-    }
+    type func new(from, to) = alloc(This) {.from, .to};
 
     func step(n) {
         return RangeIterator.new(this.from, this.to, n);
@@ -100,6 +88,20 @@ struct RangeImpl {
 
     func prettyprint() {
         return "Range from={0} to={1}".format(this.from, this.to);
+    }
+
+    func hash() {
+        val h = this.from ^ (this.to + 0x9e3779b97f4a7c15);
+        h = h ^ (h >> 30);
+        h = h * 0xbf58476d1ce4e5b9;
+        h = h ^ (h >> 27);
+        h = h * 0x94d049bb133111eb;
+        h = h ^ (h >> 31);
+        return h;
+    }
+
+    operator == (other: RangeImpl) {
+        return this.from == other.from && this.to == other.to;
     }
 }
 

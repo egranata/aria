@@ -1,9 +1,0 @@
-# SPDX-License-Identifier: Apache-2.0
-func foo() {
-    1 + 2;
-}
-
-func main() {
-    val n = foo();
-    assert n == 3;
-}

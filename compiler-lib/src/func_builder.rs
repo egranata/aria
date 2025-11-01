@@ -38,8 +38,8 @@ pub enum BasicBlockOpcode {
     ReadNamed(u16),
     WriteNamed(u16),
     TypedefNamed(u16),
-    ReadIndex,
-    WriteIndex,
+    ReadIndex(u8),
+    WriteIndex(u8),
     ReadAttribute(u16),
     WriteAttribute(u16),
     ReadUplevel(u8),
@@ -55,6 +55,7 @@ pub enum BasicBlockOpcode {
     JumpTrue(Rc<BasicBlock>),
     JumpFalse(Rc<BasicBlock>),
     Jump(Rc<BasicBlock>),
+    JumpIfArgSupplied(u8, Rc<BasicBlock>),
     Call(u8),
     Return,
     GuardEnter,
@@ -74,6 +75,7 @@ pub enum BasicBlockOpcode {
     NewEnumVal(u16),
     EnumCheckIsCase(u16),
     EnumExtractPayload,
+    TryUnwrapProtocol(u8),
     Isa,
     Import(u16),
     LiftModule,
@@ -113,8 +115,8 @@ impl BasicBlockOpcode {
             Self::ReadNamed(_) => false,
             Self::WriteNamed(_) => false,
             Self::TypedefNamed(_) => false,
-            Self::ReadIndex => false,
-            Self::WriteIndex => false,
+            Self::ReadIndex(_) => false,
+            Self::WriteIndex(_) => false,
             Self::ReadAttribute(_) => false,
             Self::WriteAttribute(_) => false,
             Self::ReadUplevel(_) => false,
@@ -130,6 +132,7 @@ impl BasicBlockOpcode {
             Self::JumpTrue(_) => false,
             Self::JumpFalse(_) => false,
             Self::Jump(_) => true,
+            Self::JumpIfArgSupplied(..) => false,
             Self::Call(_) => false,
             Self::Return => true,
             Self::GuardEnter => false,
@@ -149,6 +152,7 @@ impl BasicBlockOpcode {
             Self::NewEnumVal(_) => false,
             Self::EnumCheckIsCase(_) => false,
             Self::EnumExtractPayload => false,
+            Self::TryUnwrapProtocol(_) => false,
             Self::Isa => false,
             Self::Import(_) => false,
             Self::LiftModule => false,
@@ -188,8 +192,8 @@ impl BasicBlockOpcode {
             Self::ReadNamed(_) => 3,
             Self::WriteNamed(_) => 3,
             Self::TypedefNamed(_) => 3,
-            Self::ReadIndex => 1,
-            Self::WriteIndex => 1,
+            Self::ReadIndex(_) => 2,
+            Self::WriteIndex(_) => 2,
             Self::ReadAttribute(_) => 3,
             Self::WriteAttribute(_) => 3,
             Self::ReadUplevel(_) => 2,
@@ -205,6 +209,7 @@ impl BasicBlockOpcode {
             Self::JumpTrue(_) => 3,
             Self::JumpFalse(_) => 3,
             Self::Jump(_) => 3,
+            Self::JumpIfArgSupplied(..) => 4,
             Self::Call(_) => 2,
             Self::Return => 1,
             Self::GuardEnter => 1,
@@ -224,6 +229,7 @@ impl BasicBlockOpcode {
             Self::NewEnumVal(_) => 3,
             Self::EnumCheckIsCase(_) => 3,
             Self::EnumExtractPayload => 1,
+            Self::TryUnwrapProtocol(_) => 2,
             Self::Isa => 1,
             Self::Import(_) => 3,
             Self::LiftModule => 1,
@@ -263,8 +269,8 @@ impl BasicBlockOpcode {
             Self::ReadNamed(n) => vec![Opcode::ReadNamed(*n)],
             Self::WriteNamed(n) => vec![Opcode::WriteNamed(*n)],
             Self::TypedefNamed(n) => vec![Opcode::TypedefNamed(*n)],
-            Self::ReadIndex => vec![Opcode::ReadIndex],
-            Self::WriteIndex => vec![Opcode::WriteIndex],
+            Self::ReadIndex(n) => vec![Opcode::ReadIndex(*n)],
+            Self::WriteIndex(n) => vec![Opcode::WriteIndex(*n)],
             Self::ReadAttribute(n) => vec![Opcode::ReadAttribute(*n)],
             Self::WriteAttribute(n) => vec![Opcode::WriteAttribute(*n)],
             Self::ReadUplevel(n) => vec![Opcode::ReadUplevel(*n)],
@@ -289,6 +295,10 @@ impl BasicBlockOpcode {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
                 vec![Opcode::Jump(offset)]
             }
+            Self::JumpIfArgSupplied(arg, dst) => {
+                let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
+                vec![Opcode::JumpIfArgSupplied(*arg, offset)]
+            }
             Self::Call(n) => vec![Opcode::Call(*n)],
             Self::Return => vec![Opcode::Return],
             Self::GuardEnter => vec![Opcode::GuardEnter],
@@ -311,6 +321,7 @@ impl BasicBlockOpcode {
             Self::NewEnumVal(v) => vec![Opcode::NewEnumVal(*v)],
             Self::EnumCheckIsCase(v) => vec![Opcode::EnumCheckIsCase(*v)],
             Self::EnumExtractPayload => vec![Opcode::EnumExtractPayload],
+            Self::TryUnwrapProtocol(v) => vec![Opcode::TryUnwrapProtocol(*v)],
             Self::Isa => vec![Opcode::Isa],
             Self::Import(v) => vec![Opcode::Import(*v)],
             Self::LiftModule => vec![Opcode::LiftModule],
@@ -434,14 +445,13 @@ impl BasicBlock {
     fn optimize_true_false(&self, cv: &ConstantValues) {
         let mut br = self.writer.borrow_mut();
         for i in 0..br.len() {
-            if let BasicBlockOpcode::ReadNamed(idx) = &br[i].op {
-                if let Some(crate::constant_value::ConstantValue::String(x)) = cv.get(*idx as usize)
-                {
-                    if x == "true" {
-                        br[i].op = BasicBlockOpcode::PushTrue;
-                    } else if x == "false" {
-                        br[i].op = BasicBlockOpcode::PushFalse;
-                    }
+            if let BasicBlockOpcode::ReadNamed(idx) = &br[i].op
+                && let Some(crate::constant_value::ConstantValue::String(x)) = cv.get(*idx as usize)
+            {
+                if x == "true" {
+                    br[i].op = BasicBlockOpcode::PushTrue;
+                } else if x == "false" {
+                    br[i].op = BasicBlockOpcode::PushFalse;
                 }
             }
         }
@@ -546,13 +556,12 @@ impl BasicBlock {
         }
 
         for i in 0..br.len() - 1 {
-            if let BasicBlockOpcode::WriteLocal(x) = br[i].op {
-                if let BasicBlockOpcode::ReadLocal(y) = br[i + 1].op {
-                    if x == y {
-                        br[i].op = BasicBlockOpcode::Dup;
-                        br[i + 1].op = BasicBlockOpcode::WriteLocal(x);
-                    }
-                }
+            if let BasicBlockOpcode::WriteLocal(x) = br[i].op
+                && let BasicBlockOpcode::ReadLocal(y) = br[i + 1].op
+                && x == y
+            {
+                br[i].op = BasicBlockOpcode::Dup;
+                br[i + 1].op = BasicBlockOpcode::WriteLocal(x);
             }
         }
     }
@@ -624,8 +633,8 @@ impl BasicBlock {
 
     fn calculate_locals_access(&self, dest: &mut LocalValuesAccess) {
         let br = self.writer.borrow();
-        for src_op in br.as_slice() {
-            match src_op.op {
+        for i in 0..br.len() {
+            match br[i].op {
                 BasicBlockOpcode::ReadLocal(x) | BasicBlockOpcode::StoreUplevel(x) => {
                     dest.reads.insert(x);
                 }
@@ -633,7 +642,20 @@ impl BasicBlock {
                     dest.writes.insert(x);
                 }
                 BasicBlockOpcode::TypedefLocal(x) => {
-                    dest.writes.insert(x);
+                    if i > 0 {
+                        if let BasicBlockOpcode::PushBuiltinTy(x) = br[i - 1].op
+                            && x == 1
+                        {
+                            dest.writes.insert(x);
+                        } else {
+                            dest.reads.insert(x);
+                            dest.writes.insert(x);
+                        }
+                    } else {
+                        // this is quite odd, as there would have to be something else defining
+                        // the type of the local on the stack, but just keep going for sake of completeness
+                        dest.writes.insert(x);
+                    }
                 }
                 _ => {}
             }
@@ -688,17 +710,13 @@ impl Default for FunctionBuilder {
 
 impl FunctionBuilder {
     pub fn try_get_block(&self, name: &str) -> Option<Rc<BasicBlock>> {
-        if !self.names.contains(name) {
-            return None;
-        } else {
-            for blk in &self.blocks {
-                if blk.name == name {
-                    return Some(blk.clone());
-                }
+        for blk in &self.blocks {
+            if blk.name == name {
+                return Some(blk.clone());
             }
         }
 
-        panic!("get_block_by_name could not find")
+        None
     }
 
     pub fn get_block(&self, name: &str) -> Rc<BasicBlock> {

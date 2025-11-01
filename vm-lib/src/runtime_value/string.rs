@@ -20,6 +20,10 @@ impl StringValue {
     pub fn is_empty(&self) -> bool {
         self.imp.val.is_empty()
     }
+
+    pub fn contains(&self, pat: &str) -> bool {
+        self.imp.val.contains(pat)
+    }
 }
 
 impl std::ops::Add<&StringValue> for &StringValue {

@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::{
+    cell::RefCell,
     collections::HashMap,
     path::{Path, PathBuf},
+    rc::Rc,
 };
 
 use aria_compiler::{bc_reader::BytecodeReader, compile_from_source, module::CompiledModule};
 use aria_parser::ast::{SourceBuffer, prettyprint::printout_accumulator::PrintoutAccumulator};
 use haxby_opcodes::{
-    Opcode, enum_case_attribs::CASE_HAS_PAYLOAD, runtime_value_ids::RUNTIME_VALUE_THIS_MODULE,
+    Opcode,
+    builtin_type_ids::{BUILTIN_TYPE_MAYBE, BUILTIN_TYPE_RESULT},
+    enum_case_attribs::CASE_HAS_PAYLOAD,
+    runtime_value_ids::RUNTIME_VALUE_THIS_MODULE,
 };
+use std::sync::OnceLock;
 
 use crate::{
     builtins::VmBuiltins,
+    console::{Console, StdConsole},
     error::{
         dylib_load::{LoadResult, LoadStatus},
         exception::VmException,
@@ -34,11 +41,25 @@ use crate::{
     stack::Stack,
 };
 
-#[derive(Clone, Default)]
+pub type ConsoleHandle = Rc<RefCell<dyn Console>>;
+
+#[derive(Clone)]
 pub struct VmOptions {
     pub tracing: bool,
     pub dump_stack: bool,
     pub vm_args: Vec<String>,
+    pub console: ConsoleHandle,
+}
+
+impl Default for VmOptions {
+    fn default() -> Self {
+        Self {
+            tracing: Default::default(),
+            dump_stack: Default::default(),
+            vm_args: Default::default(),
+            console: Rc::new(RefCell::new(StdConsole {})),
+        }
+    }
 }
 
 pub struct VirtualMachine {
@@ -50,7 +71,27 @@ pub struct VirtualMachine {
     pub loaded_dylibs: HashMap<String, libloading::Library>,
 }
 
+const BUILTIN_VALUES_TO_INJECT: [(&str, &str); 5] = [
+    ("Unit", include_str!("builtins/unit.aria")),
+    ("Unimplemented", include_str!("builtins/unimplemented.aria")),
+    ("Maybe", include_str!("builtins/maybe.aria")),
+    ("Result", include_str!("builtins/result.aria")),
+    ("RuntimeError", include_str!("builtins/runtime_error.aria")),
+];
+
 impl VirtualMachine {
+    pub fn console(&self) -> &ConsoleHandle {
+        &self.options.console
+    }
+
+    fn load_version_into_builtins(self) -> Self {
+        let aria_version = env!("CARGO_PKG_VERSION");
+        assert!(!aria_version.is_empty());
+        self.builtins
+            .insert("ARIA_VERSION", RuntimeValue::String(aria_version.into()));
+        self
+    }
+
     fn load_core_file_into_builtins(&mut self, name: &str, source: &str) -> RuntimeModule {
         let sb = SourceBuffer::stdin_with_name(source, name);
         let cmod = match aria_compiler::compile_from_source(&sb, &Default::default()) {
@@ -68,68 +109,18 @@ impl VirtualMachine {
             Ok(rle) => match rle {
                 RunloopExit::Ok(m) => m.module,
                 RunloopExit::Exception(e) => {
-                    panic!("{name} module failed to load {}", e.value);
+                    panic!("{name} module raised an exception during load {}", e.value);
                 }
             },
             Err(err) => panic!("{name} module failed to load {}", err.prettyprint(None)),
         }
     }
 
-    fn load_maybe_into_builtins(mut self) -> Self {
-        let maybe_rmod = self.load_core_file_into_builtins(
-            "builtins/maybe.aria",
-            include_str!("builtins/maybe.aria"),
-        );
-
-        let maybe_enum = match maybe_rmod.load_named_value("Maybe") {
-            Some(e) => e,
-            None => panic!("Maybe type not defined in maybe module"),
-        };
-
-        self.builtins.insert("Maybe", maybe_enum);
-        self
-    }
-
-    fn load_unit_into_builtins(mut self) -> Self {
-        let unit_rmod = self
-            .load_core_file_into_builtins("builtins/unit.aria", include_str!("builtins/unit.aria"));
-
-        let unit_enum = match unit_rmod.load_named_value("Unit") {
-            Some(e) => e,
-            None => panic!("Unit type not defined in unit module"),
-        };
-
-        self.builtins.insert("Unit", unit_enum);
-        self
-    }
-
-    fn load_runtime_error_into_builtins(mut self) -> Self {
-        let maybe_rmod = self.load_core_file_into_builtins(
-            "builtins/runtime_error.aria",
-            include_str!("builtins/runtime_error.aria"),
-        );
-
-        let runtime_error_enum = match maybe_rmod.load_named_value("RuntimeError") {
-            Some(e) => e,
-            None => panic!("RuntimeError type not defined in runtime_error module"),
-        };
-
-        self.builtins.insert("RuntimeError", runtime_error_enum);
-        self
-    }
-
-    fn load_unimplemented_into_builtins(mut self) -> Self {
-        let unimpl_rmod = self.load_core_file_into_builtins(
-            "builtins/unimplemented.aria",
-            include_str!("builtins/unimplemented.aria"),
-        );
-
-        let unimpl_type = match unimpl_rmod.load_named_value("Unimplemented") {
-            Some(e) => e,
-            None => panic!("Unimplemented type not defined in unimplemented module"),
-        };
-
-        self.builtins.insert("Unimplemented", unimpl_type);
+    fn load_named_value_into_builtins(self, name: &str, rmod: &RuntimeModule) -> Self {
+        let named_value = rmod
+            .load_named_value(name)
+            .unwrap_or_else(|| panic!("failed to find {name}"));
+        self.builtins.insert(name, named_value);
         self
     }
 }
@@ -143,7 +134,7 @@ impl Default for VirtualMachine {
 
 impl VirtualMachine {
     pub fn with_options(options: VmOptions) -> Self {
-        Self {
+        let mut this = Self {
             modules: Default::default(),
             options,
             builtins: Default::default(),
@@ -151,10 +142,13 @@ impl VirtualMachine {
             imported_modules: Default::default(),
             loaded_dylibs: Default::default(),
         }
-        .load_unimplemented_into_builtins()
-        .load_maybe_into_builtins()
-        .load_runtime_error_into_builtins()
-        .load_unit_into_builtins()
+        .load_version_into_builtins();
+        for (builtin_name, source) in BUILTIN_VALUES_TO_INJECT {
+            let rmod = this.load_core_file_into_builtins(builtin_name, source);
+            this = this.load_named_value_into_builtins(builtin_name, &rmod);
+        }
+
+        this
     }
 }
 
@@ -262,18 +256,131 @@ fn get_lib_path(lib_name: &str) -> PathBuf {
     exe_dir.join(lib_name)
 }
 
+fn unique_insert<T>(vec: &mut Vec<T>, item: T) -> &Vec<T>
+where
+    T: PartialEq,
+{
+    if !vec.contains(&item) {
+        vec.push(item);
+    }
+    vec
+}
+
 impl VirtualMachine {
-    fn try_get_import_path_from_name(aria_lib_dir: &Path, ipath: &str) -> Option<PathBuf> {
-        if !aria_lib_dir.is_absolute() || !aria_lib_dir.exists() {
-            None
-        } else {
-            let mut module_path = aria_lib_dir.to_path_buf();
-            module_path.push(ipath);
-            if module_path.exists() {
-                Some(module_path)
-            } else {
-                None
+    fn get_system_import_paths() -> Vec<PathBuf> {
+        if let Ok(env_var) = std::env::var("ARIA_LIB_DIR") {
+            let mut paths = Vec::new();
+            for candidate_dir in std::env::split_paths(env_var.as_str()) {
+                if candidate_dir.exists() && candidate_dir.is_dir() {
+                    paths.push(candidate_dir);
+                }
             }
+
+            if !paths.is_empty() {
+                return paths;
+            }
+        }
+
+        if let Ok(exe_path) = std::env::current_exe()
+            && let Some(exe_dir) = exe_path.parent()
+        {
+            let lib_aria_path = exe_dir.join("lib");
+            if lib_aria_path.join("aria").is_dir() {
+                return vec![lib_aria_path];
+            }
+
+            if let Some(exe_parent_dir) = exe_dir.parent() {
+                let lib_aria_path = exe_parent_dir.join("lib");
+                if lib_aria_path.join("aria").is_dir() {
+                    return vec![lib_aria_path];
+                }
+            }
+        }
+
+        let version = env!("CARGO_PKG_VERSION");
+
+        #[cfg(target_os = "linux")]
+        {
+            let system_lib_path = PathBuf::from(format!("/usr/local/aria{}/lib", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/usr/local/aria/lib");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from(format!("/usr/lib/aria{}", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/usr/lib/aria");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let system_lib_path = PathBuf::from(format!("/opt/homebrew/opt/aria{}/lib", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/opt/homebrew/opt/aria/lib");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let version = env!("CARGO_PKG_VERSION");
+            let system_lib_path = PathBuf::from(format!("/usr/local/opt/aria{}/lib", version));
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+
+            let system_lib_path = PathBuf::from("/usr/local/opt/aria/lib");
+            if system_lib_path.join("aria").is_dir() {
+                return vec![system_lib_path];
+            }
+        }
+
+        Vec::new()
+    }
+
+    pub fn get_aria_library_paths() -> &'static Vec<PathBuf> {
+        static ARIA_LIBRARY_PATHS: OnceLock<Vec<PathBuf>> = OnceLock::new();
+
+        ARIA_LIBRARY_PATHS.get_or_init(|| {
+            let mut paths = Self::get_system_import_paths();
+
+            if let Ok(env_var) = std::env::var("ARIA_LIB_DIR_EXTRA") {
+                for candidate_dir in std::env::split_paths(env_var.as_str()) {
+                    if candidate_dir.exists() && candidate_dir.is_dir() {
+                        paths.push(candidate_dir);
+                    }
+                }
+            }
+
+            let mut ret_paths = vec![];
+            for path in paths {
+                if let Ok(can) = std::fs::canonicalize(path) {
+                    unique_insert(&mut ret_paths, can);
+                }
+            }
+
+            ret_paths
+        })
+    }
+
+    fn try_get_import_path_from_name(aria_lib_dir: &Path, ipath: &str) -> Option<PathBuf> {
+        let mut module_path = aria_lib_dir.to_path_buf();
+        module_path.push(ipath);
+        if module_path.exists() {
+            Some(module_path)
+        } else {
+            None
         }
     }
 
@@ -283,14 +390,7 @@ impl VirtualMachine {
         let err_ret =
             VmErrorReason::ImportNotAvailable(ipath.to_owned(), "no such path".to_owned());
 
-        let env_var = match std::env::var("ARIA_LIB_DIR") {
-            Ok(path) => path,
-            Err(_) => {
-                return Err(err_ret);
-            }
-        };
-
-        let aria_lib_dirs = env_var.split(':').map(Path::new).collect::<Vec<_>>();
+        let aria_lib_dirs = VirtualMachine::get_aria_library_paths();
         for aria_lib_dir in aria_lib_dirs {
             if let Some(path) = Self::try_get_import_path_from_name(aria_lib_dir, &ipath) {
                 return Ok(path);
@@ -315,7 +415,7 @@ impl VirtualMachine {
         let root = {
             match module.load_named_value(cmp0) {
                 Some(cmp0_obj) => match cmp0_obj.as_enum() {
-                    Some(s) => s,
+                    Some(s) => s.clone(),
                     _ => {
                         return Err(VmErrorReason::UnexpectedType);
                     }
@@ -337,7 +437,7 @@ impl VirtualMachine {
         ) -> Result<Enum, VmErrorReason> {
             match current_struct.load_named_value(name) {
                 Some(existing_val) => match existing_val.as_enum() {
-                    Some(s) => Ok(s),
+                    Some(s) => Ok(s.clone()),
                     _ => Err(VmErrorReason::UnexpectedType),
                 },
                 None => {
@@ -372,7 +472,7 @@ impl VirtualMachine {
         let entry_cco = entry_cm.load_entry_code_object();
         let entry_co: CodeObject = Into::into(&entry_cco);
         let entry_f = Function::from_code_object(&entry_co, 0, &r_mod);
-        let mut entry_frame: Frame = Frame::default();
+        let mut entry_frame: Frame = Default::default();
 
         let entry_result = entry_f.eval(0, &mut entry_frame, self, true);
         match entry_result {
@@ -397,18 +497,55 @@ impl VirtualMachine {
         self.modules.get(name).cloned()
     }
 
+    pub(crate) fn find_imported_module(&self, name: &str) -> Option<RuntimeModule> {
+        self.imported_modules
+            .get(name)
+            .map(|mli| mli.module.clone())
+    }
+
+    pub fn inject_imported_module(&mut self, name: &str, module: RuntimeModule) {
+        self.imported_modules
+            .insert(name.to_owned(), ModuleLoadInfo { module });
+    }
+
     pub fn execute_module(&mut self, m: &RuntimeModule) -> ExecutionResult<RunloopExit> {
         let main_f = match m.load_named_value("main") {
             Some(RuntimeValue::Function(f)) => f,
-            _ => return Err(VmErrorReason::NoSuchIdentifier("main".to_owned()).into()),
+            _ => return Ok(RunloopExit::Ok(())),
         };
 
-        match main_f.eval(
-            0,
-            &mut Frame::new_with_n_locals(main_f.frame_size()),
-            self,
-            true,
-        )? {
+        let mut main_frame = Frame::default();
+
+        let main_arity = main_f.arity();
+        let req = main_arity.required;
+        let opt = main_arity.optional;
+        let va = main_f.varargs();
+        let main_argc = if req == 0 && opt == 0 && !va {
+            0
+        } else if req == 1 && opt == 0 && !va {
+            let cmdline_args = RuntimeValue::List(List::from(
+                &self
+                    .options
+                    .vm_args
+                    .iter()
+                    .map(|arg| RuntimeValue::String(arg.as_str().into()))
+                    .collect::<Vec<_>>(),
+            ));
+            main_frame.stack.push(cmdline_args);
+            1
+        } else if req == 0 && opt == 0 && va {
+            self.options
+                .vm_args
+                .iter()
+                .rev()
+                .map(|arg| RuntimeValue::String(arg.as_str().into()))
+                .for_each(|arg| main_frame.stack.push(arg));
+            self.options.vm_args.len() as u8
+        } else {
+            return Err(VmErrorReason::InvalidMainSignature.into());
+        };
+
+        match main_f.eval(main_argc, &mut main_frame, self, true)? {
             crate::runtime_value::CallResult::OkNoValue
             | crate::runtime_value::CallResult::Ok(_) => Ok(RunloopExit::Ok(())),
             crate::runtime_value::CallResult::Exception(e) => Ok(RunloopExit::Exception(e)),
@@ -819,23 +956,23 @@ impl VirtualMachine {
                 }
             }
             Opcode::ReadNamed(n) => {
-                if let Some(ct) = this_module.load_indexed_const(n) {
-                    if let Some(sv) = ct.as_string() {
-                        frame.stack.push(self.read_named_symbol(this_module, sv)?);
-                    }
+                if let Some(ct) = this_module.load_indexed_const(n)
+                    && let Some(sv) = ct.as_string()
+                {
+                    frame.stack.push(self.read_named_symbol(this_module, sv)?);
                 }
             }
             Opcode::WriteNamed(n) => {
                 let x = pop_or_err!(next, frame, op_idx);
-                if let Some(ct) = this_module.load_indexed_const(n) {
-                    if let Some(sv) = ct.as_string() {
-                        if !this_module.store_typechecked_named_value(sv, x, &self.builtins) {
-                            return build_vm_error!(
-                                VmErrorReason::UnexpectedType,
-                                next,
-                                frame,
-                                op_idx
-                            );
+                if let Some(ct) = this_module.load_indexed_const(n)
+                    && let Some(sv) = ct.as_string()
+                {
+                    let write_result =
+                        this_module.store_typechecked_named_value(sv, x, &self.builtins);
+                    match write_result {
+                        Ok(_) => {}
+                        Err(e) => {
+                            return build_vm_error!(e, next, frame, op_idx);
                         }
                     }
                 }
@@ -843,20 +980,28 @@ impl VirtualMachine {
             Opcode::TypedefNamed(n) => {
                 let t = pop_or_err!(next, frame, op_idx);
                 if let Some(t) = t.as_type() {
-                    if let Some(ct) = this_module.load_indexed_const(n) {
-                        if let Some(sv) = ct.as_string() {
-                            this_module.typedef_named_value(sv, t.clone());
-                        }
+                    if let Some(ct) = this_module.load_indexed_const(n)
+                        && let Some(sv) = ct.as_string()
+                    {
+                        this_module.typedef_named_value(sv, t.clone());
                     }
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
-            Opcode::ReadIndex => {
-                let idx = pop_or_err!(next, frame, op_idx);
+            Opcode::ReadIndex(n) => {
+                let mut indices = Vec::<_>::with_capacity(n as usize);
+                for _ in 0..n {
+                    let idx = pop_or_err!(next, frame, op_idx);
+                    indices.insert(0, idx);
+                }
                 let cnt = pop_or_err!(next, frame, op_idx);
-                match cnt.read_index(&idx, frame, self) {
-                    Ok(_) => {}
+                match cnt.read_index(&indices, frame, self) {
+                    Ok(crate::runtime_value::CallResult::OkNoValue)
+                    | Ok(crate::runtime_value::CallResult::Ok(_)) => {}
+                    Ok(crate::runtime_value::CallResult::Exception(e)) => {
+                        return Ok(OpcodeRunExit::Exception(e));
+                    }
                     Err(e) => {
                         return if e.loc.is_none() {
                             build_vm_error!(e.reason, next, frame, op_idx)
@@ -866,12 +1011,20 @@ impl VirtualMachine {
                     }
                 }
             }
-            Opcode::WriteIndex => {
+            Opcode::WriteIndex(n) => {
                 let val = pop_or_err!(next, frame, op_idx);
-                let idx = pop_or_err!(next, frame, op_idx);
+                let mut indices = Vec::<_>::with_capacity(n as usize);
+                for _ in 0..n {
+                    let idx = pop_or_err!(next, frame, op_idx);
+                    indices.insert(0, idx);
+                }
                 let cnt = pop_or_err!(next, frame, op_idx);
-                match cnt.write_index(&idx, &val, frame, self) {
-                    Ok(_) => {}
+                match cnt.write_index(&indices, &val, frame, self) {
+                    Ok(crate::runtime_value::CallResult::OkNoValue)
+                    | Ok(crate::runtime_value::CallResult::Ok(_)) => {}
+                    Ok(crate::runtime_value::CallResult::Exception(e)) => {
+                        return Ok(OpcodeRunExit::Exception(e));
+                    }
                     Err(e) => {
                         return if e.loc.is_none() {
                             build_vm_error!(e.reason, next, frame, op_idx)
@@ -1036,6 +1189,11 @@ impl VirtualMachine {
             }
             Opcode::Jump(n) => {
                 reader.jump_to_index(n as usize);
+            }
+            Opcode::JumpIfArgSupplied(arg, dest) => {
+                if frame.argc > arg {
+                    reader.jump_to_index(dest as usize);
+                }
             }
             Opcode::Call(argc) => {
                 let x = pop_or_err!(next, frame, op_idx);
@@ -1356,6 +1514,84 @@ impl VirtualMachine {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
+            Opcode::TryUnwrapProtocol(mode) => {
+                let result_enum = if let Some(re) =
+                    self.builtins.get_builtin_type_by_id(BUILTIN_TYPE_RESULT)
+                    && let Some(re) = re.as_enum()
+                {
+                    re.clone()
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedVmState, next, frame, op_idx);
+                };
+                let maybe_enum = if let Some(re) =
+                    self.builtins.get_builtin_type_by_id(BUILTIN_TYPE_MAYBE)
+                    && let Some(re) = re.as_enum()
+                {
+                    re.clone()
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedVmState, next, frame, op_idx);
+                };
+
+                let val = pop_or_err!(next, frame, op_idx);
+                let ev = if let Some(ev) = val.as_enum_value() {
+                    if ev.get_container_enum() == &maybe_enum
+                        || ev.get_container_enum() == &result_enum
+                    {
+                        ev.clone()
+                    } else {
+                        return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    }
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                };
+
+                let case_index = ev.get_case_index();
+                match case_index {
+                    0 => {
+                        // Ok/Some
+                        if let Some(case_value) = ev.get_payload() {
+                            frame.stack.push(case_value.clone());
+                        } else {
+                            return build_vm_error!(
+                                VmErrorReason::EnumWithoutPayload,
+                                next,
+                                frame,
+                                op_idx
+                            );
+                        }
+                    }
+                    1 => {
+                        // Err/None
+                        match mode {
+                            haxby_opcodes::try_unwrap_protocol_mode::PROPAGATE_ERROR => {
+                                frame.stack.push(val.clone());
+                                return Ok(OpcodeRunExit::Return); // implement a Return
+                            }
+                            haxby_opcodes::try_unwrap_protocol_mode::ASSERT_ERROR => {
+                                return build_vm_error!(
+                                    VmErrorReason::AssertFailed("force unwrap failed".to_string()),
+                                    next,
+                                    frame,
+                                    op_idx
+                                );
+                            }
+                            _ => {
+                                // should never happen
+                                return build_vm_error!(
+                                    VmErrorReason::IncompleteInstruction,
+                                    next,
+                                    frame,
+                                    op_idx
+                                );
+                            }
+                        }
+                    }
+                    _ => {
+                        // should never happen
+                        return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    }
+                }
+            }
             Opcode::Isa => {
                 let t = pop_or_err!(next, frame, op_idx);
                 let val = pop_or_err!(next, frame, op_idx);
@@ -1487,7 +1723,12 @@ impl VirtualMachine {
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 };
-                dest.lift_all_symbols_from_other(src, self);
+                match dest.lift_all_symbols_from_other(src, self) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        return build_vm_error!(e, next, frame, op_idx);
+                    }
+                }
             }
             Opcode::Import(n) => {
                 let ipath = if let Some(ct) = this_module.load_indexed_const(n) {
@@ -1655,6 +1896,7 @@ impl VirtualMachine {
             }
 
             if let Some(except) = need_handle_exception {
+                except.fill_in_backtrace();
                 match frame.drop_to_first_try(self) {
                     Some(o) => {
                         reader.jump_to_index(o as usize);

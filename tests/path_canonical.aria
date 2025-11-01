@@ -1,9 +1,23 @@
 # SPDX-License-Identifier: Apache-2.0
 import Path from aria.io.path;
+import Platform from aria.system.platform;
 
 func main() {
-    val p = Path.new("/usr/bin/../bin/../lib/../../usr/bin/ls");
-    val q = p.new_canonical();
+    val local_platform = Platform.local();
 
-    assert q.prettyprint() == "/usr/bin/ls";
+    val p = Path.new(
+        local_platform.is_Linux() ? "/usr/bin/../bin/../lib/../../usr/bin/ls" :
+        local_platform.is_macOS() ? "/usr/bin/../bin/../lib/../../bin/ls" :
+        "<no_such_file_really_what_would_one_even_do_now>"
+    );
+    val q = p.new_canonical().unwrap_Ok();
+
+    # on Linux, it's /usr/bin/ls; on mac it's /bin/ls
+    # checking for a suffix and whether the file exists should
+    # be sufficient
+    assert q.prettyprint().has_suffix("/bin/ls");
+    assert q.exists();
+
+    val p = Path.new("/no/such/path/would/ever/exist/right/c:\makeit/really/confusing/too.txt");
+    assert p.new_canonical().is_Err();
 }

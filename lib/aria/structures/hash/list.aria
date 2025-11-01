@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+import SipHasher from aria.structures.hash.algo.sip;
+
+extension List {
+    func hash() {
+        val hasher = SipHasher.new(0x0706050403020100, 0x0f0e0d0c0b0a0908);
+        for item in this {
+            # TODO: runtime error, skip non-hashable items?
+            hasher.write(item.hash());
+        }
+        return hasher.finish();
+    }
+}

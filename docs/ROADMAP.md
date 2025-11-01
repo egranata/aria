@@ -1,15 +1,22 @@
+---
+title: "Aria Roadmap"
+description: "Overall vision doc highlighting the goals for Aria."
+---
+
 # Aria Roadmap
 
 This document outlines the future direction of the Aria programming language. As an open-source project, we welcome community feedback and contributions to help shape the future of Aria. Ideas outside this roadmap are very welcome, and can be filed as GitHub issues to begin discussion.
 
+This document is best understood alongside the [Release Policy](release_policy.md), which defines the criteria for versioning and releasing new versions of Aria.
+
 ## Very-Short-Term Goal (Aria 1.0, by December 2025)
 
-Aria is currently at version 0.9. This means that we intend the core language and library to be mostly stable and usable.
+Aria is currently at version 0.9. While we intend not to break things for its own sake, this version indicates that the language is still under development.
 Up until version 1.0, we reserve the right to make breaking changes to the language and to the library. Ideally, we will only do this if the balance between the value of the change and the cost of breaking existing code is a net-positive.
 
 After version 1.0 is released, we will only consider breaking changes on a *must* basis, i.e. we will only break existing code if there is no other realistic path to achieve a significant language goal.
 
-We plan to ship Aria 1.0 with the existing parser, but may consider a migration to hand-rolled parser in a future version, in order to improve the quality of error messages. Rewriting the Aria compiler or VM in Aria is a non-goal.
+Rewriting the Aria compiler or VM in Aria is a non-goal.
 
 *   **Improve the Standard Library's Structure:** Reorganize the standard library, including:
     - move `Path` and `Regex` outside the core language;

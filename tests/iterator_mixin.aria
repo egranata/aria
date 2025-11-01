@@ -22,7 +22,9 @@ func main() {
     assert l.iterator().position(is_even).unwrap_or(-1) == 1;
 
     assert l.iterator().sum() == 55;
+    assert l.iterator().sum(10) == 65;
     assert l.iterator().product() == 3628800;
+    assert l.iterator().product(2) == 7257600;
     assert l.iterator().max().unwrap_or(-1) == 10;
     assert l.iterator().min().unwrap_or(-1) == 1;
     assert l.iterator().count() == 10;

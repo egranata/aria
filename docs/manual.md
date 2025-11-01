@@ -246,7 +246,7 @@ func main() {
 }
 ```
 
-Functions can accept a variable number of arguments, with 0 or more fixed (required) arguments before that. Variable arguments are stored in a list provided to the function named `varargs`
+Functions can accept 0 or more required arguments, 0 or more optional arguments and possibly a variable number of arguments at the end. Variable arguments are stored in a list provided to the function named `varargs`
 
 ```
 func add_all_values(x, ...) {
@@ -259,6 +259,19 @@ func add_all_values(x, ...) {
 func main() {
     println(add_all_values(1,2,4,6,8)); # prints 21
     println(add_all_values(5)); # prints 5
+}
+```
+
+Optional arguments are given by name and a default value
+
+```
+func add(x,y=1) {
+    return x + y;
+}
+
+func main() {
+    println(add(3)); # prints 4
+    println(add(2,3)); # prints 5
 }
 ```
 
@@ -281,6 +294,12 @@ func main() {
     println(call_f(|x| => {return x + answer; }, 2)); # prints 44
 }
 ```
+
+One-line functions are a shorthand form for functions that consist of a single return expression. Instead of writing a full block, you can use = after the declaration:
+```
+func sum(x, y) = x + y;
+```
+This is equivalent to writing a normal function that returns `x+y`.
 
 ## 🧱 Structs
 
@@ -505,7 +524,7 @@ func main() {
 }
 ```
 
-## ⁉️ Maybe
+## ⁉️ Maybe and Result
 
 `Maybe` is an enum that represents a potentially missing value. It is defined as
 
@@ -517,6 +536,65 @@ enum Maybe {
 ```
 
 As an enum, it can be used in `match` or checked with `is_X` helpers. APIs where a value may be returned or not, and neither condition is an error, use `Maybe` to represent that fact.
+
+`Result` is an enum that represents a successful or failed operation. It is defined as
+
+```
+enum Result {
+    case Ok(Any),
+    case Err(Any),
+}
+```
+
+Use `Result` to represent operations that can succeed or fail, where both conditions are expected and need to be handled. Generally, the value of the `Err` case should itself be a struct or enum that describes the error in more detail.
+
+While `Maybe` is intended to convey the (non-)existence of a value, `Result` is intended to convey the (non-)success of an operation. For this reason,` Result` has bridges to-and-from exceptions, while `Maybe` does not.
+
+To convert an exception into a `Result`, use `Result.new_with_try`, which takes a closure that may throw, and returns a `Result`. To convert a `Result` into an exception, use `Result.or_throw`, which returns the value of the `Ok` case, or throws the value of the `Err` case.
+
+Shorthand syntax is provided to extract - or propagate - values from `Maybe` and `Result`, the `??` and `!!` operators. 
+
+`x??` is equivalent to `val` if the object is `Result::Ok(val)` or `Maybe::Some(val)`. If the object is a `Result::Err(err)` or `Maybe::None`, it is equivalent to `return x;` from the current function.
+
+`x!!` has the same behavior, but instead of returning it will assert on `Err` or `None` cases.
+
+Custom types can participate in the "try unwrap protocol", by defining a `_op_try_view` method, which must return a `Result` or a `Maybe`. If the method is not defined, the default behavior is to return `Result::Ok(this)`
+
+```
+func might_fail(x) {
+    if x > 0 {
+        return Result::Ok(x * 2);
+    } else {
+        return Result::Err("x must be positive");
+    }
+}
+
+func main() {
+    val r1 = might_fail(3);
+    val r2 = might_fail(-1);
+
+    println(r1!!); # prints 6
+    println(r2!!); # fails with assertion error ("force unwrap failed")
+}
+```
+
+```
+func might_be_missing(x) {
+    if x > 0 {
+        return Maybe::Some(x * 2);
+    } else {
+        return Maybe::None;
+    }
+}
+
+func main() {
+    val m1 = might_be_missing(3);
+    val m2 = might_be_missing(-1);
+
+    println(m1??); # prints 6
+    println(m2??); # returns Result::Err(Unit)
+}
+```
 
 ## 🗺️ Maps
 
@@ -579,6 +657,65 @@ func main() {
 ```
 
 Custom types can be used as keys in maps, as long as they define a `func hash()`.
+
+## 🏷️ Object Initialization
+
+Aria offers a quick syntax to write multiple values into the same object. Any expression can be followed by a write-list, e.g.
+
+```
+val x = [] {
+    [0] = 1,
+    [1] = 2,
+    [2] = 3
+};
+```
+
+will initialize a list with [1, 2, 3].
+
+It can also be done for structs, for example
+
+```
+val x = Box() {
+    .a = 1,
+    .b = 2,
+    .c = 3,
+};
+```
+
+which will create an object with fields `a`, `b`, and `c`.
+
+Indices and fields can be freely mixed:
+
+```
+val m = Map.new() {
+    ["hello"] = "world",
+    .something = "else",
+    ["foo"] = "bar",
+};
+
+println(m); # prints Map([foo]->bar, [hello]->world)
+println(m.something); # prints else
+```
+
+As a shortcut, a field can be initialized by a local variable of the same name without duplicating the name, as in
+
+```
+struct StringWrapper {
+    type func new(msg) = alloc(This) { .msg };
+
+    func prettyprint() { return this.msg; }
+}
+
+println(StringWrapper.new("hello world")); # prints hello world
+```
+
+This syntax is most often used for initializing objects and containers, but it is generally available:
+
+```
+println("x"{.hello = "world"}.hello); # prints world
+```
+
+Writes are performed in the order they are provided, and duplicated writes to the same index or name are not discarded. In general, the user should expect a "last write wins" behavior.
 
 ## 🚛 Extensions
 
@@ -669,20 +806,20 @@ func main() {
 `catch` cannot discriminate on the type of the exception or its parameters. If a `catch` block is unable to resolve an exception, it can throw it again.
 
 The error handling philosophy of Aria is generally inspired by Rust and Midori:
-- Some scenarios are expected and anticipated (e.g. getting an element out of a Map, but there is nothing with that key); for cases like these return Maybe::None or a similar placeholder "missing" value;
-- Some scenarios are erroneous, but can be recovered from (e.g. file not found, network connection failed); in these cases throw an exception and handle it somewhere else;
+- Some scenarios are expected and anticipated even if not the happy path (e.g. getting an element out of a Map, but there is nothing with that key); for cases like these return `Maybe::None` (if the absence of a value is not an error) or `Result::Err` (if the absence of a value is an error);
+- Some scenarios are erroneous, but can be recovered from (e.g. disk removed during a file write); in these cases throw an exception and handle it somewhere else;
 - Some errors are beyond recovering (e.g. the VM expected two operands but only one is present on the stack); in these cases the VM itself will throw a fatal error, or you can assert in your code. `assert` fails by throwing a non-recoverable VM error.
 
 Aria itself defines a set of common exceptions in the `RuntimeError` enum:
 
-- DivisionByZero: see example above;
-- EnumWithoutPayload: you attempted to extract payload from an enum value that has none;
-- IndexOutOfBounds: attempting to access an element beyond the end of a container;
-- MismatchedArgumentCount: called a function with fewer/more arguments than it needed;
-- NoSuchCase: attempting to access an enum's case that does not exist;
-- NoSuchIdentifier: attempting to read/write a value that does not exist;
-- OperationFailed: some task could not be completed for reasons outside of Aria's control (e.g. running an external program);
-- UnexpectedType: an operation required a value of one type, but a value of a different one was provided
+- `DivisionByZero`: see example above;
+- `EnumWithoutPayload`: you attempted to extract payload from an enum value that has none;
+- `IndexOutOfBounds`: attempting to access an element beyond the end of a container;
+- `MismatchedArgumentCount`: called a function with fewer/more arguments than it needed;
+- `NoSuchCase`: attempting to access an enum's case that does not exist;
+- `NoSuchIdentifier`: attempting to read/write a value that does not exist;
+- `OperationFailed`: some task could not be completed for reasons outside of Aria's control (e.g. running an external program);
+- `UnexpectedType`: an operation required a value of one type, but a value of a different one was provided
 
 These values can be reused by user code, or new exception types can be created. The usual pattern for an exception is to create an ad-hoc struct
 
@@ -730,15 +867,15 @@ Error: division by zero
     ╭─[/tmp/program.aria:2:12]
     │
   2 │     return x / y;
-    │            ──┬──  
+    │            ──┬──
     │              ╰──── here
-    │ 
+    │
   9 │     val d = do_division(x,y);
-    │                        ──┬──  
+    │                        ──┬──
     │                          ╰──── here
-    │ 
+    │
  15 │     println(complex_math(7,0));
-    │                         ──┬──  
+    │                         ──┬──
     │                           ╰──── here
 ────╯
 ```
@@ -776,16 +913,16 @@ Operators are overloaded by an `operator` declaration:
 ```
 struct Integer {
     type func new(n) {
-        alloc(This){
+        return alloc(This){
             .n = n,
         };
     }
 
     operator %(rhs) {
         if rhs isa Integer {
-            Integer.new(this.n % rhs.n);
+            return Integer.new(this.n % rhs.n);
         } elsif rhs isa Int {
-            Integer.new(this.n % rhs);
+            return Integer.new(this.n % rhs);
         } else {
             throw alloc(Unimplemented);
         }
@@ -804,7 +941,7 @@ func main() {
 
 If an operator does not support a combination of operands, it can throw `Unimplemented`. For a binary operator, if the type of the second operand is different, Aria will attempt to invoke the reverse operator. For operators other than equality, the syntax to define a reverse operator is `reverse operator`. For equality, one simply defines `operator ==` on the other type.
 
-Square bracket access is defined by means of `operator [](index)` and `operator []=(index, value)`. The value of the index does not have to be an integer (e.g. `Map`), however only one index can be supported in this version of Aria.
+Square bracket access is defined by means of `operator [](index)` and `operator []=(index, value)`. The value of the index does not have to be an integer (e.g. `Map`), and any arbitrary number of indices can be supported (including variable arguments).
 
 Defining `operator ()` allows objects to be called as if they are functions, e.g.
 
@@ -956,10 +1093,9 @@ A mixin can be included in multiple types, and a type can include multiple mixin
 
 ## 🎡 Iterators
 
-`for` loops work by leveraging iterators. An iterator is an object that has a `next` method with no arguments. This method is expected to return an object with a specific layout:
-
-- if the iteration is complete, a field named `done` with value `true`;
-- otherwise, a field named `done` with value `false`, and a field named `value`, whose value is the next element in the iteration
+`for` loops work by leveraging iterators. An iterator is an object that has a `next` method with no arguments. This method is expected to return an instance of the `Maybe` type:
+- if the iteration is complete, it returns `Maybe::None`;
+- otherwise, it returns `Maybe::Some(next_item)`.
 
 This mechanism allows for finite or infinite sequences, for values to be pre-computed or dynamically generated.
 
@@ -979,10 +1115,10 @@ struct SampleIterator {
 
     instance func next() {
         if this.num == 5 {
-            return Box() {.done = true};
+            return Maybe::None;
         } else {
             this.num += 1;
-            return Box{.done = false, .value = this.num};
+            return Maybe::Some(this.num);
         }
     }
 }
@@ -1021,10 +1157,10 @@ struct SampleIterator {
 
     instance func next() {
         if this.num == 5 {
-            return Box() {.done = true};
+            return Maybe::None;
         } else {
             this.num += 1;
-            return Box{.done = false, .value = this.num};
+            return Maybe::Some(this.num);
         }
     }
 
@@ -1046,9 +1182,28 @@ Any Aria file can be a module.
 
 Modules are imported with the `import` statement, which follows a dotted structure, e.g. `import aria.rng.xorshift;`. `aria` is the name of the Aria standard library module, which contains submodules defined via filesystem paths. Documentation for the Aria library is contained in [stdlib.md](stdlib.md).
 
-Modules are located via the `ARIA_LIB_DIR` environment variable, which is a list of paths, separated by a colon. Each path is scanned in order until the module is found or all are exhausted.
+The following algorithm is used to resolve where to look for imports:
+- if `ARIA_LIB_DIR` is defined, it is a list of paths separated by the platform separator; the system looks in each path in the order provided until the module is found;
+- if there is a `lib/aria` directory next to the running binary, then the system looks in `lib/` for modules;
+- if there is a `lib/aria` directory in the parent directory of the running binary, then the system looks in `lib/` for modules.
 
-`aria.rng.xorshift` is defined in `lib/aria/rng/xorshift.aria`. Directories may contain other directories, or files, or a combination thereof. A directory is scanned by virtue of its name being used, and does not need contain any files. Directories may be arbitrarily nested.
+If running on Linux, four additional paths are searched:
+- `/usr/local/aria<version>/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/local/aria/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/lib/aria<version>` which is used if it contains an `aria` subdirectory;
+- `/usr/lib/aria` which is used if it contains an `aria` subdirectory.
+
+If running on macOS, four additional paths are searched:
+- `/opt/homebrew/opt/aria<version>/lib` which is used if it contains an `aria` subdirectory;
+- `/opt/homebrew/opt/aria/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/local/opt/aria<version>/lib` which is used if it contains an `aria` subdirectory;
+- `/usr/local/opt/aria/lib` which is used if it contains an `aria` subdirectory.
+
+If `ARIA_LIB_DIR_EXTRA` is defined, it is a list of paths separated by the platform separator; each existing directory in that list is added to the end of the search path.
+
+If no valid path exists, import modules cannot be located. Running Aria without its standard library is not a supported configuration.
+
+As an example, `aria.rng.xorshift` is defined in `lib/aria/rng/xorshift.aria`. Directories may contain other directories, or files, or a combination thereof. A directory is scanned by virtue of its name being used, and does not need contain any marker files to be recognized as a module. Directories may be arbitrarily nested.
 
 A module can be imported more than once, but only the first import will load the module, others will act as a no-op. An import of a module brings that module into the visible set of symbols, and names inside the module can be referenced via a fully-dotted path. For example
 

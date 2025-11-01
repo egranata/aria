@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::{
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{collections::HashMap, rc::Rc};
 
 use aria_compiler::line_table::LineTable;
 use aria_parser::ast::SourcePointer;
 use haxby_opcodes::function_attribs::{FUNC_ACCEPTS_VARARG, FUNC_IS_METHOD, METHOD_ATTRIBUTE_TYPE};
+use rustc_data_structures::fx::FxHashSet;
 
 use crate::{
+    arity::Arity,
     frame::Frame,
     runtime_module::RuntimeModule,
     vm::{ExecutionResult, RunloopExit, VirtualMachine},
@@ -20,7 +19,7 @@ use super::{
 
 pub trait BuiltinFunctionImpl {
     fn eval(&self, frame: &mut Frame, vm: &mut VirtualMachine) -> ExecutionResult<RunloopExit>;
-    fn arity(&self) -> u8;
+    fn arity(&self) -> Arity;
     fn attrib_byte(&self) -> u8 {
         0
     }
@@ -44,7 +43,7 @@ impl BuiltinFunction {
 pub struct BytecodeFunction {
     pub name: String,
     pub body: Rc<[u8]>,
-    pub arity: u8,
+    pub arity: Arity,
     pub frame_size: u8,
     pub line_table: Rc<LineTable>,
     pub loc: SourcePointer,
@@ -90,7 +89,7 @@ impl FunctionImpl {
         }
     }
 
-    pub(crate) fn arity(&self) -> u8 {
+    pub(crate) fn arity(&self) -> Arity {
         match self {
             Self::BytecodeFunction(bc) => bc.arity,
             Self::BuiltinFunction(bf) => bf.body.arity(),
@@ -128,7 +127,7 @@ impl Function {
         self.imp.line_table()
     }
 
-    pub fn arity(&self) -> u8 {
+    pub fn arity(&self) -> Arity {
         self.imp.arity()
     }
 
@@ -146,10 +145,6 @@ impl Function {
 
     pub fn loc(&self) -> Option<&SourcePointer> {
         self.imp.loc()
-    }
-
-    pub fn identity(&self) -> usize {
-        Rc::as_ptr(&self.imp) as usize
     }
 }
 
@@ -206,7 +201,10 @@ impl FunctionImpl {
         let bcf = BytecodeFunction {
             name: co.name.clone(),
             body: rc,
-            arity: co.arity,
+            arity: Arity {
+                required: co.required_argc,
+                optional: co.default_argc,
+            },
             frame_size: co.frame_size,
             line_table: lt,
             loc: co.loc.clone(),
@@ -234,7 +232,7 @@ impl FunctionImpl {
         .read(name)
     }
 
-    fn list_attributes(&self) -> HashSet<String> {
+    fn list_attributes(&self) -> FxHashSet<String> {
         match self {
             FunctionImpl::BytecodeFunction(b) => b.boxx.list_attributes(),
             FunctionImpl::BuiltinFunction(b) => b.boxx.list_attributes(),
@@ -270,11 +268,13 @@ impl Function {
     // DO NOT CALL unless you are Function or BoundFunction
     pub(super) fn eval_in_frame(
         &self,
+        argc: u8,
         target_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> ExecutionResult<RunloopExit> {
         match self.imp.as_ref() {
             FunctionImpl::BytecodeFunction(bcf) => {
+                target_frame.set_argc(argc);
                 vm.eval_bytecode_in_frame(&bcf.module, &bcf.body, target_frame)
             }
             FunctionImpl::BuiltinFunction(bnf) => bnf.body.eval(target_frame, vm),
@@ -291,10 +291,10 @@ impl Function {
         let mut new_frame = Frame::new_with_function(self.clone());
 
         if self.attribute().is_vararg() {
-            if argc < self.arity() {
+            if argc < self.arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.arity() as usize,
+                        self.arity().required as usize,
                         argc as usize,
                     )
                     .into(),
@@ -303,7 +303,7 @@ impl Function {
 
             let l = List::default();
             for i in 0..argc {
-                if i < self.arity() {
+                if i < self.arity().required + self.arity().optional {
                     new_frame.stack.at_head(cur_frame.stack.pop());
                 } else {
                     l.append(cur_frame.stack.pop());
@@ -312,10 +312,19 @@ impl Function {
 
             new_frame.stack.at_head(super::RuntimeValue::List(l));
         } else {
-            if argc != self.arity() {
+            if argc < self.arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.arity() as usize,
+                        self.arity().required as usize,
+                        argc as usize,
+                    )
+                    .into(),
+                );
+            }
+            if argc > self.arity().required + self.arity().optional {
+                return Err(
+                    crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
+                        self.arity().required as usize + self.arity().optional as usize,
                         argc as usize,
                     )
                     .into(),
@@ -327,7 +336,7 @@ impl Function {
             }
         }
 
-        match self.eval_in_frame(&mut new_frame, vm)? {
+        match self.eval_in_frame(argc, &mut new_frame, vm)? {
             RunloopExit::Ok(_) => match new_frame.stack.try_pop() {
                 Some(ret) => {
                     if !discard_result {
@@ -349,7 +358,7 @@ impl Function {
         self.imp.read(name)
     }
 
-    pub fn list_attributes(&self) -> HashSet<String> {
+    pub fn list_attributes(&self) -> FxHashSet<String> {
         self.imp.list_attributes()
     }
 }

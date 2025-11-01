@@ -6,13 +6,11 @@ struct MiddleSquareRng {
         return MiddleSquareRng.new_with_params(now(),0x5ad4eceda1ce2a9);
     }
 
-    type func new_with_params(x,s) {
-        return alloc(This){
-            .x = x,
-            .w = 0,
-            .s = s,
-        };
-    }
+    type func new_with_params(x,s) = alloc(This){
+        .x,
+        .w = 0,
+        .s,
+    };
 
     func next() {
         this.x = this.x * this.x;

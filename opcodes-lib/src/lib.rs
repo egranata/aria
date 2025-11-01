@@ -48,6 +48,7 @@ pub const OPCODE_BITWISE_OR: u8 = 61;
 pub const OPCODE_JUMP: u8 = 62;
 pub const OPCODE_JUMP_TRUE: u8 = 63;
 pub const OPCODE_JUMP_FALSE: u8 = 64;
+pub const OPCODE_JUMP_IF_ARG_SUPPLIED: u8 = 65;
 // ...
 pub const OPCODE_GUARD_ENTER: u8 = 70;
 pub const OPCODE_GUARD_EXIT: u8 = 71;
@@ -69,6 +70,7 @@ pub const OPCODE_INCLUDE_MIXIN: u8 = 88;
 pub const OPCODE_NEW_ENUM_VAL: u8 = 89;
 pub const OPCODE_ENUM_CHECK_IS_CASE: u8 = 90;
 pub const OPCODE_ENUM_EXTRACT_PAYLOAD: u8 = 91;
+pub const OPCODE_TRY_UNWRAP_PROTOCOL: u8 = 92;
 // ...
 pub const OPCODE_IMPORT: u8 = 250;
 pub const OPCODE_LIFT_MODULE: u8 = 251;
@@ -106,6 +108,8 @@ pub mod builtin_type_ids {
     pub const BUILTIN_TYPE_UNIMPLEMENTED:  u8 = 8;
     pub const BUILTIN_TYPE_RUNTIME_ERROR:  u8 = 9;
     pub const BUILTIN_TYPE_UNIT:           u8 = 10;
+    pub const BUILTIN_TYPE_RESULT:         u8 = 11;
+    pub const BUILTIN_TYPE_TYPE:           u8 = 12;
 }
 
 #[allow(unused_imports)]
@@ -118,6 +122,15 @@ pub mod enum_case_attribs {
 
 #[allow(unused_imports)]
 use enum_case_attribs::*;
+
+#[rustfmt::skip]
+pub mod try_unwrap_protocol_mode {
+    pub const PROPAGATE_ERROR:  u8 = 1;
+    pub const ASSERT_ERROR:     u8 = 2;
+}
+
+#[allow(unused_imports)]
+use try_unwrap_protocol_mode::*;
 
 #[derive(Clone)]
 pub enum Opcode {
@@ -153,8 +166,8 @@ pub enum Opcode {
     ReadNamed(u16),
     WriteNamed(u16),
     TypedefNamed(u16),
-    ReadIndex,
-    WriteIndex,
+    ReadIndex(u8),
+    WriteIndex(u8),
     ReadAttribute(u16),
     WriteAttribute(u16),
     ReadUplevel(u8),
@@ -166,6 +179,7 @@ pub enum Opcode {
     JumpTrue(u16),
     JumpFalse(u16),
     Jump(u16),
+    JumpIfArgSupplied(u8, u16),
     Call(u8),
     Return,
     GuardEnter,
@@ -185,6 +199,7 @@ pub enum Opcode {
     NewEnumVal(u16),
     EnumCheckIsCase(u16),
     EnumExtractPayload,
+    TryUnwrapProtocol(u8),
     Isa,
     Import(u16),
     LiftModule,
@@ -224,8 +239,8 @@ impl std::fmt::Display for Opcode {
             Self::ReadNamed(arg0) => write!(f, "READ_NAMED @{arg0}"),
             Self::WriteNamed(arg0) => write!(f, "WRITE_NAMED @{arg0}"),
             Self::TypedefNamed(arg0) => write!(f, "TYPEDEF_NAMED @{arg0}"),
-            Self::ReadIndex => write!(f, "READ_INDEX"),
-            Self::WriteIndex => write!(f, "WRITE_INDEX"),
+            Self::ReadIndex(arg0) => write!(f, "READ_INDEX {arg0}"),
+            Self::WriteIndex(arg0) => write!(f, "WRITE_INDEX {arg0}"),
             Self::ReadAttribute(arg0) => write!(f, "READ_ATTRIB @{arg0}"),
             Self::WriteAttribute(arg0) => write!(f, "WRITE_ATTRIB @{arg0}"),
             Self::ReadUplevel(arg0) => write!(f, "READ_UPLEVEL {arg0}"),
@@ -241,6 +256,7 @@ impl std::fmt::Display for Opcode {
             Self::JumpTrue(arg0) => write!(f, "JUMP_TRUE {arg0}"),
             Self::JumpFalse(arg0) => write!(f, "JUMP_FALSE {arg0}"),
             Self::Jump(arg0) => write!(f, "JUMP {arg0}"),
+            Self::JumpIfArgSupplied(arg0, arg1) => write!(f, "JUMP_IF_ARG_SUPPLIED {arg0} {arg1}"),
             Self::Call(arg0) => write!(f, "CALL {arg0}"),
             Self::Return => write!(f, "RETURN"),
             Self::GuardEnter => write!(f, "ENTER_GUARD"),
@@ -260,6 +276,7 @@ impl std::fmt::Display for Opcode {
             Self::NewEnumVal(arg0) => write!(f, "NEW_ENUM_VAL @{arg0}"),
             Self::EnumCheckIsCase(arg0) => write!(f, "ENUM_CHECK_IS_CASE @{arg0}"),
             Self::EnumExtractPayload => write!(f, "ENUM_EXTRACT_PAYLOAD"),
+            Self::TryUnwrapProtocol(mode) => write!(f, "TRY_UNWRAP_PROTOCOL {mode}"),
             Self::Isa => write!(f, "ISA"),
             Self::Import(arg0) => write!(f, "IMPORT @{arg0}"),
             Self::LiftModule => write!(f, "LIFT_MODULE"),
@@ -301,8 +318,8 @@ impl Opcode {
             Self::ReadNamed(_) => 3,
             Self::WriteNamed(_) => 3,
             Self::TypedefNamed(_) => 3,
-            Self::ReadIndex => 1,
-            Self::WriteIndex => 1,
+            Self::ReadIndex(_) => 2,
+            Self::WriteIndex(_) => 2,
             Self::ReadAttribute(_) => 3,
             Self::WriteAttribute(_) => 3,
             Self::ReadUplevel(_) => 2,
@@ -317,6 +334,7 @@ impl Opcode {
             Self::LessThanEqual => 1,
             Self::JumpTrue(_) => 3,
             Self::JumpFalse(_) => 3,
+            Self::JumpIfArgSupplied(..) => 4,
             Self::Jump(_) => 3,
             Self::Call(_) => 2,
             Self::Return => 1,
@@ -337,6 +355,7 @@ impl Opcode {
             Self::NewEnumVal(_) => 3,
             Self::EnumCheckIsCase(_) => 3,
             Self::EnumExtractPayload => 1,
+            Self::TryUnwrapProtocol(_) => 2,
             Self::Isa => 1,
             Self::Import(_) => 3,
             Self::LiftModule => 1,

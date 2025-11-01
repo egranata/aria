@@ -139,8 +139,16 @@ impl BytecodeReader {
                 .map_or(Err(DecodeError::InsufficientData), |b| {
                     Ok(Opcode::TypedefNamed(b))
                 }),
-            haxby_opcodes::OPCODE_READ_INDEX => Ok(Opcode::ReadIndex),
-            haxby_opcodes::OPCODE_WRITE_INDEX => Ok(Opcode::WriteIndex),
+            haxby_opcodes::OPCODE_READ_INDEX => self
+                .read_u8()
+                .map_or(Err(DecodeError::InsufficientData), |b| {
+                    Ok(Opcode::ReadIndex(b))
+                }),
+            haxby_opcodes::OPCODE_WRITE_INDEX => self
+                .read_u8()
+                .map_or(Err(DecodeError::InsufficientData), |b| {
+                    Ok(Opcode::WriteIndex(b))
+                }),
             haxby_opcodes::OPCODE_READ_ATTRIBUTE => self
                 .read_u16()
                 .map_or(Err(DecodeError::InsufficientData), |b| {
@@ -174,6 +182,21 @@ impl BytecodeReader {
             haxby_opcodes::OPCODE_JUMP => self
                 .read_u16()
                 .map_or(Err(DecodeError::InsufficientData), |b| Ok(Opcode::Jump(b))),
+            haxby_opcodes::OPCODE_JUMP_IF_ARG_SUPPLIED => {
+                let arg0 = match self.read_u8() {
+                    Ok(b) => b,
+                    Err(_) => {
+                        return Err(DecodeError::InsufficientData);
+                    }
+                };
+                let arg1 = match self.read_u16() {
+                    Ok(w) => w,
+                    Err(_) => {
+                        return Err(DecodeError::InsufficientData);
+                    }
+                };
+                Ok(Opcode::JumpIfArgSupplied(arg0, arg1))
+            }
             haxby_opcodes::OPCODE_CALL => self
                 .read_u8()
                 .map_or(Err(DecodeError::InsufficientData), |b| Ok(Opcode::Call(b))),
@@ -247,6 +270,11 @@ impl BytecodeReader {
                     Ok(Opcode::EnumCheckIsCase(b))
                 }),
             haxby_opcodes::OPCODE_ENUM_EXTRACT_PAYLOAD => Ok(Opcode::EnumExtractPayload),
+            haxby_opcodes::OPCODE_TRY_UNWRAP_PROTOCOL => self
+                .read_u8()
+                .map_or(Err(DecodeError::InsufficientData), |b| {
+                    Ok(Opcode::TryUnwrapProtocol(b))
+                }),
             haxby_opcodes::OPCODE_ISA => Ok(Opcode::Isa),
             haxby_opcodes::OPCODE_IMPORT => self
                 .read_u16()

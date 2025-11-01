@@ -1,5 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 func main() {
     val l = [1,2,3,4];
+
     assert l.join() == "1, 2, 3, 4";
+    assert l.join("..") == "1..2..3..4";
+    assert l.join(" - ") == "1 - 2 - 3 - 4";
+
+    assert [].join() == "";
+    assert [1].join() == "1";
+    assert [].join("..") == "";
+    assert [1].join("..") == "1";
 }

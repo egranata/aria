@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+import Instant from aria.date.instant;
+
+func main() {
+    val ts = 1735446958423;
+    val instant = Instant.new_with_utc_timestamp(ts);
+
+    assert instant.year == 2024;
+    assert instant.month == 12;
+    assert instant.day == 29;
+    assert instant.hour == 4;
+    assert instant.minute == 35;
+    assert instant.second == 58;
+}

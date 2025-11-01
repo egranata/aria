@@ -69,8 +69,10 @@ impl BytecodeWriter {
             Opcode::TypedefNamed(n) => self
                 .write_u8(haxby_opcodes::OPCODE_TYPEDEF_NAMED)
                 .write_u16(*n),
-            Opcode::ReadIndex => self.write_u8(haxby_opcodes::OPCODE_READ_INDEX),
-            Opcode::WriteIndex => self.write_u8(haxby_opcodes::OPCODE_WRITE_INDEX),
+            Opcode::ReadIndex(n) => self.write_u8(haxby_opcodes::OPCODE_READ_INDEX).write_u8(*n),
+            Opcode::WriteIndex(n) => self
+                .write_u8(haxby_opcodes::OPCODE_WRITE_INDEX)
+                .write_u8(*n),
             Opcode::ReadAttribute(n) => self
                 .write_u8(haxby_opcodes::OPCODE_READ_ATTRIBUTE)
                 .write_u16(*n),
@@ -94,6 +96,10 @@ impl BytecodeWriter {
                 .write_u8(haxby_opcodes::OPCODE_JUMP_FALSE)
                 .write_u16(*n),
             Opcode::Jump(n) => self.write_u8(haxby_opcodes::OPCODE_JUMP).write_u16(*n),
+            Opcode::JumpIfArgSupplied(n, d) => self
+                .write_u8(haxby_opcodes::OPCODE_JUMP_IF_ARG_SUPPLIED)
+                .write_u8(*n)
+                .write_u16(*d),
             Opcode::Call(n) => self.write_u8(haxby_opcodes::OPCODE_CALL).write_u8(*n),
             Opcode::Return => self.write_u8(haxby_opcodes::OPCODE_RETURN),
             Opcode::GuardEnter => self.write_u8(haxby_opcodes::OPCODE_GUARD_ENTER),
@@ -129,6 +135,9 @@ impl BytecodeWriter {
                 .write_u8(haxby_opcodes::OPCODE_ENUM_CHECK_IS_CASE)
                 .write_u16(*n),
             Opcode::EnumExtractPayload => self.write_u8(haxby_opcodes::OPCODE_ENUM_EXTRACT_PAYLOAD),
+            Opcode::TryUnwrapProtocol(n) => self
+                .write_u8(haxby_opcodes::OPCODE_TRY_UNWRAP_PROTOCOL)
+                .write_u8(*n),
             Opcode::Isa => self.write_u8(haxby_opcodes::OPCODE_ISA),
             Opcode::Import(n) => self.write_u8(haxby_opcodes::OPCODE_IMPORT).write_u16(*n),
             Opcode::LiftModule => self.write_u8(haxby_opcodes::OPCODE_LIFT_MODULE),

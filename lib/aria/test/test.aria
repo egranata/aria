@@ -113,12 +113,14 @@ struct TestSuite {
         return this;
     }
 
-    instance func run() {
+    instance func run(silent=false) {
         val num_fail = 0;
         val num_pass = 0;
         for test in this.tests {
             val result = test.run();
-            println("{0}: {1}".format(prettyprint(test), result.prettyprint()));
+            if !silent {
+                println("{0}: {1}".format(prettyprint(test), result.prettyprint()));
+            }
             if result.is_Fail() {
                 num_fail += 1;
             } else {
@@ -126,7 +128,9 @@ struct TestSuite {
             }
         }
 
-        println("{0} tests, {1} passed, {2} failed".format(this.tests.len(), num_pass, num_fail));
+        if !silent {
+            println("{0} tests, {1} passed, {2} failed".format(this.tests.len(), num_pass, num_fail));
+        }
 
         return num_fail;
     }

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+val caught = false;
+val should_have_failed = false;
+
+try {
+    println(3 / 0);
+    should_have_failed = true;
+} catch e {
+    match e {
+        isa RuntimeError and case DivisionByZero => { caught = true; }
+    }
+}
+
+func main() {
+    assert caught;
+    assert !should_have_failed;
+}

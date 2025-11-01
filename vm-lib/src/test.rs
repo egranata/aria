@@ -50,6 +50,19 @@ func main() {
 }
 
 #[test]
+fn test_toplevel_assert_can_fail() {
+    let input = r##"
+val x = 1;
+assert x == 2;
+"##;
+
+    assert!(
+        exec_code(input)
+            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x==2".to_owned()))
+    );
+}
+
+#[test]
 fn test_circular_import_detected() {
     let input = r##"
 import circular.zero;
@@ -182,11 +195,72 @@ func main() {
         exec_code_with_vm_options(
             input,
             VmOptions {
-                tracing: false,
-                dump_stack: false,
                 vm_args: vec!["foo".to_owned(), "bar".to_owned()],
+                ..Default::default()
             }
         )
         .is_ok()
+    );
+}
+
+#[test]
+fn test_force_unwrap_asserts() {
+    let input = r##"
+func main() {
+    val x = Result::Err("fail");
+    assert x!! == 3;
+}
+"##;
+
+    assert!(exec_code(input).is_err_and(
+        |err| err.reason == VmErrorReason::AssertFailed("force unwrap failed".to_owned())
+    ));
+}
+
+#[test]
+fn test_cmdline_args_list() {
+    let input = r##"
+func main(args) {
+    assert args.len() == 2;
+    assert args[0] == "arg1";
+    assert args[1] == "arg2";
+}
+"##;
+
+    let mut vm_opts = VmOptions::default();
+    vm_opts.vm_args = vec!["arg1".to_owned(), "arg2".to_owned()];
+    assert!(exec_code_with_vm_options(input, vm_opts).is_ok());
+}
+
+#[test]
+fn test_cmdline_args_va() {
+    let input = r##"
+func main(...) {
+    assert varargs.len() == 2;
+    assert varargs[0] == "arg1";
+    assert varargs[1] == "arg2";
+}
+"##;
+
+    let mut vm_opts = VmOptions::default();
+    vm_opts.vm_args = vec!["arg1".to_owned(), "arg2".to_owned()];
+    assert!(exec_code_with_vm_options(input, vm_opts).is_ok());
+}
+
+#[test]
+fn test_cmdline_args_mismatch() {
+    let input = r##"
+func main(x,y,z,...) {
+    val x = Result::Err("fail");
+    assert x!! == 3;
+}
+"##;
+
+    let mut vm_opts = VmOptions::default();
+    vm_opts.vm_args = vec!["arg1".to_owned(), "arg2".to_owned()];
+
+    assert!(
+        exec_code_with_vm_options(input, vm_opts)
+            .is_err_and(|err| err.reason == VmErrorReason::InvalidMainSignature)
     );
 }

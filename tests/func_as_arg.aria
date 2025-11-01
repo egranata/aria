@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 func double(x) {
-    x + x;
+    return x + x;
 }
 
 func perform_op(f,n) {
-    f(n);
+    return f(n);
 }
 
 func main() {

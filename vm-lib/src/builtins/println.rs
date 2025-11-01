@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
-    builtins::VmBuiltins, error::vm_error::VmErrorReason, frame::Frame, ok_or_err,
-    runtime_value::function::BuiltinFunctionImpl, vm::RunloopExit,
+    builtins::VmBuiltins, frame::Frame, runtime_value::function::BuiltinFunctionImpl,
+    vm::RunloopExit,
 };
 
 #[derive(Default)]
@@ -12,18 +12,22 @@ impl BuiltinFunctionImpl for Println {
         cur_frame: &mut Frame,
         vm: &mut crate::vm::VirtualMachine,
     ) -> crate::vm::ExecutionResult<RunloopExit> {
-        let the_value = cur_frame.stack.pop();
-        println!("{}", the_value.prettyprint(cur_frame, vm));
+        if let Some(the_value) = cur_frame.stack.try_pop() {
+            let fmt = the_value.prettyprint(cur_frame, vm);
+            assert!(vm.console().borrow_mut().println(&fmt).is_ok());
+        } else {
+            assert!(vm.console().borrow_mut().println("").is_ok());
+        }
 
-        cur_frame.stack.push(ok_or_err!(
-            vm.builtins.create_unit_object(),
-            VmErrorReason::UnexpectedVmState.into()
-        ));
+        cur_frame.stack.push(vm.builtins.create_unit_object()?);
         Ok(RunloopExit::Ok(()))
     }
 
-    fn arity(&self) -> u8 {
-        1_u8
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity {
+            required: 0,
+            optional: 1,
+        }
     }
 
     fn name(&self) -> &str {

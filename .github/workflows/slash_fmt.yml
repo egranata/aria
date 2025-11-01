@@ -1,0 +1,28 @@
+name: SlashFmt
+
+on:
+  issue_comment:
+    types: [created]
+
+# Needed:
+# - issues: write  → add 👍 reaction
+# - contents: write → fire repository_dispatch
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  dispatch:
+    if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/fmt') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/slash-command-dispatch@v4
+        with:
+          # Use GITHUB_TOKEN now that it has write perms
+          token: ${{ secrets.GITHUB_TOKEN }}
+          reaction-token: ${{ secrets.GITHUB_TOKEN }}
+          commands: fmt
+          dispatch-type: repository
+          issue-type: pull-request
+          repository: ${{ github.repository }}
