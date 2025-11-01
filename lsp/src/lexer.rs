@@ -236,6 +236,7 @@ pub enum SyntaxKind {
     ImportPath,
     ArgList,
     ListLiteral,
+    ModuleFlag,
     Eof
 }
 

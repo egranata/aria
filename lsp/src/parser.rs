@@ -127,6 +127,7 @@ pub fn parse(text: &str) -> Parse {
             while !self.eof() {
                 match self.nth(0) {
                     ImportKwd => self.stmt_import(),
+                    FlagKwd => self.module_flag(),
                     StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                     MixinKwd => self.decl_mixin(),
                     EnumKwd => self.decl_enum(),
@@ -206,6 +207,30 @@ pub fn parse(text: &str) -> Parse {
             
             self.expect(RightBrace);
             self.close(m, Enum);
+        }
+
+        fn module_flag(&mut self) {
+            assert!(self.at(FlagKwd));
+            let m = self.open();
+            
+            self.expect(FlagKwd);
+            self.expect(Colon);
+            self.expect(Identifier);
+            
+            if self.at(LeftParen) {
+                self.expect(LeftParen);
+                // Value must be a string literal per grammar
+                if self.at(StringLiteral) {
+                    self.expect(StringLiteral);
+                } else {
+                    // fall back to generic expr to recover if not a string
+                    let _ = self.expr();
+                }
+                self.expect(RightParen);
+            }
+            
+            self.expect(Semicolon);
+            self.close(m, ModuleFlag);
         }
 
         fn enum_case(&mut self) {
@@ -964,7 +989,6 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn expr_list(&mut self, left_delim: SyntaxKind, right_delim: SyntaxKind) {
-            assert!(self.at(left_delim));            
             self.expect(left_delim);
 
             if self.at(right_delim) {
@@ -972,8 +996,9 @@ pub fn parse(text: &str) -> Parse {
                 return;
             }
 
-            let _ = self.expr_bp(0);
-            while self.at(Comma) {
+            self.expr();
+            
+            while self.at(Comma) && !self.eof() {
                 self.expect(Comma);
                 if !self.at(right_delim) {
                     self.expr();
@@ -1682,7 +1707,7 @@ mod tests {
                         println!("  {:?} at {:?}", error, line);
                     }
 
-                    println!("\n\ntree:\n\n{}", tree_to_string(parse_result.syntax()));
+                    //println!("\n\ntree:\n\n{}", tree_to_string(parse_result.syntax()));
 
                     panic!("Parse errors found in {}", filename);
                 }
