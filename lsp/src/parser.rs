@@ -122,25 +122,20 @@ pub fn parse(text: &str) -> Parse {
     impl Parser<'_> {
         fn file(&mut self) {
             let m: MarkOpened = self.open(); 
-            // include any leading trivia at the start of the file
-            self.consume_remaining_trivia();
+            self.trivia();
 
             while !self.eof() {
                 match self.nth(0) {
                     ImportKwd => self.stmt_import(),
-                    ValKwd => self.decl_val(),
-                    Identifier => {self.expr();},
                     StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                     MixinKwd => self.decl_mixin(),
                     EnumKwd => self.decl_enum(),
                     ExtensionKwd => self.decl_struct_or_ext(Extension, ExtensionKwd),
                     FuncKwd => self.decl_func(),
-                    AssertKwd => self.stmt_kwd_with_expr(AssertKwd),
-                    _ => {let _ = self.expr();}
+                    _ => self.stmt()
                 }
             }
-            // include any trailing trivia before closing the file
-            self.consume_remaining_trivia();
+            self.trivia();
             self.close(m, File); 
         }
 
@@ -409,28 +404,32 @@ pub fn parse(text: &str) -> Parse {
           
             self.expect(LeftBrace);
             while !self.at(RightBrace) && !self.eof() {
-                  match self.nth(0) {
-                    AssertKwd => self.stmt_kwd_with_expr(AssertKwd),
-                    BreakKwd => self.stmt_single_token(BreakKwd),
-                    ContinueKwd => self.stmt_single_token(ContinueKwd),
-                    ValKwd => self.decl_val(),
-                    IfKwd => self.stmt_if(),
-                    MatchKwd => self.stmt_match(),
-                    WhileKwd => self.stmt_while(),
-                    ForKwd => self.stmt_for(),
-                    ThrowKwd => self.stmt_kwd_with_expr(ThrowKwd),
-                    ReturnKwd => self.stmt_return(),
-                    LeftBrace => self.block(),
-                    GuardKwd => self.guard(),
-                    TryKwd => self.try_catch(),
-                    StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
-                    EnumKwd => self.decl_enum(),
-                    _ => self.stmt_expr(),
-                  }
+                self.stmt();
             }
             self.expect(RightBrace);
           
             self.close(m, Block);
+        }
+
+        fn stmt(&mut self) {
+            match self.nth(0) {
+                AssertKwd => self.stmt_kwd_with_expr(AssertKwd),
+                BreakKwd => self.stmt_single_token(BreakKwd),
+                ContinueKwd => self.stmt_single_token(ContinueKwd),
+                ValKwd => self.decl_val(),
+                IfKwd => self.stmt_if(),
+                MatchKwd => self.stmt_match(),
+                WhileKwd => self.stmt_while(),
+                ForKwd => self.stmt_for(),
+                ThrowKwd => self.stmt_kwd_with_expr(ThrowKwd),
+                ReturnKwd => self.stmt_return(),
+                LeftBrace => self.block(),
+                GuardKwd => self.guard(),
+                TryKwd => self.try_catch(),
+                StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
+                EnumKwd => self.decl_enum(),
+                _ => self.stmt_expr(),
+            }
         }
 
         fn guard(&mut self) {
@@ -1131,7 +1130,7 @@ pub fn parse(text: &str) -> Parse {
             self.errors.push(ParseError { expected, pos });
         }
 
-        fn consume_remaining_trivia(&mut self) {
+        fn trivia(&mut self) {
             while let Some(tok) = self.tokens.get(self.pos) {
                 if is_trivia(tok.0) {
                     self.events.push(Event::Advance);
