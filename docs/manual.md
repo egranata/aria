@@ -1178,9 +1178,9 @@ This is a slightly more complex but realistic example where the iterable and the
 
 ## 📦 Modules
 
-Any Aria file can be a module.
+Any Aria file can be a module and a collection of modules is called a widget.
 
-Modules are imported with the `import` statement, which follows a dotted structure, e.g. `import aria.rng.xorshift;`. `aria` is the name of the Aria standard library module, which contains submodules defined via filesystem paths. Documentation for the Aria library is contained in [stdlib.md](stdlib.md).
+Modules are imported with the `import` statement, which follows a dotted structure, e.g. `import aria.rng.xorshift;`. `aria` is the name of the Aria standard library, which contains submodules defined via filesystem paths. Documentation for the Aria library is contained in [stdlib.md](stdlib.md).
 
 The following algorithm is used to resolve where to look for imports:
 - if `ARIA_LIB_DIR` is defined, it is a list of paths separated by the platform separator; the system looks in each path in the order provided until the module is found;
@@ -1217,17 +1217,6 @@ func main() {
 }
 ```
 
-You can structure your own projects the same way. Consider this layout:
-
-```
-my_project/
-├── main.aria
-└── my_lib/
-    └── utils.aria
-```
-
-To use a function from `utils.aria` inside `main.aria`, you would set `ARIA_LIB_DIR` to include `my_project` and then write `import my_lib.utils;`.
-
 To avoid dotted notation, one can import symbols directly from a module, e.g.
 
 ```
@@ -1259,3 +1248,24 @@ i.e. the entire module is imported, and one specific symbol is lifted from it.
 It is possible to import multiple names from a module at once, or in separate statements.
 
 Extensions in a module cannot be imported by name, and are always brought in when the module is imported.
+
+## 📚 Libraries and Widgets
+
+Usually, you’ll only be writing a single file and using the standard library or other libraries, also called `Widgets`. But sometimes projects are more complex than that, or maybe you want to write your own library. With that in mind, Aria provides you with a way to structure your more complex projects.
+
+The only thing you need to do for Aria to know where your `Widget` starts is to create a `widget.json` file in the root of your `widget`. In this file, you can define metadata such as its name, version, and dependencies.
+
+A typical `Widget` structure would look like this:
+
+```bash
+my_project/
+├── widget.json
+├── main.aria
+├── parser.aria
+└── parser/
+    └── utils.aria
+```
+
+To use a function from `parser.aria` inside `my_project`, you can import it writing `import widget.parser;`. At the same time, `parser.aria` maybe uses structs inside `utils.aria` and imports it as `import widget.parser.utils;`. 
+
+This structure allows Aria to know when you’re referencing your own modules and when you’re referencing other `Widget` modules.
