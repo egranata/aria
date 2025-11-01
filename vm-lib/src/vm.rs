@@ -403,7 +403,7 @@ impl VirtualMachine {
             } else {
                 Err(VmErrorReason::ImportNotAvailable(
                     ipath.to_owned(),
-                    "tried to import using widget without a widget.toml".to_owned(),
+                    "tried to import from widget without a widget.json".to_owned(),
                 ))
             };
         }

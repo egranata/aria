@@ -956,8 +956,8 @@ pub(crate) fn compile_from_source(
             let mut ancestors = src_path.ancestors();
             loop {
                 if let Some(widget_path) = ancestors.next() {
-                    let widget_toml = widget_path.join("widget.toml");
-                    if !widget_toml.exists() {
+                    let widget_json = widget_path.join("widget.json");
+                    if !widget_json.exists() {
                         continue;
                     }
 
