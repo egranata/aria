@@ -813,6 +813,17 @@ pub fn parse(text: &str) -> Parse {
             loop {
                 let op = self.nth(0);
                 
+                // Support initializer blocks as a postfix after any expression
+                // e.g. "expr{ .field = value, [key] = value }"
+                // Only consume if the brace actually starts an init block (next is '.' or '[')
+                if op == LeftBrace {
+                    let ahead = self.nth(1);
+                    if ahead == Dot || ahead == LeftBracket {
+                        self.init_block();
+                        continue;
+                    }
+                }
+                
                 if let Some((l_bp, ())) = postfix_binding_power(op) {
                     if l_bp < min_bp {
                         break;
