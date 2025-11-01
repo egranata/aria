@@ -700,42 +700,47 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, StmtAssert);
         }
 
-        fn init_block(&mut self) {
-            // TODO: make this more elegant
+        fn init_list(&mut self) {
+            // Recognize an initializer block only when the brace starts with a field or index init
             if self.at(LeftBrace) {
                 let ahead = self.nth(1);
                 if ahead != Dot && ahead != LeftBracket {
-                    return
+                    return;
                 }
             } else {
-                return
+                return;
             }
 
             self.assert_tok(LeftBrace);
             self.expect(LeftBrace);
 
-            while self.at(Dot) {
-                self.expect(Dot);
-                self.expect(Identifier);
-                // Optional assignment; allow shorthand field init like `.x, .y`
-                if self.at(Assign) {
+            // Parse a comma-separated list of mixed field/index writes, optional trailing comma
+            while !self.at(RightBrace) && !self.eof() {
+                if self.at(Dot) {
+                    // Field write: .identifier [= expr]?
+                    self.expect(Dot);
+                    self.expect(Identifier);
+                    if self.at(Assign) {
+                        self.expect(Assign);
+                        let _ = self.expr();
+                    }
+                } else if self.at(LeftBracket) {
+                    // Index write: [expr_list?] = expr
+                    self.expr_list(LeftBracket, RightBracket);
                     self.expect(Assign);
                     let _ = self.expr();
+                } else {
+                    // Recovery: unexpected token inside init block
+                    self.report_error(RightBrace);
+                    break;
                 }
 
-                if !self.at(RightBrace) {
+                if self.at(Comma) {
                     self.expect(Comma);
-                }
-            }
-
-            while self.at(LeftBracket) {
-                self.expr_list(LeftBracket, RightBracket);
-                self.expect(Assign);
-
-                let _ = self.expr();
-
-                if !self.at(RightBrace) {
-                    self.expect(Comma);
+                    // allow trailing comma; loop condition will exit on RightBrace
+                } else {
+                    // no more entries
+                    break;
                 }
             }
 
@@ -821,7 +826,7 @@ pub fn parse(text: &str) -> Parse {
                 if op == LeftBrace {
                     let ahead = self.nth(1);
                     if ahead == Dot || ahead == LeftBracket {
-                        self.init_block();
+                        self.init_list();
                         continue;
                     }
                 }
@@ -835,7 +840,7 @@ pub fn parse(text: &str) -> Parse {
                         LeftParen => {
                             let m = self.open_before(lhs);
                             self.arg_list();
-                            self.init_block();
+                            self.init_list();
                             self.close(m, ExprCall)
                         }
                         LeftBracket => {
@@ -941,7 +946,7 @@ pub fn parse(text: &str) -> Parse {
                 
                 Identifier => {
                     self.advance();
-                    self.init_block();
+                    self.init_list();
                     self.close(m, ExprName)
                 }
                 
