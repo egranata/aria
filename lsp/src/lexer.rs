@@ -233,6 +233,7 @@ pub enum SyntaxKind {
     MatchRule,
     MatchPattern,
     IdentList,
+    QualifiedIdent,
     ImportPath,
     ArgList,
     ListLiteral,

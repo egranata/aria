@@ -155,7 +155,11 @@ pub fn parse(text: &str) -> Parse {
             let m = self.open();
             
             self.expect(kwd);
-            let _ = self.expr(); 
+            if kwd == StructKwd {
+                self.qualified_ident();
+            } else {
+                let _ = self.expr();
+            }
             self.expect(LeftBrace);
             
             while !self.at(RightBrace) && !self.eof() {
@@ -191,7 +195,7 @@ pub fn parse(text: &str) -> Parse {
             let m = self.open();
             
             self.expect(EnumKwd);
-            self.expect(Identifier);
+            self.qualified_ident();
             self.expect(LeftBrace);
             
             while !self.at(RightBrace) && !self.eof() {
@@ -260,7 +264,7 @@ pub fn parse(text: &str) -> Parse {
             let m = self.open();
             
             self.expect(MixinKwd);
-            self.expect(Identifier);
+            self.qualified_ident();
             self.expect(LeftBrace);
             
             while !self.at(RightBrace) && !self.eof() {
@@ -761,15 +765,19 @@ pub fn parse(text: &str) -> Parse {
             self.close(m, IdentList);
         }
 
-        fn import_path(&mut self) {
+        fn qualified_ident(&mut self) {
             let m = self.open();
-            
             self.expect(Identifier);
             while self.at(Dot) {
                 self.expect(Dot);
                 self.expect(Identifier);
             }
-            
+            self.close(m, QualifiedIdent);
+        }
+
+        fn import_path(&mut self) {
+            let m = self.open();
+            self.qualified_ident();
             self.close(m, ImportPath);
         }
           
@@ -1661,7 +1669,7 @@ mod tests {
         ])
     }
 
-    fn test_files_in_directory_parse(dir: &str) {
+    fn test_files_in_directory_parse(dir: &str, dir_should_error: Vec<String>) {
         use std::fs;
         use std::path::Path;
 
@@ -1671,6 +1679,8 @@ mod tests {
             println!("Directory not found, skipping test: {}", dir);
             return;
         }
+
+        let expect_err = dir_should_error.contains(&test_dir.file_name().unwrap().to_str().unwrap().to_owned());
 
         let entries = fs::read_dir(test_dir)
             .expect(&format!("Failed to read directory: {}", dir));
@@ -1689,7 +1699,18 @@ mod tests {
                 
                 let parse_result = parse(&content);
                 
-                if !parse_result.errors.is_empty() {
+                if expect_err && parse_result.errors.is_empty() {
+                    println!("\n{} should have parse errors but did not:", filename);
+                    let line_index = LineIndex::new(&content);
+                    for error in &parse_result.errors {
+                        let line = line_index.line_col(error.pos.as_ref().unwrap().start.try_into().unwrap());
+                        println!("  {:?} at {:?}", error, line);
+                    }
+
+                    println!("\n\n{}", tree_to_string(parse_result.syntax()));
+
+                    panic!("Parse errors found in {}", filename);
+                } else if !expect_err && !parse_result.errors.is_empty() {
                     println!("\n{} has parse errors:", filename);
                     let line_index = LineIndex::new(&content);
                     for error in &parse_result.errors {
@@ -1704,7 +1725,7 @@ mod tests {
             }
 
             if path.is_dir() {
-                test_files_in_directory_parse(path.to_path_buf().to_str().unwrap());
+                test_files_in_directory_parse(path.to_path_buf().to_str().unwrap(), dir_should_error.clone());
             }
         }
     }
@@ -1915,21 +1936,21 @@ mod tests {
 
     #[test]
     fn test_example_files_parse_without_errors() {
-        test_files_in_directory_parse("../examples");
+        test_files_in_directory_parse("../examples", vec![]);
     }
 
     #[test]
     fn test_files_parse_without_errors() {
-        test_files_in_directory_parse("../tests");
+        test_files_in_directory_parse("../tests", vec![]);
     }
 
     #[test]
     fn test_std_lib_files_parse_without_errors() {
-        test_files_in_directory_parse("../lib");
+        test_files_in_directory_parse("../lib", vec![]);
     }
 
     #[test]
     fn test_std_lib_test_files_parse_without_errors() {
-        test_files_in_directory_parse("../lib-test");
+        test_files_in_directory_parse("../lib-test", vec!["with_err".to_string()]);
     }
 }
