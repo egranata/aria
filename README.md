@@ -7,7 +7,7 @@
 
 Welcome to Aria. Aria is a modern, dynamic scripting language. It is meant to be a "sweet spot" language, easy to pick-up and with a good balance between ease of use, safety, and flexibility. Aria's design choices help you build great programs quickly.
 
-boom
+boom bang
 
 Aria has modern, safer error handling: Aria replaces unreliable `None` pointer checks with a modern, multi-tiered approach to error handling. By emphasizing algebraic data types (e.g. `Maybe`), Aria makes errors explicit, safer, and easier to manage, with fewer runtime surprises.
 
