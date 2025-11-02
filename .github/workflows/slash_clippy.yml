@@ -3,18 +3,25 @@ name: SlashClippy
 on:
   issue_comment:
     types: [created]
-
 permissions:
   contents: write
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   dispatch:
     if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/clippy') }}
     runs-on: ubuntu-latest
+
+    # job-specific permissions - required for reactions
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
     steps:
-      - uses: peter-evans/slash-command-dispatch@v4
+      - name: Dispatch Clippy Command
+        uses: peter-evans/slash-command-dispatch@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           reaction-token: ${{ secrets.GITHUB_TOKEN }}
@@ -22,3 +29,5 @@ jobs:
           dispatch-type: repository
           issue-type: pull-request
           repository: ${{ github.repository }}
+          # Conditionally enable reactions only if the PR is not from a fork to avoid run failures 
+          reactions: ${{ github.event.issue.pull_request.head.repo.full_name == github.repository && 'eyes' || '' }}
