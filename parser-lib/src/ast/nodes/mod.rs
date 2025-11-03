@@ -87,6 +87,7 @@ mod top_level_entry;
 mod try_block;
 mod unary_operation;
 mod unary_symbol;
+mod val_decl_entry;
 mod val_decl_statement;
 mod while_statement;
 mod write_op_eq_statement;

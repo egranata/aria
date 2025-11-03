@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+val x = 1, y = 2;
+
+x,y = y,x;
+
+assert x == 2;
+assert y == 1;

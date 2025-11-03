@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+val b = Box();
+
+b.x, b.y = 3, 4;
+assert b.x == 3;
+assert b.y == 4;
+
+b.x, b.y = b.y, b.x;
+assert b.x == 4;
+assert b.y == 3;

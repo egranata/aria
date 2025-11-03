@@ -668,6 +668,13 @@ impl From<&Identifier> for Expression {
     }
 }
 
+impl From<&Primary> for Expression {
+    fn from(value: &Primary) -> Self {
+        let pfe = PostfixExpression::from(value);
+        Self::from(&pfe)
+    }
+}
+
 impl From<&UnaryOperation> for Expression {
     fn from(value: &UnaryOperation) -> Self {
         Self::from(&LogOperation::from(&CompOperation::from(
@@ -813,17 +820,23 @@ pub struct ExpressionStatement {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ValDeclStatement {
+pub struct ValDeclEntry {
     pub loc: SourcePointer,
     pub id: DeclarationId,
     pub val: Expression,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValDeclStatement {
+    pub loc: SourcePointer,
+    pub decls: Vec<ValDeclEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AssignStatement {
     pub loc: SourcePointer,
-    pub id: PostfixExpression,
-    pub val: Expression,
+    pub id: Vec<PostfixExpression>,
+    pub val: Vec<Expression>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

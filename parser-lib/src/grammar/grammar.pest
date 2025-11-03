@@ -88,8 +88,9 @@ expression = { ternary_expr | lambda_f | log }
 
 decl_id = { identifier ~ (":" ~ expression)? }
 
-val_decl_stmt  = { "val" ~ decl_id ~ "=" ~ expression ~ ";" }
-val_write_stmt = { postfix_lv ~ "=" ~ expression ~ ";" }
+val_decl_entry = { decl_id ~ "=" ~ expression }
+val_decl_stmt  = { "val" ~ val_decl_entry ~ ("," ~ val_decl_entry)* ~ ";" }
+val_write_stmt = { postfix_lv ~ ("," ~ postfix_lv)* ~ "=" ~ expression ~ ("," ~ expression)* ~ ";" }
 
 add_op_eq        = @{ "+=" | "-=" | "*=" | "/=" | "%=" }
 val_add_eq_write =  { postfix_lv ~ add_op_eq ~ expression ~ ";" }
