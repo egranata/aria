@@ -3,7 +3,7 @@ use aria_parser::ast::{
     AssignStatement, BreakStatement, CodeBlock, DeclarationId, ElsePiece, Expression, Identifier,
     IfCondPiece, IfPiece, IfStatement, MatchRule, MatchStatement, ParenExpression,
     PostfixExpression, PostfixRvalue, PostfixTerm, PostfixTermEnumCase, Primary, Statement,
-    ThrowStatement, UnaryOperation, ValDeclStatement, WhileStatement,
+    ThrowStatement, UnaryOperation, ValDeclEntry, ValDeclStatement, WhileStatement,
 };
 
 use crate::do_compile::{CompilationResult, CompileNode, CompileParams};
@@ -12,11 +12,14 @@ macro_rules! val_decl_statement {
     ($loc:expr, $id:expr, $val:expr) => {
         Statement::ValDeclStatement(ValDeclStatement {
             loc: $loc,
-            id: DeclarationId::from(&Identifier {
+            decls: vec![ValDeclEntry {
                 loc: $loc,
-                value: $id.clone(),
-            }),
-            val: $val,
+                id: DeclarationId::from(&Identifier {
+                    loc: $loc,
+                    value: $id.clone(),
+                }),
+                val: $val,
+            }],
         })
     };
 }
@@ -136,8 +139,10 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ForStatement {
         // __for__any_hit = true;
         let assign_to_any_hit = Statement::AssignStatement(AssignStatement {
             loc: self.loc.clone(),
-            id: PostfixExpression::from(&Primary::Identifier(any_hit_ident.clone())),
-            val: true_cond.clone(),
+            id: vec![PostfixExpression::from(&Primary::Identifier(
+                any_hit_ident.clone(),
+            ))],
+            val: vec![true_cond.clone()],
         });
 
         // case Some(x)

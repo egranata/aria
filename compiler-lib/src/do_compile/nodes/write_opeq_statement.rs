@@ -69,10 +69,10 @@ impl<'a> CompileNode<'a> for aria_parser::ast::WriteOpEqStatement {
 
         let assign_stmt = AssignStatement {
             loc: self.loc.clone(),
-            id: self.id.clone(),
-            val: Expression::from(&LogOperation::from(&CompOperation::from(
+            id: vec![self.id.clone()],
+            val: vec![Expression::from(&LogOperation::from(&CompOperation::from(
                 &RelOperation::from(&ShiftOperation::from(&add_op)),
-            ))),
+            )))],
         };
 
         assign_stmt.do_compile(params)

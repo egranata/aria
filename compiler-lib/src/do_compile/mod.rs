@@ -58,6 +58,8 @@ pub enum CompilationErrorReason {
     NoTypeHintOnStructMember,
     #[error("nested closures are not supported")]
     NestedClosureDisallowed,
+    #[error("attempted to write to {0} values, but {1} were provided")]
+    AssignmentArityMismatch(usize, usize),
 }
 
 impl From<&ScopeErrorReason> for CompilationErrorReason {
@@ -613,22 +615,27 @@ fn emit_type_val_decl_compile(
     vd: &ValDeclStatement,
     params: &mut CompileParams,
 ) -> CompilationResult {
-    if vd.id.ty.is_some() {
-        return Err(CompilationError {
-            loc: vd.loc.clone(),
-            reason: CompilationErrorReason::NoTypeHintOnStructMember,
-        });
+    for decl in &vd.decls {
+        if decl.id.ty.is_some() {
+            return Err(CompilationError {
+                loc: vd.loc.clone(),
+                reason: CompilationErrorReason::NoTypeHintOnStructMember,
+            });
+        }
+        decl.val.do_compile(params)?;
+        let name_idx = vd.insert_const_or_fail(
+            params,
+            ConstantValue::String(decl.id.name.value.clone()),
+            &vd.loc,
+        )?;
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(
+                BasicBlockOpcode::WriteAttribute(name_idx),
+                vd.loc.clone(),
+            );
     }
-    vd.val.do_compile(params)?;
-    let name_idx = vd.insert_const_or_fail(
-        params,
-        ConstantValue::String(vd.id.name.value.clone()),
-        &vd.loc,
-    )?;
-    params
-        .writer
-        .get_current_block()
-        .write_opcode_and_source_info(BasicBlockOpcode::WriteAttribute(name_idx), vd.loc.clone());
     Ok(())
 }
 

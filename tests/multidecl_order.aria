@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+val x = 1, y = x + 1, z = Box(){.x,.y};
+
+assert x == 1;
+assert y == 2;
+assert z.x == 1;
+assert z.y == 2;
+
+val i = 0, a = []{[i] = 1, [i+1] = x};
+assert a == [1,1];

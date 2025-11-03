@@ -46,6 +46,7 @@ mod ternary_expression;
 mod throw_statement;
 mod try_block;
 mod unary_operation;
+mod val_decl_entry;
 mod val_decl_statement;
 mod while_statement;
 mod write_opeq_statement;

@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+val i = 0, a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+func f() = 42;
+
+a[i], i = f(), 7;
+
+assert a[0] == 42;
+assert i == 7;
+
+i, a[i] = 6, f();
+
+assert a[6] == 42;
+assert i == 6;

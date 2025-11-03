@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+val x = 1, y = 2, z = 3, t = 4, q = 5, p = 6;
+
+x,y,z = 10,20,30;
+t,q,p = 40,50,60;
+
+assert x == 10;
+assert y == 20;
+assert z == 30;
+
+assert t == 40;
+assert q == 50;
+assert p == 60;
+
+x,y,z,t,q,p = 100,200,300,400,500,600;
+
+assert x == 100;
+assert y == 200;
+assert z == 300;
+assert t == 400;
+assert q == 500;
+assert p == 600;
+
+x,y,z = z,x,y;
+
+assert x == 300;
+assert y == 100;
+assert z == 200;
