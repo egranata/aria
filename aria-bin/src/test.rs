@@ -8,9 +8,11 @@ use crate::{Args, repl_eval::Repl};
 
 fn build_test_repl<'a>(cmdline_options: &'a Args) -> Repl<'a> {
     let console = Rc::new(RefCell::new(TestConsole::default()));
-    let mut vm_options = haxby_vm::vm::VmOptions::default();
-    vm_options.console = console.clone();
-    Repl::new(vm_options, &cmdline_options).unwrap()
+    let vm_options = haxby_vm::vm::VmOptions {
+        console: console.clone(),
+        ..Default::default()
+    };
+    Repl::new(vm_options, cmdline_options).unwrap()
 }
 
 fn run_check_repl_line(
@@ -211,8 +213,10 @@ fn repl_preamble_works() {
 
 #[test]
 fn repl_skips_preamble() {
-    let mut cmdline_options = Args::default();
-    cmdline_options.no_repl_preamble = true;
+    let cmdline_options = Args {
+        no_repl_preamble: true,
+        ..Default::default()
+    };
     let mut repl = build_test_repl(&cmdline_options);
 
     run_check_repl_line(
@@ -226,8 +230,10 @@ fn repl_skips_preamble() {
 
 #[test]
 fn repl_op_count_error() {
-    let mut cmdline_options = Args::default();
-    cmdline_options.no_repl_preamble = true;
+    let cmdline_options = Args {
+        no_repl_preamble: true,
+        ..Default::default()
+    };
     let mut repl = build_test_repl(&cmdline_options);
 
     run_check_repl_line(
