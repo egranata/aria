@@ -45,7 +45,7 @@ impl DocumentState {
     pub fn token_at_line_col(&self, line: u32, col: u32) -> Option<SyntaxToken> {
         let line_col = line_index::LineCol { line, col };
         let offset = self.line_index.offset(line_col)?;
-        
+
         use crate::lexer::SyntaxKind as K;
 
         if offset > self.text_size {
