@@ -94,7 +94,7 @@ func main() {
     match result {
         Ok(result) => match result.exit {
             crate::vm::RunloopExit::Ok(_) => {
-                assert!(false, "expected typecheck to fail");
+                panic!("expected typecheck to fail");
             }
             crate::vm::RunloopExit::Exception(e) => {
                 let enum_value = e
@@ -111,7 +111,7 @@ func main() {
             }
         },
         Err(_) => {
-            assert!(false, "expected exception to be thrown");
+            panic!("expected exception to be thrown");
         }
     }
 }
@@ -166,7 +166,7 @@ func main() {
 
     match exec_code(input).expect("ok result expected").exit {
         crate::vm::RunloopExit::Ok(_) => {
-            assert!(false);
+            panic!("expected exception to be thrown");
         }
         crate::vm::RunloopExit::Exception(e) => {
             assert_eq!(
@@ -227,8 +227,10 @@ func main(args) {
 }
 "##;
 
-    let mut vm_opts = VmOptions::default();
-    vm_opts.vm_args = vec!["arg1".to_owned(), "arg2".to_owned()];
+    let vm_opts = VmOptions {
+        vm_args: vec!["arg1".to_owned(), "arg2".to_owned()],
+        ..Default::default()
+    };
     assert!(exec_code_with_vm_options(input, vm_opts).is_ok());
 }
 
@@ -242,8 +244,10 @@ func main(...) {
 }
 "##;
 
-    let mut vm_opts = VmOptions::default();
-    vm_opts.vm_args = vec!["arg1".to_owned(), "arg2".to_owned()];
+    let vm_opts = VmOptions {
+        vm_args: vec!["arg1".to_owned(), "arg2".to_owned()],
+        ..Default::default()
+    };
     assert!(exec_code_with_vm_options(input, vm_opts).is_ok());
 }
 
@@ -256,8 +260,10 @@ func main(x,y,z,...) {
 }
 "##;
 
-    let mut vm_opts = VmOptions::default();
-    vm_opts.vm_args = vec!["arg1".to_owned(), "arg2".to_owned()];
+    let vm_opts = VmOptions {
+        vm_args: vec!["arg1".to_owned(), "arg2".to_owned()],
+        ..Default::default()
+    };
 
     assert!(
         exec_code_with_vm_options(input, vm_opts)
