@@ -2,7 +2,7 @@ name: Format PR with cargo fmt
 
 on:
   repository_dispatch:
-    types: [fmt]
+    types: [fmt-command]
 
 # Needs write to push a commit
 permissions:
