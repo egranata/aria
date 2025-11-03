@@ -1166,11 +1166,7 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn report_error(&mut self, expected: SyntaxKind) {
-            let pos = if let Some(tok) = self.nth_token(0) {
-                Some(tok.2.clone())
-            } else {
-                None
-            };
+            let pos = self.nth_token(0).map(|tok| tok.2.clone());
 
             self.errors.push(ParseError { expected, pos });
         }
@@ -1208,8 +1204,7 @@ pub fn parse(text: &str) -> Parse {
                             depth -= 1;
                             assert!(
                                 depth >= 0,
-                                "Unbalanced Close at event {} (more closes than opens)",
-                                i
+                                "Unbalanced Close at event {i} (more closes than opens)"
                             );
                         }
                         Event::Advance => {
@@ -1219,14 +1214,12 @@ pub fn parse(text: &str) -> Parse {
                 }
                 assert_eq!(
                     opens, closes,
-                    "Mismatched Open/Close count: opens={} closes={}",
-                    opens, closes
+                    "Mismatched Open/Close count: opens={opens} closes={closes}"
                 );
                 let total_tokens = self.tokens.len();
                 assert_eq!(
                     advances, total_tokens,
-                    "Advance count {} does not match tokens len {}",
-                    advances, total_tokens
+                    "Advance count {advances} does not match tokens len {total_tokens}"
                 );
             }
 
@@ -1248,7 +1241,7 @@ pub fn parse(text: &str) -> Parse {
                     }
                 }));
                 if res.is_err() {
-                    eprintln!("Rowan builder panic at event index {}", idx);
+                    eprintln!("Rowan builder panic at event index {idx}");
                     std::panic::resume_unwind(res.err().unwrap());
                 }
             }

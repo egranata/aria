@@ -254,7 +254,7 @@ pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str, logos::Span), LexError>> {
             Err(_) => {
                 let span = lexer.span();
                 tokens.push(Err(LexError {
-                    message: format!("Unexpected character(s): '{}'", slice),
+                    message: format!("Unexpected character(s): '{slice}'"),
                     span,
                     text: slice.to_string(),
                 }));

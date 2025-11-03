@@ -43,7 +43,7 @@ impl Backend {
 
 fn to_lsp_position(doc: &DocumentState, offset: rowan::TextSize) -> Position {
     let lc = doc.line_col(offset);
-    Position::new(lc.line as u32, lc.col as u32)
+    Position::new(lc.line, lc.col)
 }
 
 fn to_lsp_range(doc: &DocumentState, range: TextRange) -> Range {
@@ -150,8 +150,7 @@ impl LanguageServer for Backend {
                             index = LineIndex::new(&text);
                         } else {
                             self.info(format!(
-                                "skipping invalid change range for {}: {:?}",
-                                uri, range
+                                "skipping invalid change range for {uri}: {range:?}"
                             ));
                         }
                     } else {
@@ -165,7 +164,7 @@ impl LanguageServer for Backend {
                     let mut v = Vec::new();
                     for (range, msg) in doc.parse_error_ranges() {
                         v.push(Diagnostic {
-                            range: to_lsp_range(&doc, range),
+                            range: to_lsp_range(doc, range),
                             severity: Some(DiagnosticSeverity::ERROR),
                             code: None,
                             code_description: None,
@@ -213,9 +212,9 @@ impl LanguageServer for Backend {
         };
 
         if let Some(def_range) = doc.def(position.line, position.character) {
-            let lsp_range = to_lsp_range(&doc, def_range);
+            let lsp_range = to_lsp_range(doc, def_range);
             let loc = Location::new(uri.clone(), lsp_range);
-            self.info(format!("found a definition at {:?}", loc));
+            self.info(format!("found a definition at {loc:?}"));
             return Ok(Some(GotoDefinitionResponse::Scalar(loc)));
         }
 
