@@ -1,0 +1,5 @@
+import aria.io.file;
+
+struct Path {
+    func prettyprint() = "I am the Path in some_widget!";
+}

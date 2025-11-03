@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: uses_dylib("aria_file");
 
-import aria.io.path;
+import widget.io.path;
 
 struct File {
     struct IOError {
@@ -171,7 +171,7 @@ struct FileLineIterator {
     }
 }
 
-extension aria.io.path.Path {
+extension widget.io.path.Path {
     func read() {
         guard file = File.open(this.prettyprint(), File.OpenMode.new().read()) {
             return file.read_all();

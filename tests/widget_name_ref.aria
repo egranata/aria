@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+import foo from some_widget.foo;
+import Path from some_widget.io.path;
+
+println(alloc(Path).prettyprint());
+println(aria.io.file.File);
+
+assert foo(3) == 12;

@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+import widget.mod.util;
+
+func foo(x) = some_widget.util.useful(x,x + 1, x + 2);
