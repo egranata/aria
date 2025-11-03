@@ -628,6 +628,7 @@ fn emit_type_val_decl_compile(
     params
         .writer
         .get_current_block()
+        .write_opcode_and_source_info(BasicBlockOpcode::Swap, vd.loc.clone())
         .write_opcode_and_source_info(BasicBlockOpcode::WriteAttribute(name_idx), vd.loc.clone());
     Ok(())
 }
@@ -659,6 +660,7 @@ fn emit_type_members_compile(
                 params
                     .writer
                     .get_current_block()
+                    .write_opcode_and_source_info(BasicBlockOpcode::Swap, sd.loc.clone())
                     .write_opcode_and_source_info(
                         BasicBlockOpcode::WriteAttribute(name_idx),
                         sd.loc.clone(),
@@ -674,6 +676,10 @@ fn emit_type_members_compile(
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(BasicBlockOpcode::Copy(1), ed.loc.clone());
+                    params
+                        .writer
+                        .get_current_block()
+                        .write_opcode_and_source_info(BasicBlockOpcode::Swap, ed.loc.clone());
 
                     let name_idx = ed.insert_const_or_fail(
                         params,

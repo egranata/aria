@@ -152,13 +152,24 @@ impl<'a> PostfixValue {
                                 .writer
                                 .get_current_block()
                                 .write_opcode_and_source_info(
+                                    BasicBlockOpcode::Swap,
+                                    term.loc().clone(),
+                                )
+                                .write_opcode_and_source_info(
                                     BasicBlockOpcode::WriteAttribute(identifier_idx),
                                     term.loc().clone(),
                                 );
                         }
                         ObjWrite::Index(index_write) => {
-                            index_write.index.do_compile(params)?;
                             index_write.value.do_compile(params)?;
+                            params
+                                .writer
+                                .get_current_block()
+                                .write_opcode_and_source_info(
+                                    BasicBlockOpcode::Swap,
+                                    term.loc().clone(),
+                                );
+                            index_write.index.do_compile(params)?;
                             params
                                 .writer
                                 .get_current_block()
@@ -243,9 +254,9 @@ impl<'a> PostfixValue {
                 reason: CompilationErrorReason::ReadOnlyValue,
             }),
             PostfixValue::Index(base, index) => {
+                val.do_compile(params)?;
                 base.emit_read(params)?;
                 index.do_compile(params)?;
-                val.do_compile(params)?;
                 params
                     .writer
                     .get_current_block()
@@ -269,8 +280,8 @@ impl<'a> PostfixValue {
                         });
                     }
                 };
-                base.emit_read(params)?;
                 val.do_compile(params)?;
+                base.emit_read(params)?;
                 params
                     .writer
                     .get_current_block()

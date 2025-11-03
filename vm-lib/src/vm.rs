@@ -1036,13 +1036,13 @@ impl VirtualMachine {
                 }
             }
             Opcode::WriteIndex(n) => {
-                let val = pop_or_err!(next, frame, op_idx);
                 let mut indices = Vec::<_>::with_capacity(n as usize);
                 for _ in 0..n {
                     let idx = pop_or_err!(next, frame, op_idx);
                     indices.insert(0, idx);
                 }
                 let cnt = pop_or_err!(next, frame, op_idx);
+                let val = pop_or_err!(next, frame, op_idx);
                 match cnt.write_index(&indices, &val, frame, self) {
                     Ok(crate::runtime_value::CallResult::OkNoValue)
                     | Ok(crate::runtime_value::CallResult::Ok(_)) => {}
@@ -1094,8 +1094,8 @@ impl VirtualMachine {
                 }
             }
             Opcode::WriteAttribute(n) => {
-                let val = pop_or_err!(next, frame, op_idx);
                 let obj = pop_or_err!(next, frame, op_idx);
+                let val = pop_or_err!(next, frame, op_idx);
                 let attr_name = if let Some(ct) = this_module.load_indexed_const(n) {
                     if let Some(sv) = ct.as_string() {
                         sv.clone()

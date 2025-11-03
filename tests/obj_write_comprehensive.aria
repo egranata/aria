@@ -2,4 +2,4 @@
 val t = [];
 func rec(i) { t.append(i); return i; }
 val o = [] { [rec(0)] = rec(1), [rec(1)] = rec(2) };
-assert t == [0,1,1,2];
+assert t == [1,0,2,1];
