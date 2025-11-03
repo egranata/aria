@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 use logos::Logos;
 
 #[derive(Logos, Debug, Clone, PartialEq, Hash, Eq, PartialOrd, Ord, Copy)]
@@ -157,33 +158,34 @@ pub enum SyntaxKind {
 
     #[regex(r"0x[0-9a-fA-F]+(_[0-9a-fA-F]+)*")]
     HexIntLiteral,
-    
+
     #[regex(r"0o[0-7]+(_[0-7]+)*")]
     OctIntLiteral,
-    
+
     #[regex(r"0b[01]+(_[01]+)*")]
     BinIntLiteral,
-    
+
     #[regex(r"[0-9]+(_[0-9]+)*")]
     DecIntLiteral,
-    
+
     #[regex(r"[0-9]+\.[0-9]+([eE][+-]?[0-9]+)?f?")]
     FloatLiteral,
-    
+
     #[regex(r#""([^"\\]|\\.)*""#)]
     #[regex(r#"'([^'\\]|\\.)*'"#)]
     StringLiteral,
 
-    #[regex(r#"[\p{XID_Start}\p{Emoji_Presentation}_$][\p{XID_Continue}\p{Emoji_Presentation}_$]*"#, priority = 1)]
+    #[regex(
+        r#"[\p{XID_Start}\p{Emoji_Presentation}_$][\p{XID_Continue}\p{Emoji_Presentation}_$]*"#,
+        priority = 1
+    )]
     Identifier,
-
 
     // trivia
     #[regex(r"[ \t\n\f]+")]
     Whitespace,
     #[regex(r"#[^\n]*")]
     LineComment,
-
 
     // Error token for unrecognized input
     Error,
@@ -238,13 +240,13 @@ pub enum SyntaxKind {
     ArgList,
     ListLiteral,
     ModuleFlag,
-    Eof
+    Eof,
 }
 
 pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str, logos::Span), LexError>> {
     let mut lexer = SyntaxKind::lexer(s);
     let mut tokens = Vec::new();
-    
+
     while let Some(token_result) = lexer.next() {
         let slice = lexer.slice();
         match token_result {
@@ -259,7 +261,7 @@ pub fn lex(s: &str) -> Vec<Result<(SyntaxKind, &str, logos::Span), LexError>> {
             }
         }
     }
-    
+
     tokens
 }
 
@@ -269,7 +271,6 @@ pub struct LexError {
     pub span: std::ops::Range<usize>,
     pub text: String,
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -348,7 +349,7 @@ mod tests {
     fn test_complex_expression() {
         let lexer = SyntaxKind::lexer("val x = func(a, b) { return a + b; }");
         let tokens: Vec<_> = lexer.collect();
-        
+
         assert!(!tokens.is_empty());
         assert_eq!(tokens[0], Ok(SyntaxKind::ValKwd));
     }
@@ -360,38 +361,41 @@ mod tests {
         println!("reading inside {dir}");
 
         let dir = Path::new(dir);
-        
+
         if !dir.exists() {
             println!("Examples directory not found, skipping test");
             return;
         }
 
-        let entries = fs::read_dir(dir)
-            .expect("Failed to read examples directory");
+        let entries = fs::read_dir(dir).expect("Failed to read examples directory");
 
         for entry in entries {
             let entry = entry.expect("Failed to read directory entry");
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("aria") {
                 let filename = path.file_name().unwrap().to_str().unwrap();
-                            
-                let content = fs::read_to_string(&path)
-                    .expect(&format!("Failed to read file: {}", filename));
-                
+
+                let content =
+                    fs::read_to_string(&path).expect(&format!("Failed to read file: {}", filename));
+
                 let tokens = lex(&content);
-                
-                let errors: Vec<_> = tokens.iter()
+
+                let errors: Vec<_> = tokens
+                    .iter()
                     .filter_map(|token| token.as_ref().err())
                     .collect();
-                
+
                 if !errors.is_empty() {
                     println!("\n{} has lexer errors:", filename);
                     for error in &errors {
-                        println!("  {} at position {}..{}", error.message, error.span.start, error.span.end);
+                        println!(
+                            "  {} at position {}..{}",
+                            error.message, error.span.start, error.span.end
+                        );
                     }
                 }
-                
+
                 assert!(errors.is_empty());
             }
 
@@ -424,16 +428,19 @@ mod tests {
     #[test]
     fn test_error_reporting() {
         let tokens = lex("func @ invalid # comment");
-        
+
         let errors: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().err()).collect();
-        
+
         if !errors.is_empty() {
             println!("Lexer errors found:");
             for error in &errors {
-                println!("  {} at position {}..{}", error.message, error.span.start, error.span.end);
+                println!(
+                    "  {} at position {}..{}",
+                    error.message, error.span.start, error.span.end
+                );
             }
         }
-        
+
         let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
         assert!(!successful_tokens.is_empty());
         assert_eq!(successful_tokens[0].0, SyntaxKind::FuncKwd);
@@ -443,9 +450,9 @@ mod tests {
     fn test_star_number_separation() {
         let tokens = lex("*2");
         let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
-        
+
         println!("Tokens for '*2': {:?}", successful_tokens);
-        
+
         // Should be two tokens: Star and DecIntLiteral
         assert_eq!(successful_tokens.len(), 2);
         assert_eq!(successful_tokens[0].0, SyntaxKind::Star);
@@ -458,21 +465,49 @@ mod tests {
     fn test_operator_number_separation() {
         // Test various operator-number combinations
         let test_cases = vec![
-            ("*2", vec![(SyntaxKind::Star, "*"), (SyntaxKind::DecIntLiteral, "2")]),
-            ("+3", vec![(SyntaxKind::Plus, "+"), (SyntaxKind::DecIntLiteral, "3")]),
-            ("-4", vec![(SyntaxKind::Minus, "-"), (SyntaxKind::DecIntLiteral, "4")]),
-            ("/5", vec![(SyntaxKind::Slash, "/"), (SyntaxKind::DecIntLiteral, "5")]),
-            ("%6", vec![(SyntaxKind::Percent, "%"), (SyntaxKind::DecIntLiteral, "6")]),
+            (
+                "*2",
+                vec![(SyntaxKind::Star, "*"), (SyntaxKind::DecIntLiteral, "2")],
+            ),
+            (
+                "+3",
+                vec![(SyntaxKind::Plus, "+"), (SyntaxKind::DecIntLiteral, "3")],
+            ),
+            (
+                "-4",
+                vec![(SyntaxKind::Minus, "-"), (SyntaxKind::DecIntLiteral, "4")],
+            ),
+            (
+                "/5",
+                vec![(SyntaxKind::Slash, "/"), (SyntaxKind::DecIntLiteral, "5")],
+            ),
+            (
+                "%6",
+                vec![(SyntaxKind::Percent, "%"), (SyntaxKind::DecIntLiteral, "6")],
+            ),
         ];
 
         for (input, expected) in test_cases {
             let tokens = lex(input);
             let successful_tokens: Vec<_> = tokens.iter().filter_map(|t| t.as_ref().ok()).collect();
-            
-            assert_eq!(successful_tokens.len(), expected.len(), "Failed for input: {}", input);
+
+            assert_eq!(
+                successful_tokens.len(),
+                expected.len(),
+                "Failed for input: {}",
+                input
+            );
             for (i, (expected_kind, expected_text)) in expected.iter().enumerate() {
-                assert_eq!(successful_tokens[i].0, *expected_kind, "Failed kind for input: {} at position {}", input, i);
-                assert_eq!(successful_tokens[i].1, *expected_text, "Failed text for input: {} at position {}", input, i);
+                assert_eq!(
+                    successful_tokens[i].0, *expected_kind,
+                    "Failed kind for input: {} at position {}",
+                    input, i
+                );
+                assert_eq!(
+                    successful_tokens[i].1, *expected_text,
+                    "Failed text for input: {} at position {}",
+                    input, i
+                );
             }
         }
     }
@@ -486,7 +521,7 @@ mod tests {
             .filter_map(|t| t.ok())
             .filter(|(k, _, _)| !matches!(k, SyntaxKind::Whitespace | SyntaxKind::LineComment))
             .collect();
-        
+
         assert_eq!(successful_tokens.len(), 2);
         assert_eq!(successful_tokens[0].0, SyntaxKind::Identifier);
         assert_eq!(successful_tokens[1].0, SyntaxKind::Identifier);

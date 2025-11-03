@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+// SPDX-License-Identifier: Apache-2.0
+use line_index::{LineCol, LineIndex};
+use lsp::document::DocumentState;
 use rowan::TextRange;
+use std::collections::HashMap;
+use tokio::sync::mpsc::{UnboundedSender, unbounded_channel};
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
-use lsp::document::{DocumentState};
-use line_index::{LineIndex, LineCol};
-use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
-
 
 #[derive(Clone)]
 struct Logger {
@@ -80,9 +80,9 @@ impl LanguageServer for Backend {
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         let uri = params.text_document.uri;
         let text = params.text_document.text;
-       
+
         self.info(format!("opened file {uri}"));
-       
+
         let (diags, uri_clone) = {
             let mut docs = self.documents.lock();
             let doc = DocumentState::new(text);
@@ -106,7 +106,10 @@ impl LanguageServer for Backend {
             docs.insert(uri.clone(), doc);
             (diags, uri.clone())
         };
-        let _ = self.client.publish_diagnostics(uri_clone, diags, None).await;
+        let _ = self
+            .client
+            .publish_diagnostics(uri_clone, diags, None)
+            .await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
@@ -118,30 +121,45 @@ impl LanguageServer for Backend {
                 let mut text = doc.text();
                 let mut index = LineIndex::new(&text);
 
-            for change in params.content_changes {
-                if let Some(range) = change.range {
-                    let Some(start_ts) = index.offset(LineCol { line: range.start.line, col: range.start.character }) else { continue };
-                    let Some(end_ts) = index.offset(LineCol { line: range.end.line, col: range.end.character }) else { continue };
+                for change in params.content_changes {
+                    if let Some(range) = change.range {
+                        let Some(start_ts) = index.offset(LineCol {
+                            line: range.start.line,
+                            col: range.start.character,
+                        }) else {
+                            continue;
+                        };
+                        let Some(end_ts) = index.offset(LineCol {
+                            line: range.end.line,
+                            col: range.end.character,
+                        }) else {
+                            continue;
+                        };
 
-                    let start: usize = u32::from(start_ts) as usize;
-                    let end: usize = u32::from(end_ts) as usize;
+                        let start: usize = u32::from(start_ts) as usize;
+                        let end: usize = u32::from(end_ts) as usize;
 
-                    if start <= end && end <= text.len() {
-                        let mut new_text = String::with_capacity(text.len() - (end - start) + change.text.len());
-                        new_text.push_str(&text[..start]);
-                        new_text.push_str(&change.text);
-                        new_text.push_str(&text[end..]);
-                        text = new_text;
-                        index = LineIndex::new(&text);
+                        if start <= end && end <= text.len() {
+                            let mut new_text = String::with_capacity(
+                                text.len() - (end - start) + change.text.len(),
+                            );
+                            new_text.push_str(&text[..start]);
+                            new_text.push_str(&change.text);
+                            new_text.push_str(&text[end..]);
+                            text = new_text;
+                            index = LineIndex::new(&text);
+                        } else {
+                            self.info(format!(
+                                "skipping invalid change range for {}: {:?}",
+                                uri, range
+                            ));
+                        }
                     } else {
-                        self.info(format!("skipping invalid change range for {}: {:?}", uri, range));
+                        // Full text replacement
+                        text = change.text;
+                        index = LineIndex::new(&text);
                     }
-                } else {
-                    // Full text replacement
-                    text = change.text;
-                    index = LineIndex::new(&text);
                 }
-            }
                 doc.update_text(text);
                 let diags = {
                     let mut v = Vec::new();
@@ -176,15 +194,24 @@ impl LanguageServer for Backend {
         docs.remove(&uri);
     }
 
-    async fn goto_definition(&self, params: GotoDefinitionParams) -> Result<Option<GotoDefinitionResponse>> {
+    async fn goto_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> Result<Option<GotoDefinitionResponse>> {
         let uri = params.text_document_position_params.text_document.uri;
         let position = params.text_document_position_params.position;
 
-        self.info(format!("goto_definition {} {:?}", uri.clone(), position.clone()));
+        self.info(format!(
+            "goto_definition {} {:?}",
+            uri.clone(),
+            position.clone()
+        ));
 
         let docs = self.documents.lock();
-        let Some(doc) = docs.get(&uri) else { return Ok(None) };
-               
+        let Some(doc) = docs.get(&uri) else {
+            return Ok(None);
+        };
+
         if let Some(def_range) = doc.def(position.line, position.character) {
             let lsp_range = to_lsp_range(&doc, def_range);
             let loc = Location::new(uri.clone(), lsp_range);

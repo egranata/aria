@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::parser::{self, Parse, SyntaxNode, SyntaxToken};
 use line_index::{LineCol, LineIndex};
 use rowan::{TextRange, TextSize};
-use crate::parser::{self, Parse, SyntaxNode, SyntaxToken};
 
 #[derive(Clone)]
 pub struct DocumentState {
@@ -43,7 +44,9 @@ impl DocumentState {
 
     pub fn token_at_line_col(&self, line: u32, col: u32) -> Option<SyntaxToken> {
         let line_col = line_index::LineCol { line, col };
-        let Some(offset) = self.line_index.offset(line_col) else { return None };
+        let Some(offset) = self.line_index.offset(line_col) else {
+            return None;
+        };
         use crate::lexer::SyntaxKind as K;
 
         if offset > self.text_size {
@@ -54,7 +57,8 @@ impl DocumentState {
             rowan::TokenAtOffset::Single(tok) => Some(tok),
             rowan::TokenAtOffset::Between(left, right) => {
                 // Prefer non-trivia if possible
-                let is_trivia = |t: &SyntaxToken| matches!(t.kind(), K::Whitespace | K::LineComment);
+                let is_trivia =
+                    |t: &SyntaxToken| matches!(t.kind(), K::Whitespace | K::LineComment);
                 match (is_trivia(&left), is_trivia(&right)) {
                     (false, false) => Some(left),
                     (false, true) => Some(left),
@@ -129,7 +133,6 @@ impl DocumentState {
         out
     }
 }
-
 
 #[derive(Clone, Copy, Debug)]
 struct DefEntry {
@@ -222,7 +225,11 @@ mod tests {
         let doc = DocumentState::new(text);
         let errs = doc.parse_error_ranges();
         assert!(!errs.is_empty(), "should report at least one parse error");
-        assert!(errs.iter().any(|(_, m)| m.contains("Assign") || m.contains("Semicolon")),
-            "message should mention expected token like Assign or Semicolon: {:?}", errs);
+        assert!(
+            errs.iter()
+                .any(|(_, m)| m.contains("Assign") || m.contains("Semicolon")),
+            "message should mention expected token like Assign or Semicolon: {:?}",
+            errs
+        );
     }
 }
