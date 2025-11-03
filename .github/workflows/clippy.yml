@@ -2,7 +2,7 @@ name: Run Clippy on PR
 
 on:
   repository_dispatch:
-    types: [clippy]
+    types: [clippy-command]
 
 permissions:
   contents: write
