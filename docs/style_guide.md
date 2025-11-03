@@ -160,6 +160,7 @@ Organize the contents of a `.aria` file in the following order:
 - Place all `import` statements at the top of the file, after the license and flags.
 - Prefer importing specific symbols with `import MyType from my.module;` to keep the local namespace clean. If multiple symbols are needed, they can be combined: `import Iterator, Iterable from aria.iterator.mixin;`. Only use `import *` as a last resort.
 - Prefer to order imports alphabetically within and to group the standard library first, then your own modules and dependencies. You may use empty lines to separate groups.
+- If you are importing other parts of your own widget, it is preferable to use `widget.` prefix to make it clear that it is part of your own codebase.
 
 ### 5.3. Documentation
 
