@@ -36,4 +36,4 @@ jobs:
       - name: Update homebrew tap
         run: gh workflow run main.yml -f version=${{ env.VERSION }} -R arialang/homebrew-aria
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
