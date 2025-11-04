@@ -70,6 +70,20 @@ jobs:
         if: steps.commit.outputs.changed == 'true' && steps.pr.outputs.is_fork == 'false'
         run: git push origin "HEAD:${{ steps.pr.outputs.ref }}"
 
+      - name: Trigger Linux build/test
+        if: steps.fmt.outputs.changed == 'true'
+        run: |
+          gh workflow run linux_build_test.yml --ref "${{ github.head_ref }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger macOS build/test
+        if: steps.fmt.outputs.changed == 'true'
+        run: |
+          gh workflow run macos_build_test.yml --ref "${{ github.head_ref }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Comment if forked
         if: steps.pr.outputs.is_fork == 'true' && steps.commit.outputs.changed == 'true'
         uses: peter-evans/create-or-update-comment@v4
