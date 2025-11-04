@@ -1,9 +1,9 @@
 # Aria: A Fresh, Safe, and Flexible Language for High-Level Development
-[![Linux Build](https://github.com/egranata/aria/actions/workflows/linux_build_test.yml/badge.svg?branch=master)](https://github.com/egranata/aria/actions/workflows/linux_build_test.yml)
-[![Mac Build](https://github.com/egranata/aria/actions/workflows/macos_build_test.yml/badge.svg?branch=master)](https://github.com/egranata/aria/actions/workflows/macos_build_test.yml)
+[![Linux Build](https://github.com/arialang/aria/actions/workflows/linux_build_test.yml/badge.svg?branch=master)](https://github.com/arialang/aria/actions/workflows/linux_build_test.yml)
+[![Mac Build](https://github.com/arialang/aria/actions/workflows/macos_build_test.yml/badge.svg?branch=master)](https://github.com/arialang/aria/actions/workflows/macos_build_test.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/Docs-Available-blue.svg)](https://egranata.github.io/aria/)
-[![Contributors](https://img.shields.io/github/contributors/egranata/aria)](https://github.com/egranata/aria/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/arialang/aria)](https://github.com/arialang/aria/graphs/contributors)
 
 Welcome to Aria. Aria is a modern, dynamic scripting language. It is meant to be a "sweet spot" language, easy to pick-up and with a good balance between ease of use, safety, and flexibility. Aria's design choices help you build great programs quickly.
 
@@ -79,7 +79,7 @@ Aria is currently supported on Linux and macOS. Contributions for other operatin
 
 ## A Taste of Aria
 
-Aria is easy to learn. Here's a [quick example](https://github.com/egranata/aria/blob/master/examples/github_user.aria) that fetches data from a web API and prints the result.
+Aria is easy to learn. Here's a [quick example](https://github.com/arialang/aria/blob/master/examples/github_user.aria) that fetches data from a web API and prints the result.
 
 In this example, Aria fetches user data from GitHub’s API and prints the number of public repositories for a given user. This shows how simple it is to interact with external APIs and handle dynamic data in Aria.
 
@@ -114,6 +114,6 @@ User egranata has 5 public repositories.
 
 Ready to try Aria? Want to contribute to the language? Great! Whether you’re fixing bugs, adding features, or improving the documentation, we’d love your help!
 
-If it's your first time contributing, check out [good starter bugs](https://github.com/egranata/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) or [help wanted](https://github.com/egranata/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22) on GitHub.
+If it's your first time contributing, check out [good starter bugs](https://github.com/arialang/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) or [help wanted](https://github.com/arialang/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22) on GitHub.
 
 For all this and more, visit [our website](https://egranata.github.io/aria/)!
