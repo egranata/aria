@@ -2,7 +2,7 @@
 [![Linux Build](https://github.com/arialang/aria/actions/workflows/linux_build_test.yml/badge.svg?branch=master)](https://github.com/arialang/aria/actions/workflows/linux_build_test.yml)
 [![Mac Build](https://github.com/arialang/aria/actions/workflows/macos_build_test.yml/badge.svg?branch=master)](https://github.com/arialang/aria/actions/workflows/macos_build_test.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://img.shields.io/badge/Docs-Available-blue.svg)](https://egranata.github.io/aria/)
+[![Docs](https://img.shields.io/badge/Docs-Available-blue.svg)](https://arialang.github.io/)
 [![Contributors](https://img.shields.io/github/contributors/arialang/aria)](https://github.com/arialang/aria/graphs/contributors)
 
 Welcome to Aria. Aria is a modern, dynamic scripting language. It is meant to be a "sweet spot" language, easy to pick-up and with a good balance between ease of use, safety, and flexibility. Aria's design choices help you build great programs quickly.
@@ -116,4 +116,4 @@ Ready to try Aria? Want to contribute to the language? Great! Whether you’re f
 
 If it's your first time contributing, check out [good starter bugs](https://github.com/arialang/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) or [help wanted](https://github.com/arialang/aria/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22) on GitHub.
 
-For all this and more, visit [our website](https://egranata.github.io/aria/)!
+For all this and more, visit [our website](https://arialang.github.io/)!
