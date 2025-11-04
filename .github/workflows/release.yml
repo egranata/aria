@@ -19,6 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF##refs/tags/}" >> "$GITHUB_ENV"
       - name: Build + package
         shell: bash
         run: ./package.sh
@@ -30,3 +33,7 @@ jobs:
             *.tgz.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update homebrew tap
+        run: gh workflow run main.yml -f version=${{ env.VERSION }} -R arialang/homebrew-aria
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
