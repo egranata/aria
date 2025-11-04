@@ -11,11 +11,17 @@ perf.*
 *.swp
 *.swo
 
+# NPM
+node_modules/
+
+out/
+
 # Aria-specific
 history.aria
 /vscode/aria/*.vsix
-.vscodeignore
 
 # OS-specific
 .DS_Store
 Thumbs.db
+
+.env
