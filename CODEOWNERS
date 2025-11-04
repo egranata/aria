@@ -10,3 +10,6 @@ lib/aria/io/path.aria @ZocoLini
 .github/workflows/slash* @dlkritter
 .github/workflows/clippy.yml @dlkritter
 .github/workflows/fmt.yml @dlkritter
+
+lsp @feznyng
+vscode/aria @feznyng
