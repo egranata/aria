@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+import Map from aria.structures.map;
+
+func main() {
+    val fm1 = Map.frequency_map(["apple", "banana", "apple", "orange", "banana", "apple"]);
+    assert fm1["apple"] == 3;
+    assert fm1["banana"] == 2;
+    assert fm1["orange"] == 1;
+    assert fm1.get("pear").is_None();
+
+    val fm2 = Map.frequency_map([1, 2, 2, 3, 3, 3, 4]);
+    assert fm2[1] == 1;
+    assert fm2[2] == 2;
+    assert fm2[3] == 3;
+    assert fm2[4] == 1;
+    assert fm2.get(100).is_None();
+}

@@ -23,6 +23,15 @@ struct Map {
             .key_list = [],
     };
 
+    type func frequency_map(iter) {
+        val this = This.new();
+        for item in iter {
+            val count = this.get(item).unwrap_or(0);
+            this.set(item, count + 1);
+        }
+        return this;
+    }
+
     func keys() {
         val remaining = this.len();
         val ret = [];
