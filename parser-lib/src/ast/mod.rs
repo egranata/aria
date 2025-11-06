@@ -160,8 +160,17 @@ impl From<&InputLocation> for Location {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum IntLiteralBase {
+    Binary,
+    Octal,
+    Decimal,
+    Hexadecimal,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntLiteral {
     pub loc: SourcePointer,
+    pub base: IntLiteralBase,
     pub val: String,
 }
 
@@ -253,6 +262,30 @@ impl Primary {
             Self::ListLiteral(ll) => &ll.loc,
             Self::StringLiteral(sl) => &sl.loc,
             Self::ParenExpression(pe) => &pe.loc,
+        }
+    }
+
+    pub fn is_int_literal(&self) -> bool {
+        matches!(self, Self::IntLiteral(_))
+    }
+
+    pub fn is_float_literal(&self) -> bool {
+        matches!(self, Self::FloatLiteral(_))
+    }
+
+    pub fn as_int_literal(&self) -> Option<&IntLiteral> {
+        if let Self::IntLiteral(il) = self {
+            Some(il)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_float_literal(&self) -> Option<&FloatLiteral> {
+        if let Self::FloatLiteral(fl) = self {
+            Some(fl)
+        } else {
+            None
         }
     }
 }

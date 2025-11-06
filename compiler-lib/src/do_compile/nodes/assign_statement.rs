@@ -28,6 +28,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::AssignStatement {
             };
             let zero_val = Expression::from(&Primary::IntLiteral(IntLiteral {
                 loc: self.loc.clone(),
+                base: aria_parser::ast::IntLiteralBase::Decimal,
                 val: "0".to_string(),
             }));
             let temp_buffer_expression = Expression::from(&temp_buffer_store.clone());
