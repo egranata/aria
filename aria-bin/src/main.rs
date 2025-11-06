@@ -62,17 +62,22 @@ fn print_lib_paths() {
     }
 }
 
-fn main() {
+fn main_loop() -> i32 {
     let args = Args::parse();
 
     if args.print_lib_path {
         print_lib_paths();
-        return;
+        return 0;
     }
 
     if let Some(path) = &args.path {
-        file_eval::file_eval(path, &args);
+        file_eval::file_eval(path, &args)
     } else {
-        repl_eval::repl_eval(&args);
+        repl_eval::repl_eval(&args)
     }
+}
+
+fn main() {
+    let exit_code = main_loop();
+    std::process::exit(exit_code);
 }

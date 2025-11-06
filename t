@@ -17,16 +17,42 @@ ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo run --profile "$ARIA_BUILD_CONFIG" --package 
 EXIT_CODE=$?
 set -e
 if [ $EXIT_CODE -ne 42 ]; then
-    echo "❌ test_exit.aria exited with code $EXIT_CODE, expected 12"
+    echo "❌ test_exit.aria exited with code $EXIT_CODE, expected 42"
     exit 1
+else
+    echo "✅ test_exit.aria exited with code $EXIT_CODE"
 fi
 
+set +e
+ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo run --profile "$ARIA_BUILD_CONFIG" --package aria-bin -- aria-bin/test_assert.aria
+EXIT_CODE=$?
+set -e
+if [ $EXIT_CODE -ne 1 ]; then
+    echo "❌ test_assert.aria exited with code $EXIT_CODE, expected 1"
+    exit 1
+else
+    echo "✅ test_assert.aria exited with code $EXIT_CODE"
+fi
+
+set +e
+ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo run --profile "$ARIA_BUILD_CONFIG" --package aria-bin -- aria-bin/test_uncaught_exception.aria
+EXIT_CODE=$?
+set -e
+if [ $EXIT_CODE -ne 1 ]; then
+    echo "❌ test_uncaught_exception.aria exited with code $EXIT_CODE, expected 1"
+    exit 1
+else
+    echo "✅ test_uncaught_exception.aria exited with code $EXIT_CODE"
+fi
+
+set +e
 ERROR_REPORTING_TEMPLATE="$SELF_DIR"/aria-bin/src/error_reporting_test/expected.txt
 ERROR_REPORTING_OUTPUT=$(ARIA_LIB_DIR_EXTRA="$SELF_DIR"/aria-bin/src/error_reporting_test \
           ARIA_LIB_DIR="$ARIA_LIB_DIR" \
           cargo run --profile "$ARIA_BUILD_CONFIG" \
           --package aria-bin -- \
           "$SELF_DIR"/aria-bin/src/error_reporting_test/main.aria 2>&1)
+set -e
 echo "$ERROR_REPORTING_OUTPUT" | awk '
   match($0, /\/[^[:space:]]+:[0-9]+:[0-9]+/) {
     path = substr($0, RSTART, RLENGTH)

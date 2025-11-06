@@ -89,16 +89,18 @@ fn eval_buffer(
     }
 }
 
-pub(crate) fn file_eval(path: &str, args: &Args) {
+pub(crate) fn file_eval(path: &str, args: &Args) -> i32 {
     let mut vm = VirtualMachine::with_options(VmOptions::from(args));
 
     let buffer = SourceBuffer::file(path);
     match buffer {
-        Ok(src) => {
-            let _ = eval_buffer(src, &mut vm, args);
-        }
+        Ok(src) => match eval_buffer(src, &mut vm, args) {
+            Ok(_) => 0,
+            Err(_) => 1,
+        },
         Err(err) => {
             println!("error reading source file: {err}");
+            1
         }
     }
 }
