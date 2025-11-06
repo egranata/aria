@@ -348,7 +348,7 @@ impl<'a> Repl<'a> {
     }
 }
 
-pub(crate) fn repl_eval(args: &Args) {
+pub(crate) fn repl_eval(args: &Args) -> i32 {
     let vm_opts = VmOptions::from(args);
     let mut repl = Repl::new(vm_opts, args).unwrap();
 
@@ -370,4 +370,6 @@ pub(crate) fn repl_eval(args: &Args) {
             let _ = repl.process_buffer(input);
         }
     }
+
+    0 // REPL will always exit 0
 }

@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+func foo() {
+    return 3 / 0;
+}
+
+func main() {
+    return foo();
+}
