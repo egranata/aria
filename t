@@ -17,7 +17,7 @@ ARIA_LIB_DIR="$ARIA_LIB_DIR" cargo run --profile "$ARIA_BUILD_CONFIG" --package 
 EXIT_CODE=$?
 set -e
 if [ $EXIT_CODE -ne 42 ]; then
-    echo "❌ test_exit.aria exited with code $EXIT_CODE, expected 12"
+    echo "❌ test_exit.aria exited with code $EXIT_CODE, expected 42"
     exit 1
 else
     echo "✅ test_exit.aria exited with code $EXIT_CODE"
