@@ -205,6 +205,8 @@ extension String {
         }
         return ret;
     }
+
+    func remove(pattern) = this.replace(pattern, "");
 }
 
 extension String {

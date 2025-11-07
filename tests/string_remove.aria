@@ -1,0 +1,3 @@
+val s = "Hello, World! This is such a, lovely, wonderful even, day.";
+val s2 = s.remove(",").remove("!").remove(".");
+assert s2 == "Hello World This is such a lovely wonderful even day";
