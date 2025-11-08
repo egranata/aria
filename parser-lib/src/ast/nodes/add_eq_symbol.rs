@@ -30,6 +30,11 @@ impl PrettyPrintable for AddEqSymbol {
             Self::StarEq => "*=",
             Self::SlashEq => "/=",
             Self::PercentEq => "%=",
+            Self::ShiftLeftEq => "<<=",
+            Self::ShiftRightEq => ">>=",
+            Self::XorEq => "^=",
+            Self::AndEq => "&=",
+            Self::OrEq => "|=",
         })
     }
 }
