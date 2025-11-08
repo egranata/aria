@@ -2,7 +2,7 @@
 use aria_parser::ast::{
     AddOperation, AddSymbol, AssignStatement, CompOperation, Expression, LogOperation,
     MulOperation, MulSymbol, ParenExpression, PostfixExpression, PostfixRvalue, Primary,
-    RelOperation, ShiftOperation, UnaryOperation,
+    RelOperation, ShiftOperation, ShiftSymbol, UnaryOperation,
 };
 
 use crate::do_compile::{CompilationResult, CompileNode, CompileParams};
@@ -65,6 +65,47 @@ impl<'a> CompileNode<'a> for aria_parser::ast::WriteOpEqStatement {
                     right: vec![],
                 }
             }
+            aria_parser::ast::AddEqSymbol::ShiftLeftEq => {
+                ShiftOperation {
+                    loc: self.loc.clone(),
+                    left: AddOperation::from(&MulOperation::from(&UnaryOperation::from(
+                        &PostfixRvalue::from(&self.id),
+                    ))),
+                    right: Some((ShiftSymbol::Leftward, AddOperation::from(&rhs_as_mul))),
+                };
+                let mo = MulOperation {
+                    loc: self.loc.clone(),
+                    left: UnaryOperation::from(&PostfixRvalue::from(&self.id)),
+                    right: vec![],
+                };
+                AddOperation {
+                    loc: self.loc.clone(),
+                    left: mo,
+                    right: vec![],
+                }
+            }
+            aria_parser::ast::AddEqSymbol::ShiftRightEq => {
+                ShiftOperation {
+                    loc: self.loc.clone(),
+                    left: AddOperation::from(&MulOperation::from(&UnaryOperation::from(
+                        &PostfixRvalue::from(&self.id),
+                    ))),
+                    right: Some((ShiftSymbol::Leftward, AddOperation::from(&rhs_as_mul))),
+                };
+                let mo = MulOperation {
+                    loc: self.loc.clone(),
+                    left: UnaryOperation::from(&PostfixRvalue::from(&self.id)),
+                    right: vec![],
+                };
+                AddOperation {
+                    loc: self.loc.clone(),
+                    left: mo,
+                    right: vec![],
+                }
+            }
+            aria_parser::ast::AddEqSymbol::XorEq
+            | aria_parser::ast::AddEqSymbol::AndEq
+            | aria_parser::ast::AddEqSymbol::OrEq => todo!(),
         };
 
         let assign_stmt = AssignStatement {
