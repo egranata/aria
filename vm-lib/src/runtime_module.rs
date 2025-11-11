@@ -10,14 +10,14 @@ use crate::{
     runtime_value::{
         RuntimeValue,
         function::{BuiltinFunctionImpl, Function},
-        kind::RuntimeValueType,
+        isa::IsaCheckable,
     },
 };
 
 #[derive(Clone)]
 pub struct NamedValue {
     pub val: RuntimeValue,
-    pub ty: RuntimeValueType,
+    pub ty: IsaCheckable,
 }
 
 struct RuntimeModuleImpl {
@@ -47,7 +47,7 @@ impl RuntimeModuleImpl {
         self.values.borrow().get(name).map(|v| v.val.clone())
     }
 
-    fn typedef_named_value(&self, name: &str, ty: RuntimeValueType) {
+    fn typedef_named_value(&self, name: &str, ty: IsaCheckable) {
         let mut bm = self.values.borrow_mut();
         if let Some(val) = bm.get_mut(name) {
             val.ty = ty;
@@ -70,7 +70,7 @@ impl RuntimeModuleImpl {
     ) -> Result<(), VmErrorReason> {
         let mut bm = self.values.borrow_mut();
         if let Some(nval) = bm.get_mut(name) {
-            if !val.isa(&nval.ty, builtins) {
+            if !nval.ty.isa_check(&val, builtins) {
                 Err(VmErrorReason::UnexpectedType)
             } else {
                 nval.val = val;
@@ -90,7 +90,7 @@ impl RuntimeModuleImpl {
                 name.to_owned(),
                 NamedValue {
                     val,
-                    ty: RuntimeValueType::Any,
+                    ty: IsaCheckable::any(),
                 },
             );
         }
@@ -129,7 +129,7 @@ impl RuntimeModule {
         self.imp.load_named_value(name)
     }
 
-    pub fn typedef_named_value(&self, name: &str, ty: RuntimeValueType) {
+    pub fn typedef_named_value(&self, name: &str, ty: IsaCheckable) {
         self.imp.typedef_named_value(name, ty)
     }
 
