@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin A {
+    func answer() {
+        return 42;
+    }
+}
+
+struct S {
+    include A
+}
+
+val x: A = alloc(S);
+
+func main() {
+    assert x.answer() == 42;
+}

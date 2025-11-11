@@ -42,6 +42,7 @@ pub mod enumeration;
 pub mod float;
 pub mod function;
 pub mod integer;
+pub mod isa;
 pub mod kind;
 pub mod list;
 pub mod mixin;

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin A  {}
+
+struct S {
+    include A
+}
+
+func foo(x: A) {
+    return 42;
+}
+
+struct T {}
+
+func main() {
+    assert foo(alloc(S)) == 42;
+
+    try {
+        foo(alloc(T));
+        assert false;
+    } catch e {
+        assert e.is_UnexpectedType();
+    }
+}

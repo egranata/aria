@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin A {
+    func answer() = 42;
+}
+
+struct S {
+    include A
+}
+
+enum E {
+    case HasAnswer(A),
+    case DefaultAnswer(Int),
+
+    func answer() {
+        match this {
+            case HasAnswer(a) => {
+                return a.answer();
+            },
+            case DefaultAnswer(n) => {
+                return n;
+            }
+        }
+    }
+}
+
+func main() {
+    val e1 = E::HasAnswer(alloc(S));
+    assert e1.answer() == 42;
+
+    val e2 = E::DefaultAnswer(7);
+    assert e2.answer() == 7;
+}
