@@ -10,10 +10,45 @@ pub enum IsaCheckable {
 }
 
 impl IsaCheckable {
+    fn isa(val: &RuntimeValue, t: &RuntimeValueType, builtins: &VmBuiltins) -> bool {
+        match t {
+            RuntimeValueType::Any => true,
+            RuntimeValueType::Union(u) => {
+                for u_k in u {
+                    if Self::isa(val, u_k, builtins) {
+                        return true;
+                    }
+                }
+                false
+            }
+            _ => RuntimeValueType::get_type(val, builtins) == *t,
+        }
+    }
+
+    fn isa_mixin(val: &RuntimeValue, mixin: &Mixin) -> bool {
+        if let Some(obj) = val.as_object() {
+            obj.get_struct().isa_mixin(mixin)
+        } else if let Some(env) = val.as_enum_value() {
+            env.get_container_enum().isa_mixin(mixin)
+        } else if let Some(m) = val.as_mixin() {
+            m.isa_mixin(mixin)
+        } else {
+            match val.as_struct() {
+                Some(st) => st.isa_mixin(mixin),
+                _ => match val.as_enum() {
+                    Some(en) => en.isa_mixin(mixin),
+                    _ => false,
+                },
+            }
+        }
+    }
+}
+
+impl IsaCheckable {
     pub fn isa_check(&self, other: &RuntimeValue, builtins: &VmBuiltins) -> bool {
         match self {
-            IsaCheckable::Type(t) => other.isa(t, builtins),
-            IsaCheckable::Mixin(m) => other.isa_mixin(m),
+            IsaCheckable::Type(t) => IsaCheckable::isa(other, t, builtins),
+            IsaCheckable::Mixin(m) => IsaCheckable::isa_mixin(other, m),
         }
     }
 

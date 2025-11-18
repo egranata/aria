@@ -465,39 +465,6 @@ pub enum CallResult<T = RuntimeValue> {
 }
 
 impl RuntimeValue {
-    pub fn isa(&self, t: &RuntimeValueType, builtins: &VmBuiltins) -> bool {
-        match t {
-            RuntimeValueType::Any => true,
-            RuntimeValueType::Union(u) => {
-                for u_k in u {
-                    if self.isa(u_k, builtins) {
-                        return true;
-                    }
-                }
-                false
-            }
-            _ => RuntimeValueType::get_type(self, builtins) == *t,
-        }
-    }
-
-    pub fn isa_mixin(&self, mixin: &Mixin) -> bool {
-        if let Some(obj) = self.as_object() {
-            obj.get_struct().isa_mixin(mixin)
-        } else if let Some(env) = self.as_enum_value() {
-            env.get_container_enum().isa_mixin(mixin)
-        } else if let Some(m) = self.as_mixin() {
-            m.isa_mixin(mixin)
-        } else {
-            match self.as_struct() {
-                Some(st) => st.isa_mixin(mixin),
-                _ => match self.as_enum() {
-                    Some(en) => en.isa_mixin(mixin),
-                    _ => false,
-                },
-            }
-        }
-    }
-
     pub fn bind(&self, f: Function) -> RuntimeValue {
         RuntimeValue::BoundFunction(BoundFunction::bind(self.clone(), f))
     }
