@@ -1314,7 +1314,14 @@ impl VirtualMachine {
                 }
             }
             Opcode::BuildMixin => {
-                frame.stack.push(RuntimeValue::Mixin(Mixin::default()));
+                let name = pop_or_err!(next, frame, op_idx);
+                if let Some(name) = name.as_string() {
+                    frame
+                        .stack
+                        .push(RuntimeValue::Mixin(Mixin::new(&name.raw_value())));
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                }
             }
             Opcode::IncludeMixin => {
                 let mixin = pop_or_err!(next, frame, op_idx);
