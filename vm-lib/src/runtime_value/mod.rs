@@ -30,6 +30,7 @@ use crate::{
     error::vm_error::VmErrorReason,
     frame::Frame,
     runtime_module::RuntimeModule,
+    runtime_value::isa::IsaCheckable,
     vm::{ExecutionResult, VirtualMachine},
 };
 
@@ -68,6 +69,7 @@ pub enum RuntimeValue {
     Type(RuntimeValueType),
     Module(RuntimeModule),
     Opaque(OpaqueValue),
+    TypeCheck(IsaCheckable),
 }
 
 impl RuntimeValue {
@@ -93,6 +95,7 @@ impl RuntimeValue {
             (Self::BoundFunction(l0), Self::BoundFunction(r0)) => l0 == r0,
             (Self::List(l0), Self::List(r0)) => l0 == r0,
             (Self::Type(l0), Self::Type(r0)) => l0 == r0,
+            (Self::TypeCheck(l0), Self::TypeCheck(r0)) => l0 == r0,
             _ => false,
         }
     }
@@ -398,22 +401,23 @@ unary_op_impl!(neg for neg);
 impl std::fmt::Debug for RuntimeValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RuntimeValue::Integer(x) => write!(f, "{}", x.raw_value()),
-            RuntimeValue::Float(x) => write!(f, "{}", x.raw_value()),
-            RuntimeValue::Boolean(x) => write!(f, "{}", x.raw_value()),
-            RuntimeValue::String(s) => write!(f, "\"{}\"", s.raw_value()),
-            RuntimeValue::Object(o) => write!(f, "<object of type {}>", o.get_struct().name()),
-            RuntimeValue::Opaque(_) => write!(f, "<opaque>"),
-            RuntimeValue::Mixin(_) => write!(f, "<mixin>"),
-            RuntimeValue::Module(_) => write!(f, "<module>"),
-            RuntimeValue::EnumValue(v) => {
+            Self::Integer(x) => write!(f, "{}", x.raw_value()),
+            Self::Float(x) => write!(f, "{}", x.raw_value()),
+            Self::Boolean(x) => write!(f, "{}", x.raw_value()),
+            Self::String(s) => write!(f, "\"{}\"", s.raw_value()),
+            Self::Object(o) => write!(f, "<object of type {}>", o.get_struct().name()),
+            Self::Opaque(_) => write!(f, "<opaque>"),
+            Self::Mixin(m) => write!(f, "<mixin{}>", m.name()),
+            Self::Module(_) => write!(f, "<module>"),
+            Self::EnumValue(v) => {
                 write!(f, "<enum-value of type {}>", v.get_container_enum().name())
             }
-            RuntimeValue::CodeObject(co) => write!(f, "{co:?}"),
-            RuntimeValue::Function(fnc) => write!(f, "{fnc:?}"),
-            RuntimeValue::BoundFunction(_) => write!(f, "<bound-function>"),
-            RuntimeValue::List(lt) => write!(f, "{lt:?}"),
-            RuntimeValue::Type(t) => write!(f, "type<{t:?}>"),
+            Self::CodeObject(co) => write!(f, "{co:?}"),
+            Self::Function(fnc) => write!(f, "{fnc:?}"),
+            Self::BoundFunction(_) => write!(f, "<bound-function>"),
+            Self::List(lt) => write!(f, "{lt:?}"),
+            Self::Type(t) => write!(f, "type<{t:?}>"),
+            Self::TypeCheck(t) => write!(f, "type-check({t:?})"),
         }
     }
 }

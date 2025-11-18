@@ -1181,8 +1181,10 @@ impl VirtualMachine {
                 let y = pop_or_err!(next, frame, op_idx);
                 if let (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) = (&x, &y) {
                     frame.stack.push(RuntimeValue::Integer(a | b));
-                } else if let (RuntimeValue::Type(a), RuntimeValue::Type(b)) = (&x, &y) {
-                    frame.stack.push(RuntimeValue::Type(a | b));
+                } else if let Ok(x) = IsaCheckable::try_from(&x)
+                    && let Ok(y) = IsaCheckable::try_from(&y)
+                {
+                    frame.stack.push(RuntimeValue::TypeCheck(x | &y));
                 } else {
                     binop_eval!(
                         (RuntimeValue::bitwise_or(&y, &x, frame, self)),
