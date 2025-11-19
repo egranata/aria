@@ -22,6 +22,12 @@ func is_digit(s: String) {
 }
 
 extension String {
+    operator[](index: Int) {
+        return this._get_at(index);
+    }
+}
+
+extension String {
     struct EncodingError {
         type func new(msg: String) {
             return alloc(This) {
