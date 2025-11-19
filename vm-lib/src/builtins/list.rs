@@ -100,12 +100,81 @@ impl BuiltinFunctionImpl for Drop {
     }
 }
 
+#[derive(Default)]
+struct GetAt {}
+impl BuiltinFunctionImpl for GetAt {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        _: &mut crate::vm::VirtualMachine,
+    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        let this = VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
+        let index = VmBuiltins::extract_arg(frame, |x| x.as_integer().cloned())?;
+        let index = index.raw_value() as usize;
+        match this.get_at(index) {
+            Some(v) => {
+                frame.stack.push(v);
+                Ok(RunloopExit::Ok(()))
+            }
+            None => Err(VmErrorReason::IndexOutOfBounds(index).into()),
+        }
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
+    }
+
+    fn name(&self) -> &str {
+        "_get_at"
+    }
+}
+
+#[derive(Default)]
+struct SetAt {}
+impl BuiltinFunctionImpl for SetAt {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        vm: &mut crate::vm::VirtualMachine,
+    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        let this = VmBuiltins::extract_arg(frame, |x| x.as_list().cloned())?;
+        let index = VmBuiltins::extract_arg(frame, |x| x.as_integer().cloned())?;
+        let index = index.raw_value() as usize;
+        let value = frame.stack.pop();
+        match this.set_at(index, value) {
+            Ok(_) => {
+                frame.stack.push(vm.builtins.create_unit_object()?);
+                Ok(RunloopExit::Ok(()))
+            }
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(3)
+    }
+
+    fn name(&self) -> &str {
+        "_set_at"
+    }
+}
+
 pub(super) fn insert_list_builtins(builtins: &mut VmBuiltins) {
     let list_builtin = BuiltinType::new(crate::runtime_value::builtin_type::BuiltinValueKind::List);
 
     list_builtin.insert_builtin::<ListLen>();
     list_builtin.insert_builtin::<ListAppend>();
     list_builtin.insert_builtin::<Drop>();
+    list_builtin.insert_builtin::<GetAt>();
+    list_builtin.insert_builtin::<SetAt>();
 
     builtins.insert(
         "List",
