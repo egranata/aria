@@ -23,6 +23,9 @@ func is_digit(s: String) {
 
 extension String {
     operator[](index: Int) {
+        if index < 0 {
+            index += this.len();
+        }
         return this._get_at(index);
     }
 }
