@@ -5,10 +5,16 @@ import Box from aria.core.box;
 
 extension List {
     operator[](index: Int) {
+        if index < 0 {
+            index += this.len();
+        }
         return this._get_at(index);
     }
 
     operator[]=(index: Int, value) {
+        if index < 0 {
+            index += this.len();
+        }
         this._set_at(index, value);
     }
 }
