@@ -746,18 +746,14 @@ impl RuntimeValue {
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> ExecutionResult<CallResult> {
-        if self.is_object() || self.is_list() || self.is_string() {
-            match self.read_attribute("_op_impl_read_index", &vm.builtins) {
-                Ok(read_index) => {
-                    for idx in indices.iter().rev() {
-                        cur_frame.stack.push(idx.clone());
-                    }
-                    read_index.eval(indices.len() as u8, cur_frame, vm, false)
+        match self.read_attribute("_op_impl_read_index", &vm.builtins) {
+            Ok(read_index) => {
+                for idx in indices.iter().rev() {
+                    cur_frame.stack.push(idx.clone());
                 }
-                _ => Err(VmErrorReason::UnexpectedType.into()),
+                read_index.eval(indices.len() as u8, cur_frame, vm, false)
             }
-        } else {
-            Err(VmErrorReason::UnexpectedType.into())
+            _ => Err(VmErrorReason::UnexpectedType.into()),
         }
     }
 
@@ -768,19 +764,15 @@ impl RuntimeValue {
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> ExecutionResult<CallResult> {
-        if self.is_object() || self.is_list() {
-            match self.read_attribute("_op_impl_write_index", &vm.builtins) {
-                Ok(write_index) => {
-                    cur_frame.stack.push(val.clone());
-                    for idx in indices.iter().rev() {
-                        cur_frame.stack.push(idx.clone());
-                    }
-                    write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)
+        match self.read_attribute("_op_impl_write_index", &vm.builtins) {
+            Ok(write_index) => {
+                cur_frame.stack.push(val.clone());
+                for idx in indices.iter().rev() {
+                    cur_frame.stack.push(idx.clone());
                 }
-                _ => Err(VmErrorReason::UnexpectedType.into()),
+                write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)
             }
-        } else {
-            Err(VmErrorReason::UnexpectedType.into())
+            _ => Err(VmErrorReason::UnexpectedType.into()),
         }
     }
 }
