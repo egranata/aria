@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+extension Int {
+    operator[](index: Int) {
+        val n = 1 << index;
+        return (this & n) >> index;
+    }
+}
+
+val n = 0b1111000011101;
+
+assert n[0] == 1;
+assert n[1] == 0;
+assert n[2] == 1;
+assert n[3] == 1;
+assert n[4] == 1;
+assert n[5] == 0;
+assert n[6] == 0;
+assert n[7] == 0;
+assert n[8] == 0;
+assert n[9] == 1;
+assert n[10] == 1;
+assert n[11] == 1;
+assert n[12] == 1;
+assert n[13] == 0;
+assert n[14] == 0;
+assert n[15] == 0;
+# ... and so on and so forth ...
