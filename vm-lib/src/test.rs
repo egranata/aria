@@ -45,7 +45,7 @@ func main() {
 
     assert!(
         exec_code(input)
-            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x==2".to_owned()))
+            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x == 2".to_owned()))
     );
 }
 
@@ -58,7 +58,7 @@ assert x == 2;
 
     assert!(
         exec_code(input)
-            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x==2".to_owned()))
+            .is_err_and(|err| err.reason == VmErrorReason::AssertFailed("x == 2".to_owned()))
     );
 }
 
