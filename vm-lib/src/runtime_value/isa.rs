@@ -56,21 +56,21 @@ impl IsaCheckable {
         }
     }
 
-    fn isa_mixin(val: &RuntimeValue, mixin: &Mixin) -> bool {
+    fn isa_mixin(val: &RuntimeValue, mixin: &Mixin, builtins: &VmBuiltins) -> bool {
         if let Some(obj) = val.as_object() {
             obj.get_struct().isa_mixin(mixin)
         } else if let Some(env) = val.as_enum_value() {
             env.get_container_enum().isa_mixin(mixin)
         } else if let Some(m) = val.as_mixin() {
             m.isa_mixin(mixin)
+        } else if let Some(st) = val.as_struct() {
+            st.isa_mixin(mixin)
+        } else if let Some(en) = val.as_enum() {
+            en.isa_mixin(mixin)
+        } else if let Some(btt) = RuntimeValueType::get_type(val, builtins).as_builtin() {
+            btt.isa_mixin(mixin)
         } else {
-            match val.as_struct() {
-                Some(st) => st.isa_mixin(mixin),
-                _ => match val.as_enum() {
-                    Some(en) => en.isa_mixin(mixin),
-                    _ => false,
-                },
-            }
+            false
         }
     }
 }
@@ -79,7 +79,7 @@ impl IsaCheckable {
     pub fn isa_check(&self, other: &RuntimeValue, builtins: &VmBuiltins) -> bool {
         match self {
             IsaCheckable::Type(t) => IsaCheckable::isa(other, t, builtins),
-            IsaCheckable::Mixin(m) => IsaCheckable::isa_mixin(other, m),
+            IsaCheckable::Mixin(m) => IsaCheckable::isa_mixin(other, m, builtins),
             IsaCheckable::Union(us) => us.iter().any(|u| u.isa_check(other, builtins)),
             IsaCheckable::Intersection(is) => is.iter().all(|i| i.isa_check(other, builtins)),
         }
