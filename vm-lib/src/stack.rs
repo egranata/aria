@@ -21,10 +21,6 @@ impl<T> Stack<T>
 where
     T: Clone,
 {
-    pub fn at_head(&mut self, val: T) {
-        self.values.insert(0, val);
-    }
-
     pub fn push(&mut self, val: T) {
         self.values.push(val);
     }
@@ -39,6 +35,19 @@ where
 
     pub fn pop(&mut self) -> T {
         self.try_pop().expect("empty stack")
+    }
+
+    pub fn pop_count(&mut self, count: usize) -> Vec<T> {
+        let mut result = Vec::with_capacity(count);
+        for _ in 0..count {
+            if let Some(v) = self.try_pop() {
+                result.push(v);
+            } else {
+                break;
+            }
+        }
+
+        result
     }
 
     pub fn try_pop_if<F, U>(&mut self, f: F) -> Option<U>

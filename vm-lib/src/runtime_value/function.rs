@@ -318,17 +318,19 @@ impl Function {
                 );
             }
 
+            let mut popped_args = cur_frame.stack.pop_count(argc as usize);
+            let split_at = (fixed_arity - other_argc) as usize;
+            let varargs = popped_args.split_off(split_at.min(popped_args.len()));
+
             let l = List::default();
-            for i in 0..argc {
-                let arg = cur_frame.stack.pop();
-                if i < fixed_arity - other_argc {
-                    new_frame.stack.at_head(arg);
-                } else {
-                    l.append(arg);
-                }
+            for arg in varargs {
+                l.append(arg);
             }
 
-            new_frame.stack.at_head(super::RuntimeValue::List(l));
+            new_frame.stack.push(super::RuntimeValue::List(l));
+            for arg in popped_args.into_iter().rev() {
+                new_frame.stack.push(arg);
+            }
         } else {
             if effective_argc < self.arity().required {
                 return Err(
@@ -349,8 +351,8 @@ impl Function {
                 );
             }
 
-            for _ in 0..argc {
-                new_frame.stack.at_head(cur_frame.stack.pop());
+            for item in cur_frame.stack.pop_count(argc as usize).into_iter().rev() {
+                new_frame.stack.push(item);
             }
         }
 
