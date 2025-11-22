@@ -505,7 +505,7 @@ impl RuntimeValue {
         discard_result: bool,
     ) -> ExecutionResult<CallResult> {
         if let Some(f) = self.as_function() {
-            f.eval(argc, cur_frame, vm, discard_result)
+            f.eval(argc, cur_frame, vm, &Default::default(), discard_result)
         } else if let Some(bf) = self.as_bound_function() {
             bf.eval(argc, cur_frame, vm, discard_result)
         } else {

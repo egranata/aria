@@ -240,6 +240,18 @@ impl FunctionImpl {
     }
 }
 
+#[derive(Default)]
+pub struct PartialFunctionApplication {
+    suffix_args: Vec<RuntimeValue>,
+}
+
+impl PartialFunctionApplication {
+    pub fn with_suffix_arg(mut self, arg: RuntimeValue) -> Self {
+        self.suffix_args.push(arg);
+        self
+    }
+}
+
 impl Function {
     pub fn new_builtin<T>() -> Self
     where
@@ -286,16 +298,21 @@ impl Function {
         argc: u8,
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
+        other_args: &PartialFunctionApplication,
         discard_result: bool,
     ) -> ExecutionResult<CallResult> {
         let mut new_frame = Frame::new_with_function(self.clone());
 
+        let other_argc = other_args.suffix_args.len() as u8;
+        let effective_argc = argc + other_argc;
+        let fixed_arity = self.arity().required + self.arity().optional;
+
         if self.attribute().is_vararg() {
-            if argc < self.arity().required {
+            if effective_argc < self.arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
                         self.arity().required as usize,
-                        argc as usize,
+                        effective_argc as usize,
                     )
                     .into(),
                 );
@@ -303,29 +320,30 @@ impl Function {
 
             let l = List::default();
             for i in 0..argc {
-                if i < self.arity().required + self.arity().optional {
-                    new_frame.stack.at_head(cur_frame.stack.pop());
+                let arg = cur_frame.stack.pop();
+                if i < fixed_arity - other_argc {
+                    new_frame.stack.at_head(arg);
                 } else {
-                    l.append(cur_frame.stack.pop());
+                    l.append(arg);
                 }
             }
 
             new_frame.stack.at_head(super::RuntimeValue::List(l));
         } else {
-            if argc < self.arity().required {
+            if effective_argc < self.arity().required {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
                         self.arity().required as usize,
-                        argc as usize,
+                        effective_argc as usize,
                     )
                     .into(),
                 );
             }
-            if argc > self.arity().required + self.arity().optional {
+            if effective_argc > fixed_arity {
                 return Err(
                     crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.arity().required as usize + self.arity().optional as usize,
-                        argc as usize,
+                        fixed_arity as usize,
+                        effective_argc as usize,
                     )
                     .into(),
                 );
@@ -336,7 +354,11 @@ impl Function {
             }
         }
 
-        match self.eval_in_frame(argc, &mut new_frame, vm)? {
+        for arg in &other_args.suffix_args {
+            new_frame.stack.push(arg.clone());
+        }
+
+        match self.eval_in_frame(effective_argc, &mut new_frame, vm)? {
             RunloopExit::Ok(_) => match new_frame.stack.try_pop() {
                 Some(ret) => {
                     if !discard_result {

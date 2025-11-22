@@ -499,7 +499,7 @@ impl VirtualMachine {
         let entry_f = Function::from_code_object(&entry_co, 0, &r_mod);
         let mut entry_frame: Frame = Default::default();
 
-        let entry_result = entry_f.eval(0, &mut entry_frame, self, true);
+        let entry_result = entry_f.eval(0, &mut entry_frame, self, &Default::default(), true);
         match entry_result {
             Ok(ok) => match ok {
                 crate::runtime_value::CallResult::Exception(e) => Ok(RunloopExit::Exception(e)),
@@ -570,7 +570,7 @@ impl VirtualMachine {
             return Err(VmErrorReason::InvalidMainSignature.into());
         };
 
-        match main_f.eval(main_argc, &mut main_frame, self, true)? {
+        match main_f.eval(main_argc, &mut main_frame, self, &Default::default(), true)? {
             crate::runtime_value::CallResult::OkNoValue
             | crate::runtime_value::CallResult::Ok(_) => Ok(RunloopExit::Ok(())),
             crate::runtime_value::CallResult::Exception(e) => Ok(RunloopExit::Exception(e)),
