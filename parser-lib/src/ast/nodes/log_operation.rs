@@ -9,6 +9,7 @@ use crate::{
 };
 
 impl Derive for LogOperation {
+    #[allow(clippy::len_zero)]
     fn from_parse_tree(p: pest::iterators::Pair<'_, Rule>, source: &SourceBuffer) -> Self {
         assert!(p.as_rule() == Rule::log);
         let loc = From::from(&p.as_span());
