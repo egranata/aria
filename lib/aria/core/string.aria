@@ -44,7 +44,7 @@ extension String {
     }
 
     func repeat(n: Int) {
-        if n == 0 { return ""; }
+        if n <= 0 { return ""; }
         if n == 1 { return this; }
         val ret = this;
         while n > 1 {

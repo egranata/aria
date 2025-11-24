@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+assert "hello"*-3 == "";
+assert "aria"*0 == "";
+assert "test"*-2 == "";
