@@ -20,13 +20,10 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
                 self.loc.clone(),
             );
         if let Some(p) = &self.payload {
-            let if_true = params.writer.insert_block_after(
-                &format!("if_true_{}", self.loc),
+            let if_false = params.writer.insert_block_after(
+                &format!("if_false_{}", self.loc),
                 &params.writer.get_current_block(),
             );
-            let if_false = params
-                .writer
-                .insert_block_after(&format!("if_false_{}", self.loc), &if_true);
             let if_payload_after = params
                 .writer
                 .insert_block_after(&format!("if_payload_after{}", self.loc), &if_false);
@@ -34,29 +31,9 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::JumpTrue(if_true.clone()),
+                    BasicBlockOpcode::JumpFalse(if_false.clone()),
                     self.loc.clone(),
                 );
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(if_false.clone()),
-                    self.loc.clone(),
-                );
-            params.writer.set_current_block(if_false.clone());
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(BasicBlockOpcode::PushFalse, self.loc.clone());
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(if_payload_after.clone()),
-                    self.loc.clone(),
-                );
-            params.writer.set_current_block(if_true);
             params.scope.emit_read(
                 "__match_control_expr",
                 &mut params.module.constants,
@@ -95,6 +72,18 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(BasicBlockOpcode::PushTrue, self.loc.clone());
+            params
+                .writer
+                .get_current_block()
+                .write_opcode_and_source_info(
+                    BasicBlockOpcode::Jump(if_payload_after.clone()),
+                    self.loc.clone(),
+                );
+            params.writer.set_current_block(if_false.clone());
+            params
+                .writer
+                .get_current_block()
+                .write_opcode_and_source_info(BasicBlockOpcode::PushFalse, self.loc.clone());
             params
                 .writer
                 .get_current_block()
