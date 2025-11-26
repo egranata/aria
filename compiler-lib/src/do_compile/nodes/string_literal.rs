@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::ConstantValue,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::StringLiteral {
@@ -15,7 +15,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::StringLiteral {
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Push(const_idx), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Push(const_idx), self.loc.clone());
         Ok(())
     }
 }

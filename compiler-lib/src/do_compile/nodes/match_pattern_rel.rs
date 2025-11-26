@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternRel {
@@ -12,29 +12,26 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternRel {
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode_and_source_info(BasicBlockOpcode::LessThan, self.loc.clone());
+                    .write_opcode_and_source_info(CompilerOpcode::LessThan, self.loc.clone());
             }
             aria_parser::ast::RelSymbol::LessEqual => {
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode_and_source_info(
-                        BasicBlockOpcode::LessThanEqual,
-                        self.loc.clone(),
-                    );
+                    .write_opcode_and_source_info(CompilerOpcode::LessThanEqual, self.loc.clone());
             }
             aria_parser::ast::RelSymbol::Greater => {
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode_and_source_info(BasicBlockOpcode::GreaterThan, self.loc.clone());
+                    .write_opcode_and_source_info(CompilerOpcode::GreaterThan, self.loc.clone());
             }
             aria_parser::ast::RelSymbol::GreaterEqual => {
                 params
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::GreaterThanEqual,
+                        CompilerOpcode::GreaterThanEqual,
                         self.loc.clone(),
                     );
             }

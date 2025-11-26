@@ -5,343 +5,17 @@ use aria_parser::ast::SourcePointer;
 use haxby_opcodes::Opcode;
 
 use crate::{
-    CompilationOptions, bc_writer::BytecodeWriter, constant_value::ConstantValues,
-    line_table::LineTable,
+    CompilationOptions, bc_writer::BytecodeWriter, builder::compiler_opcodes::CompilerOpcode,
+    constant_value::ConstantValues, line_table::LineTable,
 };
 
-pub enum BasicBlockOpcode {
-    Nop,
-    Push(u16),
-    Push0,
-    Push1,
-    PushTrue,
-    PushFalse,
-    PushBuiltinTy(u8),
-    PushRuntimeValue(u8),
-    Pop,
-    Dup,
-    Swap,
-    Copy(u8),
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Rem,
-    Neg,
-    ShiftLeft,
-    ShiftRight,
-    Not,
-    Equal,
-    ReadLocal(u8),
-    WriteLocal(u8),
-    TypedefLocal(u8),
-    ReadNamed(u16),
-    WriteNamed(u16),
-    TypedefNamed(u16),
-    ReadIndex(u8),
-    WriteIndex(u8),
-    ReadAttribute(u16),
-    WriteAttribute(u16),
-    ReadUplevel(u8),
-    LogicalAnd,
-    BitwiseAnd,
-    LogicalOr,
-    BitwiseOr,
-    Xor,
-    GreaterThan,
-    GreaterThanEqual,
-    LessThan,
-    LessThanEqual,
-    JumpTrue(Rc<BasicBlock>),
-    JumpFalse(Rc<BasicBlock>),
-    Jump(Rc<BasicBlock>),
-    JumpIfArgSupplied(u8, Rc<BasicBlock>),
-    Call(u8),
-    Return,
-    TryEnter(Rc<BasicBlock>),
-    TryExit,
-    Throw,
-    BuildList(u32),
-    BuildFunction(u8),
-    StoreUplevel(u8),
-    BuildStruct,
-    BuildEnum,
-    BuildMixin,
-    BindMethod(u8, u16),
-    BindCase(u8, u16),
-    IncludeMixin,
-    NewEnumVal(u16),
-    EnumCheckIsCase(u16),
-    EnumExtractPayload,
-    TryUnwrapProtocol(u8),
-    Isa,
-    Import(u16),
-    LiftModule,
-    LoadDylib(u16),
-    Assert(u16),
-    Halt,
-}
-
-impl BasicBlockOpcode {
-    pub fn is_terminal(&self) -> bool {
-        match self {
-            Self::Nop => false,
-            Self::Push(_) => false,
-            Self::Push0 => false,
-            Self::Push1 => false,
-            Self::PushTrue => false,
-            Self::PushFalse => false,
-            Self::PushBuiltinTy(_) => false,
-            Self::PushRuntimeValue(_) => false,
-            Self::Pop => false,
-            Self::Dup => false,
-            Self::Swap => false,
-            Self::Copy(_) => false,
-            Self::Add => false,
-            Self::Sub => false,
-            Self::Mul => false,
-            Self::Div => false,
-            Self::Rem => false,
-            Self::Neg => false,
-            Self::ShiftLeft => false,
-            Self::ShiftRight => false,
-            Self::Not => false,
-            Self::Equal => false,
-            Self::ReadLocal(_) => false,
-            Self::WriteLocal(_) => false,
-            Self::TypedefLocal(_) => false,
-            Self::ReadNamed(_) => false,
-            Self::WriteNamed(_) => false,
-            Self::TypedefNamed(_) => false,
-            Self::ReadIndex(_) => false,
-            Self::WriteIndex(_) => false,
-            Self::ReadAttribute(_) => false,
-            Self::WriteAttribute(_) => false,
-            Self::ReadUplevel(_) => false,
-            Self::LogicalAnd => false,
-            Self::LogicalOr => false,
-            Self::Xor => false,
-            Self::BitwiseAnd => false,
-            Self::BitwiseOr => false,
-            Self::LessThan => false,
-            Self::GreaterThan => false,
-            Self::LessThanEqual => false,
-            Self::GreaterThanEqual => false,
-            Self::JumpTrue(_) => false,
-            Self::JumpFalse(_) => false,
-            Self::Jump(_) => true,
-            Self::JumpIfArgSupplied(..) => false,
-            Self::Call(_) => false,
-            Self::Return => true,
-            Self::TryEnter(_) => false,
-            Self::TryExit => false,
-            Self::Throw => true,
-            Self::BuildList(_) => false,
-            Self::BuildFunction(_) => false,
-            Self::StoreUplevel(_) => false,
-            Self::BuildStruct => false,
-            Self::BuildEnum => false,
-            Self::BuildMixin => false,
-            Self::BindMethod(..) => false,
-            Self::BindCase(..) => false,
-            Self::IncludeMixin => false,
-            Self::NewEnumVal(_) => false,
-            Self::EnumCheckIsCase(_) => false,
-            Self::EnumExtractPayload => false,
-            Self::TryUnwrapProtocol(_) => false,
-            Self::Isa => false,
-            Self::Import(_) => false,
-            Self::LiftModule => false,
-            Self::LoadDylib(_) => false,
-            Self::Assert(_) => false,
-            Self::Halt => true,
-        }
-    }
-
-    pub fn byte_size(&self) -> usize {
-        match self {
-            Self::Nop => 1,
-            Self::Push(_) => 3,
-            Self::Push0 => 1,
-            Self::Push1 => 1,
-            Self::PushTrue => 1,
-            Self::PushFalse => 1,
-            Self::PushBuiltinTy(_) => 2,
-            Self::PushRuntimeValue(_) => 2,
-            Self::Pop => 1,
-            Self::Dup => 1,
-            Self::Swap => 1,
-            Self::Copy(_) => 2,
-            Self::Add => 1,
-            Self::Sub => 1,
-            Self::Mul => 1,
-            Self::Div => 1,
-            Self::Rem => 1,
-            Self::Neg => 1,
-            Self::ShiftLeft => 1,
-            Self::ShiftRight => 1,
-            Self::Not => 1,
-            Self::Equal => 1,
-            Self::ReadLocal(_) => 2,
-            Self::WriteLocal(_) => 2,
-            Self::TypedefLocal(_) => 2,
-            Self::ReadNamed(_) => 3,
-            Self::WriteNamed(_) => 3,
-            Self::TypedefNamed(_) => 3,
-            Self::ReadIndex(_) => 2,
-            Self::WriteIndex(_) => 2,
-            Self::ReadAttribute(_) => 3,
-            Self::WriteAttribute(_) => 3,
-            Self::ReadUplevel(_) => 2,
-            Self::LogicalAnd => 1,
-            Self::LogicalOr => 1,
-            Self::Xor => 1,
-            Self::BitwiseAnd => 1,
-            Self::BitwiseOr => 1,
-            Self::GreaterThan => 1,
-            Self::LessThan => 1,
-            Self::GreaterThanEqual => 1,
-            Self::LessThanEqual => 1,
-            Self::JumpTrue(_) => 3,
-            Self::JumpFalse(_) => 3,
-            Self::Jump(_) => 3,
-            Self::JumpIfArgSupplied(..) => 4,
-            Self::Call(_) => 2,
-            Self::Return => 1,
-            Self::TryEnter(_) => 3,
-            Self::TryExit => 1,
-            Self::Throw => 1,
-            Self::BuildList(_) => 5,
-            Self::BuildFunction(_) => 2,
-            Self::StoreUplevel(_) => 2,
-            Self::BuildStruct => 1,
-            Self::BuildEnum => 1,
-            Self::BuildMixin => 1,
-            Self::BindMethod(..) => 4,
-            Self::BindCase(..) => 4,
-            Self::IncludeMixin => 1,
-            Self::NewEnumVal(_) => 3,
-            Self::EnumCheckIsCase(_) => 3,
-            Self::EnumExtractPayload => 1,
-            Self::TryUnwrapProtocol(_) => 2,
-            Self::Isa => 1,
-            Self::Import(_) => 3,
-            Self::LiftModule => 1,
-            Self::LoadDylib(_) => 3,
-            Self::Assert(_) => 3,
-            Self::Halt => 1,
-        }
-    }
-
-    pub fn is_jump_instruction(&self) -> Option<Rc<BasicBlock>> {
-        match self {
-            Self::TryEnter(dst)
-            | Self::JumpIfArgSupplied(_, dst)
-            | Self::Jump(dst)
-            | Self::JumpTrue(dst)
-            | Self::JumpFalse(dst) => Some(dst.clone()),
-            _ => None,
-        }
-    }
-
-    pub fn to_opcodes(&self, parent: &FunctionBuilder) -> Vec<Opcode> {
-        match self {
-            Self::Nop => vec![Opcode::Nop],
-            Self::Push(v) => vec![Opcode::Push(*v)],
-            Self::Push0 => vec![Opcode::Push0],
-            Self::Push1 => vec![Opcode::Push1],
-            Self::PushTrue => vec![Opcode::PushTrue],
-            Self::PushFalse => vec![Opcode::PushFalse],
-            Self::PushBuiltinTy(n) => vec![Opcode::PushBuiltinTy(*n)],
-            Self::PushRuntimeValue(n) => vec![Opcode::PushRuntimeValue(*n)],
-            Self::Pop => vec![Opcode::Pop],
-            Self::Dup => vec![Opcode::Dup],
-            Self::Swap => vec![Opcode::Swap],
-            Self::Copy(n) => vec![Opcode::Copy(*n)],
-            Self::Add => vec![Opcode::Add],
-            Self::Sub => vec![Opcode::Sub],
-            Self::Mul => vec![Opcode::Mul],
-            Self::Div => vec![Opcode::Div],
-            Self::Rem => vec![Opcode::Rem],
-            Self::Neg => vec![Opcode::Neg],
-            Self::ShiftLeft => vec![Opcode::ShiftLeft],
-            Self::ShiftRight => vec![Opcode::ShiftRight],
-            Self::Not => vec![Opcode::Not],
-            Self::Equal => vec![Opcode::Equal],
-            Self::ReadLocal(n) => vec![Opcode::ReadLocal(*n)],
-            Self::WriteLocal(n) => vec![Opcode::WriteLocal(*n)],
-            Self::TypedefLocal(n) => vec![Opcode::TypedefLocal(*n)],
-            Self::ReadNamed(n) => vec![Opcode::ReadNamed(*n)],
-            Self::WriteNamed(n) => vec![Opcode::WriteNamed(*n)],
-            Self::TypedefNamed(n) => vec![Opcode::TypedefNamed(*n)],
-            Self::ReadIndex(n) => vec![Opcode::ReadIndex(*n)],
-            Self::WriteIndex(n) => vec![Opcode::WriteIndex(*n)],
-            Self::ReadAttribute(n) => vec![Opcode::ReadAttribute(*n)],
-            Self::WriteAttribute(n) => vec![Opcode::WriteAttribute(*n)],
-            Self::ReadUplevel(n) => vec![Opcode::ReadUplevel(*n)],
-            Self::LogicalAnd => vec![Opcode::LogicalAnd],
-            Self::LogicalOr => vec![Opcode::LogicalOr],
-            Self::Xor => vec![Opcode::Xor],
-            Self::BitwiseAnd => vec![Opcode::BitwiseAnd],
-            Self::BitwiseOr => vec![Opcode::BitwiseOr],
-            Self::GreaterThan => vec![Opcode::GreaterThan],
-            Self::LessThan => vec![Opcode::LessThan],
-            Self::GreaterThanEqual => vec![Opcode::GreaterThanEqual],
-            Self::LessThanEqual => vec![Opcode::LessThanEqual],
-            Self::JumpTrue(dst) => {
-                let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![Opcode::JumpTrue(offset)]
-            }
-            Self::JumpFalse(dst) => {
-                let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![Opcode::JumpFalse(offset)]
-            }
-            Self::Jump(dst) => {
-                let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![Opcode::Jump(offset)]
-            }
-            Self::JumpIfArgSupplied(arg, dst) => {
-                let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![Opcode::JumpIfArgSupplied(*arg, offset)]
-            }
-            Self::Call(n) => vec![Opcode::Call(*n)],
-            Self::Return => vec![Opcode::Return],
-            Self::TryEnter(dst) => {
-                let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![Opcode::TryEnter(offset)]
-            }
-            Self::TryExit => vec![Opcode::TryExit],
-            Self::Throw => vec![Opcode::Throw],
-            Self::BuildList(v) => vec![Opcode::BuildList(*v)],
-            Self::BuildFunction(a) => vec![Opcode::BuildFunction(*a)],
-            Self::StoreUplevel(a) => vec![Opcode::StoreUplevel(*a)],
-            Self::BuildStruct => vec![Opcode::BuildStruct],
-            Self::BuildEnum => vec![Opcode::BuildEnum],
-            Self::BuildMixin => vec![Opcode::BuildMixin],
-            Self::BindMethod(x, y) => vec![Opcode::BindMethod(*x, *y)],
-            Self::BindCase(x, y) => vec![Opcode::BindCase(*x, *y)],
-            Self::IncludeMixin => vec![Opcode::IncludeMixin],
-            Self::NewEnumVal(v) => vec![Opcode::NewEnumVal(*v)],
-            Self::EnumCheckIsCase(v) => vec![Opcode::EnumCheckIsCase(*v)],
-            Self::EnumExtractPayload => vec![Opcode::EnumExtractPayload],
-            Self::TryUnwrapProtocol(v) => vec![Opcode::TryUnwrapProtocol(*v)],
-            Self::Isa => vec![Opcode::Isa],
-            Self::Import(v) => vec![Opcode::Import(*v)],
-            Self::LiftModule => vec![Opcode::LiftModule],
-            Self::LoadDylib(n) => vec![Opcode::LoadDylib(*n)],
-            Self::Assert(v) => vec![Opcode::Assert(*v)],
-            Self::Halt => vec![Opcode::Halt],
-        }
-    }
-}
-
 struct BasicBlockEntry {
-    op: BasicBlockOpcode,
+    op: CompilerOpcode,
     src: Option<SourcePointer>,
 }
 
-impl From<BasicBlockOpcode> for BasicBlockEntry {
-    fn from(op: BasicBlockOpcode) -> Self {
+impl From<CompilerOpcode> for BasicBlockEntry {
+    fn from(op: CompilerOpcode) -> Self {
         Self { op, src: None }
     }
 }
@@ -383,12 +57,12 @@ impl BasicBlock {
     }
 
     #[deprecated(note = "use write_opcode_and_source_info")]
-    pub fn write_opcode(&self, op: BasicBlockOpcode) -> &Self {
+    pub fn write_opcode(&self, op: CompilerOpcode) -> &Self {
         self.writer.borrow_mut().push(op.into());
         self
     }
 
-    pub fn write_opcode_and_source_info(&self, op: BasicBlockOpcode, src: SourcePointer) -> &Self {
+    pub fn write_opcode_and_source_info(&self, op: CompilerOpcode, src: SourcePointer) -> &Self {
         let bbe = BasicBlockEntry { op, src: Some(src) };
         self.writer.borrow_mut().push(bbe);
         self
@@ -426,7 +100,7 @@ impl BasicBlock {
 
         let mut br = self.writer.borrow_mut();
         for i in 0..br.len() {
-            if let BasicBlockOpcode::Jump(dest) = &br[i].op {
+            if let CompilerOpcode::Jump(dest) = &br[i].op {
                 let dest = dest.clone();
                 if dest.id == self.id {
                     continue;
@@ -435,8 +109,8 @@ impl BasicBlock {
                     continue;
                 }
                 let dest_br = dest.writer.borrow();
-                if let BasicBlockOpcode::Jump(final_dest) = &dest_br[0].op {
-                    br[i].op = BasicBlockOpcode::Jump(final_dest.clone());
+                if let CompilerOpcode::Jump(final_dest) = &dest_br[0].op {
+                    br[i].op = CompilerOpcode::Jump(final_dest.clone());
                     any = true;
                 }
             }
@@ -448,13 +122,13 @@ impl BasicBlock {
     fn optimize_true_false(&self, cv: &ConstantValues) {
         let mut br = self.writer.borrow_mut();
         for i in 0..br.len() {
-            if let BasicBlockOpcode::ReadNamed(idx) = &br[i].op
+            if let CompilerOpcode::ReadNamed(idx) = &br[i].op
                 && let Some(crate::constant_value::ConstantValue::String(x)) = cv.get(*idx as usize)
             {
                 if x == "true" {
-                    br[i].op = BasicBlockOpcode::PushTrue;
+                    br[i].op = CompilerOpcode::PushTrue;
                 } else if x == "false" {
-                    br[i].op = BasicBlockOpcode::PushFalse;
+                    br[i].op = CompilerOpcode::PushFalse;
                 }
             }
         }
@@ -465,15 +139,15 @@ impl BasicBlock {
         let mut i = 0;
         while i + 1 < br.len() {
             match (&br[i].op, &br[i + 1].op) {
-                (BasicBlockOpcode::PushTrue, BasicBlockOpcode::JumpTrue(target))
-                | (BasicBlockOpcode::PushFalse, BasicBlockOpcode::JumpFalse(target)) => {
-                    br[i].op = BasicBlockOpcode::Jump(target.clone());
+                (CompilerOpcode::PushTrue, CompilerOpcode::JumpTrue(target))
+                | (CompilerOpcode::PushFalse, CompilerOpcode::JumpFalse(target)) => {
+                    br[i].op = CompilerOpcode::Jump(target.clone());
                     br.remove(i + 1);
                     continue;
                 }
-                (BasicBlockOpcode::PushTrue, BasicBlockOpcode::JumpFalse(_))
-                | (BasicBlockOpcode::PushFalse, BasicBlockOpcode::JumpTrue(_)) => {
-                    br[i].op = BasicBlockOpcode::Nop;
+                (CompilerOpcode::PushTrue, CompilerOpcode::JumpFalse(_))
+                | (CompilerOpcode::PushFalse, CompilerOpcode::JumpTrue(_)) => {
+                    br[i].op = CompilerOpcode::Nop;
                     br.remove(i + 1);
                     continue;
                 }
@@ -503,15 +177,15 @@ impl BasicBlock {
         }
 
         for i in 0..br.len() - 1 {
-            if let BasicBlockOpcode::ReadLocal(x) = br[i].op {
+            if let CompilerOpcode::ReadLocal(x) = br[i].op {
                 let mut j = i + 1;
                 while j < br.len() {
                     match br[j].op {
-                        BasicBlockOpcode::ReadLocal(y) => {
+                        CompilerOpcode::ReadLocal(y) => {
                             if x != y {
                                 break;
                             } else {
-                                br[j].op = BasicBlockOpcode::Dup;
+                                br[j].op = CompilerOpcode::Dup;
                             }
                         }
                         _ => {
@@ -531,15 +205,15 @@ impl BasicBlock {
         }
 
         for i in 0..br.len() - 1 {
-            if let BasicBlockOpcode::ReadNamed(x) = br[i].op {
+            if let CompilerOpcode::ReadNamed(x) = br[i].op {
                 let mut j = i + 1;
                 while j < br.len() {
                     match br[j].op {
-                        BasicBlockOpcode::ReadNamed(y) => {
+                        CompilerOpcode::ReadNamed(y) => {
                             if x != y {
                                 break;
                             } else {
-                                br[j].op = BasicBlockOpcode::Dup;
+                                br[j].op = CompilerOpcode::Dup;
                             }
                         }
                         _ => {
@@ -559,19 +233,19 @@ impl BasicBlock {
         }
 
         for i in 0..br.len() - 1 {
-            if let BasicBlockOpcode::WriteLocal(x) = br[i].op
-                && let BasicBlockOpcode::ReadLocal(y) = br[i + 1].op
+            if let CompilerOpcode::WriteLocal(x) = br[i].op
+                && let CompilerOpcode::ReadLocal(y) = br[i + 1].op
                 && x == y
             {
-                br[i].op = BasicBlockOpcode::Dup;
-                br[i + 1].op = BasicBlockOpcode::WriteLocal(x);
+                br[i].op = CompilerOpcode::Dup;
+                br[i + 1].op = CompilerOpcode::WriteLocal(x);
             }
         }
     }
 
     fn remove_nop_instructions(&self) {
         let mut br = self.writer.borrow_mut();
-        br.retain(|x| !matches!(x.op, BasicBlockOpcode::Nop));
+        br.retain(|x| !matches!(x.op, CompilerOpcode::Nop));
     }
 
     fn remove_push_pop_pairs(&self) {
@@ -582,18 +256,18 @@ impl BasicBlock {
 
         for i in 0..br.len() - 1 {
             if let (
-                BasicBlockOpcode::Push0
-                | BasicBlockOpcode::Push1
-                | BasicBlockOpcode::PushFalse
-                | BasicBlockOpcode::PushTrue
-                | BasicBlockOpcode::Push(_)
-                | BasicBlockOpcode::PushBuiltinTy(_)
-                | BasicBlockOpcode::Dup,
-                BasicBlockOpcode::Pop,
+                CompilerOpcode::Push0
+                | CompilerOpcode::Push1
+                | CompilerOpcode::PushFalse
+                | CompilerOpcode::PushTrue
+                | CompilerOpcode::Push(_)
+                | CompilerOpcode::PushBuiltinTy(_)
+                | CompilerOpcode::Dup,
+                CompilerOpcode::Pop,
             ) = (&br[i].op, &br[i + 1].op)
             {
-                br[i].op = BasicBlockOpcode::Nop;
-                br[i + 1].op = BasicBlockOpcode::Nop;
+                br[i].op = CompilerOpcode::Nop;
+                br[i + 1].op = CompilerOpcode::Nop;
             }
         }
     }
@@ -616,17 +290,17 @@ impl BasicBlock {
 
         for i in 0..br.len() {
             match br[i].op {
-                BasicBlockOpcode::ReadLocal(x) => {
+                CompilerOpcode::ReadLocal(x) => {
                     assert!(!values.contains(&x));
                 }
-                BasicBlockOpcode::TypedefLocal(x) => {
+                CompilerOpcode::TypedefLocal(x) => {
                     if values.contains(&x) {
-                        br[i].op = BasicBlockOpcode::Pop;
+                        br[i].op = CompilerOpcode::Pop;
                     }
                 }
-                BasicBlockOpcode::WriteLocal(x) => {
+                CompilerOpcode::WriteLocal(x) => {
                     if values.contains(&x) {
-                        br[i].op = BasicBlockOpcode::Pop;
+                        br[i].op = CompilerOpcode::Pop;
                     }
                 }
                 _ => {}
@@ -638,15 +312,15 @@ impl BasicBlock {
         let br = self.writer.borrow();
         for i in 0..br.len() {
             match br[i].op {
-                BasicBlockOpcode::ReadLocal(x) | BasicBlockOpcode::StoreUplevel(x) => {
+                CompilerOpcode::ReadLocal(x) | CompilerOpcode::StoreUplevel(x) => {
                     dest.reads.insert(x);
                 }
-                BasicBlockOpcode::WriteLocal(x) => {
+                CompilerOpcode::WriteLocal(x) => {
                     dest.writes.insert(x);
                 }
-                BasicBlockOpcode::TypedefLocal(x) => {
+                CompilerOpcode::TypedefLocal(x) => {
                     if i > 0 {
-                        if let BasicBlockOpcode::PushBuiltinTy(x) = br[i - 1].op
+                        if let CompilerOpcode::PushBuiltinTy(x) = br[i - 1].op
                             && x == 1
                         {
                             dest.writes.insert(x);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams, do_enum_compile},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::EnumDecl {
@@ -10,7 +10,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::EnumDecl {
             params
                 .writer
                 .get_current_block()
-                .write_opcode_and_source_info(BasicBlockOpcode::Dup, self.loc.clone());
+                .write_opcode_and_source_info(CompilerOpcode::Dup, self.loc.clone());
             params
                 .scope
                 .emit_untyped_define(

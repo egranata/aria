@@ -5,8 +5,8 @@ use aria_parser::ast::SourcePointer;
 use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_ANY;
 
 use crate::{
-    constant_value::ConstantValues,
-    func_builder::{BasicBlock, BasicBlockOpcode},
+    builder::compiler_opcodes::CompilerOpcode, constant_value::ConstantValues,
+    func_builder::BasicBlock,
 };
 
 trait Numeric<Output = Self> {
@@ -108,7 +108,7 @@ impl ModuleRootScope {
         self.symbols
             .borrow_mut()
             .insert(name.to_owned(), symbol_idx);
-        dest.write_opcode_and_source_info(BasicBlockOpcode::TypedefNamed(symbol_idx), loc);
+        dest.write_opcode_and_source_info(CompilerOpcode::TypedefNamed(symbol_idx), loc);
         Ok(())
     }
 
@@ -120,7 +120,7 @@ impl ModuleRootScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::WriteNamed(*existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::WriteNamed(*existing_idx), loc);
             Ok(())
         } else {
             let symbol_idx = match consts.insert(crate::constant_value::ConstantValue::String(
@@ -134,7 +134,7 @@ impl ModuleRootScope {
                     });
                 }
             };
-            dest.write_opcode_and_source_info(BasicBlockOpcode::WriteNamed(symbol_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::WriteNamed(symbol_idx), loc);
             Ok(())
         }
     }
@@ -147,7 +147,7 @@ impl ModuleRootScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::ReadNamed(*existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::ReadNamed(*existing_idx), loc);
         } else {
             let symbol_idx = match consts.insert(crate::constant_value::ConstantValue::String(
                 name.to_owned(),
@@ -160,7 +160,7 @@ impl ModuleRootScope {
                     });
                 }
             };
-            dest.write_opcode_and_source_info(BasicBlockOpcode::ReadNamed(symbol_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::ReadNamed(symbol_idx), loc);
         }
         Ok(())
     }
@@ -210,7 +210,7 @@ impl ModuleChildScope {
         self.symbols
             .borrow_mut()
             .insert(name.to_owned(), symbol_idx);
-        dest.write_opcode_and_source_info(BasicBlockOpcode::TypedefNamed(symbol_idx), loc);
+        dest.write_opcode_and_source_info(CompilerOpcode::TypedefNamed(symbol_idx), loc);
         Ok(())
     }
 
@@ -222,7 +222,7 @@ impl ModuleChildScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::WriteNamed(*existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::WriteNamed(*existing_idx), loc);
             Ok(())
         } else {
             self.parent.emit_write(name, consts, dest, loc)
@@ -237,7 +237,7 @@ impl ModuleChildScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::ReadNamed(*existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::ReadNamed(*existing_idx), loc);
             Ok(())
         } else {
             self.parent.emit_read(name, consts, dest, loc)
@@ -308,7 +308,7 @@ impl FunctionRootScope {
     ) -> ScopeResult {
         let next_idx = self.index_provider.borrow_mut().next();
         self.symbols.borrow_mut().insert(name.to_owned(), next_idx);
-        dest.write_opcode_and_source_info(BasicBlockOpcode::TypedefLocal(next_idx), loc);
+        dest.write_opcode_and_source_info(CompilerOpcode::TypedefLocal(next_idx), loc);
         Ok(())
     }
 
@@ -320,13 +320,13 @@ impl FunctionRootScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::WriteLocal(*existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::WriteLocal(*existing_idx), loc);
             Ok(())
         } else if let Some(uplevel_info) =
             self.resolve_uplevel_symbol(name, dest.clone(), loc.clone(), false)?
         {
             dest.write_opcode_and_source_info(
-                BasicBlockOpcode::WriteLocal(uplevel_info.index_at_depth),
+                CompilerOpcode::WriteLocal(uplevel_info.index_at_depth),
                 loc.clone(),
             );
             Ok(())
@@ -357,13 +357,13 @@ impl FunctionRootScope {
             idx_in_uplevel: uplevel.index_at_depth,
         });
         dest.write_opcode_and_source_info(
-            BasicBlockOpcode::ReadUplevel(uplevel.index_at_depth),
+            CompilerOpcode::ReadUplevel(uplevel.index_at_depth),
             loc.clone(),
         );
         if want_dup_on_stack {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::Dup, loc.clone());
+            dest.write_opcode_and_source_info(CompilerOpcode::Dup, loc.clone());
         }
-        dest.write_opcode_and_source_info(BasicBlockOpcode::WriteLocal(index_in_local), loc);
+        dest.write_opcode_and_source_info(CompilerOpcode::WriteLocal(index_in_local), loc);
         Ok(UplevelSymbolResolution {
             depth: 0,
             index_at_depth: index_in_local,
@@ -379,7 +379,7 @@ impl FunctionRootScope {
     ) -> ScopeResult {
         let maybe_idx = self.symbols.borrow().get(name).cloned();
         if let Some(existing_idx) = maybe_idx {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::ReadLocal(existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::ReadLocal(existing_idx), loc);
             return Ok(());
         }
 
@@ -451,7 +451,7 @@ impl FunctionChildScope {
     ) -> ScopeResult {
         let next_idx = self.get_function_root().index_provider.borrow_mut().next();
         self.symbols.borrow_mut().insert(name.to_owned(), next_idx);
-        dest.write_opcode_and_source_info(BasicBlockOpcode::TypedefLocal(next_idx), loc);
+        dest.write_opcode_and_source_info(CompilerOpcode::TypedefLocal(next_idx), loc);
         Ok(())
     }
 
@@ -463,7 +463,7 @@ impl FunctionChildScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::WriteLocal(*existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::WriteLocal(*existing_idx), loc);
             Ok(())
         } else {
             self.parent.emit_write(name, consts, dest, loc)
@@ -478,7 +478,7 @@ impl FunctionChildScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         if let Some(existing_idx) = self.symbols.borrow().get(name) {
-            dest.write_opcode_and_source_info(BasicBlockOpcode::ReadLocal(*existing_idx), loc);
+            dest.write_opcode_and_source_info(CompilerOpcode::ReadLocal(*existing_idx), loc);
             Ok(())
         } else {
             self.parent.emit_read(name, consts, dest, loc)
@@ -568,7 +568,7 @@ impl CompilationScope {
         loc: SourcePointer,
     ) -> ScopeResult {
         dest.write_opcode_and_source_info(
-            BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
+            CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
             loc.clone(),
         );
         self.emit_typed_define(name, consts, dest.clone(), loc.clone())?;

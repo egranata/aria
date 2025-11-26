@@ -2,10 +2,10 @@
 use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_ANY;
 
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{
         CompilationError, CompilationErrorReason, CompilationResult, CompileNode, CompileParams,
     },
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::ValDeclEntry {
@@ -28,7 +28,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ValDeclEntry {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
+                    CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
                     self.loc.clone(),
                 );
         }

@@ -2,9 +2,9 @@
 use haxby_opcodes::enum_case_attribs::CASE_HAS_PAYLOAD;
 
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::ConstantValue,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::EnumCaseDecl {
@@ -12,7 +12,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::EnumCaseDecl {
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Dup, self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Dup, self.loc.clone());
         let attrib_byte = match &self.payload {
             Some(expr) => {
                 expr.do_compile(params)?;
@@ -29,7 +29,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::EnumCaseDecl {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::BindCase(attrib_byte, name_idx),
+                CompilerOpcode::BindCase(attrib_byte, name_idx),
                 self.loc.clone(),
             );
 

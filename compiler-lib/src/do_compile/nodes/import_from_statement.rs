@@ -2,9 +2,9 @@
 use haxby_opcodes::runtime_value_ids::RUNTIME_VALUE_THIS_MODULE;
 
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::ConstantValue,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::ImportFromStatement {
@@ -27,11 +27,11 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ImportFromStatement {
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::Import(path_idx),
+                            CompilerOpcode::Import(path_idx),
                             self.loc.clone(),
                         )
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::ReadAttribute(ident_idx),
+                            CompilerOpcode::ReadAttribute(ident_idx),
                             self.loc.clone(),
                         );
                     params.scope.emit_untyped_define(
@@ -52,14 +52,14 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ImportFromStatement {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::Import(path_idx),
+                        CompilerOpcode::Import(path_idx),
                         self.loc.clone(),
                     )
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::PushRuntimeValue(RUNTIME_VALUE_THIS_MODULE),
+                        CompilerOpcode::PushRuntimeValue(RUNTIME_VALUE_THIS_MODULE),
                         self.loc.clone(),
                     )
-                    .write_opcode_and_source_info(BasicBlockOpcode::LiftModule, self.loc.clone());
+                    .write_opcode_and_source_info(CompilerOpcode::LiftModule, self.loc.clone());
             }
         }
 
