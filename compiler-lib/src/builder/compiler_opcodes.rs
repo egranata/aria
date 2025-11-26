@@ -240,93 +240,93 @@ impl CompilerOpcode {
         }
     }
 
-    pub fn to_opcodes(&self, parent: &FunctionBuilder) -> Vec<VmOpcode> {
+    pub fn to_vm_opcode(&self, parent: &FunctionBuilder) -> VmOpcode {
         match self {
-            Self::Nop => vec![VmOpcode::Nop],
-            Self::Push(v) => vec![VmOpcode::Push(*v)],
-            Self::Push0 => vec![VmOpcode::Push0],
-            Self::Push1 => vec![VmOpcode::Push1],
-            Self::PushTrue => vec![VmOpcode::PushTrue],
-            Self::PushFalse => vec![VmOpcode::PushFalse],
-            Self::PushBuiltinTy(n) => vec![VmOpcode::PushBuiltinTy(*n)],
-            Self::PushRuntimeValue(n) => vec![VmOpcode::PushRuntimeValue(*n)],
-            Self::Pop => vec![VmOpcode::Pop],
-            Self::Dup => vec![VmOpcode::Dup],
-            Self::Swap => vec![VmOpcode::Swap],
-            Self::Copy(n) => vec![VmOpcode::Copy(*n)],
-            Self::Add => vec![VmOpcode::Add],
-            Self::Sub => vec![VmOpcode::Sub],
-            Self::Mul => vec![VmOpcode::Mul],
-            Self::Div => vec![VmOpcode::Div],
-            Self::Rem => vec![VmOpcode::Rem],
-            Self::Neg => vec![VmOpcode::Neg],
-            Self::ShiftLeft => vec![VmOpcode::ShiftLeft],
-            Self::ShiftRight => vec![VmOpcode::ShiftRight],
-            Self::Not => vec![VmOpcode::Not],
-            Self::Equal => vec![VmOpcode::Equal],
-            Self::ReadLocal(n) => vec![VmOpcode::ReadLocal(*n)],
-            Self::WriteLocal(n) => vec![VmOpcode::WriteLocal(*n)],
-            Self::TypedefLocal(n) => vec![VmOpcode::TypedefLocal(*n)],
-            Self::ReadNamed(n) => vec![VmOpcode::ReadNamed(*n)],
-            Self::WriteNamed(n) => vec![VmOpcode::WriteNamed(*n)],
-            Self::TypedefNamed(n) => vec![VmOpcode::TypedefNamed(*n)],
-            Self::ReadIndex(n) => vec![VmOpcode::ReadIndex(*n)],
-            Self::WriteIndex(n) => vec![VmOpcode::WriteIndex(*n)],
-            Self::ReadAttribute(n) => vec![VmOpcode::ReadAttribute(*n)],
-            Self::WriteAttribute(n) => vec![VmOpcode::WriteAttribute(*n)],
-            Self::ReadUplevel(n) => vec![VmOpcode::ReadUplevel(*n)],
-            Self::LogicalAnd => vec![VmOpcode::LogicalAnd],
-            Self::LogicalOr => vec![VmOpcode::LogicalOr],
-            Self::Xor => vec![VmOpcode::Xor],
-            Self::BitwiseAnd => vec![VmOpcode::BitwiseAnd],
-            Self::BitwiseOr => vec![VmOpcode::BitwiseOr],
-            Self::GreaterThan => vec![VmOpcode::GreaterThan],
-            Self::LessThan => vec![VmOpcode::LessThan],
-            Self::GreaterThanEqual => vec![VmOpcode::GreaterThanEqual],
-            Self::LessThanEqual => vec![VmOpcode::LessThanEqual],
+            Self::Nop => VmOpcode::Nop,
+            Self::Push(v) => VmOpcode::Push(*v),
+            Self::Push0 => VmOpcode::Push0,
+            Self::Push1 => VmOpcode::Push1,
+            Self::PushTrue => VmOpcode::PushTrue,
+            Self::PushFalse => VmOpcode::PushFalse,
+            Self::PushBuiltinTy(n) => VmOpcode::PushBuiltinTy(*n),
+            Self::PushRuntimeValue(n) => VmOpcode::PushRuntimeValue(*n),
+            Self::Pop => VmOpcode::Pop,
+            Self::Dup => VmOpcode::Dup,
+            Self::Swap => VmOpcode::Swap,
+            Self::Copy(n) => VmOpcode::Copy(*n),
+            Self::Add => VmOpcode::Add,
+            Self::Sub => VmOpcode::Sub,
+            Self::Mul => VmOpcode::Mul,
+            Self::Div => VmOpcode::Div,
+            Self::Rem => VmOpcode::Rem,
+            Self::Neg => VmOpcode::Neg,
+            Self::ShiftLeft => VmOpcode::ShiftLeft,
+            Self::ShiftRight => VmOpcode::ShiftRight,
+            Self::Not => VmOpcode::Not,
+            Self::Equal => VmOpcode::Equal,
+            Self::ReadLocal(n) => VmOpcode::ReadLocal(*n),
+            Self::WriteLocal(n) => VmOpcode::WriteLocal(*n),
+            Self::TypedefLocal(n) => VmOpcode::TypedefLocal(*n),
+            Self::ReadNamed(n) => VmOpcode::ReadNamed(*n),
+            Self::WriteNamed(n) => VmOpcode::WriteNamed(*n),
+            Self::TypedefNamed(n) => VmOpcode::TypedefNamed(*n),
+            Self::ReadIndex(n) => VmOpcode::ReadIndex(*n),
+            Self::WriteIndex(n) => VmOpcode::WriteIndex(*n),
+            Self::ReadAttribute(n) => VmOpcode::ReadAttribute(*n),
+            Self::WriteAttribute(n) => VmOpcode::WriteAttribute(*n),
+            Self::ReadUplevel(n) => VmOpcode::ReadUplevel(*n),
+            Self::LogicalAnd => VmOpcode::LogicalAnd,
+            Self::LogicalOr => VmOpcode::LogicalOr,
+            Self::Xor => VmOpcode::Xor,
+            Self::BitwiseAnd => VmOpcode::BitwiseAnd,
+            Self::BitwiseOr => VmOpcode::BitwiseOr,
+            Self::GreaterThan => VmOpcode::GreaterThan,
+            Self::LessThan => VmOpcode::LessThan,
+            Self::GreaterThanEqual => VmOpcode::GreaterThanEqual,
+            Self::LessThanEqual => VmOpcode::LessThanEqual,
             Self::JumpTrue(dst) => {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![VmOpcode::JumpTrue(offset)]
+                VmOpcode::JumpTrue(offset)
             }
             Self::JumpFalse(dst) => {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![VmOpcode::JumpFalse(offset)]
+                VmOpcode::JumpFalse(offset)
             }
             Self::Jump(dst) => {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![VmOpcode::Jump(offset)]
+                VmOpcode::Jump(offset)
             }
             Self::JumpIfArgSupplied(arg, dst) => {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![VmOpcode::JumpIfArgSupplied(*arg, offset)]
+                VmOpcode::JumpIfArgSupplied(*arg, offset)
             }
-            Self::Call(n) => vec![VmOpcode::Call(*n)],
-            Self::Return => vec![VmOpcode::Return],
+            Self::Call(n) => VmOpcode::Call(*n),
+            Self::Return => VmOpcode::Return,
             Self::TryEnter(dst) => {
                 let offset = parent.offset_of_block(dst).expect("invalid block") - 1;
-                vec![VmOpcode::TryEnter(offset)]
+                VmOpcode::TryEnter(offset)
             }
-            Self::TryExit => vec![VmOpcode::TryExit],
-            Self::Throw => vec![VmOpcode::Throw],
-            Self::BuildList(v) => vec![VmOpcode::BuildList(*v)],
-            Self::BuildFunction(a) => vec![VmOpcode::BuildFunction(*a)],
-            Self::StoreUplevel(a) => vec![VmOpcode::StoreUplevel(*a)],
-            Self::BuildStruct => vec![VmOpcode::BuildStruct],
-            Self::BuildEnum => vec![VmOpcode::BuildEnum],
-            Self::BuildMixin => vec![VmOpcode::BuildMixin],
-            Self::BindMethod(x, y) => vec![VmOpcode::BindMethod(*x, *y)],
-            Self::BindCase(x, y) => vec![VmOpcode::BindCase(*x, *y)],
-            Self::IncludeMixin => vec![VmOpcode::IncludeMixin],
-            Self::NewEnumVal(v) => vec![VmOpcode::NewEnumVal(*v)],
-            Self::EnumCheckIsCase(v) => vec![VmOpcode::EnumCheckIsCase(*v)],
-            Self::EnumExtractPayload => vec![VmOpcode::EnumExtractPayload],
-            Self::TryUnwrapProtocol(v) => vec![VmOpcode::TryUnwrapProtocol(*v)],
-            Self::Isa => vec![VmOpcode::Isa],
-            Self::Import(v) => vec![VmOpcode::Import(*v)],
-            Self::LiftModule => vec![VmOpcode::LiftModule],
-            Self::LoadDylib(n) => vec![VmOpcode::LoadDylib(*n)],
-            Self::Assert(v) => vec![VmOpcode::Assert(*v)],
-            Self::Halt => vec![VmOpcode::Halt],
+            Self::TryExit => VmOpcode::TryExit,
+            Self::Throw => VmOpcode::Throw,
+            Self::BuildList(v) => VmOpcode::BuildList(*v),
+            Self::BuildFunction(a) => VmOpcode::BuildFunction(*a),
+            Self::StoreUplevel(a) => VmOpcode::StoreUplevel(*a),
+            Self::BuildStruct => VmOpcode::BuildStruct,
+            Self::BuildEnum => VmOpcode::BuildEnum,
+            Self::BuildMixin => VmOpcode::BuildMixin,
+            Self::BindMethod(x, y) => VmOpcode::BindMethod(*x, *y),
+            Self::BindCase(x, y) => VmOpcode::BindCase(*x, *y),
+            Self::IncludeMixin => VmOpcode::IncludeMixin,
+            Self::NewEnumVal(v) => VmOpcode::NewEnumVal(*v),
+            Self::EnumCheckIsCase(v) => VmOpcode::EnumCheckIsCase(*v),
+            Self::EnumExtractPayload => VmOpcode::EnumExtractPayload,
+            Self::TryUnwrapProtocol(v) => VmOpcode::TryUnwrapProtocol(*v),
+            Self::Isa => VmOpcode::Isa,
+            Self::Import(v) => VmOpcode::Import(*v),
+            Self::LiftModule => VmOpcode::LiftModule,
+            Self::LoadDylib(n) => VmOpcode::LoadDylib(*n),
+            Self::Assert(v) => VmOpcode::Assert(*v),
+            Self::Halt => VmOpcode::Halt,
         }
     }
 }

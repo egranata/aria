@@ -25,8 +25,8 @@ impl BasicBlockEntry {
         self.op.byte_size()
     }
 
-    fn to_opcodes(&self, parent: &FunctionBuilder) -> Vec<Opcode> {
-        self.op.to_opcodes(parent)
+    fn to_vm_opcode(&self, parent: &FunctionBuilder) -> Opcode {
+        self.op.to_vm_opcode(parent)
     }
 }
 
@@ -342,9 +342,7 @@ impl BasicBlock {
     fn write(&self, parent: &FunctionBuilder, dest: &mut BytecodeWriter) {
         let br = self.writer.borrow();
         for src_op in br.as_slice() {
-            for dst_op in src_op.to_opcodes(parent) {
-                dest.write_opcode(&dst_op);
-            }
+            dest.write_opcode(&src_op.to_vm_opcode(parent));
         }
     }
 
@@ -352,12 +350,11 @@ impl BasicBlock {
         let mut cur_offset = offset;
         let br = self.writer.borrow();
         for src_op in br.as_slice() {
-            for dst_op in src_op.to_opcodes(parent) {
-                if let Some(src) = &src_op.src {
-                    line_table.insert(cur_offset - 1_u16, src.clone());
-                }
-                cur_offset += dst_op.byte_size() as u16;
+            let dst_op = src_op.to_vm_opcode(parent);
+            if let Some(src) = &src_op.src {
+                line_table.insert(cur_offset - 1_u16, src.clone());
             }
+            cur_offset += dst_op.byte_size() as u16;
         }
     }
 }
