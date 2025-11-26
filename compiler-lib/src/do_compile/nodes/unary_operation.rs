@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::UnaryOperation {
@@ -13,8 +13,8 @@ impl<'a> CompileNode<'a> for aria_parser::ast::UnaryOperation {
                 .get_current_block()
                 .write_opcode_and_source_info(
                     match op {
-                        aria_parser::ast::UnarySymbol::Exclamation => BasicBlockOpcode::Not,
-                        aria_parser::ast::UnarySymbol::Minus => BasicBlockOpcode::Neg,
+                        aria_parser::ast::UnarySymbol::Exclamation => CompilerOpcode::Not,
+                        aria_parser::ast::UnarySymbol::Minus => CompilerOpcode::Neg,
                     },
                     self.loc.clone(),
                 );

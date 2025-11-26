@@ -5,6 +5,7 @@ use module::CompiledModule;
 
 pub mod bc_reader;
 pub mod bc_writer;
+pub mod builder;
 pub mod constant_value;
 pub mod do_compile;
 pub mod dump;

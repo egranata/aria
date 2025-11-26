@@ -2,12 +2,13 @@
 use haxby_opcodes::{builtin_type_ids::BUILTIN_TYPE_UNIT, function_attribs::FUNC_ACCEPTS_VARARG};
 
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::{CompiledCodeObject, ConstantValue},
     do_compile::{
         CompilationError, CompilationResult, CompileNode, CompileParams, ControlFlowTargets,
         emit_args_at_target,
     },
-    func_builder::{BasicBlockOpcode, FunctionBuilder},
+    func_builder::FunctionBuilder,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
@@ -35,11 +36,11 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_UNIT),
+                CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_UNIT),
                 self.loc.clone(),
             )
-            .write_opcode_and_source_info(BasicBlockOpcode::NewEnumVal(unit), self.loc.clone())
-            .write_opcode_and_source_info(BasicBlockOpcode::Return, self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::NewEnumVal(unit), self.loc.clone())
+            .write_opcode_and_source_info(CompilerOpcode::Return, self.loc.clone());
 
         let co = match writer.write(&params.module.constants, params.options) {
             Ok(c) => c,
@@ -71,8 +72,8 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Push(cco_idx), self.loc.clone())
-            .write_opcode_and_source_info(BasicBlockOpcode::BuildFunction(a), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Push(cco_idx), self.loc.clone())
+            .write_opcode_and_source_info(CompilerOpcode::BuildFunction(a), self.loc.clone());
 
         for uplv in params
             .scope
@@ -86,7 +87,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::StoreUplevel(uplv.idx_in_uplevel),
+                    CompilerOpcode::StoreUplevel(uplv.idx_in_uplevel),
                     self.loc.clone(),
                 );
         }

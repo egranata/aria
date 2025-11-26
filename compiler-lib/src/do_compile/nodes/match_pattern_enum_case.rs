@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::ConstantValue,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
@@ -16,7 +16,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::EnumCheckIsCase(case_name_idx),
+                CompilerOpcode::EnumCheckIsCase(case_name_idx),
                 self.loc.clone(),
             );
         if let Some(p) = &self.payload {
@@ -31,7 +31,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::JumpFalse(if_false.clone()),
+                    CompilerOpcode::JumpFalse(if_false.clone()),
                     self.loc.clone(),
                 );
             params.scope.emit_read(
@@ -43,22 +43,19 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
             params
                 .writer
                 .get_current_block()
-                .write_opcode_and_source_info(
-                    BasicBlockOpcode::EnumExtractPayload,
-                    self.loc.clone(),
-                );
+                .write_opcode_and_source_info(CompilerOpcode::EnumExtractPayload, self.loc.clone());
             if let Some(ty) = &p.ty {
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode_and_source_info(BasicBlockOpcode::Dup, self.loc.clone());
+                    .write_opcode_and_source_info(CompilerOpcode::Dup, self.loc.clone());
                 ty.do_compile(params)?;
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode_and_source_info(BasicBlockOpcode::Isa, self.loc.clone())
+                    .write_opcode_and_source_info(CompilerOpcode::Isa, self.loc.clone())
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::JumpFalse(if_false.clone()),
+                        CompilerOpcode::JumpFalse(if_false.clone()),
                         self.loc.clone(),
                     );
             }
@@ -71,24 +68,24 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
             params
                 .writer
                 .get_current_block()
-                .write_opcode_and_source_info(BasicBlockOpcode::PushTrue, self.loc.clone());
+                .write_opcode_and_source_info(CompilerOpcode::PushTrue, self.loc.clone());
             params
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(if_payload_after.clone()),
+                    CompilerOpcode::Jump(if_payload_after.clone()),
                     self.loc.clone(),
                 );
             params.writer.set_current_block(if_false.clone());
             params
                 .writer
                 .get_current_block()
-                .write_opcode_and_source_info(BasicBlockOpcode::PushFalse, self.loc.clone());
+                .write_opcode_and_source_info(CompilerOpcode::PushFalse, self.loc.clone());
             params
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(if_payload_after.clone()),
+                    CompilerOpcode::Jump(if_payload_after.clone()),
                     self.loc.clone(),
                 );
             params.writer.set_current_block(if_payload_after);

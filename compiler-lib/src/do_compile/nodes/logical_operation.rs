@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::LogOperation {
@@ -15,27 +15,21 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LogOperation {
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(
-                            BasicBlockOpcode::BitwiseAnd,
-                            self.loc.clone(),
-                        );
+                        .write_opcode_and_source_info(CompilerOpcode::BitwiseAnd, self.loc.clone());
                 }
                 aria_parser::ast::LogSymbol::Pipe => {
                     right.1.do_compile(params)?;
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(
-                            BasicBlockOpcode::BitwiseOr,
-                            self.loc.clone(),
-                        );
+                        .write_opcode_and_source_info(CompilerOpcode::BitwiseOr, self.loc.clone());
                 }
                 aria_parser::ast::LogSymbol::Caret => {
                     right.1.do_compile(params)?;
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(BasicBlockOpcode::Xor, self.loc.clone());
+                        .write_opcode_and_source_info(CompilerOpcode::Xor, self.loc.clone());
                 }
                 aria_parser::ast::LogSymbol::DoubleAmpersand => {
                     let bb_and_true = params
@@ -48,21 +42,18 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LogOperation {
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::JumpTrue(bb_and_true.clone()),
+                            CompilerOpcode::JumpTrue(bb_and_true.clone()),
                             self.loc.clone(),
                         );
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(
-                            BasicBlockOpcode::PushFalse,
-                            self.loc.clone(),
-                        );
+                        .write_opcode_and_source_info(CompilerOpcode::PushFalse, self.loc.clone());
                     params
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::Jump(bb_and_done.clone()),
+                            CompilerOpcode::Jump(bb_and_done.clone()),
                             self.loc.clone(),
                         );
                     params.writer.set_current_block(bb_and_true);
@@ -71,7 +62,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LogOperation {
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::Jump(bb_and_done.clone()),
+                            CompilerOpcode::Jump(bb_and_done.clone()),
                             self.loc.clone(),
                         );
                     params.writer.set_current_block(bb_and_done);
@@ -87,7 +78,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LogOperation {
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::JumpTrue(bb_or_true.clone()),
+                            CompilerOpcode::JumpTrue(bb_or_true.clone()),
                             self.loc.clone(),
                         );
                     right.1.do_compile(params)?; // false or X == X
@@ -95,19 +86,19 @@ impl<'a> CompileNode<'a> for aria_parser::ast::LogOperation {
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::Jump(bb_or_done.clone()),
+                            CompilerOpcode::Jump(bb_or_done.clone()),
                             self.loc.clone(),
                         );
                     params.writer.set_current_block(bb_or_true);
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(BasicBlockOpcode::PushTrue, self.loc.clone());
+                        .write_opcode_and_source_info(CompilerOpcode::PushTrue, self.loc.clone());
                     params
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::Jump(bb_or_done.clone()),
+                            CompilerOpcode::Jump(bb_or_done.clone()),
                             self.loc.clone(),
                         );
                     params.writer.set_current_block(bb_or_done);
