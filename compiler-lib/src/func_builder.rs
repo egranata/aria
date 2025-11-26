@@ -233,6 +233,17 @@ impl BasicBlockOpcode {
         }
     }
 
+    pub fn is_jump_instruction(&self) -> Option<Rc<BasicBlock>> {
+        match self {
+            Self::TryEnter(dst)
+            | Self::JumpIfArgSupplied(_, dst)
+            | Self::Jump(dst)
+            | Self::JumpTrue(dst)
+            | Self::JumpFalse(dst) => Some(dst.clone()),
+            _ => None,
+        }
+    }
+
     pub fn to_opcodes(&self, parent: &FunctionBuilder) -> Vec<Opcode> {
         match self {
             Self::Nop => vec![Opcode::Nop],
@@ -797,14 +808,8 @@ impl FunctionBuilder {
         for blk in &self.blocks {
             let br = blk.writer.borrow();
             for src_op in br.as_slice() {
-                match &src_op.op {
-                    BasicBlockOpcode::TryEnter(dst)
-                    | BasicBlockOpcode::Jump(dst)
-                    | BasicBlockOpcode::JumpTrue(dst)
-                    | BasicBlockOpcode::JumpFalse(dst) => {
-                        orphans.remove(&dst.id);
-                    }
-                    _ => {}
+                if let Some(dst) = src_op.op.is_jump_instruction() {
+                    orphans.remove(&dst.id);
                 }
             }
         }
