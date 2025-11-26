@@ -5,6 +5,13 @@ func ok(v)  { return Result::Ok(v); }
 func err(e) { return Result::Err(e); }
 
 extension Result {
+    func apply(f) {
+        match this {
+            case Ok(x) => { return Result::Ok(f(x)); },
+            case Err(e) => { return Result::Err(e); }
+        }
+    }
+
     type func new_with_maybe(m: Maybe) {
         match m {
             case Some(v) => { return ok(v); }

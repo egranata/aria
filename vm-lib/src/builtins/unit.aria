@@ -1,18 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: no_std;
 
-enum Unit {
-    case unit
-
-    type func new() {
-        return Unit::unit;
-    }
-
-    func prettyprint() {
-        return "unit";
-    }
-
-    operator ==(rhs) {
-        return rhs isa Unit;
-    }
-}
+enum Unit { case unit }
