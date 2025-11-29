@@ -112,7 +112,8 @@ struct File {
     }
 
     func writeln(s) {
-        return this.write(s); this.write("\n");
+        this.write(s);
+        this.write("\n");
     }
 
     func get_position() {
