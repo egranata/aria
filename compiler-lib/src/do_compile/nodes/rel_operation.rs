@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::RelOperation {
@@ -14,12 +14,12 @@ impl<'a> CompileNode<'a> for aria_parser::ast::RelOperation {
                 .get_current_block()
                 .write_opcode_and_source_info(
                     match rhs.0 {
-                        aria_parser::ast::RelSymbol::Greater => BasicBlockOpcode::GreaterThan,
-                        aria_parser::ast::RelSymbol::Less => BasicBlockOpcode::LessThan,
+                        aria_parser::ast::RelSymbol::Greater => CompilerOpcode::GreaterThan,
+                        aria_parser::ast::RelSymbol::Less => CompilerOpcode::LessThan,
                         aria_parser::ast::RelSymbol::GreaterEqual => {
-                            BasicBlockOpcode::GreaterThanEqual
+                            CompilerOpcode::GreaterThanEqual
                         }
-                        aria_parser::ast::RelSymbol::LessEqual => BasicBlockOpcode::LessThanEqual,
+                        aria_parser::ast::RelSymbol::LessEqual => CompilerOpcode::LessThanEqual,
                     },
                     self.loc.clone(),
                 );

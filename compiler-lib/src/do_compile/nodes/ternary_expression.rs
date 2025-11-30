@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 use aria_parser::ast::TernaryExpression;
 
@@ -20,7 +20,7 @@ impl<'a> CompileNode<'a> for TernaryExpression {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::JumpFalse(false_branch.clone()),
+                CompilerOpcode::JumpFalse(false_branch.clone()),
                 self.loc.clone(),
             );
 
@@ -30,7 +30,7 @@ impl<'a> CompileNode<'a> for TernaryExpression {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::Jump(end_branch.clone()),
+                CompilerOpcode::Jump(end_branch.clone()),
                 self.loc.clone(),
             );
 
@@ -41,7 +41,7 @@ impl<'a> CompileNode<'a> for TernaryExpression {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::Jump(end_branch.clone()),
+                CompilerOpcode::Jump(end_branch.clone()),
                 self.loc.clone(),
             );
 

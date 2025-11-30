@@ -3,10 +3,11 @@ use std::rc::Rc;
 
 use crate::{
     frame::Frame,
-    vm::{ExecutionResult, RunloopExit, VirtualMachine},
+    runtime_value::function::PartialFunctionApplication,
+    vm::{ExecutionResult, VirtualMachine},
 };
 
-use super::{CallResult, RuntimeValue, function::Function, list::List};
+use super::{CallResult, RuntimeValue, function::Function};
 
 struct BoundFunctionImpl {
     this: RuntimeValue,
@@ -40,70 +41,10 @@ impl BoundFunction {
         vm: &mut VirtualMachine,
         discard_result: bool,
     ) -> ExecutionResult<CallResult> {
-        let mut new_frame = Frame::new_with_function(self.func().clone());
-
-        if self.func().attribute().is_vararg() {
-            if 1 + argc < self.func().arity().required {
-                return Err(
-                    crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.func().arity().required as usize,
-                        argc as usize,
-                    )
-                    .into(),
-                );
-            }
-
-            let l = List::default();
-            for i in 0..argc {
-                let arg = cur_frame.stack.pop();
-                if i < self.func().arity().required + self.func().arity().optional - 1 {
-                    new_frame.stack.at_head(arg);
-                } else {
-                    l.append(arg);
-                }
-            }
-
-            new_frame.stack.at_head(super::RuntimeValue::List(l));
-        } else {
-            if argc + 1 < self.func().arity().required {
-                return Err(
-                    crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.func().arity().required as usize,
-                        argc as usize,
-                    )
-                    .into(),
-                );
-            }
-            if argc + 1 > self.func().arity().required + self.func().arity().optional {
-                return Err(
-                    crate::error::vm_error::VmErrorReason::MismatchedArgumentCount(
-                        self.func().arity().required as usize
-                            + self.func().arity().optional as usize,
-                        argc as usize,
-                    )
-                    .into(),
-                );
-            }
-
-            for _ in 0..argc {
-                new_frame.stack.at_head(cur_frame.stack.pop());
-            }
-        }
-
-        new_frame.stack.push(self.this().clone());
-
-        match self.imp.func.eval_in_frame(argc + 1, &mut new_frame, vm)? {
-            RunloopExit::Ok(()) => match new_frame.stack.try_pop() {
-                Some(ret) => {
-                    if !discard_result {
-                        cur_frame.stack.push(ret.clone());
-                    }
-                    Ok(CallResult::Ok(ret))
-                }
-                _ => Ok(CallResult::OkNoValue),
-            },
-            RunloopExit::Exception(e) => Ok(CallResult::Exception(e)),
-        }
+        let partial_application =
+            PartialFunctionApplication::default().with_suffix_arg(self.this().clone());
+        self.func()
+            .eval(argc, cur_frame, vm, &partial_application, discard_result)
     }
 }
 

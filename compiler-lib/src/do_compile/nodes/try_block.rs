@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::TryBlock {
@@ -21,7 +21,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::TryBlock {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::Jump(try_block.clone()),
+                CompilerOpcode::Jump(try_block.clone()),
                 self.loc.clone(),
             );
         params.writer.set_current_block(try_block);
@@ -29,19 +29,19 @@ impl<'a> CompileNode<'a> for aria_parser::ast::TryBlock {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::TryEnter(catch_block.clone()),
+                CompilerOpcode::TryEnter(catch_block.clone()),
                 self.loc.clone(),
             );
         self.body.do_compile(params)?;
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::TryExit, self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::TryExit, self.loc.clone());
         params
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::Jump(after_block.clone()),
+                CompilerOpcode::Jump(after_block.clone()),
                 self.loc.clone(),
             );
         params.writer.set_current_block(catch_block);
@@ -66,7 +66,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::TryBlock {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::Jump(after_block.clone()),
+                CompilerOpcode::Jump(after_block.clone()),
                 self.loc.clone(),
             );
         catch_params.writer.set_current_block(after_block);

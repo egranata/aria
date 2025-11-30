@@ -84,7 +84,7 @@ dependencies = [
 
 [[package]]
 name = "aria-bin"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "ariadne",
  "clap",
@@ -261,9 +261,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.51"
+version = "4.5.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c26d721170e0295f191a69bd9a1f93efcdb0aff38684b61ab5750468972e5f5"
+checksum = "c9e340e012a1bf4935f5282ed1436d1489548e8f72308207ea5df0e23d2d03f8"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -271,9 +271,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.51"
+version = "4.5.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75835f0c7bf681bfd05abe44e965760fea999a5286c6eb2d59883634fd02011a"
+checksum = "d76b5d13eaa18c901fd2f7fca939fefe3a0727a953561fefdf3b2922b8569d00"
 dependencies = [
  "anstream",
  "anstyle",
@@ -307,7 +307,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "compiler-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "enum-as-inner",
  "lazy_static",
@@ -560,7 +560,7 @@ dependencies = [
 
 [[package]]
 name = "file-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "opcodes-lib",
  "vm-lib",
@@ -1113,9 +1113,9 @@ checksum = "2874a2af47a2325c2001a6e6fad9b16a53b802102b528163885171cf92b15976"
 
 [[package]]
 name = "libloading"
-version = "0.8.9"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55"
+checksum = "754ca22de805bb5744484a5b151a9e1a8e837d5dc232c2d7d8c2e3492edc8b60"
 dependencies = [
  "cfg-if 1.0.1",
  "windows-link 0.2.0",
@@ -1276,7 +1276,7 @@ dependencies = [
 
 [[package]]
 name = "network-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "opcodes-lib",
  "reqwest",
@@ -1337,7 +1337,7 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
 name = "opcodes-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 
 [[package]]
 name = "openssl"
@@ -1408,7 +1408,7 @@ dependencies = [
 
 [[package]]
 name = "parser-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "pest",
  "pest_derive",
@@ -1416,7 +1416,7 @@ dependencies = [
 
 [[package]]
 name = "path-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "glob",
  "opcodes-lib",
@@ -1431,9 +1431,9 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "pest"
-version = "2.8.3"
+version = "2.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "989e7521a040efde50c3ab6bbadafbe15ab6dc042686926be59ac35d74607df4"
+checksum = "cbcfd20a6d4eeba40179f05735784ad32bdaef05ce8e8af05f180d45bb3e7e22"
 dependencies = [
  "memchr",
  "ucd-trie",
@@ -1512,7 +1512,7 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
 name = "platform-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "opcodes-lib",
  "vm-lib",
@@ -1663,7 +1663,7 @@ dependencies = [
 
 [[package]]
 name = "regex-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "opcodes-lib",
  "regex",
@@ -2187,7 +2187,7 @@ dependencies = [
 
 [[package]]
 name = "test-bin"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "ariadne",
  "clap",
@@ -2228,7 +2228,7 @@ dependencies = [
 
 [[package]]
 name = "timezone-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "libc",
  "opcodes-lib",
@@ -2520,7 +2520,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vm-lib"
-version = "0.9.20251013"
+version = "0.9.20251118"
 dependencies = [
  "compiler-lib",
  "criterion",

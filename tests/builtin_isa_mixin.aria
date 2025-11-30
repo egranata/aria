@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+mixin Double {
+    func double(x) {
+        return x * 2;
+    }
+}
+
+extension Int {
+    include Double
+}
+
+func main() {
+    assert 3 isa Double;
+}

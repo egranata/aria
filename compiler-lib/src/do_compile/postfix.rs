@@ -2,7 +2,7 @@
 use aria_parser::ast::{Expression, ExpressionList, Identifier, SourcePointer};
 use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_RESULT;
 
-use crate::{constant_value::ConstantValue, func_builder::BasicBlockOpcode};
+use crate::{builder::compiler_opcodes::CompilerOpcode, constant_value::ConstantValue};
 
 use super::{
     CompilationError, CompilationErrorReason, CompilationResult, CompileNode, CompileParams,
@@ -63,7 +63,7 @@ impl<'a> PostfixValue {
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode_and_source_info(BasicBlockOpcode::Call(argc as u8), loc.clone());
+                    .write_opcode_and_source_info(CompilerOpcode::Call(argc as u8), loc.clone());
                 Ok(())
             }
             PostfixValue::Case(base, case, payload) => {
@@ -88,7 +88,7 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::NewEnumVal(identifier_idx),
+                        CompilerOpcode::NewEnumVal(identifier_idx),
                         case.loc.clone(),
                     );
                 Ok(())
@@ -100,7 +100,7 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::ReadIndex(index.expressions.len() as u8),
+                        CompilerOpcode::ReadIndex(index.expressions.len() as u8),
                         index.loc.clone(),
                     );
                 Ok(())
@@ -124,7 +124,7 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::ReadAttribute(identifier_idx),
+                        CompilerOpcode::ReadAttribute(identifier_idx),
                         identifier.loc.clone(),
                     );
                 Ok(())
@@ -135,7 +135,7 @@ impl<'a> PostfixValue {
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(BasicBlockOpcode::Dup, term.loc().clone());
+                        .write_opcode_and_source_info(CompilerOpcode::Dup, term.loc().clone());
                     match term {
                         ObjWrite::Field(field_write) => {
                             let identifier_idx = params
@@ -152,7 +152,7 @@ impl<'a> PostfixValue {
                                 .writer
                                 .get_current_block()
                                 .write_opcode_and_source_info(
-                                    BasicBlockOpcode::WriteAttribute(identifier_idx),
+                                    CompilerOpcode::WriteAttribute(identifier_idx),
                                     term.loc().clone(),
                                 );
                         }
@@ -163,7 +163,7 @@ impl<'a> PostfixValue {
                                 .writer
                                 .get_current_block()
                                 .write_opcode_and_source_info(
-                                    BasicBlockOpcode::WriteIndex(1_u8),
+                                    CompilerOpcode::WriteIndex(1_u8),
                                     term.loc().clone(),
                                 );
                         }
@@ -195,16 +195,16 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_RESULT),
+                        CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_RESULT),
                         tp.loc.clone(),
                     )
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::ReadAttribute(try_unwrap_protocol_idx),
+                        CompilerOpcode::ReadAttribute(try_unwrap_protocol_idx),
                         tp.loc.clone(),
                     )
-                    .write_opcode_and_source_info(BasicBlockOpcode::Call(1), tp.loc.clone())
+                    .write_opcode_and_source_info(CompilerOpcode::Call(1), tp.loc.clone())
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::TryUnwrapProtocol(mode),
+                        CompilerOpcode::TryUnwrapProtocol(mode),
                         tp.loc.clone(),
                     );
                 Ok(())
@@ -250,7 +250,7 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::WriteIndex(index.expressions.len() as u8),
+                        CompilerOpcode::WriteIndex(index.expressions.len() as u8),
                         index.loc.clone(),
                     );
                 Ok(())
@@ -275,7 +275,7 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::WriteAttribute(identifier_idx),
+                        CompilerOpcode::WriteAttribute(identifier_idx),
                         identifier.loc.clone(),
                     );
                 Ok(())

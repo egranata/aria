@@ -14,8 +14,9 @@ use thiserror::Error;
 
 use crate::{
     CompilationOptions,
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::{ConstantValue, ConstantValuesError},
-    func_builder::{BasicBlock, BasicBlockOpcode, FunctionBuilder},
+    func_builder::{BasicBlock, FunctionBuilder},
     module::CompiledModule,
     scope::{CompilationScope, ScopeError, ScopeErrorReason},
 };
@@ -197,14 +198,14 @@ fn emit_arg_at_target(
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::JumpIfArgSupplied(idx, block.clone()),
+                CompilerOpcode::JumpIfArgSupplied(idx, block.clone()),
                 arg.loc.clone(),
             );
         deft_expr.do_compile(params)?;
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Jump(block.clone()), arg.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Jump(block.clone()), arg.loc.clone());
         params.writer.set_current_block(block);
     }
     if let Some(ty) = arg.type_info() {
@@ -214,7 +215,7 @@ fn emit_arg_at_target(
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
+                CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_ANY),
                 arg.loc.clone(),
             );
     }
@@ -309,7 +310,7 @@ fn emit_type_mixin_include_decl_compile(
     params
         .writer
         .get_current_block()
-        .write_opcode_and_source_info(BasicBlockOpcode::IncludeMixin, mi.loc.clone());
+        .write_opcode_and_source_info(CompilerOpcode::IncludeMixin, mi.loc.clone());
     Ok(())
 }
 
@@ -326,7 +327,7 @@ fn emit_method_decl_compile(md: &MethodDecl, params: &mut CompileParams) -> Comp
         .writer
         .get_current_block()
         .write_opcode_and_source_info(
-            BasicBlockOpcode::BindMethod(
+            CompilerOpcode::BindMethod(
                 if md.args.vararg {
                     FUNC_ACCEPTS_VARARG
                 } else {
@@ -631,10 +632,7 @@ fn emit_type_val_decl_compile(
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(
-                BasicBlockOpcode::WriteAttribute(name_idx),
-                vd.loc.clone(),
-            );
+            .write_opcode_and_source_info(CompilerOpcode::WriteAttribute(name_idx), vd.loc.clone());
     }
     Ok(())
 }
@@ -649,7 +647,7 @@ fn emit_type_members_compile(
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Dup, se.loc().clone());
+            .write_opcode_and_source_info(CompilerOpcode::Dup, se.loc().clone());
 
         match se {
             aria_parser::ast::StructEntry::Method(md) => emit_method_decl_compile(md, params)?,
@@ -667,7 +665,7 @@ fn emit_type_members_compile(
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::WriteAttribute(name_idx),
+                        CompilerOpcode::WriteAttribute(name_idx),
                         sd.loc.clone(),
                     );
             }
@@ -676,11 +674,11 @@ fn emit_type_members_compile(
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(BasicBlockOpcode::Swap, ed.loc.clone());
+                        .write_opcode_and_source_info(CompilerOpcode::Swap, ed.loc.clone());
                     params
                         .writer
                         .get_current_block()
-                        .write_opcode_and_source_info(BasicBlockOpcode::Copy(1), ed.loc.clone());
+                        .write_opcode_and_source_info(CompilerOpcode::Copy(1), ed.loc.clone());
 
                     let name_idx = ed.insert_const_or_fail(
                         params,
@@ -692,7 +690,7 @@ fn emit_type_members_compile(
                         .writer
                         .get_current_block()
                         .write_opcode_and_source_info(
-                            BasicBlockOpcode::WriteAttribute(name_idx),
+                            CompilerOpcode::WriteAttribute(name_idx),
                             ed.loc.clone(),
                         );
                     Ok(())
@@ -710,7 +708,7 @@ fn emit_type_members_compile(
         params
             .writer
             .get_current_block()
-            .write_opcode(BasicBlockOpcode::Pop);
+            .write_opcode(CompilerOpcode::Pop);
     }
 
     Ok(())
@@ -725,7 +723,7 @@ fn do_struct_compile(sd: &StructDecl, params: &mut CompileParams) -> Compilation
     params
         .writer
         .get_current_block()
-        .write_opcode_and_source_info(BasicBlockOpcode::BuildStruct, sd.loc.clone());
+        .write_opcode_and_source_info(CompilerOpcode::BuildStruct, sd.loc.clone());
 
     emit_type_members_compile(&sd.body, params, false)
 }
@@ -747,7 +745,7 @@ where
     params
         .writer
         .get_current_block()
-        .write_opcode_and_source_info(BasicBlockOpcode::BuildEnum, ed.loc.clone());
+        .write_opcode_and_source_info(CompilerOpcode::BuildEnum, ed.loc.clone());
     name_writer(&ed.name.value, params)?;
 
     let mut cases: Vec<EnumCaseDecl> = vec![];
@@ -770,7 +768,7 @@ where
     params
         .writer
         .get_current_block()
-        .write_opcode_and_source_info(BasicBlockOpcode::Pop, ed.loc.clone());
+        .write_opcode_and_source_info(CompilerOpcode::Pop, ed.loc.clone());
 
     Ok(())
 }

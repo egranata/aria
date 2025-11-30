@@ -9,7 +9,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ExpressionStatement {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    crate::func_builder::BasicBlockOpcode::Pop,
+                    crate::builder::compiler_opcodes::CompilerOpcode::Pop,
                     self.loc.clone(),
                 );
         }

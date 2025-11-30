@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+val x = [1,2,3,4,5];
+
+assert x[-1] == 5;
+assert x[-2] == 4;
+assert x[-5] == 1;
+
+try {
+    println(x[-6]);
+} catch e {
+    assert e isa RuntimeError;
+    assert e.is_IndexOutOfBounds();
+}
+
+x[-1] = 10;
+assert x[4] == 10;
+x[-2] = 20;
+assert x[3] == 20;
+
+try {
+    x[-10] = 50;
+} catch e {
+    assert e isa RuntimeError;
+    assert e.is_IndexOutOfBounds();
+}
+

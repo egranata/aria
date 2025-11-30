@@ -1,17 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
+use aria_parser::ast::StringLiteral;
+
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams, emit_type_members_compile},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::MixinDecl {
     fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
+        let self_name = StringLiteral {
+            loc: self.loc.clone(),
+            value: self.name.value.clone(),
+        };
+        self_name.do_compile(params)?;
+
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::BuildMixin, self.loc.clone())
-            .write_opcode_and_source_info(BasicBlockOpcode::Dup, self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::BuildMixin, self.loc.clone())
+            .write_opcode_and_source_info(CompilerOpcode::Dup, self.loc.clone());
         params.scope.emit_untyped_define(
             &self.name.value,
             &mut params.module.constants,

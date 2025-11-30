@@ -38,7 +38,7 @@ impl PrettyPrintable for CompOperation {
     fn prettyprint(&self, buffer: PrintoutAccumulator) -> PrintoutAccumulator {
         let this = self.left.prettyprint(buffer);
         if let Some(right) = &self.right {
-            this << &right.0 << &right.1
+            this << " " << &right.0 << " " << &right.1
         } else {
             this
         }

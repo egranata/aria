@@ -7,13 +7,21 @@ use crate::runtime_value::object::ObjectBox;
 
 use super::RuntimeValue;
 
-#[derive(Default)]
 struct MixinImpl {
+    name: String,
     entries: ObjectBox,
     mixins: RefCell<crate::mixin_includer::MixinIncluder>,
 }
 
 impl MixinImpl {
+    fn new(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            entries: ObjectBox::default(),
+            mixins: RefCell::new(crate::mixin_includer::MixinIncluder::default()),
+        }
+    }
+
     fn load_named_value(&self, name: &str) -> Option<RuntimeValue> {
         if let Some(val) = self.entries.read(name) {
             Some(val.clone())
@@ -45,12 +53,22 @@ impl MixinImpl {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct Mixin {
     imp: Rc<MixinImpl>,
 }
 
 impl Mixin {
+    pub fn new(name: &str) -> Self {
+        Self {
+            imp: Rc::new(MixinImpl::new(name)),
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.imp.name
+    }
+
     pub fn load_named_value(&self, name: &str) -> Option<RuntimeValue> {
         self.imp.load_named_value(name)
     }

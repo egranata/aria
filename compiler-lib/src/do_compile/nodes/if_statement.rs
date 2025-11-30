@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::IfStatement {
@@ -37,7 +37,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::IfStatement {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::JumpFalse(after_all.clone()),
+                        CompilerOpcode::JumpFalse(after_all.clone()),
                         self.iff.content.loc.clone(),
                     );
             } else {
@@ -45,14 +45,14 @@ impl<'a> CompileNode<'a> for aria_parser::ast::IfStatement {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::JumpTrue(if_true.clone()),
+                        CompilerOpcode::JumpTrue(if_true.clone()),
                         self.iff.content.then.loc.clone(),
                     );
                 params
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::Jump(if_false.clone()),
+                        CompilerOpcode::Jump(if_false.clone()),
                         self.iff.content.loc.clone(),
                     );
                 params.writer.set_current_block(if_true);
@@ -62,7 +62,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::IfStatement {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(after_all.clone()),
+                    CompilerOpcode::Jump(after_all.clone()),
                     self.iff.content.loc.clone(),
                 );
             params.writer.set_current_block(if_false);
@@ -83,14 +83,14 @@ impl<'a> CompileNode<'a> for aria_parser::ast::IfStatement {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::JumpTrue(if_true.clone()),
+                        CompilerOpcode::JumpTrue(if_true.clone()),
                         elsif.content.then.loc.clone(),
                     );
                 params
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::Jump(if_false.clone()),
+                        CompilerOpcode::Jump(if_false.clone()),
                         elsif.content.loc.clone(),
                     );
                 params.writer.set_current_block(if_true);
@@ -99,7 +99,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::IfStatement {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::Jump(after_all.clone()),
+                        CompilerOpcode::Jump(after_all.clone()),
                         elsif.content.loc.clone(),
                     );
                 params.writer.set_current_block(if_false);
@@ -119,7 +119,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::IfStatement {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(after_all.clone()),
+                    CompilerOpcode::Jump(after_all.clone()),
                     self.loc.clone(),
                 );
         }

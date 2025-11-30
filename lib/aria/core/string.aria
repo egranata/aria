@@ -22,6 +22,15 @@ func is_digit(s: String) {
 }
 
 extension String {
+    operator[](index: Int) {
+        if index < 0 {
+            index += this.len();
+        }
+        return this._get_at(index);
+    }
+}
+
+extension String {
     struct EncodingError {
         type func new(msg: String) {
             return alloc(This) {
@@ -35,7 +44,7 @@ extension String {
     }
 
     func repeat(n: Int) {
-        if n == 0 { return ""; }
+        if n <= 0 { return ""; }
         if n == 1 { return this; }
         val ret = this;
         while n > 1 {

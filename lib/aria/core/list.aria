@@ -4,8 +4,24 @@ flag: no_std;
 import Box from aria.core.box;
 
 extension List {
+    operator[](index: Int) {
+        if index < 0 {
+            index += this.len();
+        }
+        return this._get_at(index);
+    }
+
+    operator[]=(index: Int, value) {
+        if index < 0 {
+            index += this.len();
+        }
+        this._set_at(index, value);
+    }
+}
+
+extension List {
     func repeat(n: Int) {
-        if n == 0 { return []; }
+        if n <= 0 { return []; }
         if n == 1 { return this; }
         val ret = this;
         while n > 1 {

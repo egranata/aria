@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: Apache-2.0
+import ok,err from aria.core.result;
+
+mixin A {
+    func double(x) {
+        return x + x;
+    }
+}
+
+mixin B {
+    func double(x) {
+        return x * 2;
+    }
+}
+
+struct S {
+    include A
+}
+
+struct T {
+    include B
+}
+
+struct U {}
+
+func foo(x: A|B) {
+    return x.double(5);
+}
+
+func try_double(x) {
+    try {
+        return ok(foo(x));
+    } catch e {
+        return err(e);
+    }
+}
+
+func main() {
+    val s = alloc(S);
+    val t = alloc(T);
+    val u = alloc(U);
+
+    val double_s = try_double(s);
+    val double_t = try_double(t);
+    val double_u = try_double(u);
+
+    assert double_s.is_Ok();
+    assert double_s!! == 10;
+
+    assert double_t.is_Ok();
+    assert double_t!! == 10;
+
+    assert double_u.is_Err();
+}
