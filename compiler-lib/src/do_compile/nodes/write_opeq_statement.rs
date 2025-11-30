@@ -108,7 +108,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::WriteOpEqStatement {
                         &PostfixRvalue::from(&self.id),
                     ))),
                     right: Some((
-                        ShiftSymbol::Rightward, // Note: was Leftward in your code!
+                        ShiftSymbol::Rightward,
                         AddOperation::from(&MulOperation::from(&rhs_as_unary)),
                     )),
                 };
