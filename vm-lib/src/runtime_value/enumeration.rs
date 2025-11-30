@@ -6,20 +6,20 @@ use rustc_data_structures::fx::FxHashSet;
 
 use crate::runtime_value::{
     function::{BuiltinFunctionImpl, Function},
+    isa::IsaCheckable,
     object::ObjectBox,
 };
 
 use super::{
     RuntimeValue,
     enum_case::{EnumValue, EnumValueImpl},
-    kind::RuntimeValueType,
     mixin::Mixin,
 };
 
 #[derive(Clone)]
 pub struct EnumCase {
     pub name: String,
-    pub payload_type: Option<RuntimeValueType>,
+    pub payload_type: Option<IsaCheckable>,
 }
 
 #[derive(Default)]

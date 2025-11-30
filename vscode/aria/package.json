@@ -43,7 +43,7 @@
     ]
   },
   "dependencies": {
-		"glob": "^11.0.0",
+		"glob": "^11.1.0",
 		"vscode-languageclient": "^9.0.1"
 	},
 	"devDependencies": {

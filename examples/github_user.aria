@@ -8,7 +8,7 @@ val whoami = "egranata";
 func main() {
     val request = Request.new("https://api.github.com/users/{0}".format(whoami));
     request.headers["User-Agent"] = "AriaLang/1.0";
-    val response = request.get();
+    val response = request.get()!!;
 
     if response.status_code == 200 {
         val user_data = JsonValue.parse(response.content)!!.flatten();

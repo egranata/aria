@@ -31,6 +31,7 @@ use crate::{
         RuntimeValue,
         enumeration::{Enum, EnumCase},
         function::Function,
+        isa::IsaCheckable,
         kind::RuntimeValueType,
         list::List,
         mixin::Mixin,
@@ -498,7 +499,7 @@ impl VirtualMachine {
         let entry_f = Function::from_code_object(&entry_co, 0, &r_mod);
         let mut entry_frame: Frame = Default::default();
 
-        let entry_result = entry_f.eval(0, &mut entry_frame, self, true);
+        let entry_result = entry_f.eval(0, &mut entry_frame, self, &Default::default(), true);
         match entry_result {
             Ok(ok) => match ok {
                 crate::runtime_value::CallResult::Exception(e) => Ok(RunloopExit::Exception(e)),
@@ -569,7 +570,7 @@ impl VirtualMachine {
             return Err(VmErrorReason::InvalidMainSignature.into());
         };
 
-        match main_f.eval(main_argc, &mut main_frame, self, true)? {
+        match main_f.eval(main_argc, &mut main_frame, self, &Default::default(), true)? {
             crate::runtime_value::CallResult::OkNoValue
             | crate::runtime_value::CallResult::Ok(_) => Ok(RunloopExit::Ok(())),
             crate::runtime_value::CallResult::Exception(e) => Ok(RunloopExit::Exception(e)),
@@ -965,7 +966,7 @@ impl VirtualMachine {
             Opcode::WriteLocal(n) => {
                 let x = pop_or_err!(next, frame, op_idx);
                 let local = &mut frame.locals[n as usize];
-                if !x.isa(&local.ty, &self.builtins) {
+                if !local.ty.isa_check(&x, &self.builtins) {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 } else {
                     local.val = x;
@@ -973,8 +974,8 @@ impl VirtualMachine {
             }
             Opcode::TypedefLocal(n) => {
                 let t = pop_or_err!(next, frame, op_idx);
-                if let Some(t) = t.as_type() {
-                    frame.locals[n as usize].ty = t.clone();
+                if let Ok(isa_check) = IsaCheckable::try_from(&t) {
+                    frame.locals[n as usize].ty = isa_check;
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
@@ -1003,11 +1004,11 @@ impl VirtualMachine {
             }
             Opcode::TypedefNamed(n) => {
                 let t = pop_or_err!(next, frame, op_idx);
-                if let Some(t) = t.as_type() {
+                if let Ok(t) = IsaCheckable::try_from(&t) {
                     if let Some(ct) = this_module.load_indexed_const(n)
                         && let Some(sv) = ct.as_string()
                     {
-                        this_module.typedef_named_value(sv, t.clone());
+                        this_module.typedef_named_value(sv, t);
                     }
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
@@ -1166,6 +1167,10 @@ impl VirtualMachine {
                 let y = pop_or_err!(next, frame, op_idx);
                 if let (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) = (&x, &y) {
                     frame.stack.push(RuntimeValue::Integer(a & b));
+                } else if let Ok(x) = IsaCheckable::try_from(&x)
+                    && let Ok(y) = IsaCheckable::try_from(&y)
+                {
+                    frame.stack.push(RuntimeValue::TypeCheck(x & &y));
                 } else {
                     binop_eval!(
                         (RuntimeValue::bitwise_and(&y, &x, frame, self)),
@@ -1180,8 +1185,10 @@ impl VirtualMachine {
                 let y = pop_or_err!(next, frame, op_idx);
                 if let (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) = (&x, &y) {
                     frame.stack.push(RuntimeValue::Integer(a | b));
-                } else if let (RuntimeValue::Type(a), RuntimeValue::Type(b)) = (&x, &y) {
-                    frame.stack.push(RuntimeValue::Type(a | b));
+                } else if let Ok(x) = IsaCheckable::try_from(&x)
+                    && let Ok(y) = IsaCheckable::try_from(&y)
+                {
+                    frame.stack.push(RuntimeValue::TypeCheck(x | &y));
                 } else {
                     binop_eval!(
                         (RuntimeValue::bitwise_or(&y, &x, frame, self)),
@@ -1313,7 +1320,14 @@ impl VirtualMachine {
                 }
             }
             Opcode::BuildMixin => {
-                frame.stack.push(RuntimeValue::Mixin(Mixin::default()));
+                let name = pop_or_err!(next, frame, op_idx);
+                if let Some(name) = name.as_string() {
+                    frame
+                        .stack
+                        .push(RuntimeValue::Mixin(Mixin::new(&name.raw_value())));
+                } else {
+                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                }
             }
             Opcode::IncludeMixin => {
                 let mixin = pop_or_err!(next, frame, op_idx);
@@ -1368,10 +1382,10 @@ impl VirtualMachine {
             Opcode::BindCase(a, n) => {
                 let payload_type = if (a & CASE_HAS_PAYLOAD) == CASE_HAS_PAYLOAD {
                     let t = pop_or_err!(next, frame, op_idx);
-                    if !t.is_type() {
-                        return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    if let Ok(t) = IsaCheckable::try_from(&t) {
+                        Some(t)
                     } else {
-                        t.as_type().cloned()
+                        return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                     }
                 } else {
                     None
@@ -1429,7 +1443,7 @@ impl VirtualMachine {
                         let payload = match &case.payload_type {
                             Some(pt) => {
                                 let pv = pop_or_err!(next, frame, op_idx);
-                                if !pv.isa(pt, &self.builtins) {
+                                if !pt.isa_check(&pv, &self.builtins) {
                                     return build_vm_error!(
                                         VmErrorReason::UnexpectedType,
                                         next,
@@ -1576,14 +1590,10 @@ impl VirtualMachine {
             Opcode::Isa => {
                 let t = pop_or_err!(next, frame, op_idx);
                 let val = pop_or_err!(next, frame, op_idx);
-                if let Some(t) = t.as_type() {
-                    frame
-                        .stack
-                        .push(RuntimeValue::Boolean(val.isa(t, &self.builtins).into()));
-                } else if let Some(mx) = t.as_mixin() {
-                    frame
-                        .stack
-                        .push(RuntimeValue::Boolean(val.isa_mixin(mx).into()));
+                if let Ok(isa_check) = IsaCheckable::try_from(&t) {
+                    frame.stack.push(RuntimeValue::Boolean(
+                        isa_check.isa_check(&val, &self.builtins).into(),
+                    ));
                 } else {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }

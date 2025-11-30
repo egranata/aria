@@ -2,9 +2,9 @@
 use aria_parser::ast::prettyprint::{PrettyPrintable, printout_accumulator::PrintoutAccumulator};
 
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::ConstantValue,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::AssertStatement {
@@ -16,7 +16,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::AssertStatement {
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Assert(msg_idx), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Assert(msg_idx), self.loc.clone());
         Ok(())
     }
 }

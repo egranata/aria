@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::MatchStatement {
@@ -61,7 +61,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchStatement {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        BasicBlockOpcode::JumpFalse(match_miss.clone()),
+                        CompilerOpcode::JumpFalse(match_miss.clone()),
                         pattern.loc().clone(),
                     );
             }
@@ -69,7 +69,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchStatement {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(match_hit.clone()),
+                    CompilerOpcode::Jump(match_hit.clone()),
                     rule.loc.clone(),
                 );
             rule_param.writer.set_current_block(match_hit);
@@ -78,7 +78,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchStatement {
                 .writer
                 .get_current_block()
                 .write_opcode_and_source_info(
-                    BasicBlockOpcode::Jump(match_after.clone()),
+                    CompilerOpcode::Jump(match_after.clone()),
                     rule.loc.clone(),
                 );
             rule_param.writer.set_current_block(match_miss);
@@ -91,7 +91,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MatchStatement {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::Jump(match_after.clone()),
+                CompilerOpcode::Jump(match_after.clone()),
                 self.loc.clone(),
             );
         match_param.writer.set_current_block(match_after);

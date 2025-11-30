@@ -43,6 +43,10 @@ impl BuiltinTypeImpl {
         self.mixins.borrow_mut().include(mixin.clone());
     }
 
+    fn isa_mixin(&self, mixin: &Mixin) -> bool {
+        self.mixins.borrow().contains(mixin)
+    }
+
     fn list_attributes(&self) -> FxHashSet<String> {
         let mut attrs = self.boxx.list_attributes();
         attrs.extend(self.mixins.borrow().list_attributes());
@@ -84,6 +88,10 @@ impl BuiltinType {
 
     pub fn include_mixin(&self, mixin: &Mixin) {
         self.imp.include_mixin(mixin);
+    }
+
+    pub fn isa_mixin(&self, mixin: &Mixin) -> bool {
+        self.imp.isa_mixin(mixin)
     }
 
     pub fn insert_builtin<T>(&self)

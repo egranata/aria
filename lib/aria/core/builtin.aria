@@ -20,3 +20,7 @@ import aria.core.result;
 import aria.core.string;
 
 import Nothing from aria.core.nothing;
+
+import aria.core.unimplemented;
+
+import aria.core.unit;

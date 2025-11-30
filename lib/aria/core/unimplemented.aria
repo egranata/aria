@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+flag: no_std;
+
+extension Unimplemented {
+    func prettyprint() = "unimplemented";
+
+    operator ==(rhs) = rhs isa Unimplemented;
+}

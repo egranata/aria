@@ -30,6 +30,7 @@ use crate::{
     error::vm_error::VmErrorReason,
     frame::Frame,
     runtime_module::RuntimeModule,
+    runtime_value::isa::IsaCheckable,
     vm::{ExecutionResult, VirtualMachine},
 };
 
@@ -42,6 +43,7 @@ pub mod enumeration;
 pub mod float;
 pub mod function;
 pub mod integer;
+pub mod isa;
 pub mod kind;
 pub mod list;
 pub mod mixin;
@@ -67,6 +69,7 @@ pub enum RuntimeValue {
     Type(RuntimeValueType),
     Module(RuntimeModule),
     Opaque(OpaqueValue),
+    TypeCheck(IsaCheckable),
 }
 
 impl RuntimeValue {
@@ -92,6 +95,7 @@ impl RuntimeValue {
             (Self::BoundFunction(l0), Self::BoundFunction(r0)) => l0 == r0,
             (Self::List(l0), Self::List(r0)) => l0 == r0,
             (Self::Type(l0), Self::Type(r0)) => l0 == r0,
+            (Self::TypeCheck(l0), Self::TypeCheck(r0)) => l0 == r0,
             _ => false,
         }
     }
@@ -397,22 +401,23 @@ unary_op_impl!(neg for neg);
 impl std::fmt::Debug for RuntimeValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RuntimeValue::Integer(x) => write!(f, "{}", x.raw_value()),
-            RuntimeValue::Float(x) => write!(f, "{}", x.raw_value()),
-            RuntimeValue::Boolean(x) => write!(f, "{}", x.raw_value()),
-            RuntimeValue::String(s) => write!(f, "\"{}\"", s.raw_value()),
-            RuntimeValue::Object(o) => write!(f, "<object of type {}>", o.get_struct().name()),
-            RuntimeValue::Opaque(_) => write!(f, "<opaque>"),
-            RuntimeValue::Mixin(_) => write!(f, "<mixin>"),
-            RuntimeValue::Module(_) => write!(f, "<module>"),
-            RuntimeValue::EnumValue(v) => {
+            Self::Integer(x) => write!(f, "{}", x.raw_value()),
+            Self::Float(x) => write!(f, "{}", x.raw_value()),
+            Self::Boolean(x) => write!(f, "{}", x.raw_value()),
+            Self::String(s) => write!(f, "\"{}\"", s.raw_value()),
+            Self::Object(o) => write!(f, "<object of type {}>", o.get_struct().name()),
+            Self::Opaque(_) => write!(f, "<opaque>"),
+            Self::Mixin(m) => write!(f, "<mixin{}>", m.name()),
+            Self::Module(_) => write!(f, "<module>"),
+            Self::EnumValue(v) => {
                 write!(f, "<enum-value of type {}>", v.get_container_enum().name())
             }
-            RuntimeValue::CodeObject(co) => write!(f, "{co:?}"),
-            RuntimeValue::Function(fnc) => write!(f, "{fnc:?}"),
-            RuntimeValue::BoundFunction(_) => write!(f, "<bound-function>"),
-            RuntimeValue::List(lt) => write!(f, "{lt:?}"),
-            RuntimeValue::Type(t) => write!(f, "type<{t:?}>"),
+            Self::CodeObject(co) => write!(f, "{co:?}"),
+            Self::Function(fnc) => write!(f, "{fnc:?}"),
+            Self::BoundFunction(_) => write!(f, "<bound-function>"),
+            Self::List(lt) => write!(f, "{lt:?}"),
+            Self::Type(t) => write!(f, "type<{t:?}>"),
+            Self::TypeCheck(t) => write!(f, "type-check({t:?})"),
         }
     }
 }
@@ -464,39 +469,6 @@ pub enum CallResult<T = RuntimeValue> {
 }
 
 impl RuntimeValue {
-    pub fn isa(&self, t: &RuntimeValueType, builtins: &VmBuiltins) -> bool {
-        match t {
-            RuntimeValueType::Any => true,
-            RuntimeValueType::Union(u) => {
-                for u_k in u {
-                    if self.isa(u_k, builtins) {
-                        return true;
-                    }
-                }
-                false
-            }
-            _ => RuntimeValueType::get_type(self, builtins) == *t,
-        }
-    }
-
-    pub fn isa_mixin(&self, mixin: &Mixin) -> bool {
-        if let Some(obj) = self.as_object() {
-            obj.get_struct().isa_mixin(mixin)
-        } else if let Some(env) = self.as_enum_value() {
-            env.get_container_enum().isa_mixin(mixin)
-        } else if let Some(m) = self.as_mixin() {
-            m.isa_mixin(mixin)
-        } else {
-            match self.as_struct() {
-                Some(st) => st.isa_mixin(mixin),
-                _ => match self.as_enum() {
-                    Some(en) => en.isa_mixin(mixin),
-                    _ => false,
-                },
-            }
-        }
-    }
-
     pub fn bind(&self, f: Function) -> RuntimeValue {
         RuntimeValue::BoundFunction(BoundFunction::bind(self.clone(), f))
     }
@@ -533,7 +505,7 @@ impl RuntimeValue {
         discard_result: bool,
     ) -> ExecutionResult<CallResult> {
         if let Some(f) = self.as_function() {
-            f.eval(argc, cur_frame, vm, discard_result)
+            f.eval(argc, cur_frame, vm, &Default::default(), discard_result)
         } else if let Some(bf) = self.as_bound_function() {
             bf.eval(argc, cur_frame, vm, discard_result)
         } else {
@@ -774,32 +746,14 @@ impl RuntimeValue {
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> ExecutionResult<CallResult> {
-        if self.is_object() {
-            match self.read_attribute("_op_impl_read_index", &vm.builtins) {
-                Ok(read_index) => {
-                    for idx in indices.iter().rev() {
-                        cur_frame.stack.push(idx.clone());
-                    }
-                    read_index.eval(indices.len() as u8, cur_frame, vm, false)
+        match self.read_attribute("_op_impl_read_index", &vm.builtins) {
+            Ok(read_index) => {
+                for idx in indices.iter().rev() {
+                    cur_frame.stack.push(idx.clone());
                 }
-                _ => Err(VmErrorReason::UnexpectedType.into()),
+                read_index.eval(indices.len() as u8, cur_frame, vm, false)
             }
-        } else if let Some(lst) = self.as_list() {
-            if indices.len() != 1 {
-                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
-            }
-            let val = lst.read_index(&indices[0], cur_frame, vm)?;
-            cur_frame.stack.push(val);
-            Ok(CallResult::OkNoValue)
-        } else if let Some(str) = self.as_string() {
-            if indices.len() != 1 {
-                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
-            }
-            let val = str.read_index(&indices[0], cur_frame, vm)?;
-            cur_frame.stack.push(val);
-            Ok(CallResult::OkNoValue)
-        } else {
-            Err(VmErrorReason::UnexpectedType.into())
+            _ => Err(VmErrorReason::UnexpectedType.into()),
         }
     }
 
@@ -810,25 +764,15 @@ impl RuntimeValue {
         cur_frame: &mut Frame,
         vm: &mut VirtualMachine,
     ) -> ExecutionResult<CallResult> {
-        if self.is_object() {
-            match self.read_attribute("_op_impl_write_index", &vm.builtins) {
-                Ok(write_index) => {
-                    cur_frame.stack.push(val.clone());
-                    for idx in indices.iter().rev() {
-                        cur_frame.stack.push(idx.clone());
-                    }
-                    write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)
+        match self.read_attribute("_op_impl_write_index", &vm.builtins) {
+            Ok(write_index) => {
+                cur_frame.stack.push(val.clone());
+                for idx in indices.iter().rev() {
+                    cur_frame.stack.push(idx.clone());
                 }
-                _ => Err(VmErrorReason::UnexpectedType.into()),
+                write_index.eval(1 + indices.len() as u8, cur_frame, vm, true)
             }
-        } else if let Some(lst) = self.as_list() {
-            if indices.len() != 1 {
-                return Err(VmErrorReason::MismatchedArgumentCount(1, indices.len()).into());
-            }
-            lst.write_index(&indices[0], val, cur_frame, vm)?;
-            Ok(CallResult::OkNoValue)
-        } else {
-            Err(VmErrorReason::UnexpectedType.into())
+            _ => Err(VmErrorReason::UnexpectedType.into()),
         }
     }
 }

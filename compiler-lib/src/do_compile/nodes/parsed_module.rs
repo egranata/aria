@@ -3,9 +3,9 @@ use aria_parser::ast::{ImportFromStatement, ImportPath, ParsedModule};
 use haxby_opcodes::runtime_value_ids::RUNTIME_VALUE_THIS_MODULE;
 
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::{CompiledCodeObject, ConstantValue},
     do_compile::{CompilationError, CompilationResult, CompileNode, CompileParams},
-    func_builder::BasicBlockOpcode,
 };
 
 macro_rules! collate_error_if_any {
@@ -120,10 +120,8 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
                 params
                     .writer
                     .get_current_block()
-                    .write_opcode(BasicBlockOpcode::PushRuntimeValue(
-                        RUNTIME_VALUE_THIS_MODULE,
-                    ))
-                    .write_opcode(BasicBlockOpcode::LoadDylib(cidx));
+                    .write_opcode(CompilerOpcode::PushRuntimeValue(RUNTIME_VALUE_THIS_MODULE))
+                    .write_opcode(CompilerOpcode::LoadDylib(cidx));
             }
         }
 
@@ -131,7 +129,7 @@ impl<'a> CompileNode<'a, (), Vec<CompilationError>> for ParsedModule {
         params
             .writer
             .get_current_block()
-            .write_opcode(BasicBlockOpcode::Return);
+            .write_opcode(CompilerOpcode::Return);
 
         let co = match params
             .writer

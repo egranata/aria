@@ -4,12 +4,13 @@ use aria_parser::ast::{DeclarationId, Identifier};
 use haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_UNIT;
 
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     constant_value::{CompiledCodeObject, ConstantValue},
     do_compile::{
         CompilationError, CompilationResult, CompileNode, CompileParams, ControlFlowTargets,
         emit_args_at_target,
     },
-    func_builder::{BasicBlockOpcode, FunctionBuilder},
+    func_builder::FunctionBuilder,
     scope::CompilationScope,
 };
 
@@ -51,11 +52,11 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::PushBuiltinTy(BUILTIN_TYPE_UNIT),
+                CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_UNIT),
                 self.loc.clone(),
             )
-            .write_opcode_and_source_info(BasicBlockOpcode::NewEnumVal(unit), self.loc.clone())
-            .write_opcode_and_source_info(BasicBlockOpcode::Return, self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::NewEnumVal(unit), self.loc.clone())
+            .write_opcode_and_source_info(CompilerOpcode::Return, self.loc.clone());
 
         let frame_size = c_params.scope.as_function_root().unwrap().num_locals();
 
@@ -83,7 +84,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
         params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Push(cco_idx), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Push(cco_idx), self.loc.clone());
 
         Ok(())
     }

@@ -4,21 +4,21 @@ use aria_compiler::line_table::LineTable;
 use aria_parser::ast::SourcePointer;
 
 use crate::{
-    runtime_value::{RuntimeValue, function::Function, kind::RuntimeValueType},
+    runtime_value::{RuntimeValue, function::Function, isa::IsaCheckable},
     stack::Stack,
     vm::VirtualMachine,
 };
 
 pub struct LocalVariable {
     pub val: RuntimeValue,
-    pub ty: RuntimeValueType,
+    pub ty: IsaCheckable,
 }
 
 impl Default for LocalVariable {
     fn default() -> Self {
         Self {
             val: RuntimeValue::Integer(From::from(0)),
-            ty: RuntimeValueType::Any,
+            ty: IsaCheckable::any(),
         }
     }
 }

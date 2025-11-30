@@ -37,6 +37,7 @@ pub enum RuntimeValueType {
     BoundFunction(FunctionType),
     Mixin,
     Opaque,
+    TypeCheck,
     Struct(Struct),
     Enum(Enum),
     Union(Vec<RuntimeValueType>),
@@ -77,6 +78,7 @@ impl RuntimeValueType {
             RuntimeValue::Module(_) => Self::Module,
             RuntimeValue::Mixin(_) => Self::Mixin,
             RuntimeValue::Opaque(_) => Self::Opaque,
+            RuntimeValue::TypeCheck(_) => Self::TypeCheck,
             RuntimeValue::Function(f) => Self::Function(FunctionType {
                 arity: f.arity(),
                 varargs: f.varargs(),
@@ -104,6 +106,7 @@ impl std::fmt::Debug for RuntimeValueType {
             Self::Module => write!(f, "Module"),
             Self::Mixin => write!(f, "Mixin"),
             Self::Opaque => write!(f, "Opaque"),
+            Self::TypeCheck => write!(f, "TypeCheck"),
             Self::Function(ft) => write!(f, "Function{ft:?}"),
             Self::BoundFunction(ft) => write!(f, "BoundFunction{ft:?}"),
             Self::Struct(s) => write!(f, "Struct {}", s.name()),

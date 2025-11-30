@@ -1,8 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 flag: no_std;
 
-struct Unimplemented {
-    func prettyprint() {
-        return "unimplemented";
-    }
-}
+struct Unimplemented {}
+

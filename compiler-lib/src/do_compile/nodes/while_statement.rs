@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{
+    builder::compiler_opcodes::CompilerOpcode,
     do_compile::{CompilationResult, CompileNode, CompileParams, ControlFlowTargets},
-    func_builder::BasicBlockOpcode,
 };
 
 impl<'a> CompileNode<'a> for aria_parser::ast::WhileStatement {
@@ -47,7 +47,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::WhileStatement {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::Jump(first_check.clone()),
+                CompilerOpcode::Jump(first_check.clone()),
                 self.loc.clone(),
             );
         c_params.writer.set_current_block(first_check.clone());
@@ -56,13 +56,13 @@ impl<'a> CompileNode<'a> for aria_parser::ast::WhileStatement {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::JumpTrue(then.clone()),
+                CompilerOpcode::JumpTrue(then.clone()),
                 self.then.loc.clone(),
             );
         c_params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Jump(els.clone()), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Jump(els.clone()), self.loc.clone());
 
         c_params.writer.set_current_block(check.clone());
         self.cond.do_compile(&mut c_params)?;
@@ -70,19 +70,19 @@ impl<'a> CompileNode<'a> for aria_parser::ast::WhileStatement {
             .writer
             .get_current_block()
             .write_opcode_and_source_info(
-                BasicBlockOpcode::JumpTrue(then.clone()),
+                CompilerOpcode::JumpTrue(then.clone()),
                 self.then.loc.clone(),
             );
         c_params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Jump(after.clone()), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Jump(after.clone()), self.loc.clone());
         c_params.writer.set_current_block(then);
         self.then.do_compile(&mut c_params)?;
         c_params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Jump(check.clone()), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Jump(check.clone()), self.loc.clone());
 
         c_params.writer.set_current_block(els);
         if let Some(els) = &self.els {
@@ -91,7 +91,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::WhileStatement {
         c_params
             .writer
             .get_current_block()
-            .write_opcode_and_source_info(BasicBlockOpcode::Jump(after.clone()), self.loc.clone());
+            .write_opcode_and_source_info(CompilerOpcode::Jump(after.clone()), self.loc.clone());
         c_params.writer.set_current_block(after);
         Ok(())
     }

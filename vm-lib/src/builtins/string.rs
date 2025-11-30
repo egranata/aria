@@ -548,6 +548,39 @@ impl BuiltinFunctionImpl for Contains {
     }
 }
 
+#[derive(Default)]
+struct GetAt {}
+impl BuiltinFunctionImpl for GetAt {
+    fn eval(
+        &self,
+        frame: &mut Frame,
+        _: &mut crate::vm::VirtualMachine,
+    ) -> crate::vm::ExecutionResult<RunloopExit> {
+        let this = VmBuiltins::extract_arg(frame, |x| x.as_string().cloned())?;
+        let index = VmBuiltins::extract_arg(frame, |x| x.as_integer().cloned())?;
+        let index = index.raw_value() as usize;
+        match this.get_at(index) {
+            Some(v) => {
+                frame.stack.push(v);
+                Ok(RunloopExit::Ok(()))
+            }
+            None => Err(VmErrorReason::IndexOutOfBounds(index).into()),
+        }
+    }
+
+    fn attrib_byte(&self) -> u8 {
+        FUNC_IS_METHOD
+    }
+
+    fn arity(&self) -> crate::arity::Arity {
+        crate::arity::Arity::required(2)
+    }
+
+    fn name(&self) -> &str {
+        "_get_at"
+    }
+}
+
 pub(super) fn insert_string_builtins(builtins: &mut VmBuiltins) {
     let string_builtin =
         BuiltinType::new(crate::runtime_value::builtin_type::BuiltinValueKind::String);
@@ -566,6 +599,7 @@ pub(super) fn insert_string_builtins(builtins: &mut VmBuiltins) {
     string_builtin.insert_builtin::<Uppercase>();
     string_builtin.insert_builtin::<Lowercase>();
     string_builtin.insert_builtin::<Contains>();
+    string_builtin.insert_builtin::<GetAt>();
 
     builtins.insert(
         "String",
