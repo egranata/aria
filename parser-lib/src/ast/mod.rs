@@ -494,6 +494,8 @@ pub enum AddEqSymbol {
     StarEq,
     SlashEq,
     PercentEq,
+    ShiftLeftEq,
+    ShiftRightEq,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

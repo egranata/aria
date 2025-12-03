@@ -17,6 +17,8 @@ impl Derive for AddEqSymbol {
             "*=" => Self::StarEq,
             "/=" => Self::SlashEq,
             "%=" => Self::PercentEq,
+            "<<=" => Self::ShiftLeftEq,
+            ">>=" => Self::ShiftRightEq,
             _ => panic!("operator expected"),
         }
     }
@@ -30,6 +32,8 @@ impl PrettyPrintable for AddEqSymbol {
             Self::StarEq => "*=",
             Self::SlashEq => "/=",
             Self::PercentEq => "%=",
+            Self::ShiftLeftEq => "<<=",
+            Self::ShiftRightEq => ">>=",
         })
     }
 }
