@@ -5,9 +5,15 @@ func main() {
     x *= 4;
     assert x == 12;
 
-    x /=2;
+    x /= 2;
     assert x == 6;
 
     x %= 4;
     assert x == 2;
+
+    x <<= 3;  # 2 << 3 = 16
+    assert x == 16;
+
+    x >>= 2;  # 16 >> 2 = 4
+    assert x == 4;
 }
