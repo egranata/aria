@@ -1488,24 +1488,21 @@ impl VirtualMachine {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
-            Opcode::EnumExtractPayload => {
+            Opcode::EnumTryExtractPayload => {
                 let ev = pop_or_err!(next, frame, op_idx);
                 if let Some(ev) = ev.as_enum_value() {
                     let p = ev.get_payload();
                     match p {
                         None => {
-                            return build_vm_error!(
-                                VmErrorReason::EnumWithoutPayload,
-                                next,
-                                frame,
-                                op_idx
-                            );
+                            frame.stack.push(RuntimeValue::Boolean(false.into()));
                         }
                         Some(p) => {
                             frame.stack.push(p.clone());
+                            frame.stack.push(RuntimeValue::Boolean(true.into()));
                         }
                     }
                 } else {
+                    // should this return false instead?
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
