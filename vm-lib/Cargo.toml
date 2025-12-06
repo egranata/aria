@@ -9,7 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 pest = "2.8.4"
-pest_derive = "2.8.3"
+pest_derive = "2.8.4"
 parser-lib = { path = "../parser-lib" }
 compiler-lib = { path = "../compiler-lib" }
 opcodes-lib = { path = "../opcodes-lib" }
@@ -20,7 +20,7 @@ libc = "0.2.177"
 rustc_data_structures = "0.1.2"
 
 [dev-dependencies]
-criterion = { version = "0.7.0" }
+criterion = { version = "0.8.0" }
 
 [[bench]]
 name = "control_flow"

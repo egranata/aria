@@ -46,7 +46,7 @@ enum Color {
             }
 
             if s.len() != 6 {
-                return Result::Ok("Invalid RGB hex string length");
+                return Result::Err("Invalid RGB hex string length");
             }
 
             val red = s.substring(0,1);
@@ -152,19 +152,19 @@ struct ColorScheme {
         val result = s;
         val flags_on = [];
         val flags_off = [];
- 
+
         if this.bold {
             flags_on.append("1");
             flags_off.append("22");
         }
-        
+
         match this.fg {
             case Some(c) => {
                 flags_on.append(c.to_ansi_sequence(true));
                 flags_off.append("39");
             },
         }
-        
+
         match this.bg {
             case Some(c) => {
                 flags_on.append(c.to_ansi_sequence(false));
