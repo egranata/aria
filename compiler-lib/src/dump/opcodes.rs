@@ -168,6 +168,7 @@ pub fn opcode_prettyprint(
         | Opcode::BuildMixin
         | Opcode::IncludeMixin
         | Opcode::EnumExtractPayload
+        | Opcode::EnumTryExtractPayload
         | Opcode::Isa
         | Opcode::LiftModule
         | Opcode::Halt => buffer << opcode.to_string(),

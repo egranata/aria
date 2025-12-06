@@ -1,95 +1,120 @@
 // SPDX-License-Identifier: Apache-2.0
+
+use aria_parser::ast::SourcePointer;
+
 use crate::{
     builder::compiler_opcodes::CompilerOpcode,
     constant_value::ConstantValue,
     do_compile::{CompilationResult, CompileNode, CompileParams},
 };
 
-impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
-    fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
-        let case_name_idx = self.insert_const_or_fail(
-            params,
-            ConstantValue::String(self.case.value.clone()),
-            &self.loc,
-        )?;
+fn emit_case_without_payload(
+    _: &SourcePointer,
+    case: &aria_parser::ast::Identifier,
+    params: &mut CompileParams,
+) -> CompilationResult {
+    let case_name_idx =
+        case.insert_const_or_fail(params, ConstantValue::String(case.value.clone()), &case.loc)?;
+    params
+        .writer
+        .get_current_block()
+        .write_opcode_and_source_info(
+            CompilerOpcode::EnumCheckIsCase(case_name_idx),
+            case.loc.clone(),
+        );
+    Ok(())
+}
+
+fn emit_case_with_payload(
+    loc: &SourcePointer,
+    case: &aria_parser::ast::Identifier,
+    payload: &aria_parser::ast::DeclarationId,
+    params: &mut CompileParams,
+) -> CompilationResult {
+    emit_case_without_payload(loc, case, params)?;
+    // jump here when any intermediate check fails, this will push false on the stack
+    let payload_chck_failed = params
+        .writer
+        .append_block_at_end(&format!("payload_chck_failed{}", case.loc));
+    // this is where match expects to continue, with either true or false on the stack
+    // and possibly a local symbol bound on success
+    let payload_chck_aftermath = params
+        .writer
+        .append_block_at_end(&format!("payload_chck_aftermath{}", case.loc));
+    params
+        .writer
+        .get_current_block()
+        .write_opcode_and_source_info(
+            CompilerOpcode::JumpFalse(payload_chck_failed.clone()),
+            loc.clone(),
+        );
+    // we know we have a case match - now extract the payload
+    params.scope.emit_read(
+        "__match_control_expr",
+        &mut params.module.constants,
+        params.writer.get_current_block(),
+        payload.loc.clone(),
+    )?;
+    params
+        .writer
+        .get_current_block()
+        .write_opcode_and_source_info(CompilerOpcode::EnumTryExtractPayload, payload.loc.clone());
+    params
+        .writer
+        .get_current_block()
+        .write_opcode_and_source_info(
+            CompilerOpcode::JumpFalse(payload_chck_failed.clone()),
+            loc.clone(),
+        );
+    // if we're here, we know we have a payload - bind it to a local variable now
+    if let Some(ty) = &payload.ty {
         params
             .writer
             .get_current_block()
+            .write_opcode_and_source_info(CompilerOpcode::Dup, loc.clone());
+        ty.do_compile(params)?;
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(CompilerOpcode::Isa, loc.clone())
             .write_opcode_and_source_info(
-                CompilerOpcode::EnumCheckIsCase(case_name_idx),
-                self.loc.clone(),
+                CompilerOpcode::JumpFalse(payload_chck_failed.clone()),
+                loc.clone(),
             );
-        if let Some(p) = &self.payload {
-            let if_false = params.writer.insert_block_after(
-                &format!("if_false_{}", self.loc),
-                &params.writer.get_current_block(),
-            );
-            let if_payload_after = params
-                .writer
-                .insert_block_after(&format!("if_payload_after{}", self.loc), &if_false);
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(
-                    CompilerOpcode::JumpFalse(if_false.clone()),
-                    self.loc.clone(),
-                );
-            params.scope.emit_read(
-                "__match_control_expr",
-                &mut params.module.constants,
-                params.writer.get_current_block(),
-                p.loc.clone(),
-            )?;
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(CompilerOpcode::EnumExtractPayload, self.loc.clone());
-            if let Some(ty) = &p.ty {
-                params
-                    .writer
-                    .get_current_block()
-                    .write_opcode_and_source_info(CompilerOpcode::Dup, self.loc.clone());
-                ty.do_compile(params)?;
-                params
-                    .writer
-                    .get_current_block()
-                    .write_opcode_and_source_info(CompilerOpcode::Isa, self.loc.clone())
-                    .write_opcode_and_source_info(
-                        CompilerOpcode::JumpFalse(if_false.clone()),
-                        self.loc.clone(),
-                    );
-            }
-            params.scope.emit_untyped_define(
-                &p.name.value,
-                &mut params.module.constants,
-                params.writer.get_current_block(),
-                self.loc.clone(),
-            )?;
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(CompilerOpcode::PushTrue, self.loc.clone());
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(
-                    CompilerOpcode::Jump(if_payload_after.clone()),
-                    self.loc.clone(),
-                );
-            params.writer.set_current_block(if_false.clone());
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(CompilerOpcode::PushFalse, self.loc.clone());
-            params
-                .writer
-                .get_current_block()
-                .write_opcode_and_source_info(
-                    CompilerOpcode::Jump(if_payload_after.clone()),
-                    self.loc.clone(),
-                );
-            params.writer.set_current_block(if_payload_after);
+    }
+    params.scope.emit_untyped_define(
+        &payload.name.value,
+        &mut params.module.constants,
+        params.writer.get_current_block(),
+        loc.clone(),
+    )?;
+    // if we're still here, we passed all checks - push true and jump to aftermath
+    params
+        .writer
+        .get_current_block()
+        .write_opcode_and_source_info(CompilerOpcode::PushTrue, loc.clone())
+        .write_opcode_and_source_info(
+            CompilerOpcode::Jump(payload_chck_aftermath.clone()),
+            loc.clone(),
+        );
+    params.writer.set_current_block(payload_chck_failed);
+    params
+        .writer
+        .get_current_block()
+        .write_opcode_and_source_info(CompilerOpcode::PushFalse, loc.clone())
+        .write_opcode_and_source_info(
+            CompilerOpcode::Jump(payload_chck_aftermath.clone()),
+            loc.clone(),
+        );
+    params.writer.set_current_block(payload_chck_aftermath);
+    Ok(())
+}
+
+impl<'a> CompileNode<'a> for aria_parser::ast::MatchPatternEnumCase {
+    fn do_compile(&self, params: &'a mut CompileParams) -> CompilationResult {
+        match &self.payload {
+            None => emit_case_without_payload(&self.loc, &self.case, params),
+            Some(decl_id) => emit_case_with_payload(&self.loc, &self.case, decl_id, params),
         }
-        Ok(())
     }
 }
