@@ -268,6 +268,7 @@ impl BytecodeReader {
                     Ok(Opcode::EnumCheckIsCase(b))
                 }),
             haxby_opcodes::OPCODE_ENUM_EXTRACT_PAYLOAD => Ok(Opcode::EnumExtractPayload),
+            haxby_opcodes::OPCODE_ENUM_TRY_EXTRACT_PAYLOAD => Ok(Opcode::EnumTryExtractPayload),
             haxby_opcodes::OPCODE_TRY_UNWRAP_PROTOCOL => self
                 .read_u8()
                 .map_or(Err(DecodeError::InsufficientData), |b| {

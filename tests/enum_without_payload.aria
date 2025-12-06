@@ -1,23 +1,23 @@
 # SPDX-License-Identifier: Apache-2.0
 enum E {
     case NoPayload,
+    case Payload(Any)
+}
+
+func get_maybe_something(x: E) {
+    match x {
+        # NoPayload case should not extract payload, but it tries
+        # it can't match (and if it does it's a bug in the compiler or in the VM)
+        # but it also should just fail to match and move on to the next case
+        case NoPayload(x) => { assert false; },
+        case Payload(x) => { return Maybe::Some(x); }
+        case NoPayload => { return Maybe::None; }
+    }
+
+    assert false;
 }
 
 func main() {
-    val caught = false;
-    val e = E::NoPayload;
-
-    try {
-        match e {
-            case NoPayload(x) => { println(x); },
-        }
-    } catch e {
-        match e {
-            isa RuntimeError and case EnumWithoutPayload => {
-                caught = true;
-            }
-        }
-    }
-
-    assert caught;
+    assert get_maybe_something(E::NoPayload) == Maybe::None;
+    assert get_maybe_something(E::Payload(42))!! == 42;
 }
