@@ -67,9 +67,8 @@ pub const OPCODE_BIND_CASE: u8 = 87;
 pub const OPCODE_INCLUDE_MIXIN: u8 = 88;
 pub const OPCODE_NEW_ENUM_VAL: u8 = 89;
 pub const OPCODE_ENUM_CHECK_IS_CASE: u8 = 90;
-pub const OPCODE_ENUM_EXTRACT_PAYLOAD: u8 = 91;
+pub const OPCODE_ENUM_TRY_EXTRACT_PAYLOAD: u8 = 91;
 pub const OPCODE_TRY_UNWRAP_PROTOCOL: u8 = 92;
-pub const OPCODE_ENUM_TRY_EXTRACT_PAYLOAD: u8 = 93;
 // ...
 pub const OPCODE_IMPORT: u8 = 250;
 pub const OPCODE_LIFT_MODULE: u8 = 251;
@@ -195,7 +194,6 @@ pub enum Opcode {
     IncludeMixin,
     NewEnumVal(u16),
     EnumCheckIsCase(u16),
-    EnumExtractPayload,
     EnumTryExtractPayload,
     TryUnwrapProtocol(u8),
     Isa,
@@ -271,7 +269,6 @@ impl std::fmt::Display for Opcode {
             Self::IncludeMixin => write!(f, "INCLUDE_MIXIN"),
             Self::NewEnumVal(arg0) => write!(f, "NEW_ENUM_VAL @{arg0}"),
             Self::EnumCheckIsCase(arg0) => write!(f, "ENUM_CHECK_IS_CASE @{arg0}"),
-            Self::EnumExtractPayload => write!(f, "ENUM_EXTRACT_PAYLOAD"),
             Self::EnumTryExtractPayload => write!(f, "ENUM_TRY_EXTRACT_PAYLOAD"),
             Self::TryUnwrapProtocol(mode) => write!(f, "TRY_UNWRAP_PROTOCOL {mode}"),
             Self::Isa => write!(f, "ISA"),
@@ -349,7 +346,6 @@ impl Opcode {
             Self::IncludeMixin => 1,
             Self::NewEnumVal(_) => 3,
             Self::EnumCheckIsCase(_) => 3,
-            Self::EnumExtractPayload => 1,
             Self::EnumTryExtractPayload => 1,
             Self::TryUnwrapProtocol(_) => 2,
             Self::Isa => 1,

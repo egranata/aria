@@ -167,7 +167,6 @@ pub fn opcode_prettyprint(
         | Opcode::BuildEnum
         | Opcode::BuildMixin
         | Opcode::IncludeMixin
-        | Opcode::EnumExtractPayload
         | Opcode::EnumTryExtractPayload
         | Opcode::Isa
         | Opcode::LiftModule
