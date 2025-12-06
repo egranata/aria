@@ -1488,27 +1488,6 @@ impl VirtualMachine {
                     return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
                 }
             }
-            Opcode::EnumExtractPayload => {
-                let ev = pop_or_err!(next, frame, op_idx);
-                if let Some(ev) = ev.as_enum_value() {
-                    let p = ev.get_payload();
-                    match p {
-                        None => {
-                            return build_vm_error!(
-                                VmErrorReason::EnumWithoutPayload,
-                                next,
-                                frame,
-                                op_idx
-                            );
-                        }
-                        Some(p) => {
-                            frame.stack.push(p.clone());
-                        }
-                    }
-                } else {
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
-                }
-            }
             Opcode::EnumTryExtractPayload => {
                 let ev = pop_or_err!(next, frame, op_idx);
                 if let Some(ev) = ev.as_enum_value() {
@@ -1523,8 +1502,7 @@ impl VirtualMachine {
                         }
                     }
                 } else {
-                    // should this return false instead?
-                    return build_vm_error!(VmErrorReason::UnexpectedType, next, frame, op_idx);
+                    frame.stack.push(RuntimeValue::Boolean(false.into()));
                 }
             }
             Opcode::TryUnwrapProtocol(mode) => {

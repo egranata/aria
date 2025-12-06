@@ -33,19 +33,19 @@ fn emit_case_with_payload(
 ) -> CompilationResult {
     emit_case_without_payload(loc, case, params)?;
     // jump here when any intermediate check fails, this will push false on the stack
-    let payload_chck_failed = params
+    let payload_check_failed = params
         .writer
         .append_block_at_end(&format!("payload_chck_failed{}", case.loc));
     // this is where match expects to continue, with either true or false on the stack
     // and possibly a local symbol bound on success
-    let payload_chck_aftermath = params
+    let payload_check_aftermath = params
         .writer
         .append_block_at_end(&format!("payload_chck_aftermath{}", case.loc));
     params
         .writer
         .get_current_block()
         .write_opcode_and_source_info(
-            CompilerOpcode::JumpFalse(payload_chck_failed.clone()),
+            CompilerOpcode::JumpFalse(payload_check_failed.clone()),
             loc.clone(),
         );
     // we know we have a case match - now extract the payload
@@ -63,7 +63,7 @@ fn emit_case_with_payload(
         .writer
         .get_current_block()
         .write_opcode_and_source_info(
-            CompilerOpcode::JumpFalse(payload_chck_failed.clone()),
+            CompilerOpcode::JumpFalse(payload_check_failed.clone()),
             loc.clone(),
         );
     // if we're here, we know we have a payload - bind it to a local variable now
@@ -78,7 +78,7 @@ fn emit_case_with_payload(
             .get_current_block()
             .write_opcode_and_source_info(CompilerOpcode::Isa, loc.clone())
             .write_opcode_and_source_info(
-                CompilerOpcode::JumpFalse(payload_chck_failed.clone()),
+                CompilerOpcode::JumpFalse(payload_check_failed.clone()),
                 loc.clone(),
             );
     }
@@ -94,19 +94,19 @@ fn emit_case_with_payload(
         .get_current_block()
         .write_opcode_and_source_info(CompilerOpcode::PushTrue, loc.clone())
         .write_opcode_and_source_info(
-            CompilerOpcode::Jump(payload_chck_aftermath.clone()),
+            CompilerOpcode::Jump(payload_check_aftermath.clone()),
             loc.clone(),
         );
-    params.writer.set_current_block(payload_chck_failed);
+    params.writer.set_current_block(payload_check_failed);
     params
         .writer
         .get_current_block()
         .write_opcode_and_source_info(CompilerOpcode::PushFalse, loc.clone())
         .write_opcode_and_source_info(
-            CompilerOpcode::Jump(payload_chck_aftermath.clone()),
+            CompilerOpcode::Jump(payload_check_aftermath.clone()),
             loc.clone(),
         );
-    params.writer.set_current_block(payload_chck_aftermath);
+    params.writer.set_current_block(payload_check_aftermath);
     Ok(())
 }
 
