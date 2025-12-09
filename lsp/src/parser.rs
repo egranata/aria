@@ -417,6 +417,9 @@ pub fn parse(text: &str) -> Parse {
                 if self.at(Pipe) {
                     self.expect(Pipe);
                 }
+                if self.at(BitwiseAnd) {
+                    self.expect(BitwiseAnd);
+                }
             }
             self.close(m, ExprType);
         }
@@ -447,26 +450,12 @@ pub fn parse(text: &str) -> Parse {
                 ThrowKwd => self.stmt_kwd_with_expr(ThrowKwd),
                 ReturnKwd => self.stmt_return(),
                 LeftBrace => self.block(),
-                GuardKwd => self.guard(),
                 TryKwd => self.try_catch(),
                 StructKwd => self.decl_struct_or_ext(Struct, StructKwd),
                 EnumKwd => self.decl_enum(),
                 FuncKwd => self.decl_func(),
                 _ => self.stmt_expr(),
             }
-        }
-
-        fn guard(&mut self) {
-            assert!(self.at(GuardKwd));
-            let m = self.open();
-
-            self.expect(GuardKwd);
-            self.expect(Identifier);
-            self.expect(Assign);
-            let _ = self.expr();
-            self.block();
-
-            self.close(m, Guard);
         }
 
         fn stmt_if(&mut self) {
@@ -1163,7 +1152,6 @@ pub fn parse(text: &str) -> Parse {
                     | ForKwd
                     | FromKwd
                     | FuncKwd
-                    | GuardKwd
                     | IfKwd
                     | ImportKwd
                     | InKwd

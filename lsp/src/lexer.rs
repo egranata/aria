@@ -30,8 +30,6 @@ pub enum SyntaxKind {
     FromKwd,
     #[token("func")]
     FuncKwd,
-    #[token("guard")]
-    GuardKwd,
     #[token("if")]
     IfKwd,
     #[token("import")]
