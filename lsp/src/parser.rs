@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::lexer::{self, SyntaxKind};
 use SyntaxKind::*;
-use line_index::LineIndex;
 use core::ops::Range;
+use line_index::LineIndex;
 use rowan::{GreenNode, GreenNodeBuilder, TextSize};
 use std::cell::Cell;
 
@@ -104,14 +104,8 @@ pub fn parse(text: &str) -> Parse {
         use SyntaxKind::*;
         match op {
             // Assignment operators (right-associative, lowest precedence)
-            Assign
-            | PlusAssign
-            | MinusAssign
-            | StarAssign
-            | SlashAssign
-            | PercentAssign
-            | LeftShiftAssign
-            | RightShiftAssign => Some((2, 1)),
+            Assign | PlusAssign | MinusAssign | StarAssign | SlashAssign | PercentAssign
+            | LeftShiftAssign | RightShiftAssign => Some((2, 1)),
 
             LogicalOr => Some((3, 4)),
             LogicalAnd => Some((5, 6)),
@@ -955,14 +949,8 @@ pub fn parse(text: &str) -> Parse {
 
                     // Use ExprAssign for assignment operators, ExprBinary for others
                     let node_kind = match op {
-                        Assign
-                        | PlusAssign
-                        | MinusAssign
-                        | StarAssign
-                        | SlashAssign
-                        | PercentAssign
-                        | LeftShiftAssign
-                        | RightShiftAssign => ExprAssign,
+                        Assign | PlusAssign | MinusAssign | StarAssign | SlashAssign
+                        | PercentAssign | LeftShiftAssign | RightShiftAssign => ExprAssign,
                         _ => ExprBinary,
                     };
 
@@ -1207,7 +1195,13 @@ pub fn parse(text: &str) -> Parse {
         }
 
         fn assert_tok(&mut self, kind: SyntaxKind) {
-            assert!(self.at(kind), "expected {:?} but found {:?} at {:?}", kind, self.nth(0), self.line_index.line_col(TextSize::from(self.pos as u32)));
+            assert!(
+                self.at(kind),
+                "expected {:?} but found {:?} at {:?}",
+                kind,
+                self.nth(0),
+                self.line_index.line_col(TextSize::from(self.pos as u32))
+            );
         }
 
         fn build_tree(self) -> Parse {
