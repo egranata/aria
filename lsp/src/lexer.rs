@@ -81,6 +81,10 @@ pub enum SyntaxKind {
     Slash,
     #[token("%")]
     Percent,
+    #[token("<<=")]
+    LeftShiftAssign,
+    #[token(">>=")]
+    RightShiftAssign,
     #[token("<<")]
     LeftShift,
     #[token(">>")]
@@ -184,7 +188,7 @@ pub enum SyntaxKind {
     // trivia
     #[regex(r"[ \t\n\f]+")]
     Whitespace,
-    #[regex(r"#[^\n]*")]
+    #[regex(r"#[^\n]*", allow_greedy = true)]
     LineComment,
 
     // Error token for unrecognized input
