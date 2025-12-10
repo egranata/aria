@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+func main() {
+    try {
+        val some = Maybe::Some;
+    } catch e {
+        assert e isa RuntimeError;
+        assert e.is_UnexpectedType();
+    }
+
+    try {
+        val none = Maybe::None(3);
+    } catch e {
+        assert e isa RuntimeError;
+        assert e.is_UnexpectedType();
+    }
+}

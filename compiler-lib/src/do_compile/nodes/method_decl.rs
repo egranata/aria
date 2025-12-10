@@ -55,7 +55,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::MethodDecl {
                 CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_UNIT),
                 self.loc.clone(),
             )
-            .write_opcode_and_source_info(CompilerOpcode::NewEnumVal(unit), self.loc.clone())
+            .write_opcode_and_source_info(CompilerOpcode::NewEnumVal(false, unit), self.loc.clone())
             .write_opcode_and_source_info(CompilerOpcode::Return, self.loc.clone());
 
         let frame_size = c_params.scope.as_function_root().unwrap().num_locals();

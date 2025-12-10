@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::rc::Rc;
 
-use haxby_opcodes::Opcode as VmOpcode;
+use haxby_opcodes::{Opcode as VmOpcode, enum_case_attribs::CASE_HAS_PAYLOAD};
 
 use crate::func_builder::{BasicBlock, FunctionBuilder};
 
@@ -66,7 +66,7 @@ pub enum CompilerOpcode {
     BindMethod(u8, u16),
     BindCase(u8, u16),
     IncludeMixin,
-    NewEnumVal(u16),
+    NewEnumVal(bool, u16),
     EnumCheckIsCase(u16),
     EnumTryExtractPayload,
     TryUnwrapProtocol(u8),
@@ -141,7 +141,7 @@ impl CompilerOpcode {
             Self::BindMethod(..) => false,
             Self::BindCase(..) => false,
             Self::IncludeMixin => false,
-            Self::NewEnumVal(_) => false,
+            Self::NewEnumVal(..) => false,
             Self::EnumCheckIsCase(_) => false,
             Self::EnumTryExtractPayload => false,
             Self::TryUnwrapProtocol(_) => false,
@@ -216,7 +216,7 @@ impl CompilerOpcode {
             Self::BindMethod(..) => 4,
             Self::BindCase(..) => 4,
             Self::IncludeMixin => 1,
-            Self::NewEnumVal(_) => 3,
+            Self::NewEnumVal(..) => 4,
             Self::EnumCheckIsCase(_) => 3,
             Self::EnumTryExtractPayload => 1,
             Self::TryUnwrapProtocol(_) => 2,
@@ -317,7 +317,9 @@ impl CompilerOpcode {
             Self::BindMethod(x, y) => VmOpcode::BindMethod(*x, *y),
             Self::BindCase(x, y) => VmOpcode::BindCase(*x, *y),
             Self::IncludeMixin => VmOpcode::IncludeMixin,
-            Self::NewEnumVal(v) => VmOpcode::NewEnumVal(*v),
+            Self::NewEnumVal(v, n) => {
+                VmOpcode::NewEnumVal(if *v { CASE_HAS_PAYLOAD } else { 0 }, *n)
+            }
             Self::EnumCheckIsCase(v) => VmOpcode::EnumCheckIsCase(*v),
             Self::EnumTryExtractPayload => VmOpcode::EnumTryExtractPayload,
             Self::TryUnwrapProtocol(v) => VmOpcode::TryUnwrapProtocol(*v),

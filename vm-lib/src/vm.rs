@@ -1415,7 +1415,8 @@ impl VirtualMachine {
                     }
                 }
             }
-            Opcode::NewEnumVal(n) => {
+            Opcode::NewEnumVal(a, n) => {
+                let has_payload = (a & CASE_HAS_PAYLOAD) == CASE_HAS_PAYLOAD;
                 let case_name = if let Some(ct) = this_module.load_indexed_const(n) {
                     if let Some(sv) = ct.as_string() {
                         sv.clone()
@@ -1440,6 +1441,14 @@ impl VirtualMachine {
                                 op_idx
                             );
                         };
+                        if case.payload_type.is_some() != has_payload {
+                            return build_vm_error!(
+                                VmErrorReason::UnexpectedType,
+                                next,
+                                frame,
+                                op_idx
+                            );
+                        }
                         let payload = match &case.payload_type {
                             Some(pt) => {
                                 let pv = pop_or_err!(next, frame, op_idx);

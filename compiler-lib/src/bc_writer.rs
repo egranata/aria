@@ -126,8 +126,9 @@ impl BytecodeWriter {
                 .write_u8(*a)
                 .write_u16(*n),
             Opcode::IncludeMixin => self.write_u8(haxby_opcodes::OPCODE_INCLUDE_MIXIN),
-            Opcode::NewEnumVal(n) => self
+            Opcode::NewEnumVal(a, n) => self
                 .write_u8(haxby_opcodes::OPCODE_NEW_ENUM_VAL)
+                .write_u8(*a)
                 .write_u16(*n),
             Opcode::EnumCheckIsCase(n) => self
                 .write_u8(haxby_opcodes::OPCODE_ENUM_CHECK_IS_CASE)

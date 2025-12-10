@@ -88,7 +88,7 @@ impl<'a> PostfixValue {
                     .writer
                     .get_current_block()
                     .write_opcode_and_source_info(
-                        CompilerOpcode::NewEnumVal(identifier_idx),
+                        CompilerOpcode::NewEnumVal(payload.is_some(), identifier_idx),
                         case.loc.clone(),
                     );
                 Ok(())
