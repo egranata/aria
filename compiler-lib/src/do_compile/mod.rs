@@ -130,7 +130,7 @@ trait CompileNode<'a, T = (), E = CompilationError> {
 
     fn insert_const_or_fail(
         &self,
-        params: &'a mut CompileParams,
+        params: &mut CompileParams,
         ct: ConstantValue,
         loc: &SourcePointer,
     ) -> CompilationResult<u16> {
@@ -141,6 +141,30 @@ trait CompileNode<'a, T = (), E = CompilationError> {
                 reason: CompilationErrorReason::TooManyConstants,
             }),
         }
+    }
+
+    fn return_unit_value(
+        &self,
+        params: &mut CompileParams,
+        loc: &SourcePointer,
+    ) -> CompilationResult {
+        let unit_const_idx =
+            self.insert_const_or_fail(params, ConstantValue::String("unit".to_owned()), loc)?;
+
+        params
+            .writer
+            .get_current_block()
+            .write_opcode_and_source_info(
+                CompilerOpcode::PushBuiltinTy(haxby_opcodes::builtin_type_ids::BUILTIN_TYPE_UNIT),
+                loc.clone(),
+            )
+            .write_opcode_and_source_info(
+                CompilerOpcode::NewEnumVal(false, unit_const_idx),
+                loc.clone(),
+            )
+            .write_opcode_and_source_info(CompilerOpcode::Return, loc.clone());
+
+        Ok(())
     }
 }
 
