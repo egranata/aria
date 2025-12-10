@@ -14,6 +14,15 @@ impl Derive for StructDecl {
         let loc = From::from(&p.as_span());
         let mut inner = p.into_inner();
         let name = Identifier::from_parse_tree(inner.next().expect("need identifier"), source);
+        let inherits = if let Some(next) = inner.peek() {
+            if next.as_rule() == Rule::identifier {
+                Some(Identifier::from_parse_tree(inner.next().unwrap(), source))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
         let mut body = vec![];
         for next in inner {
             let next = StructEntry::from_parse_tree(next, source);
@@ -22,6 +31,7 @@ impl Derive for StructDecl {
         Self {
             loc: source.pointer(loc),
             name,
+            inherits,
             body,
         }
     }

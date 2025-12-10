@@ -5,7 +5,7 @@ use aria_parser::ast::{
     ArgumentDecl, ArgumentList, AssertStatement, CodeBlock, DeclarationId, ElsePiece, EnumCaseDecl,
     EnumDecl, EnumDeclEntry, Expression, FunctionBody, Identifier, MatchPattern,
     MatchPatternEnumCase, MatchRule, MatchStatement, MethodAccess, MethodDecl, MixinIncludeDecl,
-    OperatorDecl, ParsedModule, ReturnStatement, SourceBuffer, SourcePointer, Statement,
+    OperatorDecl, ParsedModule, Primary, ReturnStatement, SourceBuffer, SourcePointer, Statement,
     StringLiteral, StructDecl, StructEntry, ValDeclStatement, prettyprint::PrettyPrintable,
     source_to_ast,
 };
@@ -748,8 +748,21 @@ fn do_struct_compile(sd: &StructDecl, params: &mut CompileParams) -> Compilation
         .writer
         .get_current_block()
         .write_opcode_and_source_info(CompilerOpcode::BuildStruct, sd.loc.clone());
+    let body = if let Some(ref mixin_name) = sd.inherits {
+        let mut new_body = vec![StructEntry::MixinInclude(Box::new(MixinIncludeDecl {
+            loc: sd.loc.clone(),
+            what: Expression::from(&Primary::Identifier(Identifier {
+                loc: mixin_name.loc.clone(),
+                value: mixin_name.value.clone(),
+            })),
+        }))];
+        new_body.extend_from_slice(&sd.body);
+        new_body
+    } else {
+        sd.body.clone()
+    };
 
-    emit_type_members_compile(&sd.body, params, false)
+    emit_type_members_compile(&body, params, false)
 }
 
 fn do_enum_compile<T>(
