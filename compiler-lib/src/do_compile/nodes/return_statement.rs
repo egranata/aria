@@ -23,7 +23,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::ReturnStatement {
                     self.loc.clone(),
                 )
                 .write_opcode_and_source_info(
-                    CompilerOpcode::NewEnumVal(unit_name),
+                    CompilerOpcode::NewEnumVal(false, unit_name),
                     self.loc.clone(),
                 );
         }

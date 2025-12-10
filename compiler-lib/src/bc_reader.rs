@@ -257,11 +257,21 @@ impl BytecodeReader {
                 Ok(Opcode::BindCase(b0, w1))
             }
             haxby_opcodes::OPCODE_INCLUDE_MIXIN => Ok(Opcode::IncludeMixin),
-            haxby_opcodes::OPCODE_NEW_ENUM_VAL => self
-                .read_u16()
-                .map_or(Err(DecodeError::InsufficientData), |b| {
-                    Ok(Opcode::NewEnumVal(b))
-                }),
+            haxby_opcodes::OPCODE_NEW_ENUM_VAL => {
+                let b0 = match self.read_u8() {
+                    Ok(b) => b,
+                    Err(_) => {
+                        return Err(DecodeError::InsufficientData);
+                    }
+                };
+                let w1 = match self.read_u16() {
+                    Ok(w) => w,
+                    Err(_) => {
+                        return Err(DecodeError::InsufficientData);
+                    }
+                };
+                Ok(Opcode::NewEnumVal(b0, w1))
+            }
             haxby_opcodes::OPCODE_ENUM_CHECK_IS_CASE => self
                 .read_u16()
                 .map_or(Err(DecodeError::InsufficientData), |b| {

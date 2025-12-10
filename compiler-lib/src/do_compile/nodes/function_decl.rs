@@ -39,7 +39,7 @@ impl<'a> CompileNode<'a> for aria_parser::ast::FunctionDecl {
                 CompilerOpcode::PushBuiltinTy(BUILTIN_TYPE_UNIT),
                 self.loc.clone(),
             )
-            .write_opcode_and_source_info(CompilerOpcode::NewEnumVal(unit), self.loc.clone())
+            .write_opcode_and_source_info(CompilerOpcode::NewEnumVal(false, unit), self.loc.clone())
             .write_opcode_and_source_info(CompilerOpcode::Return, self.loc.clone());
 
         let co = match writer.write(&params.module.constants, params.options) {
