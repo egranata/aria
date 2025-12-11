@@ -11,6 +11,7 @@ use crate::{
     line_table::LineTable,
 };
 
+#[derive(Clone)]
 pub(crate) struct BasicBlockEntry {
     pub op: CompilerOpcode,
     pub src: Option<SourcePointer>,
@@ -65,6 +66,14 @@ impl LocalValuesAccess {
     pub(crate) fn calculate_unused_locals(&self) -> HashSet<u8> {
         self.writes.difference(&self.reads).cloned().collect()
     }
+}
+
+#[allow(dead_code)]
+pub struct BlockEntryPoint {
+    pub source: BasicBlock,
+    pub dest: BasicBlock,
+    pub op: CompilerOpcode,
+    pub op_idx: usize,
 }
 
 impl BasicBlock {
@@ -123,9 +132,18 @@ impl BasicBlock {
         false
     }
 
-    #[allow(dead_code)]
     pub(crate) fn remove_op_at_idx(&self, idx: usize) {
         self.imp.writer.borrow_mut().remove(idx);
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn merge_other(&self, other: &BasicBlock, at: usize) {
+        self.remove_op_at_idx(at);
+        let mut br = self.imp.writer.borrow_mut();
+        let other_br = other.imp.writer.borrow();
+        for (idx, src_op) in other_br.as_slice().iter().enumerate() {
+            br.insert(at + idx, src_op.clone());
+        }
     }
 
     fn replace_double_jump(&self) -> bool {
@@ -191,7 +209,7 @@ impl BasicBlock {
         }
     }
 
-    fn remove_instructions_after_terminal(&self) {
+    pub(crate) fn remove_instructions_after_terminal(&self) {
         let mut br = self.imp.writer.borrow_mut();
         for i in 0..br.len() {
             if br[i].op.is_terminal() {

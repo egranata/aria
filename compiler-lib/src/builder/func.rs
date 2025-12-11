@@ -4,10 +4,7 @@ use std::collections::HashSet;
 use crate::{
     CompilationOptions,
     bc_writer::BytecodeWriter,
-    builder::{
-        block::{BasicBlock, LocalValuesAccess},
-        compiler_opcodes::CompilerOpcode,
-    },
+    builder::block::{BasicBlock, BlockEntryPoint, LocalValuesAccess},
     constant_value::ConstantValues,
     line_table::LineTable,
 };
@@ -33,14 +30,6 @@ impl Default for FunctionBuilder {
         this.names.insert(this.current.name().to_owned());
         this
     }
-}
-
-#[allow(dead_code)]
-struct BlockEntryPoint {
-    source: BasicBlock,
-    dest: BasicBlock,
-    op: CompilerOpcode,
-    op_idx: usize,
 }
 
 impl FunctionBuilder {
@@ -134,6 +123,7 @@ impl FunctionBuilder {
         let mut dests = Vec::<BlockEntryPoint>::new();
 
         for src_blk in &self.blocks {
+            src_blk.remove_instructions_after_terminal();
             let br = src_blk.imp.writer.borrow();
             for (op_idx, src_op) in br.as_slice().iter().enumerate() {
                 if let Some(dst) = src_op.op.is_jump_instruction()
@@ -152,21 +142,6 @@ impl FunctionBuilder {
         dests
     }
 
-    fn find_orphaned_blocks(&self) -> HashSet<usize> {
-        let mut orphans = HashSet::<usize>::default();
-
-        for blk in &self.blocks {
-            if blk.id() != 0 {
-                let entrypoints = self.get_block_entrypoints(blk);
-                if entrypoints.is_empty() {
-                    orphans.insert(blk.id());
-                }
-            }
-        }
-
-        orphans
-    }
-
     fn remove_block_with_id(&mut self, id: usize) -> bool {
         for i in 0..self.blocks.len() {
             if self.blocks[i].id() == id {
@@ -178,11 +153,35 @@ impl FunctionBuilder {
         false
     }
 
-    fn run_optimize_passes(&mut self, cv: &ConstantValues) {
-        let orphans = self.find_orphaned_blocks();
-        for orphan_id in &orphans {
-            assert!(self.remove_block_with_id(*orphan_id));
+    fn clean_block_structure(&mut self) -> bool {
+        let mut orphans = HashSet::<usize>::default();
+
+        for blk in &self.blocks {
+            if blk.id() != 0 {
+                let entrypoints = self.get_block_entrypoints(blk);
+                if entrypoints.is_empty() {
+                    orphans.insert(blk.id());
+                } else if entrypoints.len() == 1 {
+                    let ep = &entrypoints[0];
+                    if ep.source != ep.dest && ep.op.is_jump() {
+                        ep.source.merge_other(blk, ep.op_idx);
+                        orphans.insert(blk.id());
+                    }
+                }
+            }
         }
+
+        let ret = !orphans.is_empty();
+
+        for block_id in orphans {
+            assert!(self.remove_block_with_id(block_id));
+        }
+
+        ret
+    }
+
+    fn run_optimize_passes(&mut self, cv: &ConstantValues) {
+        while self.clean_block_structure() {}
 
         let locals_access = self.calculate_locals_access();
         let unused_locals = locals_access.calculate_unused_locals();
