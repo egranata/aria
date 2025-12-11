@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-use std::rc::Rc;
-
+use enum_as_inner::EnumAsInner;
 use haxby_opcodes::{Opcode as VmOpcode, enum_case_attribs::CASE_HAS_PAYLOAD};
 
-use crate::func_builder::{BasicBlock, FunctionBuilder};
+use crate::builder::{block::BasicBlock, func::FunctionBuilder};
 
+#[derive(Clone, EnumAsInner)]
 pub enum CompilerOpcode {
     Nop,
     Push(u16),
@@ -48,13 +48,13 @@ pub enum CompilerOpcode {
     GreaterThanEqual,
     LessThan,
     LessThanEqual,
-    JumpTrue(Rc<BasicBlock>),
-    JumpFalse(Rc<BasicBlock>),
-    Jump(Rc<BasicBlock>),
-    JumpIfArgSupplied(u8, Rc<BasicBlock>),
+    JumpTrue(BasicBlock),
+    JumpFalse(BasicBlock),
+    Jump(BasicBlock),
+    JumpIfArgSupplied(u8, BasicBlock),
     Call(u8),
     Return,
-    TryEnter(Rc<BasicBlock>),
+    TryEnter(BasicBlock),
     TryExit,
     Throw,
     BuildList(u32),
@@ -229,7 +229,7 @@ impl CompilerOpcode {
         }
     }
 
-    pub fn is_jump_instruction(&self) -> Option<Rc<BasicBlock>> {
+    pub fn is_jump_instruction(&self) -> Option<BasicBlock> {
         match self {
             Self::TryEnter(dst)
             | Self::JumpIfArgSupplied(_, dst)
@@ -329,6 +329,86 @@ impl CompilerOpcode {
             Self::LoadDylib(n) => VmOpcode::LoadDylib(*n),
             Self::Assert(v) => VmOpcode::Assert(*v),
             Self::Halt => VmOpcode::Halt,
+        }
+    }
+}
+
+impl std::fmt::Display for CompilerOpcode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use CompilerOpcode::*;
+        match self {
+            Nop => write!(f, "Nop"),
+            Push(v) => write!(f, "Push({})", v),
+            Push0 => write!(f, "Push0"),
+            Push1 => write!(f, "Push1"),
+            PushTrue => write!(f, "PushTrue"),
+            PushFalse => write!(f, "PushFalse"),
+            PushBuiltinTy(n) => write!(f, "PushBuiltinTy({})", n),
+            PushRuntimeValue(n) => write!(f, "PushRuntimeValue({})", n),
+            Pop => write!(f, "Pop"),
+            Dup => write!(f, "Dup"),
+            Swap => write!(f, "Swap"),
+            Copy(n) => write!(f, "Copy({})", n),
+            Add => write!(f, "Add"),
+            Sub => write!(f, "Sub"),
+            Mul => write!(f, "Mul"),
+            Div => write!(f, "Div"),
+            Rem => write!(f, "Rem"),
+            Neg => write!(f, "Neg"),
+            ShiftLeft => write!(f, "ShiftLeft"),
+            ShiftRight => write!(f, "ShiftRight"),
+            Not => write!(f, "Not"),
+            Equal => write!(f, "Equal"),
+            ReadLocal(n) => write!(f, "ReadLocal({})", n),
+            WriteLocal(n) => write!(f, "WriteLocal({})", n),
+            TypedefLocal(n) => write!(f, "TypedefLocal({})", n),
+            ReadNamed(n) => write!(f, "ReadNamed({})", n),
+            WriteNamed(n) => write!(f, "WriteNamed({})", n),
+            TypedefNamed(n) => write!(f, "TypedefNamed({})", n),
+            ReadIndex(n) => write!(f, "ReadIndex({})", n),
+            WriteIndex(n) => write!(f, "WriteIndex({})", n),
+            ReadAttribute(n) => write!(f, "ReadAttribute({})", n),
+            WriteAttribute(n) => write!(f, "WriteAttribute({})", n),
+            ReadUplevel(n) => write!(f, "ReadUplevel({})", n),
+            LogicalAnd => write!(f, "LogicalAnd"),
+            BitwiseAnd => write!(f, "BitwiseAnd"),
+            LogicalOr => write!(f, "LogicalOr"),
+            BitwiseOr => write!(f, "BitwiseOr"),
+            Xor => write!(f, "Xor"),
+            GreaterThan => write!(f, "GreaterThan"),
+            GreaterThanEqual => write!(f, "GreaterThanEqual"),
+            LessThan => write!(f, "LessThan"),
+            LessThanEqual => write!(f, "LessThanEqual"),
+            JumpTrue(dst) => write!(f, "JumpTrue({})", dst.name()),
+            JumpFalse(dst) => write!(f, "JumpFalse({})", dst.name()),
+            Jump(dst) => write!(f, "Jump({})", dst.name()),
+            JumpIfArgSupplied(arg, dst) => {
+                write!(f, "JumpIfArgSupplied({}, {})", arg, dst.name())
+            }
+            Call(n) => write!(f, "Call({})", n),
+            Return => write!(f, "Return"),
+            TryEnter(dst) => write!(f, "TryEnter({})", dst.name()),
+            TryExit => write!(f, "TryExit"),
+            Throw => write!(f, "Throw"),
+            BuildList(v) => write!(f, "BuildList({})", v),
+            BuildFunction(a) => write!(f, "BuildFunction({})", a),
+            StoreUplevel(a) => write!(f, "StoreUplevel({})", a),
+            BuildStruct => write!(f, "BuildStruct"),
+            BuildEnum => write!(f, "BuildEnum"),
+            BuildMixin => write!(f, "BuildMixin"),
+            BindMethod(x, y) => write!(f, "BindMethod({}, {})", x, y),
+            BindCase(x, y) => write!(f, "BindCase({}, {})", x, y),
+            IncludeMixin => write!(f, "IncludeMixin"),
+            NewEnumVal(has_payload, n) => write!(f, "NewEnumVal({}, {})", has_payload, n),
+            EnumCheckIsCase(v) => write!(f, "EnumCheckIsCase({})", v),
+            EnumTryExtractPayload => write!(f, "EnumTryExtractPayload"),
+            TryUnwrapProtocol(v) => write!(f, "TryUnwrapProtocol({})", v),
+            Isa => write!(f, "Isa"),
+            Import(v) => write!(f, "Import({})", v),
+            LiftModule => write!(f, "LiftModule"),
+            LoadDylib(n) => write!(f, "LoadDylib({})", n),
+            Assert(v) => write!(f, "Assert({})", v),
+            Halt => write!(f, "Halt"),
         }
     }
 }

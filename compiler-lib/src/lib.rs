@@ -9,18 +9,21 @@ pub mod builder;
 pub mod constant_value;
 pub mod do_compile;
 pub mod dump;
-pub mod func_builder;
 pub mod line_table;
 pub mod module;
 pub mod scope;
 
 pub struct CompilationOptions {
     pub optimize: bool,
+    pub dump_builder: bool,
 }
 
 impl Default for CompilationOptions {
     fn default() -> Self {
-        Self { optimize: true }
+        Self {
+            optimize: true,
+            dump_builder: false,
+        }
     }
 }
 
